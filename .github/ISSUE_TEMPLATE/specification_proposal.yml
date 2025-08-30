@@ -1,0 +1,97 @@
+name: Specification Proposal
+description: Propose a new specification or major changes to existing specifications
+title: "[Spec Proposal]: "
+labels: ["specification", "proposal", "sig-spec"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for proposing a new specification! This will help us track and review your proposal.
+        
+        **Note**: For detailed proposals, please also create a formal proposal document in the `proposals/` directory following our [proposal template](https://github.com/[ORG]/miri-standard/blob/main/proposals/template.md).
+        
+  - type: textarea
+    id: abstract
+    attributes:
+      label: Abstract
+      description: Brief summary of the proposed specification
+      placeholder: Provide a 2-3 sentence summary of what this specification aims to achieve.
+    validations:
+      required: true
+      
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this specification needed?
+      placeholder: |
+        - What problem does this solve?
+        - Who would benefit from this?
+        - What are the current limitations?
+    validations:
+      required: true
+      
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is included and excluded from this specification?
+      placeholder: |
+        **In Scope:**
+        - Feature A
+        - Feature B
+        
+        **Out of Scope:**
+        - Feature C
+        - Feature D
+    validations:
+      required: true
+      
+  - type: dropdown
+    id: specification-type
+    attributes:
+      label: Specification Type
+      description: What type of specification is this?
+      options:
+        - Core specification
+        - Extension specification
+        - Protocol specification
+        - API specification
+        - Data format specification
+        - Security specification
+        - Other
+    validations:
+      required: true
+      
+  - type: textarea
+    id: related-work
+    attributes:
+      label: Related Work
+      description: Are there existing standards or implementations related to this?
+      placeholder: List any related standards, RFCs, or existing implementations
+    validations:
+      required: false
+      
+  - type: textarea
+    id: implementation-considerations
+    attributes:
+      label: Implementation Considerations
+      description: Any specific implementation challenges or requirements?
+      placeholder: Describe any technical challenges, dependencies, or requirements
+    validations:
+      required: false
+      
+  - type: checkboxes
+    id: proposal-checklist
+    attributes:
+      label: Proposal Checklist
+      description: Please confirm the following
+      options:
+        - label: I have searched for existing similar proposals
+          required: true
+        - label: I am willing to champion this proposal through the development process
+          required: true
+        - label: I will create a detailed proposal document if this initial proposal is accepted
+          required: true
+        - label: I agree to follow this project's Code of Conduct
+          required: true

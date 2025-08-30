@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/[GITHUB_ORG]/miri-standard/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: Community Chat
+    url: https://github.com/[GITHUB_ORG]/miri-standard/discussions
+    about: Join our community discussions
+  - name: Security Issues
+    url: https://github.com/[GITHUB_ORG]/miri-standard/security/policy
+    about: Report security vulnerabilities privately

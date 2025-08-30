@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint:
+    name: Lint Documentation
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Lint Markdown
+      uses: DavidAnson/markdownlint-cli2-action@v16
+      with:
+        globs: '**/*.md'
+        config: '.markdownlint.json'
+        
+    - name: Check Links
+      uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-quiet-mode: 'yes'
+        use-verbose-mode: 'yes'
+        config-file: '.markdown-link-check.json'
+
+  validate-structure:
+    name: Validate Project Structure
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check Required Files
+      run: |
+        echo "Checking for required governance files..."
+        test -f CODE-OF-CONDUCT.md || (echo "Missing CODE-OF-CONDUCT.md" && exit 1)
+        test -f CONTRIBUTING.md || (echo "Missing CONTRIBUTING.md" && exit 1)
+        test -f GOVERNANCE.md || (echo "Missing GOVERNANCE.md" && exit 1)
+        test -f LICENSE || (echo "Missing LICENSE" && exit 1)
+        test -f DCO || (echo "Missing DCO" && exit 1)
+        test -f CODEOWNERS || (echo "Missing CODEOWNERS" && exit 1)
+        echo "All required files present!"
+        
+    - name: Check Directory Structure
+      run: |
+        echo "Checking directory structure..."
+        test -d community || (echo "Missing community directory" && exit 1)
+        test -d standards || (echo "Missing standards directory" && exit 1)
+        test -d proposals || (echo "Missing proposals directory" && exit 1)
+        test -f community/README.md || (echo "Missing community/README.md" && exit 1)
+        test -f standards/README.md || (echo "Missing standards/README.md" && exit 1)
+        test -f proposals/README.md || (echo "Missing proposals/README.md" && exit 1)
+        echo "Directory structure validated!"
+
+  spell-check:
+    name: Spell Check
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Spell Check
+      uses: streetsidesoftware/cspell-action@v6
+      with:
+        files: '**/*.md'
+        config: '.cspell.json'

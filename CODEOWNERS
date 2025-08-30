@@ -1,0 +1,15 @@
+# Global owners - these users will be requested for review on all PRs
+* @y3bishop3y
+
+# Standards directory - requires approval from standards maintainers
+/standards/ @y3bishop3y
+
+# Governance files - requires approval from steering committee
+/GOVERNANCE.md @y3bishop3y
+/CODE-OF-CONDUCT.md @y3bishop3y
+
+# Community files
+/community/ @y3bishop3y
+
+# Proposals require approval from relevant SIG leads
+/proposals/ @y3bishop3y
