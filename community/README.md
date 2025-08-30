@@ -1,6 +1,8 @@
-# miri-standard Community
+# Miri Standard Community
 
-Welcome to the miri-standard community! This directory contains information about how our community is organized and how to participate.
+Welcome to the Miri Standard community! Just as Miranda Sharifi used her enhanced capabilities to serve the broader community rather than isolation, our project aims to enhance collaboration between human developers and autonomous agents for everyone's benefit.
+
+This directory contains information about how our community is organized and how to participate in building the future of agent-friendly Python packaging.
 
 ## Community Structure
 

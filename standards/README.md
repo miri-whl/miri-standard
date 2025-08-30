@@ -1,10 +1,30 @@
-# miri-standard Specifications
+# Miri Standard Specifications
 
-This directory contains the official specifications and standards developed by the miri-standard project.
+This directory contains the official specifications and standards for agent-friendly package extensions across all programming languages.
 
 ## Overview
 
-The miri-standard project develops specifications for [PROJECT DESCRIPTION TO BE ADDED]. All specifications follow a formal development process and are versioned for stability and compatibility.
+The Miri Standard develops specifications that enable rich, structured communication between software packages and autonomous agents, transcending language boundaries. Named after Miranda Serena Sharifi from "Beggars in Spain," these standards address the "thought-string gaps" in current packaging systems—missing information that prevents agents from reaching their full potential in understanding and using software libraries.
+
+**Multi-Language Vision**: While we begin with Python wheel extensions, the Miri Standard's core principles apply universally. The same metadata structures that enhance Python packages will extend to npm packages, Ruby gems, Rust crates, Go modules, and all major packaging ecosystems.
+
+### The Problem: Structural Flaws in Package Communication
+
+Just as Miri's thought-strings had gaps where information should be, current Python packages have structural flaws:
+
+- **Missing Context**: Agents can't determine complexity levels or learning paths
+- **Scattered Examples**: Code samples are dispersed across READMEs, docs, and external sites  
+- **No Relationships**: Dependencies and related packages lack structured connections
+- **Linear Discovery**: Sequential documentation reading prevents instant capability assessment
+
+### The Solution: Complete Metadata Structures
+
+Miri Standard specifications define complete, multi-dimensional metadata that fills these gaps:
+
+- **Structured Examples**: Organized by complexity, category, and learning progression
+- **Rich Templates**: With clear placeholders and usage instructions
+- **Contextual Metadata**: Relationships, prerequisites, and capability descriptions
+- **Instant Discovery**: JSON schemas enabling immediate package comprehension
 
 ## Specification Status
 

@@ -1,7 +1,7 @@
 # miri-standard
 
 <p align="center">
-  <img src="images/miri-grey.png" alt="MIRI Logo" width="200"/>
+  <img src="assets/img/miri-grey.png" alt="MIRI Logo" width="200"/>
 </p>
 
 [![CI](https://github.com/[GITHUB_ORG]/miri-standard/workflows/CI/badge.svg)](https://github.com/[GITHUB_ORG]/miri-standard/actions)
@@ -10,15 +10,81 @@
 
 > **Status**: 🚧 Incubation Phase - This project is in early development
 
-[PROJECT DESCRIPTION TO BE ADDED]
+**Multi-language packaging standards for enhanced human-AI collaboration**
+
+*Named after Miranda Serena Sharifi from Nancy Kress's "Beggars in Spain"*
 
 ## Overview
 
-The miri-standard project develops specifications and standards for [DOMAIN TO BE SPECIFIED]. Our goal is to create open, interoperable standards that enable [GOALS TO BE DEFINED].
+The Miri Standard addresses a fundamental gap in how software packages communicate with autonomous agents across all programming languages. Just as Miranda Sharifi's "thought-strings" had structural flaws that prevented enhanced beings from reaching their full potential, current packaging systems have gaps where agent-useful information should be—but isn't.
+
+**Starting with Python wheels, expanding to all languages.** While our initial implementation focuses on Python wheel extensions, the Miri Standard's principles and specifications are designed to be language-agnostic. The same "thought-string" approach that fills gaps in Python packaging will extend to npm packages, Ruby gems, Rust crates, Go modules, and beyond.
+
+The Miri Standard fills these gaps by defining rich, structured metadata that enables agents to instantly understand package capabilities, discover examples, and access learning paths without external lookups or sequential documentation reading.
+
+### The Vision: From Linear Documentation to Thought-String Communication
+
+Traditional package documentation follows a linear model that forces both humans and agents through sequential discovery across all languages:
+1. Read README → 2. Check docs → 3. Search examples → 4. Trial and error
+
+The Miri Standard enables "thought-string" style information transfer that transcends language boundaries:
+1. Install package → 2. Instantly discover all capabilities → 3. Access structured examples and templates → 4. Understand relationships and learning paths
+
+This represents an evolution from language-specific, word-based documentation to universal, multi-dimensional metadata structures that serve both human developers and autonomous agents regardless of the underlying programming language.
+
+> 📖 **Read the full origin story**: [From Thought-Strings to Agent Communication](docs/origin-story.md)
+
+## Core Principles
+
+The Miri Standard is built on four foundational principles inspired by Miranda Sharifi's journey:
+
+### 1. **Structural Completeness** 🧩
+No gaps where information should be. Every Miri-compliant package includes complete metadata schemas with required fields for agent comprehension.
+
+### 2. **Multi-Dimensional Information** 🌐
+Beyond linear documentation. Packages provide examples, templates, learning paths, and contextual relationships simultaneously.
+
+### 3. **Immediate Discovery** ⚡
+Instant capability assessment. Agents can understand package functionality without external lookups or sequential reading.
+
+### 4. **Enhanced Collaboration** 🤝
+Serving both humans and agents. Better structured information benefits all developers while enabling new forms of AI-assisted development.
 
 ## Quick Start
 
 [QUICK START GUIDE TO BE ADDED]
+
+## Language Roadmap
+
+The Miri Standard follows a strategic multi-language expansion plan:
+
+### Phase 1: Python Foundation 🐍
+- **Current Focus**: Python wheel extensions (.whl)
+- **Status**: In development
+- **Goal**: Establish core metadata schemas and validation frameworks
+
+### Phase 2: JavaScript Ecosystem 📦
+- **Target**: npm packages (package.json extensions)
+- **Planned**: Q2 2025
+- **Focus**: Node.js and browser-based package discovery
+
+### Phase 3: Systems Languages 🦀
+- **Rust**: Cargo.toml extensions for crates
+- **Go**: go.mod metadata enhancements  
+- **C/C++**: Package manager agnostic solutions
+
+### Phase 4: Enterprise Languages ☕
+- **Java**: Maven/Gradle integration
+- **C#**: NuGet package extensions
+- **Scala**: sbt compatibility
+
+### Universal Principles Across All Languages
+
+Regardless of the target language, every Miri implementation will provide:
+- **Structured Examples**: Language-appropriate code samples with complexity levels
+- **Rich Templates**: Boilerplate code with clear placeholders
+- **Contextual Metadata**: Dependencies, relationships, and learning paths
+- **Instant Discovery**: JSON schemas for immediate capability assessment
 
 ## Standards
 
