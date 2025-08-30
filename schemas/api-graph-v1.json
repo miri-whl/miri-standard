@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/api-graph-v1.json",
+  "title": "Miri Standard API Graph",
+  "description": "Schema for api-graph.json - API relationship mapping for advanced agent reasoning",
+  "type": "object",
+  "required": ["version", "nodes", "edges"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "nodes": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z_][A-Za-z0-9_]*$": {
+          "$ref": "#/definitions/graph_node"
+        }
+      },
+      "description": "API components as graph nodes"
+    },
+    "edges": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/graph_edge"},
+      "description": "Relationships between API components"
+    },
+    "workflows": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/workflow"},
+      "description": "Common usage workflows"
+    }
+  },
+  "definitions": {
+    "graph_node": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["class", "function", "method", "module", "constant"],
+          "description": "Type of API component"
+        },
+        "centrality": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Importance score (0-1)"
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Components this depends on"
+        },
+        "dependents": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Components that depend on this"
+        },
+        "common_with": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Components commonly used together"
+        },
+        "complexity": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"],
+          "description": "Usage complexity level"
+        }
+      }
+    },
+    "graph_edge": {
+      "type": "object",
+      "required": ["from", "to", "relationship"],
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "Source component name"
+        },
+        "to": {
+          "type": "string",
+          "description": "Target component name"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": ["uses", "returns", "creates", "extends", "implements", "calls"],
+          "description": "Type of relationship"
+        },
+        "methods": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Methods involved in relationship"
+        },
+        "pattern": {
+          "type": "string",
+          "description": "Usage pattern ID that demonstrates this relationship"
+        },
+        "frequency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How often this relationship is used (0-1)"
+        }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "required": ["id", "steps"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Unique workflow identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable workflow name"
+        },
+        "steps": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Ordered list of components/operations"
+        },
+        "frequency": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "How common this workflow is (0-1)"
+        },
+        "complexity": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"],
+          "description": "Workflow complexity"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,248 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/migration-guide-v1.json",
+  "title": "Miri Standard Migration Guide",
+  "description": "Schema for migration-guide.json - Structured version change documentation",
+  "type": "object",
+  "required": ["from_version", "to_version", "migration_type", "generated_at", "summary"],
+  "properties": {
+    "from_version": {
+      "type": "string",
+      "description": "Source version pattern (e.g., '1.1.x')",
+      "pattern": "^\\d+\\.\\d+(\\.\\d+|\\.[x*])?$"
+    },
+    "to_version": {
+      "type": "string", 
+      "description": "Target version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+.*$"
+    },
+    "migration_type": {
+      "type": "string",
+      "enum": ["major", "minor", "patch"],
+      "description": "Type of version change"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When migration guide was generated"
+    },
+    "summary": {
+      "$ref": "#/definitions/migration_summary",
+      "description": "High-level migration overview"
+    },
+    "breaking_changes": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/breaking_change"},
+      "description": "Changes that break backward compatibility"
+    },
+    "new_features": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/new_feature"},
+      "description": "New functionality added"
+    },
+    "deprecations": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/deprecation"},
+      "description": "Features marked for future removal"
+    },
+    "compatibility": {
+      "$ref": "#/definitions/compatibility_info",
+      "description": "Compatibility requirements and changes"
+    }
+  },
+  "definitions": {
+    "migration_summary": {
+      "type": "object",
+      "required": ["breaking_changes", "new_features", "deprecations"],
+      "properties": {
+        "breaking_changes": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of breaking changes"
+        },
+        "new_features": {
+          "type": "integer", 
+          "minimum": 0,
+          "description": "Number of new features"
+        },
+        "deprecations": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of deprecations"
+        },
+        "estimated_migration_time": {
+          "type": "string",
+          "description": "Estimated time to complete migration"
+        }
+      }
+    },
+    "breaking_change": {
+      "type": "object",
+      "required": ["id", "severity", "component", "change", "old_code", "new_code"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Unique change identifier"
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Impact severity"
+        },
+        "component": {
+          "type": "string",
+          "description": "Affected component (class, module, etc.)"
+        },
+        "change": {
+          "type": "string",
+          "description": "Description of what changed"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why the change was made"
+        },
+        "old_code": {
+          "type": "string",
+          "description": "Code before the change"
+        },
+        "new_code": {
+          "type": "string",
+          "description": "Code after the change"
+        },
+        "migration_steps": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Step-by-step migration instructions"
+        },
+        "automated_fix": {
+          "$ref": "#/definitions/automated_fix",
+          "description": "Automated migration information"
+        },
+        "affected_patterns": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Usage pattern IDs that need updates"
+        }
+      }
+    },
+    "new_feature": {
+      "type": "object",
+      "required": ["id", "name", "description"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Unique feature identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Feature name"
+        },
+        "description": {
+          "type": "string",
+          "description": "What the feature does"
+        },
+        "example": {
+          "type": "string",
+          "description": "Usage example"
+        },
+        "new_classes": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "New classes introduced"
+        },
+        "new_methods": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "New methods introduced"
+        },
+        "usage_patterns": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Related usage pattern IDs"
+        }
+      }
+    },
+    "deprecation": {
+      "type": "object",
+      "required": ["id", "deprecated", "replacement"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Unique deprecation identifier"
+        },
+        "deprecated": {
+          "type": "string",
+          "description": "What is being deprecated"
+        },
+        "replacement": {
+          "type": "string",
+          "description": "What to use instead"
+        },
+        "removal_version": {
+          "type": "string",
+          "description": "Version when feature will be removed"
+        },
+        "migration": {
+          "type": "string",
+          "description": "How to migrate to replacement"
+        }
+      }
+    },
+    "automated_fix": {
+      "type": "object",
+      "required": ["find_pattern", "replace_pattern", "confidence"],
+      "properties": {
+        "find_pattern": {
+          "type": "string",
+          "description": "Regex pattern to find old code"
+        },
+        "replace_pattern": {
+          "type": "string",
+          "description": "Replacement pattern"
+        },
+        "confidence": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Confidence in automated fix"
+        }
+      }
+    },
+    "compatibility_info": {
+      "type": "object",
+      "properties": {
+        "python_versions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Supported Python versions"
+        },
+        "dependencies": {
+          "$ref": "#/definitions/dependency_changes",
+          "description": "Dependency changes"
+        }
+      }
+    },
+    "dependency_changes": {
+      "type": "object",
+      "properties": {
+        "added": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "New dependencies"
+        },
+        "updated": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Updated dependencies"
+        },
+        "removed": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Removed dependencies"
+        }
+      }
+    }
+  }
+}

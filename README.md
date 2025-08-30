@@ -10,7 +10,7 @@
 
 > **Status**: 🚧 Incubation Phase - This project is in early development
 
-**Multi-language packaging standards for enhanced human-AI collaboration**
+**Multi-language packaging standards for enhanced human-agent collaboration**
 
 *Named after Miranda Serena Sharifi from Nancy Kress's "Beggars in Spain"*
 

@@ -1,0 +1,171 @@
+{
+  "sdk_version": "1.2.0",
+  "generated_at": "2025-08-30T12:00:00Z",
+  "miri_version": "1.0",
+  "quick_reference": {
+    "primary_classes": ["WeatherClient"],
+    "key_methods": ["get_current_weather", "get_forecast", "search_locations"],
+    "common_imports": [
+      "from weather_sdk import WeatherClient",
+      "from weather_sdk import WeatherError, AuthenticationError"
+    ],
+    "typical_workflow": [
+      "client = WeatherClient(api_key='your-key')",
+      "weather = client.get_current_weather('New York, NY')",
+      "forecast = client.get_forecast('New York, NY', days=5)",
+      "client.close()"
+    ]
+  },
+  "api_index": {
+    "WeatherClient": {
+      "type": "class",
+      "purpose": "Main weather API client for retrieving weather data and forecasts",
+      "complexity": "intermediate",
+      "init_params": {
+        "api_key": {
+          "type": "str",
+          "required": true,
+          "description": "Your weather API key for authentication",
+          "example": "your-api-key-here"
+        },
+        "base_url": {
+          "type": "str",
+          "required": false,
+          "default": "https://api.weather.example.com/v1",
+          "description": "Custom base URL for the weather service",
+          "example": "https://custom-weather-api.com"
+        },
+        "timeout": {
+          "type": "int",
+          "required": false,
+          "default": 30,
+          "description": "Request timeout in seconds",
+          "example": "60"
+        }
+      },
+      "key_methods": {
+        "get_current_weather": {
+          "purpose": "Get current weather conditions for a location",
+          "params": {
+            "location": {
+              "type": "str",
+              "required": true,
+              "description": "Location name (e.g., 'New York, NY' or 'London, UK')",
+              "example": "San Francisco, CA"
+            }
+          },
+          "returns": "WeatherData: Current weather information",
+          "raises": ["WeatherError", "AuthenticationError", "APIError"],
+          "example": "weather = client.get_current_weather('Boston, MA')",
+          "complexity": "beginner"
+        },
+        "get_forecast": {
+          "purpose": "Get weather forecast for a location",
+          "params": {
+            "location": {
+              "type": "str",
+              "required": true,
+              "description": "Location name",
+              "example": "Chicago, IL"
+            },
+            "days": {
+              "type": "int",
+              "required": false,
+              "default": 5,
+              "description": "Number of forecast days (1-10)",
+              "example": "7"
+            }
+          },
+          "returns": "ForecastData: Weather forecast information",
+          "raises": ["WeatherError", "AuthenticationError", "APIError", "ValueError"],
+          "example": "forecast = client.get_forecast('Miami, FL', days=7)",
+          "complexity": "beginner"
+        },
+        "search_locations": {
+          "purpose": "Search for locations matching a query",
+          "params": {
+            "query": {
+              "type": "str",
+              "required": true,
+              "description": "Search query",
+              "example": "New York"
+            },
+            "limit": {
+              "type": "int",
+              "required": false,
+              "default": 5,
+              "description": "Maximum number of results (1-20)",
+              "example": "10"
+            }
+          },
+          "returns": "List[Location]: Matching locations",
+          "raises": ["WeatherError", "AuthenticationError", "ValueError"],
+          "example": "locations = client.search_locations('London', limit=3)",
+          "complexity": "intermediate"
+        }
+      },
+      "usage_patterns": ["basic_weather", "forecast_retrieval", "location_search"],
+      "related_classes": ["WeatherData", "ForecastData", "Location"],
+      "common_errors": ["WeatherError", "AuthenticationError", "APIError"],
+      "example": "client = WeatherClient(api_key='key')\nweather = client.get_current_weather('NYC')"
+    },
+    "WeatherData": {
+      "type": "class",
+      "purpose": "Current weather conditions data model",
+      "complexity": "beginner",
+      "key_methods": {
+        "from_api_response": {
+          "purpose": "Create WeatherData from API response",
+          "params": {
+            "data": {
+              "type": "Dict[str, Any]",
+              "required": true,
+              "description": "Raw API response data"
+            }
+          },
+          "returns": "WeatherData: Parsed weather data",
+          "complexity": "advanced"
+        }
+      },
+      "usage_patterns": ["weather_data_access"],
+      "related_classes": ["Location"],
+      "example": "print(f'Temperature: {weather.temperature}°F')"
+    },
+    "ForecastData": {
+      "type": "class", 
+      "purpose": "Multi-day weather forecast data model",
+      "complexity": "beginner",
+      "usage_patterns": ["forecast_processing"],
+      "related_classes": ["DailyForecast", "Location"],
+      "example": "for day in forecast.days:\n    print(f'{day.date}: {day.high_temp}°F')"
+    }
+  },
+  "error_handling": {
+    "WeatherError": {
+      "when": "Base weather SDK error occurs",
+      "common_causes": ["Invalid location", "API service unavailable", "Network issues"],
+      "solutions": ["Check location spelling", "Verify API service status", "Check network connectivity"]
+    },
+    "AuthenticationError": {
+      "when": "API authentication fails",
+      "common_causes": ["Invalid API key", "Expired API key", "Missing API key"],
+      "solutions": ["Verify API key is correct", "Check API key expiration", "Ensure API key is provided"]
+    },
+    "APIError": {
+      "when": "Weather API returns an error",
+      "common_causes": ["Server error", "Rate limiting", "Malformed request"],
+      "solutions": ["Retry request", "Check rate limits", "Validate request parameters"]
+    }
+  },
+  "configuration": {
+    "environment_variables": {
+      "WEATHER_API_KEY": "Primary API key for authentication",
+      "WEATHER_BASE_URL": "Custom base URL override",
+      "WEATHER_TIMEOUT": "Request timeout override"
+    },
+    "config_files": {
+      "weather_config.yaml": "YAML configuration for multiple environments",
+      ".env": "Environment variables file"
+    }
+  }
+}

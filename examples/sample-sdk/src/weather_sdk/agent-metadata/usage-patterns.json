@@ -1,0 +1,195 @@
+{
+  "version": "1.0",
+  "generated_at": "2025-08-30T12:00:00Z",
+  "patterns": [
+    {
+      "id": "basic_weather",
+      "name": "Basic Weather Retrieval",
+      "description": "Standard pattern for getting current weather conditions",
+      "complexity": "beginner",
+      "category": "basic_usage",
+      "tags": ["weather", "current", "basic", "getting-started"],
+      "code": "from weather_sdk import WeatherClient\n\n# Initialize client with API key\nclient = WeatherClient(api_key=\"your-api-key\")\n\n# Get current weather\nweather = client.get_current_weather(\"New York, NY\")\nprint(f\"Temperature: {weather.temperature}°F\")\nprint(f\"Conditions: {weather.description}\")\nprint(f\"Humidity: {weather.humidity}%\")\n\n# Always close the client\nclient.close()",
+      "explanation": {
+        "steps": [
+          "Import the WeatherClient class",
+          "Create client instance with your API key",
+          "Call get_current_weather() with location",
+          "Access weather data properties",
+          "Close client to free resources"
+        ],
+        "key_points": [
+          "Always close the client when done",
+          "Use descriptive location names for best results",
+          "Handle potential exceptions for production use"
+        ]
+      },
+      "variations": [
+        {
+          "name": "With context manager",
+          "code": "with WeatherClient(api_key=\"your-key\") as client:\n    weather = client.get_current_weather(\"Boston, MA\")\n    print(f\"Temperature: {weather.temperature}°F\")\n# Client automatically closed",
+          "description": "Automatically handles client cleanup"
+        }
+      ],
+      "related_patterns": ["error_handling", "forecast_retrieval"],
+      "prerequisites": [],
+      "estimated_time": "2 minutes"
+    },
+    {
+      "id": "forecast_retrieval",
+      "name": "Weather Forecast Retrieval",
+      "description": "Get multi-day weather forecasts with customizable duration",
+      "complexity": "beginner",
+      "category": "basic_usage",
+      "tags": ["forecast", "multi-day", "planning"],
+      "code": "from weather_sdk import WeatherClient\n\nclient = WeatherClient(api_key=\"your-api-key\")\n\n# Get 5-day forecast (default)\nforecast = client.get_forecast(\"San Francisco, CA\")\nprint(f\"5-day forecast for {forecast.location.name}:\")\nfor day in forecast.days:\n    print(f\"{day.date}: {day.high_temp}°F / {day.low_temp}°F - {day.description}\")\n\n# Get extended 10-day forecast\nextended_forecast = client.get_forecast(\"Los Angeles, CA\", days=10)\nprint(f\"\\nExtended forecast: {len(extended_forecast.days)} days\")\n\nclient.close()",
+      "explanation": {
+        "steps": [
+          "Create WeatherClient instance",
+          "Call get_forecast() with location",
+          "Optionally specify number of days (1-10)",
+          "Iterate through forecast.days list",
+          "Access daily forecast properties"
+        ],
+        "key_points": [
+          "Default forecast is 5 days",
+          "Maximum forecast is 10 days",
+          "Each day includes high/low temps and conditions"
+        ]
+      },
+      "variations": [
+        {
+          "name": "With error handling",
+          "code": "try:\n    forecast = client.get_forecast(\"Miami, FL\", days=7)\n    for day in forecast.days:\n        print(f\"{day.date}: {day.high_temp}°F\")\nexcept ValueError as e:\n    print(f\"Invalid days parameter: {e}\")\nexcept WeatherError as e:\n    print(f\"Weather data unavailable: {e}\")"
+        }
+      ],
+      "related_patterns": ["basic_weather", "error_handling"],
+      "prerequisites": ["basic_weather"],
+      "estimated_time": "3 minutes"
+    },
+    {
+      "id": "error_handling",
+      "name": "Comprehensive Error Handling",
+      "description": "Robust error handling for all weather API operations",
+      "complexity": "intermediate",
+      "category": "error_management",
+      "tags": ["error", "exception", "robust", "production"],
+      "code": "from weather_sdk import WeatherClient, WeatherError, AuthenticationError, APIError\n\ndef get_weather_safely(location: str, api_key: str):\n    \"\"\"Get weather with comprehensive error handling.\"\"\"\n    try:\n        with WeatherClient(api_key=api_key) as client:\n            weather = client.get_current_weather(location)\n            return {\n                'success': True,\n                'temperature': weather.temperature,\n                'description': weather.description\n            }\n    \n    except AuthenticationError as e:\n        return {\n            'success': False,\n            'error': 'authentication',\n            'message': f\"API key issue: {e}\"\n        }\n    \n    except WeatherError as e:\n        return {\n            'success': False,\n            'error': 'weather_data',\n            'message': f\"Weather data unavailable: {e}\"\n        }\n    \n    except APIError as e:\n        return {\n            'success': False,\n            'error': 'api',\n            'message': f\"API error: {e}\"\n        }\n    \n    except Exception as e:\n        return {\n            'success': False,\n            'error': 'unexpected',\n            'message': f\"Unexpected error: {e}\"\n        }\n\n# Usage\nresult = get_weather_safely(\"Chicago, IL\", \"your-api-key\")\nif result['success']:\n    print(f\"Temperature: {result['temperature']}°F\")\nelse:\n    print(f\"Error ({result['error']}): {result['message']}\")",
+      "explanation": {
+        "steps": [
+          "Import all relevant exception types",
+          "Wrap API calls in try-except blocks",
+          "Handle specific exceptions before general ones",
+          "Return structured error information",
+          "Use context manager for automatic cleanup"
+        ],
+        "key_points": [
+          "Handle AuthenticationError for API key issues",
+          "Handle WeatherError for data-specific problems", 
+          "Handle APIError for network/server issues",
+          "Always include a general Exception handler",
+          "Return structured results for easier processing"
+        ]
+      },
+      "related_patterns": ["basic_weather", "forecast_retrieval", "batch_processing"],
+      "prerequisites": ["basic_weather"],
+      "estimated_time": "5 minutes"
+    },
+    {
+      "id": "location_search",
+      "name": "Location Search and Selection",
+      "description": "Search for locations and handle ambiguous location names",
+      "complexity": "intermediate",
+      "category": "location_handling",
+      "tags": ["search", "location", "disambiguation"],
+      "code": "from weather_sdk import WeatherClient\n\ndef find_and_get_weather(search_query: str, api_key: str):\n    \"\"\"Search for locations and get weather for the best match.\"\"\"\n    with WeatherClient(api_key=api_key) as client:\n        # Search for matching locations\n        locations = client.search_locations(search_query, limit=5)\n        \n        if not locations:\n            print(f\"No locations found for '{search_query}'\")\n            return None\n        \n        # Show options if multiple matches\n        if len(locations) > 1:\n            print(f\"Multiple locations found for '{search_query}':\")\n            for i, loc in enumerate(locations, 1):\n                print(f\"{i}. {loc.name} ({loc.country})\")\n            \n            # Use first match for demo (in real app, let user choose)\n            selected = locations[0]\n            print(f\"Using: {selected.name}\")\n        else:\n            selected = locations[0]\n        \n        # Get weather for selected location\n        weather = client.get_current_weather(selected.name)\n        return {\n            'location': selected.name,\n            'temperature': weather.temperature,\n            'description': weather.description\n        }\n\n# Usage examples\nresult = find_and_get_weather(\"London\", \"your-api-key\")\nif result:\n    print(f\"{result['location']}: {result['temperature']}°F, {result['description']}\")",
+      "explanation": {
+        "steps": [
+          "Search for locations using search_locations()",
+          "Handle cases with no matches",
+          "Present options when multiple matches found",
+          "Select appropriate location",
+          "Get weather for selected location"
+        ],
+        "key_points": [
+          "Always handle empty search results",
+          "Consider user experience with multiple matches",
+          "Use exact location names for weather requests"
+        ]
+      },
+      "related_patterns": ["basic_weather", "error_handling"],
+      "prerequisites": ["basic_weather"],
+      "estimated_time": "4 minutes"
+    },
+    {
+      "id": "batch_processing",
+      "name": "Batch Weather Processing",
+      "description": "Efficiently process weather data for multiple locations",
+      "complexity": "advanced",
+      "category": "performance",
+      "tags": ["batch", "multiple", "performance", "concurrent"],
+      "code": "from weather_sdk import WeatherClient, WeatherError\nfrom concurrent.futures import ThreadPoolExecutor, as_completed\nfrom typing import List, Dict\n\ndef get_weather_for_location(client: WeatherClient, location: str) -> Dict:\n    \"\"\"Get weather for a single location with error handling.\"\"\"\n    try:\n        weather = client.get_current_weather(location)\n        return {\n            'location': location,\n            'success': True,\n            'temperature': weather.temperature,\n            'description': weather.description\n        }\n    except WeatherError as e:\n        return {\n            'location': location,\n            'success': False,\n            'error': str(e)\n        }\n\ndef get_batch_weather(locations: List[str], api_key: str, max_workers: int = 5) -> List[Dict]:\n    \"\"\"Get weather for multiple locations concurrently.\"\"\"\n    results = []\n    \n    with WeatherClient(api_key=api_key) as client:\n        # Process locations concurrently\n        with ThreadPoolExecutor(max_workers=max_workers) as executor:\n            # Submit all tasks\n            future_to_location = {\n                executor.submit(get_weather_for_location, client, loc): loc \n                for loc in locations\n            }\n            \n            # Collect results as they complete\n            for future in as_completed(future_to_location):\n                result = future.result()\n                results.append(result)\n                \n                # Progress feedback\n                if result['success']:\n                    print(f\"✓ {result['location']}: {result['temperature']}°F\")\n                else:\n                    print(f\"✗ {result['location']}: {result['error']}\")\n    \n    return results\n\n# Usage\ncities = [\n    \"New York, NY\", \"Los Angeles, CA\", \"Chicago, IL\", \n    \"Houston, TX\", \"Phoenix, AZ\", \"Philadelphia, PA\"\n]\n\nresults = get_batch_weather(cities, \"your-api-key\")\n\n# Summary\nsuccess_count = sum(1 for r in results if r['success'])\nprint(f\"\\nProcessed {len(results)} locations, {success_count} successful\")",
+      "explanation": {
+        "steps": [
+          "Create helper function for single location processing",
+          "Use ThreadPoolExecutor for concurrent requests",
+          "Submit all tasks and collect results",
+          "Handle both successful and failed requests",
+          "Provide progress feedback during processing"
+        ],
+        "key_points": [
+          "Concurrent processing improves performance",
+          "Always handle individual request failures",
+          "Limit concurrent workers to avoid rate limits",
+          "Provide user feedback for long operations"
+        ],
+        "performance_note": "Concurrent requests can significantly speed up batch processing but may hit API rate limits"
+      },
+      "related_patterns": ["error_handling", "basic_weather"],
+      "prerequisites": ["basic_weather", "error_handling"],
+      "estimated_time": "8 minutes"
+    }
+  ],
+  "categories": {
+    "basic_usage": {
+      "name": "Basic Usage",
+      "description": "Essential patterns for getting started with the Weather SDK",
+      "patterns": ["basic_weather", "forecast_retrieval"]
+    },
+    "error_management": {
+      "name": "Error Management",
+      "description": "Robust error handling and recovery patterns",
+      "patterns": ["error_handling"]
+    },
+    "location_handling": {
+      "name": "Location Handling",
+      "description": "Working with locations and resolving ambiguous names",
+      "patterns": ["location_search"]
+    },
+    "performance": {
+      "name": "Performance Optimization",
+      "description": "Patterns for efficient and scalable weather data processing",
+      "patterns": ["batch_processing"]
+    }
+  },
+  "learning_paths": {
+    "beginner": {
+      "name": "Getting Started Path",
+      "description": "Essential patterns for new Weather SDK users",
+      "patterns": ["basic_weather", "forecast_retrieval", "error_handling"],
+      "estimated_total_time": "10 minutes"
+    },
+    "production": {
+      "name": "Production Ready Path", 
+      "description": "Patterns for robust production deployment",
+      "patterns": ["error_handling", "location_search", "batch_processing"],
+      "estimated_total_time": "17 minutes"
+    },
+    "complete": {
+      "name": "Complete Weather SDK Guide",
+      "description": "Full progression from basics to advanced usage",
+      "patterns": ["basic_weather", "forecast_retrieval", "error_handling", "location_search", "batch_processing"],
+      "estimated_total_time": "22 minutes"
+    }
+  }
+}

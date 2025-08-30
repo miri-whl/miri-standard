@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/sdk-manifest-v1.json",
+  "title": "Miri Standard SDK Manifest",
+  "description": "Schema for sdk-manifest.json - Core API index with structured signatures and metadata",
+  "type": "object",
+  "required": ["sdk_version", "generated_at", "miri_version", "quick_reference", "api_index"],
+  "properties": {
+    "sdk_version": {
+      "type": "string",
+      "description": "Version of the SDK package",
+      "pattern": "^\\d+\\.\\d+\\.\\d+.*$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp when metadata was generated"
+    },
+    "miri_version": {
+      "type": "string",
+      "description": "Version of Miri Standard used",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "quick_reference": {
+      "type": "object",
+      "required": ["primary_classes", "key_methods", "common_imports"],
+      "properties": {
+        "primary_classes": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Main classes agents should know about"
+        },
+        "key_methods": {
+          "type": "array", 
+          "items": {"type": "string"},
+          "description": "Most important methods across all classes"
+        },
+        "common_imports": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Standard import statements for the SDK"
+        },
+        "typical_workflow": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Common sequence of operations"
+        }
+      }
+    },
+    "api_index": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z_][A-Za-z0-9_]*$": {
+          "$ref": "#/definitions/api_component"
+        }
+      },
+      "description": "Index of all public API components"
+    },
+    "error_handling": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z_][A-Za-z0-9_]*$": {
+          "$ref": "#/definitions/error_info"
+        }
+      },
+      "description": "Common errors and their handling"
+    },
+    "configuration": {
+      "type": "object",
+      "properties": {
+        "environment_variables": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Z_][A-Z0-9_]*$": {"type": "string"}
+          },
+          "description": "Environment variables used by the SDK"
+        },
+        "config_files": {
+          "type": "object",
+          "patternProperties": {
+            ".*": {"type": "string"}
+          },
+          "description": "Configuration files and their purposes"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "api_component": {
+      "type": "object",
+      "required": ["type", "purpose"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["class", "function", "module", "constant"]
+        },
+        "purpose": {
+          "type": "string",
+          "description": "What this component does"
+        },
+        "complexity": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"],
+          "description": "Complexity level for users"
+        },
+        "init_params": {
+          "$ref": "#/definitions/parameters",
+          "description": "Constructor parameters for classes"
+        },
+        "key_methods": {
+          "type": "object",
+          "patternProperties": {
+            "^[a-z_][a-z0-9_]*$": {
+              "$ref": "#/definitions/method_info"
+            }
+          }
+        },
+        "usage_patterns": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "IDs of relevant usage patterns"
+        },
+        "related_classes": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Names of related API components"
+        },
+        "common_errors": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Common exception types"
+        },
+        "example": {
+          "type": "string",
+          "description": "Quick usage example"
+        },
+        "file": {
+          "type": "string",
+          "description": "Source file path"
+        }
+      }
+    },
+    "method_info": {
+      "type": "object",
+      "required": ["purpose"],
+      "properties": {
+        "purpose": {
+          "type": "string",
+          "description": "What this method does"
+        },
+        "params": {
+          "$ref": "#/definitions/parameters"
+        },
+        "returns": {
+          "type": "string",
+          "description": "Return type and description"
+        },
+        "raises": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Exception types that may be raised"
+        },
+        "example": {
+          "type": "string",
+          "description": "Usage example"
+        },
+        "complexity": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"]
+        }
+      }
+    },
+    "parameters": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_][a-z0-9_]*$": {
+          "$ref": "#/definitions/parameter_info"
+        }
+      }
+    },
+    "parameter_info": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "Parameter type (e.g., 'str', 'int', 'List[str]')"
+        },
+        "required": {
+          "type": "boolean",
+          "default": true,
+          "description": "Whether parameter is required"
+        },
+        "default": {
+          "description": "Default value if not required"
+        },
+        "description": {
+          "type": "string",
+          "description": "Parameter description"
+        },
+        "example": {
+          "type": "string",
+          "description": "Example value"
+        }
+      }
+    },
+    "error_info": {
+      "type": "object",
+      "required": ["when", "common_causes"],
+      "properties": {
+        "when": {
+          "type": "string",
+          "description": "When this error occurs"
+        },
+        "common_causes": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Common causes of this error"
+        },
+        "solutions": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "How to fix this error"
+        }
+      }
+    }
+  }
+}

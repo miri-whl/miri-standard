@@ -26,6 +26,19 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **Contextual Metadata**: Relationships, prerequisites, and capability descriptions
 - **Instant Discovery**: JSON schemas enabling immediate package comprehension
 
+## Language-Specific Standards
+
+### Python Standards
+- **[Python Overview](python/)** - Complete Python packaging documentation and Miri extensions
+- **[Wheel Format Specification](python/wheel-format.md)** - Comprehensive documentation of current .whl format
+- **[Packaging Standards Overview](python/packaging-standards.md)** - Summary of existing Python packaging standards and PEPs
+- **[Metadata Standards](python/metadata-standards.md)** *(Planned)*
+
+### Future Language Standards
+- **JavaScript/npm** *(Planned for Q2 2025)*
+- **Rust/Cargo** *(Planned)*
+- **Go Modules** *(Planned)*
+
 ## Specification Status
 
 ### Published Standards
@@ -34,7 +47,11 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 
 ### Draft Standards
 
-*(Draft standards will be listed here as development progresses)*
+- **[Python Wheel Format Documentation](python/wheel-format.md)** - Complete reference for current wheel format
+- **[Python Packaging Standards](python/packaging-standards.md)** - Overview of existing Python packaging ecosystem
+- **[Miri Wheel Extensions](python/miri-wheel-extensions.md)** - Agent-friendly Python wheel format extensions specification
+- **[Agent Metadata Specification](python/agent-metadata-specification.md)** - Pre-parsed metadata formats for performance optimization
+- **[Python Implementation Guide](python/implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
 
 ### Proposed Standards
 

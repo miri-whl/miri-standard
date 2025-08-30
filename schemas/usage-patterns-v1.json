@@ -1,0 +1,193 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/usage-patterns-v1.json",
+  "title": "Miri Standard Usage Patterns",
+  "description": "Schema for usage-patterns.json - Pre-extracted, categorized code patterns",
+  "type": "object",
+  "required": ["version", "generated_at", "patterns"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When patterns were generated"
+    },
+    "patterns": {
+      "type": "array",
+      "items": {"$ref": "#/definitions/usage_pattern"},
+      "description": "List of usage patterns"
+    },
+    "categories": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_][a-z0-9_]*$": {
+          "$ref": "#/definitions/category"
+        }
+      },
+      "description": "Pattern categories"
+    },
+    "learning_paths": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-z_][a-z0-9_]*$": {
+          "$ref": "#/definitions/learning_path"
+        }
+      },
+      "description": "Structured learning progressions"
+    }
+  },
+  "definitions": {
+    "usage_pattern": {
+      "type": "object",
+      "required": ["id", "name", "description", "complexity", "category", "code"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z_][a-z0-9_]*$",
+          "description": "Unique pattern identifier"
+        },
+        "name": {
+          "type": "string",
+          "description": "Human-readable pattern name"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this pattern demonstrates"
+        },
+        "complexity": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"],
+          "description": "Difficulty level"
+        },
+        "category": {
+          "type": "string",
+          "description": "Pattern category"
+        },
+        "tags": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Searchable tags"
+        },
+        "code": {
+          "type": "string",
+          "description": "Complete, runnable code example"
+        },
+        "explanation": {
+          "$ref": "#/definitions/explanation",
+          "description": "Detailed explanation of the pattern"
+        },
+        "variations": {
+          "type": "array",
+          "items": {"$ref": "#/definitions/code_variation"},
+          "description": "Alternative implementations"
+        },
+        "related_patterns": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "IDs of related patterns"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Required knowledge or patterns"
+        },
+        "estimated_time": {
+          "type": "string",
+          "description": "Time to understand/implement"
+        }
+      }
+    },
+    "explanation": {
+      "type": "object",
+      "properties": {
+        "steps": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Step-by-step breakdown"
+        },
+        "key_points": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Important concepts to understand"
+        },
+        "security_note": {
+          "type": "string",
+          "description": "Security considerations"
+        },
+        "performance_note": {
+          "type": "string",
+          "description": "Performance considerations"
+        },
+        "parameter_styles": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Different parameter formats supported"
+        }
+      }
+    },
+    "code_variation": {
+      "type": "object",
+      "required": ["name", "code"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Variation name"
+        },
+        "code": {
+          "type": "string",
+          "description": "Alternative code implementation"
+        },
+        "description": {
+          "type": "string",
+          "description": "When to use this variation"
+        }
+      }
+    },
+    "category": {
+      "type": "object",
+      "required": ["name", "description", "patterns"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Category display name"
+        },
+        "description": {
+          "type": "string",
+          "description": "What patterns in this category cover"
+        },
+        "patterns": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Pattern IDs in this category"
+        }
+      }
+    },
+    "learning_path": {
+      "type": "object",
+      "required": ["name", "description", "patterns"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Learning path name"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this path teaches"
+        },
+        "patterns": {
+          "type": "array",
+          "items": {"type": "string"},
+          "description": "Ordered list of pattern IDs"
+        },
+        "estimated_total_time": {
+          "type": "string",
+          "description": "Total time for complete path"
+        }
+      }
+    }
+  }
+}
