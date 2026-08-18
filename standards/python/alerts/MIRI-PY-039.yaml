@@ -1,0 +1,24 @@
+# MIRI-PY-039 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-039
+name: Prompt templates valid
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Discovery & Degradation
+weight: 1
+conditional: false
+severity:
+  default: LOW
+  violation_unit: the prompt-templates file
+short_description: '`prompt-templates.md`, if present, follows the specified structure'
+long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
+  This check verifies: `prompt-templates.md`, if present, follows the specified structure.'
+examples:
+  violation: prompt-templates.md has no Quick Start section
+  compliant: prompt-templates.md follows the Agent Metadata Specification §4.4 structure
+suggested_fix: Follow the structure in the Agent Metadata Specification §4.4.
+references:
+- title: Agent Metadata §4.4
+  url: agent-metadata-specification.md
+  type: spec

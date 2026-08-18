@@ -1,0 +1,24 @@
+# MIRI-PY-038 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-038
+name: Templates coherent
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Discovery & Degradation
+weight: 2
+conditional: false
+severity:
+  default: LOW
+  violation_unit: each index/template mismatch
+short_description: '`TEMPLATES.json` entries ↔ template files; placeholders documented'
+long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
+  This check verifies: `TEMPLATES.json` entries ↔ template files; placeholders documented.'
+examples:
+  violation: TEMPLATES.json lists a template file that is missing
+  compliant: TEMPLATES.json matches the template files; every placeholder is documented
+suggested_fix: Regenerate the template index; document every placeholder.
+references:
+- title: Miri Wheel Ext. §4.4
+  url: miri-wheel-extensions.md
+  type: spec

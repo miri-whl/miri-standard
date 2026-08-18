@@ -1,0 +1,25 @@
+# MIRI-CLI-026 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-026
+name: Passive by default
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Update & Changelog
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each implicit update check
+short_description: No implicit update check on normal invocations; nothing printed to other commands' stdout
+long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
+  passive, and honest offline. This check verifies: No implicit update check on normal invocations; nothing printed to other
+  commands'' stdout.'
+examples:
+  violation: Every invocation phones home and prints an upgrade banner
+  compliant: tool list makes no update-related network calls; update state only via check-update
+suggested_fix: 'Make update checks passive: only on explicit check-update.'
+references:
+- title: CLI Spec §5.1
+  url: cli-lifecycle-specification.md
+  type: spec

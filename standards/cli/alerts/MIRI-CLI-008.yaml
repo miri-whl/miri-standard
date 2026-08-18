@@ -1,0 +1,24 @@
+# MIRI-CLI-008 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-008
+name: JSON everywhere
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Machine Output
+weight: 4
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each command without JSON output
+short_description: Every command supports JSON output
+long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
+  turns. This check verifies: Every command supports JSON output.'
+examples:
+  violation: '''tool status'' has no machine-readable form'
+  compliant: Every command accepts --json and emits a machine-readable document
+suggested_fix: Support the JSON output flag on every command.
+references:
+- title: CLI Spec §2.5
+  url: cli-lifecycle-specification.md
+  type: spec

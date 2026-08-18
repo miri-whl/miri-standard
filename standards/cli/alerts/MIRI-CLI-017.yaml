@@ -1,0 +1,24 @@
+# MIRI-CLI-017 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-017
+name: Version coherence
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the identity declaration
+short_description: '`identity.version` equals the binary''s actual `--version`'
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: `identity.version` equals the binary''s actual `--version`.'
+examples:
+  violation: --describe says 3.2.0 but --version prints 3.4.0
+  compliant: identity.version equals the output of tool --version
+suggested_fix: Derive both from the single version source in the build.
+references:
+- title: CLI Spec §9-1
+  url: cli-lifecycle-specification.md
+  type: spec

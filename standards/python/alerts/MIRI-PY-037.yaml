@@ -1,0 +1,24 @@
+# MIRI-PY-037 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-037
+name: Embedded docs present
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Discovery & Degradation
+weight: 2
+conditional: false
+severity:
+  default: LOW
+  violation_unit: the docs directory
+short_description: '`docs/` directory with API reference and troubleshooting'
+long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
+  This check verifies: `docs/` directory with API reference and troubleshooting.'
+examples:
+  violation: No embedded docs/ directory
+  compliant: docs/ ships api_reference.md and troubleshooting.md inside the package
+suggested_fix: Embed api_reference.md and troubleshooting.md in the package.
+references:
+- title: Miri Wheel Ext. §5.3
+  url: miri-wheel-extensions.md
+  type: spec

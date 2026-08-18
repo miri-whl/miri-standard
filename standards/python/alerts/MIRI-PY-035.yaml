@@ -1,0 +1,25 @@
+# MIRI-PY-035 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-035
+name: Runtime warnings fire
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Deprecation & Lifecycle Coherence
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each silent deprecated interface
+short_description: Importing/calling deprecated interfaces emits `DeprecationWarning`
+long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
+  inventoried in metadata, and never resolved by silent removal. This check verifies: Importing/calling deprecated interfaces
+  emits `DeprecationWarning`.'
+examples:
+  violation: Calling legacy_connect() emits no DeprecationWarning
+  compliant: Calling legacy_connect() emits DeprecationWarning at runtime
+suggested_fix: Ensure the PEP 702 decorator (or warnings call) fires at runtime.
+references:
+- title: PEP 565
+  url: https://peps.python.org/pep-0565/
+  type: external

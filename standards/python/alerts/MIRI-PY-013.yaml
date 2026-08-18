@@ -1,0 +1,22 @@
+# MIRI-PY-013 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-013
+name: JSON hygiene
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Agent Metadata Core
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each malformed file
+short_description: All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments)
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: All
+  metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments).'
+examples:
+  violation: usage-patterns.json contains NaN as a value
+  compliant: All metadata files parse as strict UTF-8 JSON with no NaN/Infinity
+suggested_fix: 'Emit strict RFC 8259 JSON: UTF-8, no NaN/Infinity, no comments.'
+references: []

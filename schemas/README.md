@@ -27,6 +27,10 @@ consistency and enable automated validation of agent metadata.
   - Required fields: `version`, `nodes`, `edges`
   - Validates graph structure and workflow definitions
 
+- **[alert-v1.json](alert-v1.json)** - Schema for the per-check alert definitions in `standards/<target>/alerts/`
+  - Committee-owned check metadata: level, weight, severity, violation unit, example, fix, references
+  - The severity vocabulary (LOW/MINOR/MEDIUM/HIGH/CRITICAL, 1-5) is normative for health scoring
+
 - **[lifecycle-v1.json](lifecycle-v1.json)** - Schema for `lifecycle.json`
   - Package identity (purl), advisory sources, update check, and support status
   - Required fields: `miri_lifecycle_version`, `generated_at`, `identity`, `advisory_sources`, `update_check`, `support`

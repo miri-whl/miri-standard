@@ -1,0 +1,24 @@
+# MIRI-CLI-028 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-028
+name: Security urgency
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Update & Changelog
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the urgency signal
+short_description: '`urgency: security` set when an advisory covers the running version'
+long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
+  passive, and honest offline. This check verifies: `urgency: security` set when an advisory covers the running version.'
+examples:
+  violation: A known advisory covers the running version but urgency is 'routine'
+  compliant: 'urgency: security with advisories: ["ACME-2026-0007"] when the running version is affected'
+suggested_fix: 'Set urgency: security whenever an advisory affects the running version.'
+references:
+- title: CLI Spec §5.1
+  url: cli-lifecycle-specification.md
+  type: spec

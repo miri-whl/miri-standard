@@ -1,0 +1,24 @@
+# MIRI-CLI-027 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-027
+name: Offline degradation
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Update & Changelog
+weight: 1
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: the offline behavior
+short_description: 'Offline returns `update_available: null`, exit 0 — not an error'
+long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
+  passive, and honest offline. This check verifies: Offline returns `update_available: null`, exit 0 — not an error.'
+examples:
+  violation: check-update exits 1 when the manifest is unreachable
+  compliant: 'Offline, check-update returns update_available: null with exit 0'
+suggested_fix: 'Return update_available: null with exit 0 when offline.'
+references:
+- title: CLI Spec §5.1
+  url: cli-lifecycle-specification.md
+  type: spec

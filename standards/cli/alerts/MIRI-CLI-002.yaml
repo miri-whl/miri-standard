@@ -1,0 +1,25 @@
+# MIRI-CLI-002 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-002
+name: Conforming --help
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Baseline Conventions
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the --help behavior
+short_description: '`--help` prints to stdout, exits 0, never pages or blocks'
+long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
+  invisible or hangs silently in a non-interactive context. This check verifies: `--help` prints to stdout, exits 0, never
+  pages or blocks.'
+examples:
+  violation: git-style help opens a pager and blocks in CI
+  compliant: tool --help prints usage to stdout and exits 0, even in a pipe
+suggested_fix: Print help to stdout, exit 0, never invoke a pager.
+references:
+- title: GNU Coding Standards §4.7
+  url: https://www.gnu.org/prep/standards/html_node/_002d_002dhelp.html
+  type: external

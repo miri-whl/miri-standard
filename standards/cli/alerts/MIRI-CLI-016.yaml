@@ -1,0 +1,28 @@
+# MIRI-CLI-016 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-016
+name: Identity purl
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 3
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: the identity declaration
+short_description: '`identity.purl` present, well-formed, matches distribution channel'
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: `identity.purl` present, well-formed, matches distribution
+  channel.'
+examples:
+  violation: --describe carries no purl
+  compliant: 'identity.purl: pkg:brew/acme-cli@3.2.0 matches the Homebrew distribution channel'
+suggested_fix: Declare identity.purl using the distribution channel's purl type.
+references:
+- title: CLI Spec §3.1
+  url: cli-lifecycle-specification.md
+  type: spec
+- title: purl spec
+  url: https://github.com/package-url/purl-spec
+  type: external

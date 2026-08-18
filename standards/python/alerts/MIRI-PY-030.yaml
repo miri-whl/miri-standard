@@ -1,0 +1,25 @@
+# MIRI-PY-030 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-030
+name: No silent removals
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 5
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each silently removed interface
+short_description: Every public interface removed since the prior release was listed in an earlier release's `deprecations`
+long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
+  inventoried in metadata, and never resolved by silent removal. This check verifies: Every public interface removed since
+  the prior release was listed in an earlier release''s `deprecations`.'
+examples:
+  violation: execute() vanished in 2.0.0 without ever being listed as deprecated
+  compliant: execute() was deprecated in 1.8, warned for two releases, and removed in 2.0
+suggested_fix: 'Deprecate first: marker + inventory entry + grace period, then remove.'
+references:
+- title: Lifecycle §6.4-2
+  url: lifecycle-security-metadata.md
+  type: spec

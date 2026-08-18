@@ -1,0 +1,28 @@
+# MIRI-CLI-006 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-006
+name: Non-interactive default
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Baseline Conventions
+weight: 3
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each blocking prompt
+short_description: No command blocks on a prompt when stdin is not a TTY
+long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
+  invisible or hangs silently in a non-interactive context. This check verifies: No command blocks on a prompt when stdin
+  is not a TTY.'
+examples:
+  violation: '''tool init'' waits on ''Continue? [y/N]'' with stdin closed'
+  compliant: With stdin closed, tool init fails fast with a structured error naming --yes
+suggested_fix: Never prompt when stdin is not a TTY; fail fast or take flags.
+references:
+- title: CLI Spec §2.5
+  url: cli-lifecycle-specification.md
+  type: spec
+- title: anc.dev
+  url: https://anc.dev/
+  type: external

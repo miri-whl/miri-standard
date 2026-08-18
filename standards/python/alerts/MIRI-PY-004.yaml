@@ -1,0 +1,28 @@
+# MIRI-PY-004 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-004
+name: Declarative build config
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Packaging Baseline
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: the build configuration
+short_description: '`pyproject.toml` with `[project]` table drives the build'
+long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
+  baseline cannot carry trustworthy agent metadata. This check verifies: `pyproject.toml` with `[project]` table drives
+  the build.'
+examples:
+  violation: Package metadata lives only in setup.py
+  compliant: The [project] table in pyproject.toml declares name, version, and dependencies
+suggested_fix: Move project metadata to the [project] table of pyproject.toml.
+references:
+- title: PEP 621
+  url: https://peps.python.org/pep-0621/
+  type: external
+- title: PEP 517
+  url: https://peps.python.org/pep-0517/
+  type: external

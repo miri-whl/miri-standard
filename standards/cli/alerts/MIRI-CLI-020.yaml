@@ -1,0 +1,24 @@
+# MIRI-CLI-020 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-020
+name: Support block
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: the support declaration
+short_description: '`support` present with valid `status`'
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: `support` present with valid `status`.'
+examples:
+  violation: --describe has no support block
+  compliant: 'support.status: active with supported_versions declared'
+suggested_fix: Add support with a valid status per CLI Spec §3.2.
+references:
+- title: CLI Spec §3.2
+  url: cli-lifecycle-specification.md
+  type: spec

@@ -1,0 +1,24 @@
+# MIRI-PY-036 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-036
+name: Discovery APIs work
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Discovery & Degradation
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: the discovery API surface
+short_description: Package-level discovery functions importable and return coherent data
+long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
+  This check verifies: Package-level discovery functions importable and return coherent data.'
+examples:
+  violation: miri_overview() raises AttributeError
+  compliant: miri_overview() returns the package summary from the generated metadata
+suggested_fix: Implement the package-level discovery functions over the generated metadata.
+references:
+- title: Miri Wheel Ext. §6
+  url: miri-wheel-extensions.md
+  type: spec

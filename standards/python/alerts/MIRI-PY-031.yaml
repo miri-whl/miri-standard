@@ -1,0 +1,25 @@
+# MIRI-PY-031 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-031
+name: Replacements resolve
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each unresolvable replacement
+short_description: Every `deprecations[].replacement` exists in the new `sdk-manifest.json`
+long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
+  inventoried in metadata, and never resolved by silent removal. This check verifies: Every `deprecations[].replacement`
+  exists in the new `sdk-manifest.json`.'
+examples:
+  violation: deprecations names replacement query_v2() which is not in sdk-manifest.json
+  compliant: replacement query() exists in the 2.0.0 sdk-manifest.json
+suggested_fix: Point replacement at an interface that exists in the release performing the removal.
+references:
+- title: Lifecycle §6.4-3
+  url: lifecycle-security-metadata.md
+  type: spec

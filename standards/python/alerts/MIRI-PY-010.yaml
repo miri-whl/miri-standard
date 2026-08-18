@@ -1,0 +1,28 @@
+# MIRI-PY-010 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-010
+name: api-graph.json valid
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Agent Metadata Core
+weight: 1
+conditional: false
+severity:
+  default: LOW
+  violation_unit: each schema violation in api-graph.json
+short_description: If present, validates against schema
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: If
+  present, validates against schema.'
+examples:
+  violation: An edge references a node that does not exist
+  compliant: api-graph.json validates; every edge references an existing node
+suggested_fix: Regenerate api-graph.json or fix the dangling edge.
+references:
+- title: Agent Metadata §4.5
+  url: agent-metadata-specification.md
+  type: spec
+- title: schema
+  url: ../../schemas/api-graph-v1.json
+  type: spec

@@ -1,0 +1,24 @@
+# MIRI-PY-016 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-016
+name: Example index coherent
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Examples
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each index/file mismatch
+short_description: '`AGENT_EXAMPLES.json` entries ↔ files on disk, both directions'
+long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
+  lesson at machine speed. This check verifies: `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions.'
+examples:
+  violation: AGENT_EXAMPLES.json lists auth.py but the file does not exist
+  compliant: AGENT_EXAMPLES.json entries match the example files one-to-one, both directions
+suggested_fix: Regenerate the example index from the files on disk.
+references:
+- title: Miri Wheel Ext. §4.1
+  url: miri-wheel-extensions.md
+  type: spec

@@ -1,0 +1,25 @@
+# MIRI-PY-020 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-020
+name: Distribution & registry declared
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Security
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: the identity declaration
+short_description: '`distribution` set; `registry` a well-formed index URL'
+long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
+  databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: `distribution`
+  set; `registry` a well-formed index URL.'
+examples:
+  violation: distribution is missing so consumers cannot pick §4/§5 defaults
+  compliant: 'distribution: open-source with registry https://pypi.org/simple/'
+suggested_fix: Declare distribution (open-source or private) and the publishing registry URL.
+references:
+- title: Lifecycle §3.1
+  url: lifecycle-security-metadata.md
+  type: spec

@@ -1,0 +1,180 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/alert-v1.json",
+  "title": "Miri Standard Alert Definition",
+  "description": "Schema for the per-alert definition files in standards/<target>/alerts/ - the committee-owned, machine-readable source of truth for every check, consumed by linter implementations",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "target",
+    "status",
+    "added_in",
+    "level",
+    "category",
+    "weight",
+    "conditional",
+    "severity",
+    "short_description",
+    "long_description",
+    "examples",
+    "suggested_fix",
+    "references"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable check ID; never renumbered. Extension (health-only) checks use the MIRI-PYX-/MIRI-CLIX- namespaces.",
+      "pattern": "^MIRI-(PY|CLI|PYX|CLIX)-\\d{3}$"
+    },
+    "name": {
+      "type": "string",
+      "description": "Short human-readable name of the check",
+      "maxLength": 80
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "python-wheel",
+        "cli"
+      ],
+      "description": "Artifact type this alert applies to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "withdrawn"
+      ],
+      "description": "Withdrawn checks keep their file and ID; their weight is redistributed in a minor version"
+    },
+    "added_in": {
+      "type": "string",
+      "description": "Checklist version that introduced this check"
+    },
+    "withdrawn_in": {
+      "type": "string",
+      "description": "Checklist version that withdrew this check; required when status is withdrawn"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "MUST",
+        "SHOULD"
+      ],
+      "description": "MUST failures make the artifact non-conforming (score capped at 74)"
+    },
+    "category": {
+      "type": "string",
+      "description": "Checklist category the check belongs to"
+    },
+    "weight": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 10,
+      "description": "Conformance-score weight; all active weights per target sum to exactly 100. Extension (X-namespace) checks carry weight 0."
+    },
+    "conditional": {
+      "type": "boolean",
+      "description": "Conditional checks score their full weight automatically when the condition does not apply"
+    },
+    "severity": {
+      "type": "object",
+      "description": "Committee-assigned severity for health scoring; implementations MUST use these values, not their own",
+      "required": [
+        "default",
+        "violation_unit"
+      ],
+      "properties": {
+        "default": {
+          "type": "string",
+          "enum": [
+            "LOW",
+            "MINOR",
+            "MEDIUM",
+            "HIGH",
+            "CRITICAL"
+          ],
+          "description": "Severity of each violation of this check (numeric values 1-5 in the same order)"
+        },
+        "violation_unit": {
+          "type": "string",
+          "description": "What counts as one violation - the countable unit that feeds magnitude-aware health scoring"
+        }
+      },
+      "additionalProperties": false
+    },
+    "short_description": {
+      "type": "string",
+      "description": "One-line statement of what the check verifies"
+    },
+    "long_description": {
+      "type": "string",
+      "description": "Rationale and full definition"
+    },
+    "suggested_fix": {
+      "type": "string",
+      "description": "How to resolve a violation"
+    },
+    "references": {
+      "type": "array",
+      "description": "Standards trail: the specs and external standards this check derives from",
+      "items": {
+        "type": "object",
+        "required": [
+          "title",
+          "url",
+          "type"
+        ],
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "spec",
+              "external"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "examples": {
+      "type": "object",
+      "description": "Concrete examples of the check failing and passing",
+      "required": [
+        "violation",
+        "compliant"
+      ],
+      "properties": {
+        "violation": {
+          "type": "string",
+          "description": "A concrete example of a violation"
+        },
+        "compliant": {
+          "type": "string",
+          "description": "What the conforming state looks like"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false,
+  "if": {
+    "properties": {
+      "status": {
+        "const": "withdrawn"
+      }
+    }
+  },
+  "then": {
+    "required": [
+      "withdrawn_in"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+# MIRI-PY-015 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-015
+name: Examples runnable
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Examples
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each example that fails to compile or execute
+short_description: Every example compiles; executes in sandbox (except external credentials)
+long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
+  lesson at machine speed. This check verifies: Every example compiles; executes in sandbox (except external credentials).'
+examples:
+  violation: examples/advanced.py raises ImportError on an optional dependency
+  compliant: Every example executes cleanly with only documented prerequisites
+suggested_fix: Fix or guard the example; examples must run with only documented prerequisites.
+references:
+- title: Miri Wheel Ext. §7.2.2
+  url: miri-wheel-extensions.md
+  type: spec

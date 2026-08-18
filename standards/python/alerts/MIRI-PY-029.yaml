@@ -1,0 +1,25 @@
+# MIRI-PY-029 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-029
+name: Inventory derived
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 4
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each marker missing from the inventory
+short_description: Every PEP 702 marker appears in `migration-guide.json` `deprecations`
+long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
+  inventoried in metadata, and never resolved by silent removal. This check verifies: Every PEP 702 marker appears in `migration-guide.json`
+  `deprecations`.'
+examples:
+  violation: '@deprecated on old_query() has no migration-guide.json entry'
+  compliant: Every PEP 702 marker has a matching migration-guide.json deprecations entry
+suggested_fix: Derive the deprecations array from PEP 702 markers at build time.
+references:
+- title: Lifecycle §6.2/§6.4-1
+  url: lifecycle-security-metadata.md
+  type: spec

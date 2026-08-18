@@ -1,0 +1,28 @@
+# MIRI-CLI-034 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-034
+name: Warnings on stderr
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation Coherence
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each warning on stdout
+short_description: Grace-period deprecation warnings never touch stdout
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
+  a dead-end error strands every consumer working from stale knowledge. This check verifies: Grace-period deprecation warnings
+  never touch stdout.'
+examples:
+  violation: Deprecation warning corrupts the JSON payload
+  compliant: The deprecation warning goes to stderr; stdout JSON parses clean
+suggested_fix: Emit grace-period warnings on stderr only.
+references:
+- title: CLI Spec §2.5
+  url: cli-lifecycle-specification.md
+  type: spec
+- title: Signaling §3.3-5
+  url: update-and-vulnerability-signaling.md
+  type: spec

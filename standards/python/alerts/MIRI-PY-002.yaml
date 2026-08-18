@@ -1,0 +1,27 @@
+# MIRI-PY-002 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-002
+name: Core metadata valid
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Packaging Baseline
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the METADATA file
+short_description: '`METADATA` parses as Core Metadata 2.x; name normalized'
+long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
+  baseline cannot carry trustworthy agent metadata. This check verifies: `METADATA` parses as Core Metadata 2.x; name normalized.'
+examples:
+  violation: METADATA is missing the Name field or uses an unnormalized project name
+  compliant: METADATA parses as Metadata 2.x with the PEP 503-normalized name example-package
+suggested_fix: Regenerate METADATA from pyproject.toml; normalize the name per PEP 503.
+references:
+- title: PEP 566
+  url: https://peps.python.org/pep-0566/
+  type: external
+- title: PEP 503
+  url: https://peps.python.org/pep-0503/
+  type: external

@@ -1,0 +1,25 @@
+# MIRI-PY-012 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-012
+name: Version coherence
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Agent Metadata Core
+weight: 3
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each file with a mismatched version
+short_description: '`sdk_version` in every metadata file equals the wheel version'
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: `sdk_version`
+  in every metadata file equals the wheel version.'
+examples:
+  violation: sdk-manifest.json says 1.1.0 inside the 1.2.0 wheel
+  compliant: sdk_version 1.2.0 matches the wheel version 1.2.0 in every metadata file
+suggested_fix: Derive sdk_version from the single package version source at build time.
+references:
+- title: Agent Metadata §4.1
+  url: agent-metadata-specification.md
+  type: spec

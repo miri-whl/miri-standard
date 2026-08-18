@@ -1,0 +1,25 @@
+# MIRI-CLI-037 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-037
+name: No silent removals
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation Coherence
+weight: 3
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each silently removed surface
+short_description: Every removed surface was deprecated in ≥1 earlier release
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
+  a dead-end error strands every consumer working from stale knowledge. This check verifies: Every removed surface was deprecated
+  in ≥1 earlier release.'
+examples:
+  violation: --export vanished without ever appearing as deprecated
+  compliant: Every removed flag appears as deprecated in at least one earlier release's changelog
+suggested_fix: 'Deprecate first: lifecycle block + changelog entry + grace period, then remove.'
+references:
+- title: CLI Spec §6.3-2
+  url: cli-lifecycle-specification.md
+  type: spec

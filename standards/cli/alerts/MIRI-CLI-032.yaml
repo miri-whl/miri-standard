@@ -1,0 +1,31 @@
+# MIRI-CLI-032 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-032
+name: Two-phase fields
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation Coherence
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each incomplete lifecycle block
+short_description: '`deprecated_since` and `removed_in`/`replacement` populated'
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
+  a dead-end error strands every consumer working from stale knowledge. This check verifies: `deprecated_since` and `removed_in`/`replacement`
+  populated.'
+examples:
+  violation: lifecycle has deprecated_since but neither removed_in nor replacement
+  compliant: deprecated_since 1.14.0, removed_in 1.18.0, replacement --output archive
+suggested_fix: Populate the two-phase fields (RFC 9745/8594 shape).
+references:
+- title: CLI Spec §6.1
+  url: cli-lifecycle-specification.md
+  type: spec
+- title: RFC 9745
+  url: https://www.rfc-editor.org/info/rfc9745/
+  type: external
+- title: RFC 8594
+  url: https://www.rfc-editor.org/info/rfc8594/
+  type: external

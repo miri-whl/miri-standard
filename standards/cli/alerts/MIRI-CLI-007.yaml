@@ -1,0 +1,25 @@
+# MIRI-CLI-007 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-007
+name: Pipeline composability
+target: cli
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Baseline Conventions
+weight: 1
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each composability failure
+short_description: Handles SIGPIPE cleanly; accepts stdin where input is expected
+long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
+  invisible or hangs silently in a non-interactive context. This check verifies: Handles SIGPIPE cleanly; accepts stdin
+  where input is expected.'
+examples:
+  violation: Tool panics with a stack trace on SIGPIPE from head
+  compliant: tool list | head -1 exits cleanly with no stack trace
+suggested_fix: Handle SIGPIPE; read stdin where input is expected.
+references:
+- title: clig.dev
+  url: https://clig.dev/
+  type: external

@@ -1,0 +1,25 @@
+# MIRI-CLI-030 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-030
+name: Changelog coverage
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Update & Changelog
+weight: 1
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each missing changelog category
+short_description: Output covers added/removed/deprecated surfaces, schema bumps, exit-code changes
+long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
+  passive, and honest offline. This check verifies: Output covers added/removed/deprecated surfaces, schema bumps, exit-code
+  changes.'
+examples:
+  violation: Schema bumps are not reported by changelog --since
+  compliant: The changelog reports the schema_version bump shipped in 3.2.0
+suggested_fix: Cover added/removed/deprecated surfaces, schema bumps, and exit-code changes.
+references:
+- title: CLI Spec §5.2
+  url: cli-lifecycle-specification.md
+  type: spec

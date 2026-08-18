@@ -1,0 +1,27 @@
+# MIRI-CLI-039 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-039
+name: Dry run on writes
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Safety
+weight: 4
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each mutating command without dry-run
+short_description: Every mutating command supports `--dry-run` with faithful simulation
+long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
+  marked, and safe to repeat. This check verifies: Every mutating command supports `--dry-run` with faithful simulation.'
+examples:
+  violation: '''tool delete'' has no --dry-run'
+  compliant: tool delete --dry-run reports exactly what would be removed and touches nothing
+suggested_fix: Add faithful --dry-run to every write operation.
+references:
+- title: Landscape §2.2 (anc.dev)
+  url: landscape-and-prior-art.md
+  type: spec
+- title: CLI Spec §9
+  url: cli-lifecycle-specification.md
+  type: spec

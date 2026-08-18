@@ -1,0 +1,25 @@
+# MIRI-CLI-031 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-031
+name: Lifecycle blocks
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation Coherence
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each deprecated surface without a lifecycle block
+short_description: Every deprecated flag/subcommand carries a `lifecycle` object
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
+  a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecated flag/subcommand
+  carries a `lifecycle` object.'
+examples:
+  violation: --export is deprecated in docs only; --describe shows nothing
+  compliant: '--export carries lifecycle {status: deprecated, deprecated_since, replacement}'
+suggested_fix: Attach a lifecycle object to every deprecated flag and subcommand.
+references:
+- title: CLI Spec §6
+  url: cli-lifecycle-specification.md
+  type: spec

@@ -1,0 +1,24 @@
+# MIRI-CLI-043 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-043
+name: Graceful cancellation
+target: cli
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Safety
+weight: 1
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each unclean cancellation
+short_description: SIGINT/SIGTERM cleans up partial state before exit
+long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
+  marked, and safe to repeat. This check verifies: SIGINT/SIGTERM cleans up partial state before exit.'
+examples:
+  violation: SIGINT leaves a half-written state file
+  compliant: SIGINT during apply rolls back the partial state file before exit
+suggested_fix: Clean up partial state on SIGINT/SIGTERM.
+references:
+- title: Landscape §2.1 P11
+  url: landscape-and-prior-art.md
+  type: spec

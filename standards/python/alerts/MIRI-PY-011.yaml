@@ -1,0 +1,25 @@
+# MIRI-PY-011 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-011
+name: Build-time generation
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Agent Metadata Core
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each stale metadata file
+short_description: '`generated_at` timestamps within the build window; not hand-edited afterward'
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: `generated_at`
+  timestamps within the build window; not hand-edited afterward.'
+examples:
+  violation: generated_at predates the release commit by three weeks
+  compliant: generated_at falls inside the release build window
+suggested_fix: Generate agent metadata inside the build, never by hand afterward.
+references:
+- title: Agent Metadata §5
+  url: agent-metadata-specification.md
+  type: spec

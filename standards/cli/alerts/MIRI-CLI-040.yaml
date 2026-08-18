@@ -1,0 +1,24 @@
+# MIRI-CLI-040 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-040
+name: Danger marked
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Safety
+weight: 3
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each unmarked destructive operation
+short_description: Destructive operations flagged as such in `--describe`
+long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
+  marked, and safe to repeat. This check verifies: Destructive operations flagged as such in `--describe`.'
+examples:
+  violation: '''tool purge'' is not flagged destructive in --describe'
+  compliant: '--describe marks the purge command destructive: true'
+suggested_fix: Mark destructive operations in the introspection output.
+references:
+- title: Landscape §2.1 P16
+  url: landscape-and-prior-art.md
+  type: spec

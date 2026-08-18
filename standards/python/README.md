@@ -27,6 +27,8 @@ packaging ecosystem and how the Miri Standard extends it to enable enhanced agen
   update checks, and deprecation state for open source and private packages
 - **[Linter Checklist](linter-checklist.md)** - The 40 numbered checks (MIRI-PY-001…040) with standards references and
   scoring weights summing to 100
+- **[Alert Definitions](alerts/)** - One YAML file per check: committee-assigned severity, violation unit, example,
+  fix, and references — the machine-readable source of truth for linters
 - **[Artifact Lifecycle](artifact-lifecycle.md)** - Every stage from build to EOL, the nested interface lifecycle, and
   the three-clocks model (diagrammed PDF available)
 

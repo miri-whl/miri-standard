@@ -1,0 +1,25 @@
+# MIRI-CLI-001 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-001
+name: POSIX option syntax
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Baseline Conventions
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each violating option form
+short_description: '`-` short options, `--` terminator, options-before-operands accepted'
+long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
+  invisible or hangs silently in a non-interactive context. This check verifies: `-` short options, `--` terminator, options-before-operands
+  accepted.'
+examples:
+  violation: -abc bundling of no-argument flags is rejected
+  compliant: -o out, -oout, and -abc bundling all parse; -- terminates option parsing
+suggested_fix: Follow POSIX XBD §12.2 option syntax, including the -- terminator.
+references:
+- title: POSIX XBD §12.2
+  url: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html
+  type: external

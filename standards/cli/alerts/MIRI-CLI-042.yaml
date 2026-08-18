@@ -1,0 +1,24 @@
+# MIRI-CLI-042 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-042
+name: Safe retries
+target: cli
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Safety
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each unsafe retry path
+short_description: Mutations support idempotency keys or optimistic-lock version guards
+long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
+  marked, and safe to repeat. This check verifies: Mutations support idempotency keys or optimistic-lock version guards.'
+examples:
+  violation: Re-running a create duplicates the resource
+  compliant: Retrying tool create --idempotency-key abc123 returns the original result, no duplicate
+suggested_fix: Support idempotency keys or optimistic-lock version guards.
+references:
+- title: Landscape §2.3 (desk) / §2.4 (Docker)
+  url: landscape-and-prior-art.md
+  type: spec

@@ -1,0 +1,28 @@
+# MIRI-PY-009 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-009
+name: migration-guide.json valid
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Agent Metadata Core
+weight: 3
+conditional: true
+severity:
+  default: MEDIUM
+  violation_unit: each schema violation in migration-guide.json
+short_description: Present for any non-initial release; validates against schema
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
+  for any non-initial release; validates against schema.'
+examples:
+  violation: Release 2.1.0 ships without a migration guide from 2.0.x
+  compliant: 2.1.0 ships migration-guide.json covering the changes from 2.0.x
+suggested_fix: Generate migration-guide.json for every non-initial release.
+references:
+- title: Agent Metadata §4.3
+  url: agent-metadata-specification.md
+  type: spec
+- title: schema
+  url: ../../schemas/migration-guide-v1.json
+  type: spec

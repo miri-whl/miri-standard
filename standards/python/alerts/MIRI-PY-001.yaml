@@ -1,0 +1,28 @@
+# MIRI-PY-001 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-001
+name: Wheel structure valid
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Packaging Baseline
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the wheel archive
+short_description: '`.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD'
+long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
+  baseline cannot carry trustworthy agent metadata. This check verifies: `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`;
+  archive matches RECORD.'
+examples:
+  violation: RECORD lists a file missing from the archive
+  compliant: unzip -l and RECORD agree file-for-file; dist-info carries METADATA, WHEEL, RECORD
+suggested_fix: Rebuild the wheel with a standard build backend; do not hand-edit the archive.
+references:
+- title: PEP 427
+  url: https://peps.python.org/pep-0427/
+  type: external
+- title: PEP 491
+  url: https://peps.python.org/pep-0491/
+  type: external

@@ -1,0 +1,24 @@
+# MIRI-PY-040 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-040
+name: Graceful degradation
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Discovery & Degradation
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the package
+short_description: Package imports and functions normally with all Miri metadata stripped
+long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
+  This check verifies: Package imports and functions normally with all Miri metadata stripped.'
+examples:
+  violation: Import fails when agent-metadata/ is stripped
+  compliant: pip install and import behave identically with agent-metadata/ stripped
+suggested_fix: Guard all Miri integration so the package works identically without it.
+references:
+- title: Miri Wheel Ext. §8.3
+  url: miri-wheel-extensions.md
+  type: spec

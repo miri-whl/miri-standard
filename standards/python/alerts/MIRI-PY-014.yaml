@@ -1,0 +1,24 @@
+# MIRI-PY-014 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-014
+name: Quickstart exists
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Examples
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: the examples directory
+short_description: '`examples/quickstart.py` present'
+long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
+  lesson at machine speed. This check verifies: `examples/quickstart.py` present.'
+examples:
+  violation: examples/quickstart.py is absent
+  compliant: examples/quickstart.py runs the minimal end-to-end flow
+suggested_fix: Add a minimal runnable quickstart example.
+references:
+- title: Miri Wheel Ext. §5.1
+  url: miri-wheel-extensions.md
+  type: spec

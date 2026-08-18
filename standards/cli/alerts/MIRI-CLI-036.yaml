@@ -1,0 +1,25 @@
+# MIRI-CLI-036 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-036
+name: Changelog coherence
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation Coherence
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each deprecation absent from the changelog
+short_description: Every deprecation appears in `changelog --since` of the deprecating release
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
+  a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecation appears in
+  `changelog --since` of the deprecating release.'
+examples:
+  violation: --export deprecated in 1.14 but changelog --since 1.13 does not mention it
+  compliant: changelog --since 1.13 lists the --export deprecation in the 1.14 entry
+suggested_fix: Derive changelog and lifecycle blocks from the same schema struct.
+references:
+- title: CLI Spec §6.3-1
+  url: cli-lifecycle-specification.md
+  type: spec

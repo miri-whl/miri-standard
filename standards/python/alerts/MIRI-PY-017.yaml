@@ -1,0 +1,24 @@
+# MIRI-PY-017 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-017
+name: Error handling shown
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Examples
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each example lacking error handling
+short_description: Examples demonstrate the package's error/exception handling
+long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
+  lesson at machine speed. This check verifies: Examples demonstrate the package''s error/exception handling.'
+examples:
+  violation: quickstart.py lets connection errors propagate uncaught
+  compliant: quickstart.py catches ConnectionError and demonstrates the recovery path
+suggested_fix: Demonstrate the package's exception handling in each example.
+references:
+- title: Miri Wheel Ext. §7.2.2
+  url: miri-wheel-extensions.md
+  type: spec

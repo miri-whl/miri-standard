@@ -1,0 +1,28 @@
+# MIRI-PY-034 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-034
+name: Grace period
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Deprecation & Lifecycle Coherence
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each interface removed early
+short_description: Deprecated interfaces survive ≥2 releases before removal
+long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
+  inventoried in metadata, and never resolved by silent removal. This check verifies: Deprecated interfaces survive ≥2 releases
+  before removal.'
+examples:
+  violation: Deprecated in 2.0.0, removed in 2.1.0 (one release)
+  compliant: Deprecated in 1.8.0, functioning and warning through 1.9.x, removed in 2.0.0
+suggested_fix: Keep deprecated interfaces working for at least two releases (PEP 387 shape).
+references:
+- title: PEP 387
+  url: https://peps.python.org/pep-0387/
+  type: external
+- title: Lifecycle §6.1
+  url: lifecycle-security-metadata.md
+  type: spec

@@ -1,0 +1,24 @@
+# MIRI-PY-005 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-005
+name: Publish attestations
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Packaging Baseline
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: the release
+short_description: Release carries index-hosted attestations (provenance)
+long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
+  baseline cannot carry trustworthy agent metadata. This check verifies: Release carries index-hosted attestations (provenance).'
+examples:
+  violation: No attestations are published alongside the release
+  compliant: Release uploaded via trusted publishing with PEP 740 attestations attached
+suggested_fix: Publish via trusted publishing so PEP 740 attestations are attached.
+references:
+- title: PEP 740
+  url: https://peps.python.org/pep-0740/
+  type: external

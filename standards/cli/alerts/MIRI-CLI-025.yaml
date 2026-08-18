@@ -1,0 +1,24 @@
+# MIRI-CLI-025 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-025
+name: check-update implemented
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Update & Changelog
+weight: 4
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the update surface
+short_description: '`check-update --json` returns the specified shape'
+long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
+  passive, and honest offline. This check verifies: `check-update --json` returns the specified shape.'
+examples:
+  violation: No check-update command exists
+  compliant: tool check-update --json returns current, latest, update_available, urgency
+suggested_fix: Implement check-update --json per CLI Spec §5.1.
+references:
+- title: CLI Spec §5.1
+  url: cli-lifecycle-specification.md
+  type: spec

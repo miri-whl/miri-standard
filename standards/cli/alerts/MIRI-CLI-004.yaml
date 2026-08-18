@@ -1,0 +1,24 @@
+# MIRI-CLI-004 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-004
+name: Per-subcommand help
+target: cli
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Baseline Conventions
+weight: 1
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each subcommand without help
+short_description: '`<cli> <sub> --help` works for every subcommand'
+long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
+  invisible or hangs silently in a non-interactive context. This check verifies: `<cli> <sub> --help` works for every subcommand.'
+examples:
+  violation: '''tool deploy --help'' errors with ''unknown flag'''
+  compliant: tool deploy --help documents the deploy subcommand
+suggested_fix: Wire --help on every subcommand.
+references:
+- title: clig.dev
+  url: https://clig.dev/
+  type: external

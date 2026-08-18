@@ -106,6 +106,22 @@ automatically when inapplicable.
 | F. Safety | 12 | 039–043 |
 | **Total** | **100** | **43** |
 
+## Alert Definitions (Source of Truth)
+
+Every check in this table has a committee-owned definition file in [`alerts/`](alerts/) — one YAML document per check
+(`alerts/MIRI-CLI-NNN.yaml`), validated against [alert-v1.json](../../schemas/alert-v1.json). Each file carries the check's
+name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
+references, versioning (`added_in`/`withdrawn_in`), and — critically — the **committee-assigned severity**: a default
+severity (`LOW`/`MINOR`/`MEDIUM`/`HIGH`/`CRITICAL`, numeric 1–5) and the `violation_unit` defining what counts as one
+violation.
+
+The severity assignment exists so that magnitude-aware health scoring is comparable across implementations: severity is
+defined by the standard, never by the linter. Linter implementations MUST consume these definitions rather than
+maintaining their own copies, and MUST NOT override severity or violation units.
+
+This table is the human rendering of the same data; the YAML files are authoritative, and coherence between the two
+(IDs, levels, weights, and the 100-point sum) is verified mechanically.
+
 ## Notes for Linter Implementers
 
 - Report each check by its stable ID (`MIRI-CLI-NNN`); IDs are never renumbered — retired checks are marked *withdrawn*
@@ -115,7 +131,8 @@ automatically when inapplicable.
 - References marked *(informative)* cite community practice (clig.dev, anc.dev, Agent-First CLI principles) that has no
   normative authority — the normative source for those checks is the Miri CLI specification itself; the citation records
   lineage per the [landscape survey](landscape-and-prior-art.md).
-- Machine-readable form: a `checklist.json` derived from this table is a planned deliverable — this document and the
+- Machine-readable form: the [`alerts/`](alerts/) directory is the per-check source of truth; an aggregated
+  `checklist.json` remains a planned convenience deliverable — this document and the
   JSON must be generated from one source.
 
 ## Companion

@@ -1,0 +1,27 @@
+# MIRI-CLI-014 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-014
+name: Recoverable errors
+target: cli
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Machine Output
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each error without recovery hints
+short_description: Errors carry `retryable` and `suggestions`
+long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
+  turns. This check verifies: Errors carry `retryable` and `suggestions`.'
+examples:
+  violation: Errors lack retryable and suggestions
+  compliant: 'Errors carry retryable: true and suggestions: ["run tool login"]'
+suggested_fix: Add retryable and suggestions to the error object.
+references:
+- title: CLI Spec §6
+  url: cli-lifecycle-specification.md
+  type: spec
+- title: Signaling §3.3-3
+  url: update-and-vulnerability-signaling.md
+  type: spec

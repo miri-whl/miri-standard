@@ -1,0 +1,24 @@
+# MIRI-CLI-029 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-029
+name: changelog --since
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Update & Changelog
+weight: 4
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the changelog surface
+short_description: '`changelog --since <v> --json` implemented'
+long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
+  passive, and honest offline. This check verifies: `changelog --since <v> --json` implemented.'
+examples:
+  violation: No changelog --since command exists
+  compliant: tool changelog --since 3.0.0 --json lists surface changes per release
+suggested_fix: Implement changelog --since <version> --json per CLI Spec §5.2.
+references:
+- title: CLI Spec §5.2
+  url: cli-lifecycle-specification.md
+  type: spec

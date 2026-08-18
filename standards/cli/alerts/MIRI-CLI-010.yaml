@@ -1,0 +1,24 @@
+# MIRI-CLI-010 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-010
+name: schema_version stamped
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Machine Output
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each payload missing schema_version
+short_description: Every JSON payload carries top-level `schema_version`
+long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
+  turns. This check verifies: Every JSON payload carries top-level `schema_version`.'
+examples:
+  violation: '''tool list --json'' emits an unversioned payload'
+  compliant: 'Every JSON payload carries top-level schema_version: "1"'
+suggested_fix: Stamp top-level schema_version on every JSON document.
+references:
+- title: CLI Spec §3.1
+  url: cli-lifecycle-specification.md
+  type: spec

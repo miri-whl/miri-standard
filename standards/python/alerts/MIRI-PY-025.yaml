@@ -1,0 +1,28 @@
+# MIRI-PY-025 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-025
+name: SBOM purls resolvable
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Identity & Security
+weight: 1
+conditional: true
+severity:
+  default: MINOR
+  violation_unit: each malformed SBOM purl
+short_description: SBOM component purls are well-formed
+long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
+  databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: SBOM component
+  purls are well-formed.'
+examples:
+  violation: An SBOM component has purl 'openssl 3.0' (not a purl)
+  compliant: Every SBOM component carries a valid purl
+suggested_fix: Emit valid purls for every SBOM component.
+references:
+- title: PEP 770
+  url: https://peps.python.org/pep-0770/
+  type: external
+- title: purl spec
+  url: https://github.com/package-url/purl-spec
+  type: external

@@ -1,0 +1,28 @@
+# MIRI-PY-032 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-032
+name: Removal versions sane
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each invalid removal version
+short_description: Every `removal_version` is greater than the current release
+long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
+  inventoried in metadata, and never resolved by silent removal. This check verifies: Every `removal_version` is greater
+  than the current release.'
+examples:
+  violation: removal_version 1.9.0 is below the current 2.0.0
+  compliant: removal_version 3.0.0 declared on a 2.x release
+suggested_fix: Set removal_version to a future release.
+references:
+- title: Lifecycle §6.4-3
+  url: lifecycle-security-metadata.md
+  type: spec
+- title: PEP 440
+  url: https://peps.python.org/pep-0440/
+  type: external

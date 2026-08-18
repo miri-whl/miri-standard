@@ -1,0 +1,25 @@
+# MIRI-CLI-038 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-038
+name: Replacements resolve
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation Coherence
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each unresolvable replacement
+short_description: Every `replacement` names a surface in the current `--describe`
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
+  a dead-end error strands every consumer working from stale knowledge. This check verifies: Every `replacement` names a
+  surface in the current `--describe`.'
+examples:
+  violation: replacement names '--output archive' which does not exist
+  compliant: replacement --output archive exists in the current --describe
+suggested_fix: Point replacement at a surface present in the current --describe.
+references:
+- title: CLI Spec §6.3-3
+  url: cli-lifecycle-specification.md
+  type: spec

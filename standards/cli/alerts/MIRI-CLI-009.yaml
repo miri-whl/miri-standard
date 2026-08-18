@@ -1,0 +1,24 @@
+# MIRI-CLI-009 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-009
+name: One output flag
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Machine Output
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each inconsistent command
+short_description: The same flag (e.g. `--json`) selects it on every command — no per-command variants
+long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
+  turns. This check verifies: The same flag (e.g. `--json`) selects it on every command — no per-command variants.'
+examples:
+  violation: Half the commands use --json, the rest --output json
+  compliant: --json is the output flag on every command, with no per-command variants
+suggested_fix: Pick one output flag and use it everywhere.
+references:
+- title: Landscape §2.3 (Chow)
+  url: landscape-and-prior-art.md
+  type: spec

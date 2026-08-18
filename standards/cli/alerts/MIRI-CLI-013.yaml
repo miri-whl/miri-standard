@@ -1,0 +1,24 @@
+# MIRI-CLI-013 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-013
+name: Structured errors
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Machine Output
+weight: 3
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each unstructured failure
+short_description: Failures emit JSON with a stable machine `error.code`
+long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
+  turns. This check verifies: Failures emit JSON with a stable machine `error.code`.'
+examples:
+  violation: Errors print prose with exit 1 and no code
+  compliant: 'Failures emit {"ok": false, "error": {"code": "AUTH_EXPIRED"}}'
+suggested_fix: Emit structured errors with a stable machine error.code.
+references:
+- title: CLI Spec §6
+  url: cli-lifecycle-specification.md
+  type: spec

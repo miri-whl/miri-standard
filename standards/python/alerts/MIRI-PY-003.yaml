@@ -1,0 +1,24 @@
+# MIRI-PY-003 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-003
+name: Version scheme valid
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Packaging Baseline
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the version string
+short_description: Version parses under the canonical scheme
+long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
+  baseline cannot carry trustworthy agent metadata. This check verifies: Version parses under the canonical scheme.'
+examples:
+  violation: Version reads 'v1.2-final' which does not parse under PEP 440
+  compliant: 'Version: 2.1.0'
+suggested_fix: Use a PEP 440 version such as 1.2.0 or 1.2.0rc1.
+references:
+- title: PEP 440
+  url: https://peps.python.org/pep-0440/
+  type: external

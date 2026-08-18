@@ -1,0 +1,24 @@
+# MIRI-CLI-003 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-003
+name: --version
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Baseline Conventions
+weight: 1
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: the --version behavior
+short_description: Prints version to stdout, exits 0
+long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
+  invisible or hangs silently in a non-interactive context. This check verifies: Prints version to stdout, exits 0.'
+examples:
+  violation: --version prints to stderr
+  compliant: tool --version prints 3.2.0 to stdout and exits 0
+suggested_fix: Print the version to stdout and exit 0.
+references:
+- title: GNU Coding Standards §4.7
+  url: https://www.gnu.org/prep/standards/html_node/_002d_002dversion.html
+  type: external

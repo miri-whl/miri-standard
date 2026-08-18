@@ -73,7 +73,10 @@ A suite has four layers that must stay coherent when any one changes:
    (`examples/sample-sdk/src/weather_sdk/agent-metadata/`) must validate together.
 3. **Linter checklists** (`linter-checklist.md` per suite) — numbered checks `MIRI-PY-NNN` / `MIRI-CLI-NNN` with
    weights summing to exactly 100. **IDs are never renumbered**; retired checks are marked withdrawn and weight is
-   redistributed. Every conformance rule added to a spec should get a check here.
+   redistributed. Every conformance rule added to a spec should get a check here. Each check's authoritative
+   definition is a YAML file in `standards/<target>/alerts/` (schema: `schemas/alert-v1.json`) carrying the
+   committee-assigned severity and violation unit for health scoring — the markdown table is the derived rendering;
+   keep IDs/levels/weights coherent between the two when editing either.
 4. **Artifact lifecycles** (`artifact-lifecycle.md` per suite) — stage tables + mermaid diagrams. The PDFs in
    `assets/` are generated renderings (HTML + inline SVG → headless Chrome); the markdown is the source of truth —
    regenerate PDFs when lifecycle docs change.

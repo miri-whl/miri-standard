@@ -1,0 +1,27 @@
+# MIRI-CLI-022 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-022
+name: Advisory sources
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 3
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the advisory_sources list
+short_description: ≥1 valid entry in `advisory_sources`
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: ≥1 valid entry in `advisory_sources`.'
+examples:
+  violation: advisory_sources is absent
+  compliant: advisory_sources lists an OSV-compatible endpoint with a valid URL
+suggested_fix: Declare at least one OSV-compatible advisory endpoint.
+references:
+- title: CLI Spec §4
+  url: cli-lifecycle-specification.md
+  type: spec
+- title: OSV schema
+  url: https://ossf.github.io/osv-schema/
+  type: external

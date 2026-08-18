@@ -1,0 +1,26 @@
+# MIRI-CLI-033 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-033
+name: Teaching errors
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation Coherence
+weight: 4
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each removed surface with a dead-end error
+short_description: 'Invoking a removed surface yields the structured error (code, `retryable: false`, `suggestions`) — not
+  a generic parse failure'
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
+  a dead-end error strands every consumer working from stale knowledge. This check verifies: Invoking a removed surface
+  yields the structured error (code, `retryable: false`, `suggestions`) — not a generic parse failure.'
+examples:
+  violation: --export answers 'unrecognized argument' with no guidance
+  compliant: '--export answers {error: {code: FLAG_REMOVED, retryable: false, suggestions: ["use --output archive"]}}'
+suggested_fix: 'Serve the structured teaching error: code, retryable false, suggestions.'
+references:
+- title: CLI Spec §6/§6.3-4
+  url: cli-lifecycle-specification.md
+  type: spec

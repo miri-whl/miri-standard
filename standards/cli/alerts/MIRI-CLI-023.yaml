@@ -1,0 +1,25 @@
+# MIRI-CLI-023 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-023
+name: Private-source rule
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 2
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: the advisory_sources list
+short_description: '`distribution: private` does not rely solely on public OSV'
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: `distribution: private` does not rely solely on public
+  OSV.'
+examples:
+  violation: A private CLI lists only public OSV
+  compliant: The private CLI declares its internal endpoint authoritative; public OSV covers only the dependency tree
+suggested_fix: Add the internal OSV endpoint as authoritative.
+references:
+- title: CLI Spec §4
+  url: cli-lifecycle-specification.md
+  type: spec

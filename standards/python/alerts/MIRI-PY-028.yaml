@@ -1,0 +1,29 @@
+# MIRI-PY-028 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-028
+name: PEP 702 markers
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 4
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each deprecated interface without a marker
+short_description: Every interface listed as deprecated carries `@deprecated`; decorator message names replacement + removal
+  version
+long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
+  inventoried in metadata, and never resolved by silent removal. This check verifies: Every interface listed as deprecated
+  carries `@deprecated`; decorator message names replacement + removal version.'
+examples:
+  violation: legacy_connect() is listed as deprecated but carries no @deprecated decorator
+  compliant: legacy_connect() carries @deprecated naming connect() and removal in 3.0.0
+suggested_fix: Mark it with warnings.deprecated (PEP 702) naming the replacement and removal version.
+references:
+- title: PEP 702
+  url: https://peps.python.org/pep-0702/
+  type: external
+- title: Lifecycle §6.1
+  url: lifecycle-security-metadata.md
+  type: spec

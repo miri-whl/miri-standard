@@ -1,0 +1,25 @@
+# MIRI-PY-022 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-022
+name: Private-source rule
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Security
+weight: 3
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the advisory_sources list
+short_description: '`distribution: private` does not rely solely on public OSV'
+long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
+  databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: `distribution:
+  private` does not rely solely on public OSV.'
+examples:
+  violation: A private package lists only public OSV, so empty results read as 'not vulnerable'
+  compliant: The private package lists its internal OSV endpoint as the authoritative source
+suggested_fix: Add the internal OSV endpoint as the authoritative source for private packages.
+references:
+- title: Lifecycle §5.1
+  url: lifecycle-security-metadata.md
+  type: spec

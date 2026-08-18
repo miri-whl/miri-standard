@@ -1,0 +1,31 @@
+# MIRI-CLI-024 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-024
+name: Composition legible
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 3
+conditional: true
+severity:
+  default: HIGH
+  violation_unit: the release's composition data
+short_description: Standalone binary carries embedded module info or references a release SBOM
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: Standalone binary carries embedded module info or references
+  a release SBOM.'
+examples:
+  violation: A stripped Rust binary ships with no SBOM reference
+  compliant: The release ships sbom.cdx.json referenced from identity.sbom
+suggested_fix: Publish a CycloneDX/SPDX SBOM per release (or use cargo auditable / Go buildinfo).
+references:
+- title: CLI Spec §3.1/§7.1
+  url: cli-lifecycle-specification.md
+  type: spec
+- title: CycloneDX
+  url: https://cyclonedx.org/
+  type: external
+- title: SPDX
+  url: https://spdx.dev/
+  type: external

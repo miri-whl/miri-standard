@@ -1,0 +1,28 @@
+# MIRI-CLI-005 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-005
+name: Color & TTY discipline
+target: cli
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Baseline Conventions
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each decoration leak
+short_description: Honors `NO_COLOR`; detects non-TTY and drops decoration
+long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
+  invisible or hangs silently in a non-interactive context. This check verifies: Honors `NO_COLOR`; detects non-TTY and
+  drops decoration.'
+examples:
+  violation: Spinner control codes appear when piped to a file
+  compliant: NO_COLOR=1 output is plain; piped output contains no control codes
+suggested_fix: Detect TTY and honor NO_COLOR; drop decoration on non-TTY.
+references:
+- title: no-color.org
+  url: https://no-color.org/
+  type: external
+- title: clig.dev
+  url: https://clig.dev/
+  type: external

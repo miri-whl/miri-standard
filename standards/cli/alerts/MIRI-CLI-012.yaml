@@ -1,0 +1,24 @@
+# MIRI-CLI-012 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-012
+name: Deterministic ordering
+target: cli
+status: active
+added_in: 0.1-draft
+level: SHOULD
+category: Machine Output
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each nondeterministic output
+short_description: Same inputs produce identically ordered output
+long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
+  turns. This check verifies: Same inputs produce identically ordered output.'
+examples:
+  violation: Result ordering changes across identical runs
+  compliant: Two identical runs produce identically ordered output
+suggested_fix: Sort output deterministically.
+references:
+- title: Landscape §2.1 P03
+  url: landscape-and-prior-art.md
+  type: spec

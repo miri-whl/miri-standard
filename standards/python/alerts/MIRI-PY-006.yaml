@@ -1,0 +1,25 @@
+# MIRI-PY-006 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-006
+name: agent-metadata/ present
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Agent Metadata Core
+weight: 2
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: the package
+short_description: Directory exists in the package
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Directory
+  exists in the package.'
+examples:
+  violation: The package ships no agent-metadata/ directory
+  compliant: package/agent-metadata/ ships in the wheel with all required files
+suggested_fix: Add the agent-metadata/ directory and generate its files at build time.
+references:
+- title: Miri Wheel Ext. §3.2
+  url: miri-wheel-extensions.md
+  type: spec

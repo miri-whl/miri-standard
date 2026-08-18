@@ -1,0 +1,24 @@
+# MIRI-CLI-021 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-021
+name: EOL coherence
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 2
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: the support declaration
+short_description: '`support.status` `deprecated`/`eol` ⇒ `replacement` present'
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: `support.status` `deprecated`/`eol` ⇒ `replacement` present.'
+examples:
+  violation: status is eol with no replacement
+  compliant: support.status deprecated with replacement pkg:generic/acme/acme-cli2
+suggested_fix: Name the successor (purl or absorbing subcommand).
+references:
+- title: CLI Spec §3.2
+  url: cli-lifecycle-specification.md
+  type: spec

@@ -1,0 +1,28 @@
+# MIRI-PY-008 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-PY-008
+name: usage-patterns.json valid
+target: python-wheel
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Agent Metadata Core
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each schema violation in usage-patterns.json
+short_description: Present and validates against schema
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
+  and validates against schema.'
+examples:
+  violation: A pattern entry has no code field
+  compliant: usage-patterns.json validates; every pattern carries id and code
+suggested_fix: Regenerate usage-patterns.json; every pattern needs id and code.
+references:
+- title: Agent Metadata §4.2
+  url: agent-metadata-specification.md
+  type: spec
+- title: schema
+  url: ../../schemas/usage-patterns-v1.json
+  type: spec

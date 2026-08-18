@@ -1,0 +1,25 @@
+# MIRI-CLI-018 — generated with the checklist table; committee-owned source of truth.
+id: MIRI-CLI-018
+name: Wire schema versioned
+target: cli
+status: active
+added_in: 0.1-draft
+level: MUST
+category: Identity & Introspection
+weight: 1
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: the identity declaration
+short_description: '`identity.schema_version` present, independent of release version'
+long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
+  and agents can trust the surface they see. This check verifies: `identity.schema_version` present, independent of release
+  version.'
+examples:
+  violation: No schema_version independent of the release version
+  compliant: identity.schema_version "1" declared alongside release version 3.2.0
+suggested_fix: Version the wire schema separately and declare it in identity.
+references:
+- title: CLI Spec §3.1
+  url: cli-lifecycle-specification.md
+  type: spec
