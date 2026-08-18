@@ -60,7 +60,7 @@ EOF
 
 # External links added in THIS commit: fail on hard 404s only (403/timeouts are CI-crawler noise).
 echo "[miri pre-commit] new external links (404 check)..."
-NEW_URLS=$(git diff --cached -U0 -- '*.md' | grep '^+' | grep -oE 'https?://[^)"<> ]+' | sort -u || true)
+NEW_URLS=$(git diff --no-ext-diff --cached -U0 -- '*.md' | grep '^+' | grep -oE 'https?://[^)"<> ]+' | sort -u || true)
 for url in $NEW_URLS; do
     case "$url" in *gnu.org*|*localhost*) continue;; esac
     code=$(curl -o /dev/null -sL -w '%{http_code}' -m 8 "$url" || echo 000)
