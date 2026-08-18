@@ -25,7 +25,7 @@ The repository ships its CI checks as a pre-commit hook. Enable it once per clon
 git config core.hooksPath .githooks
 ```
 
-It runs markdownlint, cspell, relative-link verification, checklist-weight and alert-definition coherence, and a
+It runs markdownlint, cspell, relative-link verification, checklist-weight and check-definition coherence, and a
 404 check on external links added by the commit. Full external-link checking runs in CI only.
 
 ## Getting Started

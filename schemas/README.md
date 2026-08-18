@@ -27,7 +27,7 @@ consistency and enable automated validation of agent metadata.
   - Required fields: `version`, `nodes`, `edges`
   - Validates graph structure and workflow definitions
 
-- **[alert-v1.json](alert-v1.json)** - Schema for the per-check alert definitions in `standards/<target>/alerts/`
+- **[check-v1.json](check-v1.json)** - Schema for the per-check check definitions in `standards/<target>/checks/`
   - Committee-owned check metadata: level, weight, severity, violation unit, example, fix, references
   - The severity vocabulary (LOW/MINOR/MEDIUM/HIGH/CRITICAL, 1-5) is normative for health scoring
 

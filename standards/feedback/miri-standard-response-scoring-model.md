@@ -24,9 +24,9 @@ ships in the standard. See §2.
 | 2 | Normative Health Score (severity vocabulary, violation binding, baseline method, profiles) | **Accepted with amendments** (§2–§3) — severity layer shipped; scoring layer pending your drafts |
 | 3 | Method + profile declaration on any reported health score ("no naked scores") | **Accepted** as proposed — it is our "declare sources, not verdicts" principle applied to scoring |
 | 4 | Reserved extension namespace for health-only quality checks | **Accepted, amended** — namespaces reserved, promotion rule added (§3.3) |
-| 5 | `checklist.json` + `scoring-v1.json` + `lint-report-v1.json` | **Accepted, amended** — per-check definitions shipped as `alerts/`; scoring/report schemas welcome as drafts, cross-language (§3.2) |
+| 5 | `checklist.json` + `scoring-v1.json` + `lint-report-v1.json` | **Accepted, amended** — per-check definitions shipped as `checks/`; scoring/report schemas welcome as drafts, cross-language (§3.2) |
 
-## 2. Already Shipped: Centralized Alert Definitions
+## 2. Already Shipped: Centralized Check Definitions
 
 Your §3.2-1 and §3.2-2 (severity vocabulary + violation-to-check binding) had a hidden dependency you did not call out:
 **if severity assignment is implementation-defined, baseline health scores are not comparable across linters** — the
@@ -35,8 +35,8 @@ inputs must be fixed too.
 
 The standard therefore now defines severity per check, centrally:
 
-- **`standards/python/alerts/`** and **`standards/cli/alerts/`** — one YAML file per check (`MIRI-PY-001.yaml` …),
-  validated against [`alert-v1.json`](../../schemas/alert-v1.json). Each file is the committee-owned definition:
+- **`standards/python/checks/`** and **`standards/cli/checks/`** — one YAML file per check (`MIRI-PY-001.yaml` …),
+  validated against [`check-v1.json`](../../schemas/check-v1.json). Each file is the committee-owned definition:
   name, level, category, weight, short/long descriptions, violation and compliant examples, suggested fix, references,
   and versioning (`added_in` / `withdrawn_in`).
 - **`severity.default`** — one of `LOW` / `MINOR` / `MEDIUM` / `HIGH` / `CRITICAL` (numeric 1–5), exactly your
@@ -66,12 +66,12 @@ Penalty method already contains the per-severity-cap idea.
 Nothing in the severity vocabulary, baseline method, profiles, or report format is Python-specific. We will adopt:
 
 - `scoring-v1.json` and `lint-report-v1.json` as **shared schemas** (like `lifecycle-v1.json`), serving the CLI
-  checklist (`MIRI-CLI-NNN`, 43 checks — alert definitions already shipped) and future Go/Rust suites identically.
+  checklist (`MIRI-CLI-NNN`, 43 checks — check definitions already shipped) and future Go/Rust suites identically.
 - Please generalize your §3.4 drafts accordingly; Python-only schemas will not be accepted.
 
 ### 3.3 Extension Namespace: Granted, With a Promotion Rule
 
-`MIRI-PYX-NNN` is reserved (and `MIRI-CLIX-NNN` alongside it; the `alert-v1.json` ID pattern already admits both).
+`MIRI-PYX-NNN` is reserved (and `MIRI-CLIX-NNN` alongside it; the `check-v1.json` ID pattern already admits both).
 Extension checks carry weight 0 and contribute only to health. One addition: **promotion from an X-namespace into the
 conformance namespace is a weight-table change** and follows the same versioned-redistribution rule as withdrawal — no
 silent migration, ever. Also note one alignment requirement: any PYX security-scanning check (your pip-audit
@@ -90,8 +90,8 @@ Profiles carry versions (`balanced@1`); changing a profile's weights is a new pr
 Your §4 commitments are accepted with thanks — the reference scoring engine and the generalized schema drafts are
 exactly the contributions that make "conforming linter" a testable claim. Concretely, in order:
 
-1. Bind your finding IDs to the `alerts/` definitions and report any severity or violation-unit assignment you
-   disagree with as an issue against the alert file — that is now the mechanism for severity debate.
+1. Bind your finding IDs to the `checks/` definitions and report any severity or violation-unit assignment you
+   disagree with as an issue against the check file — that is now the mechanism for severity debate.
 2. Draft `scoring-v1.json` / `lint-report-v1.json` as cross-language schemas (§3.2), including versioned profiles
    (§3.4) and a count-normalization stance for the baseline method (§3.1).
 3. Validate the Wheel A/B worked example end-to-end against the shipped severity data — MIRI-PY-015 is defined as

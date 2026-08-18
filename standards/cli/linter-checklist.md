@@ -106,10 +106,13 @@ automatically when inapplicable.
 | F. Safety | 12 | 039–043 |
 | **Total** | **100** | **43** |
 
-## Alert Definitions (Source of Truth)
+## Check Definitions (Source of Truth)
 
-Every check in this table has a committee-owned definition file in [`alerts/`](alerts/) — one YAML document per check
-(`alerts/MIRI-CLI-NNN.yaml`), validated against [alert-v1.json](../../schemas/alert-v1.json). Each file carries the check's
+The standard's vocabulary: each *requirement* in a spec is verified by a *check*; each check failure instance is a
+*violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
+
+Every check in this table has a committee-owned definition file in [`checks/`](checks/) — one YAML document per check
+(`checks/MIRI-CLI-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), and — critically — the **committee-assigned severity**: a default
 severity (`LOW`/`MINOR`/`MEDIUM`/`HIGH`/`CRITICAL`, numeric 1–5) and the `violation_unit` defining what counts as one
@@ -131,7 +134,7 @@ This table is the human rendering of the same data; the YAML files are authorita
 - References marked *(informative)* cite community practice (clig.dev, anc.dev, Agent-First CLI principles) that has no
   normative authority — the normative source for those checks is the Miri CLI specification itself; the citation records
   lineage per the [landscape survey](landscape-and-prior-art.md).
-- Machine-readable form: the [`alerts/`](alerts/) directory is the per-check source of truth; an aggregated
+- Machine-readable form: the [`checks/`](checks/) directory is the per-check source of truth; an aggregated
   `checklist.json` remains a planned convenience deliverable — this document and the
   JSON must be generated from one source.
 

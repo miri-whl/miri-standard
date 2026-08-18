@@ -106,10 +106,13 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 | F. Discovery & Degradation | 10 | 036–040 |
 | **Total** | **100** | **40** |
 
-## Alert Definitions (Source of Truth)
+## Check Definitions (Source of Truth)
 
-Every check in this table has a committee-owned definition file in [`alerts/`](alerts/) — one YAML document per check
-(`alerts/MIRI-PY-NNN.yaml`), validated against [alert-v1.json](../../schemas/alert-v1.json). Each file carries the check's
+The standard's vocabulary: each *requirement* in a spec is verified by a *check*; each check failure instance is a
+*violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
+
+Every check in this table has a committee-owned definition file in [`checks/`](checks/) — one YAML document per check
+(`checks/MIRI-PY-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), and — critically — the **committee-assigned severity**: a default
 severity (`LOW`/`MINOR`/`MEDIUM`/`HIGH`/`CRITICAL`, numeric 1–5) and the `violation_unit` defining what counts as one
@@ -128,7 +131,7 @@ This table is the human rendering of the same data; the YAML files are authorita
   and their weight redistributed in a new minor version of this checklist.
 - Checks E-029/030/031 require the *previous* release for comparison; linters SHOULD fetch it via the declared
   `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable.
-- Machine-readable form: the [`alerts/`](alerts/) directory is the per-check source of truth; an aggregated
+- Machine-readable form: the [`checks/`](checks/) directory is the per-check source of truth; an aggregated
   `checklist.json` remains a planned convenience deliverable, following the same
   schema-as-data rule as everything else in Miri — this document and the JSON must be generated from one source.
 

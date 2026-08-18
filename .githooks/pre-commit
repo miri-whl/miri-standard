@@ -22,7 +22,7 @@ if bad:
     print("broken relative links:", *bad, sep="\n  "); sys.exit(1)
 EOF
 
-echo "[miri pre-commit] checklist weights + alert coherence..."
+echo "[miri pre-commit] checklist weights + check-definition coherence..."
 python3 - <<'EOF'
 import re, pathlib, sys, json
 try:
@@ -38,23 +38,23 @@ for target, cl in [('python', 'standards/python/linter-checklist.md'), ('cli', '
     if total != 100:
         print(f"{cl}: weights sum {total}, expected 100"); fail = True
     if deep:
-        schema = json.load(open('schemas/alert-v1.json'))
+        schema = json.load(open('schemas/check-v1.json'))
         alerts = {}
-        for f in sorted(pathlib.Path(f'standards/{target}/alerts').glob('*.yaml')):
+        for f in sorted(pathlib.Path(f'standards/{target}/checks').glob('*.yaml')):
             d = yaml.safe_load(f.read_text())
             try:
                 jsonschema.validate(d, schema)
             except jsonschema.ValidationError as e:
                 print(f"{f}: schema violation: {e.message}"); fail = True
-            alerts[d['id']] = d
+            checks[d['id']] = d
         for cid, (lvl, w) in table.items():
             if cid not in alerts:
-                print(f"missing alert file: {cid}"); fail = True
-            elif alerts[cid]['level'][0] != lvl or alerts[cid]['weight'] != w:
-                print(f"{cid}: alert/table level or weight mismatch"); fail = True
+                print(f"missing check file: {cid}"); fail = True
+            elif checks[cid]['level'][0] != lvl or checks[cid]['weight'] != w:
+                print(f"{cid}: check-file/table level or weight mismatch"); fail = True
         for cid in alerts:
             if cid not in table:
-                print(f"alert with no checklist row: {cid}"); fail = True
+                print(f"check file with no checklist row: {cid}"); fail = True
 if fail: sys.exit(1)
 EOF
 

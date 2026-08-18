@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/alert-v1.json",
-  "title": "Miri Standard Alert Definition",
-  "description": "Schema for the per-alert definition files in standards/<target>/alerts/ - the committee-owned, machine-readable source of truth for every check, consumed by linter implementations",
+  "$id": "https://miri-standard.org/schemas/check-v1.json",
+  "title": "Miri Standard Check Definition",
+  "description": "Schema for the per-check definition files in standards/<target>/checks/ - the committee-owned, machine-readable source of truth for every check, consumed by linter implementations",
   "type": "object",
   "required": [
     "id",
