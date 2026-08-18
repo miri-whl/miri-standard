@@ -1,0 +1,73 @@
+#!/bin/sh
+# Miri Standard pre-commit hook — mirrors the CI checks that can run fast and deterministically.
+# Enable once per clone:  git config core.hooksPath .githooks
+set -e
+
+echo "[miri pre-commit] markdownlint..."
+npx -y markdownlint-cli@0.41.0 "**/*.md"
+
+echo "[miri pre-commit] cspell..."
+npx -y cspell@8 "**/*.md" --no-progress --no-summary
+
+echo "[miri pre-commit] relative links..."
+python3 - <<'EOF'
+import re, pathlib, sys
+bad = []
+for md in pathlib.Path('.').rglob('*.md'):
+    if 'node_modules' in str(md): continue
+    for _, t in re.findall(r'\[([^\]]*)\]\(([^)]+)\)', md.read_text()):
+        if not t.startswith(('http', 'mailto:', '#')) and not (md.parent / t.split('#')[0]).resolve().exists():
+            bad.append(f"{md}: {t}")
+if bad:
+    print("broken relative links:", *bad, sep="\n  "); sys.exit(1)
+EOF
+
+echo "[miri pre-commit] checklist weights + alert coherence..."
+python3 - <<'EOF'
+import re, pathlib, sys, json
+try:
+    import yaml, jsonschema
+    deep = True
+except ImportError:
+    deep = False  # weights still checked; install pyyaml+jsonschema for full alert validation
+ROW = re.compile(r'^\| (MIRI-(?:PY|CLI)-\d+) \| ([MS]) \| .+? \| .+? \| .+? \| (\d+) \|$', re.M)
+fail = False
+for target, cl in [('python', 'standards/python/linter-checklist.md'), ('cli', 'standards/cli/linter-checklist.md')]:
+    table = {m.group(1): (m.group(2), int(m.group(3))) for m in ROW.finditer(open(cl).read())}
+    total = sum(w for _, w in table.values())
+    if total != 100:
+        print(f"{cl}: weights sum {total}, expected 100"); fail = True
+    if deep:
+        schema = json.load(open('schemas/alert-v1.json'))
+        alerts = {}
+        for f in sorted(pathlib.Path(f'standards/{target}/alerts').glob('*.yaml')):
+            d = yaml.safe_load(f.read_text())
+            try:
+                jsonschema.validate(d, schema)
+            except jsonschema.ValidationError as e:
+                print(f"{f}: schema violation: {e.message}"); fail = True
+            alerts[d['id']] = d
+        for cid, (lvl, w) in table.items():
+            if cid not in alerts:
+                print(f"missing alert file: {cid}"); fail = True
+            elif alerts[cid]['level'][0] != lvl or alerts[cid]['weight'] != w:
+                print(f"{cid}: alert/table level or weight mismatch"); fail = True
+        for cid in alerts:
+            if cid not in table:
+                print(f"alert with no checklist row: {cid}"); fail = True
+if fail: sys.exit(1)
+EOF
+
+# External links added in THIS commit: fail on hard 404s only (403/timeouts are CI-crawler noise).
+echo "[miri pre-commit] new external links (404 check)..."
+NEW_URLS=$(git diff --cached -U0 -- '*.md' | grep '^+' | grep -oE 'https?://[^)"<> ]+' | sort -u || true)
+for url in $NEW_URLS; do
+    case "$url" in *gnu.org*|*localhost*) continue;; esac
+    code=$(curl -o /dev/null -sL -w '%{http_code}' -m 8 "$url" || echo 000)
+    if [ "$code" = "404" ]; then
+        echo "dead link added in this commit (HTTP 404): $url"
+        exit 1
+    fi
+done
+
+echo "[miri pre-commit] all checks passed"

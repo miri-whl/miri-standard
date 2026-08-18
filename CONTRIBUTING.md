@@ -17,6 +17,17 @@ information about how to contribute.
 This project and everyone participating in it is governed by our [Code of Conduct](CODE-OF-CONDUCT.md). By
 participating, you are expected to uphold this code.
 
+## Pre-commit Hook
+
+The repository ships its CI checks as a pre-commit hook. Enable it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+It runs markdownlint, cspell, relative-link verification, checklist-weight and alert-definition coherence, and a
+404 check on external links added by the commit. Full external-link checking runs in CI only.
+
 ## Getting Started
 
 1. Fork the repository on GitHub

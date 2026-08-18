@@ -170,4 +170,4 @@ these two wheels as the same number.
 ---
 
 *Prepared by the miri-py team. Reference implementation of everything in §2.2 is available in the
-[miri-py repository](https://github.com/miri-standard/miri-py) (`src/miri_py/linter/scoring/`).*
+`miri-py` repository (`src/miri_py/linter/scoring/`; repository not yet public — link withheld).*

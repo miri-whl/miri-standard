@@ -12,7 +12,8 @@ verification scripting.
 
 ## CI and Local Verification
 
-CI (`.github/workflows/ci.yml`) runs three jobs; all must pass:
+A pre-commit hook mirroring CI ships in `.githooks/` — enable with `git config core.hooksPath .githooks` (do this
+first in a fresh clone). CI (`.github/workflows/ci.yml`) runs three jobs; all must pass:
 
 ```bash
 # Markdown lint — same ruleset as CI (config: .markdownlint.json)
