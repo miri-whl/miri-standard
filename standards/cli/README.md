@@ -9,6 +9,8 @@ Where the Python standards extend the wheel format so agents can understand a *l
 ## Current Specifications
 
 - **[CLI Lifecycle and Vulnerability Signaling](cli-lifecycle-specification.md)** *(Draft)* - Self-identification (purl), advisory sources, `check-update`, machine-readable changelog, and deprecation metadata; covers open source and private CLIs
+- **[Linter Checklist](linter-checklist.md)** *(Draft)* - The 43 numbered checks (MIRI-CLI-001…043) with standards references and scoring weights summing to 100
+- **[Artifact Lifecycle](artifact-lifecycle.md)** *(Draft)* - Every stage from release to withdrawal, the nested surface lifecycle, and the three-clocks model (diagrammed PDF available)
 
 ### Planned Specifications
 

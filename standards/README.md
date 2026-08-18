@@ -37,6 +37,8 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 ### CLI Standards
 - **[CLI Overview](cli/)** - CLI standards, background research, and planned specifications
 - **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - Self-identification, advisory sources, update checks, and deprecation metadata for open source and private CLIs
+- **[CLI Linter Checklist](cli/linter-checklist.md)** - 43 numbered, weighted conformance checks for scoring CLIs 0–100
+- **[CLI Artifact Lifecycle](cli/artifact-lifecycle.md)** - Stages from release to withdrawal with the nested surface lifecycle
 - **[Agent CLI Landscape and Prior Art](cli/landscape-and-prior-art.md)** - Survey of existing CLI standards, 2026 agent-CLI efforts, and the open gaps (lifecycle, versioning, introspection) that scope Miri's CLI work
 - **[Update and Vulnerability Signaling](cli/update-and-vulnerability-signaling.md)** - How the library world computes "must be updated" (purl + OSV + installed inventory), why standalone CLIs are illegible to that machinery, and what Miri should require (self-identification, update-check primitive)
 
@@ -63,6 +65,8 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **[Agent Metadata Specification](python/agent-metadata-specification.md)** - Pre-parsed metadata formats for performance optimization
 - **[Python Implementation Guide](python/implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
 - **[Python Lifecycle and Security Metadata](python/lifecycle-security-metadata.md)** - Package identity, advisory sources, and lifecycle state for open source and private packages
+- **[Python Linter Checklist](python/linter-checklist.md)** - 40 numbered, weighted conformance checks for scoring wheels 0–100
+- **[Python Artifact Lifecycle](python/artifact-lifecycle.md)** - Stages from build to archival with the nested interface lifecycle
 - **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - CLI self-identification, advisory sources, update checks, and deprecation metadata
 
 ### Proposed Standards
