@@ -4,7 +4,7 @@
   <img src="assets/img/miri-grey.png" alt="MIRI Logo" width="200"/>
 </p>
 
-[![CI](https://github.com/[GITHUB_ORG]/miri-standard/workflows/CI/badge.svg)](https://github.com/[GITHUB_ORG]/miri-standard/actions)
+[![CI](https://github.com/miri-whl/miri-standard/workflows/CI/badge.svg)](https://github.com/miri-whl/miri-standard/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Contributor Covenant](https://img.shields.io/badge/Contributor%20Covenant-2.1-4baaaa.svg)](CODE-OF-CONDUCT.md)
 
@@ -122,7 +122,7 @@ Current specifications and standards:
 ### Getting Involved
 
 - 📖 Read our [Contributing Guidelines](CONTRIBUTING.md)
-- 💬 Join discussions in [GitHub Discussions](../../discussions)
+- 💬 Join discussions in [GitHub Discussions](https://github.com/miri-whl/miri-standard/discussions)
 - 🤝 Follow our [Code of Conduct](CODE-OF-CONDUCT.md)
 - 📅 Attend community meetings (schedule TBD)
 

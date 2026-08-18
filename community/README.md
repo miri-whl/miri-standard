@@ -60,7 +60,7 @@ Working groups are formed for specific, time-bounded initiatives. Currently acti
 
 ## Meeting Notes
 
-All meeting notes are stored in the [meetings/](meetings/) directory and are organized by date and meeting type.
+All meeting notes are stored in the `meetings/` directory *(to be created)* and are organized by date and meeting type.
 
 ## Contact
 

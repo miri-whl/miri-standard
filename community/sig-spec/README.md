@@ -116,7 +116,7 @@ SIG-Spec focuses on:
 
 ## Meeting Archive
 
-Meeting notes and recordings are stored in the [meetings/](../meetings/sig-spec/) directory.
+Meeting notes and recordings are stored in the `meetings/sig-spec/` directory *(to be created)*.
 
 ## Contact
 

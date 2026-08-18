@@ -40,7 +40,7 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **[Wheel Format Specification](python/wheel-format.md)** - Comprehensive documentation of current .whl format
 - **[Packaging Standards Overview](python/packaging-standards.md)** - Summary of existing Python packaging standards and
   PEPs
-- **[Metadata Standards](python/metadata-standards.md)** *(Planned)*
+- **Metadata Standards** *(Planned)*
 
 ### CLI Standards
 

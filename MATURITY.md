@@ -162,15 +162,15 @@ The project tracks the following metrics to assess maturity:
 
 ### Documentation
 
-- [Project Roadmap](docs/roadmap.md) *(to be created)*
+- Project Roadmap *(to be created)*
 - [Technical Specifications](standards/) *(to be populated)*
-- [Implementation Guide](docs/implementation.md) *(to be created)*
+- Implementation Guide *(to be created)*
 
 ### Community
 
 - [Community Guidelines](community/) *(to be created)*
-- [Meeting Notes](community/meetings/) *(to be created)*
-- [Special Interest Groups](community/sigs/) *(to be created)*
+- Meeting Notes *(to be created)*
+- Special Interest Groups *(to be created)*
 
 ---
 

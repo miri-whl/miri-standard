@@ -81,7 +81,7 @@ SIG-Community focuses on:
 
 ## Meeting Archive
 
-Meeting notes and recordings are stored in the [meetings/](../meetings/sig-community/) directory.
+Meeting notes and recordings are stored in the `meetings/sig-community/` directory *(to be created)*.
 
 ## Contact
 

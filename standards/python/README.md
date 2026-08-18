@@ -13,7 +13,7 @@ packaging ecosystem and how the Miri Standard extends it to enable enhanced agen
 
 - **[Wheel Format Specification](wheel-format.md)** - Complete documentation of the current .whl format
 - **[Packaging Standards Overview](packaging-standards.md)** - Summary of existing Python packaging standards and PEPs
-- **[Metadata Standards](metadata-standards.md)** - Current metadata formats and their limitations
+- **Metadata Standards** - Current metadata formats and their limitations
 
 ## Miri Extensions
 
@@ -32,17 +32,17 @@ packaging ecosystem and how the Miri Standard extends it to enable enhanced agen
 
 ### Planned Specifications
 
-- **[Agent Metadata Schema](agent-metadata-schema.md)** *(Planned)* - JSON schemas for validation
-- **[Example Structure Specification](example-structure.md)** *(Planned)* - Detailed example organization guidelines
-- **[Build Tools Integration](build-tools-integration.md)** *(Planned)* - Integration with setuptools, poetry, hatch
+- **Agent Metadata Schema** *(Planned)* - JSON schemas for validation
+- **Example Structure Specification** *(Planned)* - Detailed example organization guidelines
+- **Build Tools Integration** *(Planned)* - Integration with setuptools, poetry, hatch
 
 ## Implementation
 
 ### Reference Implementation
 
-- **[Python Miri Library](reference-implementation/)** *(Planned)*
-- **[Validation Tools](validation-tools/)** *(Planned)*
-- **[Examples and Templates](examples/)** *(Planned)*
+- **Python Miri Library** *(Planned)*
+- **Validation Tools** *(Planned)*
+- **Examples and Templates** *(Planned)*
 
 ## Background
 

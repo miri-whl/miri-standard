@@ -182,9 +182,9 @@ technical details.]
 
 [List relevant references, standards, and related work:]
 
-- [Reference 1](link)
-- [Reference 2](link)
-- [Related Standard](link)
+- Reference 1 — *add link*
+- Reference 2 — *add link*
+- Related Standard — *add link*
 
 ## Changelog
 
