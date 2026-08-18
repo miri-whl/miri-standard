@@ -1,6 +1,7 @@
 # Contributing to miri-standard
 
-Thank you for your interest in contributing to the miri-standard project! This document provides guidelines and information about how to contribute.
+Thank you for your interest in contributing to the miri-standard project! This document provides guidelines and
+information about how to contribute.
 
 ## Table of Contents
 
@@ -13,7 +14,8 @@ Thank you for your interest in contributing to the miri-standard project! This d
 
 ## Code of Conduct
 
-This project and everyone participating in it is governed by our [Code of Conduct](CODE-OF-CONDUCT.md). By participating, you are expected to uphold this code.
+This project and everyone participating in it is governed by our [Code of Conduct](CODE-OF-CONDUCT.md). By
+participating, you are expected to uphold this code.
 
 ## Getting Started
 
@@ -146,11 +148,13 @@ If you need help with contributing:
 
 ## License
 
-By contributing to this project, you agree that your contributions will be licensed under the same license as the project (MIT License).
+By contributing to this project, you agree that your contributions will be licensed under the same license as the
+project (MIT License).
 
 ## Developer Certificate of Origin (DCO)
 
-This project requires all contributors to sign off on their commits, indicating that they have the right to submit the code under the project's license. See [DCO](DCO) for more details.
+This project requires all contributors to sign off on their commits, indicating that they have the right to submit the
+code under the project's license. See [DCO](DCO) for more details.
 
 To sign off on a commit, add the `-s` flag to your git commit command:
 

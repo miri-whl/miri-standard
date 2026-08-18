@@ -4,17 +4,21 @@ This document describes the governance model for the miri-standard project.
 
 ## Overview
 
-The miri-standard project is committed to building an open, inclusive, productive and self-governing open source community focused on developing standards for [PROJECT DESCRIPTION TO BE ADDED]. The community is governed by this document which defines how all members should work together to achieve this goal.
+The miri-standard project is committed to building an open, inclusive, productive and self-governing open source
+community focused on developing standards for [PROJECT DESCRIPTION TO BE ADDED]. The community is governed by this
+document which defines how all members should work together to achieve this goal.
 
 ## Roles and Responsibilities
 
 ### Users
 
-Users are community members who have a need for the project. Anyone can be a User; there are no special requirements. Users are encouraged to participate in the community and provide feedback.
+Users are community members who have a need for the project. Anyone can be a User; there are no special requirements.
+Users are encouraged to participate in the community and provide feedback.
 
 ### Contributors
 
-Contributors are community members who contribute in concrete ways to the project. Anyone can become a Contributor, and contributions can take many forms including:
+Contributors are community members who contribute in concrete ways to the project. Anyone can become a Contributor, and
+contributions can take many forms including:
 
 - Code contributions
 - Documentation improvements
@@ -119,7 +123,8 @@ When conflicts arise, the following escalation process is used:
 
 ## Code of Conduct
 
-All community members must follow the project's [Code of Conduct](CODE-OF-CONDUCT.md). Violations are handled according to the enforcement procedures outlined in that document.
+All community members must follow the project's [Code of Conduct](CODE-OF-CONDUCT.md). Violations are handled according
+to the enforcement procedures outlined in that document.
 
 ## Amendments
 
@@ -138,7 +143,8 @@ All contributions to the project are made under the [MIT License](LICENSE).
 
 ### Copyright
 
-Contributors retain copyright to their contributions while granting the project rights to use, modify, and distribute the contributions under the project license.
+Contributors retain copyright to their contributions while granting the project rights to use, modify, and distribute
+the contributions under the project license.
 
 ### Patents
 
@@ -175,4 +181,5 @@ For questions about governance:
 
 ---
 
-This governance model is inspired by successful open source projects and standards organizations. It will evolve as the project grows and the community's needs change.
+This governance model is inspired by successful open source projects and standards organizations. It will evolve as the
+project grows and the community's needs change.

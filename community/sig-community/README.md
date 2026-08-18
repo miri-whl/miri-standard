@@ -1,6 +1,7 @@
 # SIG-Community
 
-The Community Special Interest Group (SIG-Community) is responsible for community building, outreach, governance, and ensuring the health and growth of the miri-standard project community.
+The Community Special Interest Group (SIG-Community) is responsible for community building, outreach, governance, and
+ensuring the health and growth of the miri-standard project community.
 
 ## Scope
 

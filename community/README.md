@@ -1,8 +1,11 @@
 # Miri Standard Community
 
-Welcome to the Miri Standard community! Just as Miranda Sharifi used her enhanced capabilities to serve the broader community rather than isolation, our project aims to enhance collaboration between human developers and autonomous agents for everyone's benefit.
+Welcome to the Miri Standard community! Just as Miranda Sharifi used her enhanced capabilities to serve the broader
+community rather than isolation, our project aims to enhance collaboration between human developers and autonomous
+agents for everyone's benefit.
 
-This directory contains information about how our community is organized and how to participate in building the future of agent-friendly Python packaging.
+This directory contains information about how our community is organized and how to participate in building the future
+of agent-friendly Python packaging.
 
 ## Community Structure
 
@@ -17,7 +20,7 @@ Our community is organized into Special Interest Groups that focus on specific a
 
 Working groups are formed for specific, time-bounded initiatives. Currently active working groups:
 
-*(No active working groups at this time)*
+*(No active working groups at this time).*
 
 ## Communication
 

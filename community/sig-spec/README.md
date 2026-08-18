@@ -1,6 +1,7 @@
 # SIG-Spec
 
-The Specification Special Interest Group (SIG-Spec) is responsible for the development, maintenance, and evolution of the miri-standard specifications and technical standards.
+The Specification Special Interest Group (SIG-Spec) is responsible for the development, maintenance, and evolution of
+the miri-standard specifications and technical standards.
 
 ## Scope
 
@@ -43,11 +44,11 @@ SIG-Spec focuses on:
 
 ### Current Standards
 
-*(Standards will be listed here as they are developed)*
+*(Standards will be listed here as they are developed).*
 
 ### Standards in Development
 
-*(Active specification work will be tracked here)*
+*(Active specification work will be tracked here).*
 
 ## Current Initiatives
 

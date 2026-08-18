@@ -6,16 +6,21 @@
 
 ## Purpose
 
-The explicit, numbered list of every check a Miri-conformance linter runs against a Python wheel, with the standard each check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-040`); the weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the weights of its passing checks.
+The explicit, numbered list of every check a Miri-conformance linter runs against a Python wheel, with the standard each
+check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-040`); the
+weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the weights of its passing checks.
 
 ## Scoring Model
 
 - **Score** = Σ weights of passing checks (0–100).
 - **Level** column: **M** (MUST — required for conformance) or **S** (SHOULD — quality signal).
-- A wheel with any failing **M** check is **non-conforming regardless of score**; its score is still reported, capped at 74, to show distance from conformance.
-- Checks marked *conditional* (e.g. SBOM only when bundling non-Python components) score their full weight automatically when the condition does not apply.
+- A wheel with any failing **M** check is **non-conforming regardless of score**; its score is still reported, capped at
+  74, to show distance from conformance.
+- Checks marked *conditional* (e.g. SBOM only when bundling non-Python components) score their full weight automatically
+  when the condition does not apply.
 
-**Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible) · <50 non-conforming.
+**Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
+· <50 non-conforming.
 
 ## The Checks
 
@@ -103,9 +108,12 @@ The explicit, numbered list of every check a Miri-conformance linter runs agains
 
 ## Notes for Linter Implementers
 
-- Report each check by its stable ID (`MIRI-PY-NNN`); IDs are never renumbered — retired checks are marked *withdrawn* and their weight redistributed in a new minor version of this checklist.
-- Checks E-029/030/031 require the *previous* release for comparison; linters SHOULD fetch it via the declared `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable.
-- Machine-readable form: a `checklist.json` derived from this table is a planned deliverable, following the same schema-as-data rule as everything else in Miri — this document and the JSON must be generated from one source.
+- Report each check by its stable ID (`MIRI-PY-NNN`); IDs are never renumbered — retired checks are marked *withdrawn*
+  and their weight redistributed in a new minor version of this checklist.
+- Checks E-029/030/031 require the *previous* release for comparison; linters SHOULD fetch it via the declared
+  `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable.
+- Machine-readable form: a `checklist.json` derived from this table is a planned deliverable, following the same
+  schema-as-data rule as everything else in Miri — this document and the JSON must be generated from one source.
 
 ## Companion
 

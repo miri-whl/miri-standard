@@ -2,25 +2,30 @@
 
 ## Introduction
 
-This document provides a comprehensive overview of the Python packaging ecosystem standards that form the foundation for the Miri Standard extensions. Understanding these existing standards is crucial for implementing agent-friendly enhancements while maintaining compatibility.
+This document provides a comprehensive overview of the Python packaging ecosystem standards that form the foundation for
+the Miri Standard extensions. Understanding these existing standards is crucial for implementing agent-friendly
+enhancements while maintaining compatibility.
 
 ## Standards Hierarchy
 
 ### Core Standards (Must Implement)
 
 #### 1. Package Distribution Format
+
 - **PEP 427**: Wheel Binary Package Format 1.0
 - **PEP 491**: Wheel Binary Package Format 1.9
 - **Status**: Universal adoption
 - **Purpose**: Defines the .whl file structure and naming
 
 #### 2. Metadata Format
+
 - **PEP 566**: Metadata for Python Software Packages 2.1
 - **PEP 621**: Storing project metadata in pyproject.toml
 - **Status**: Current standard
 - **Purpose**: Defines package metadata structure and fields
 
 #### 3. Dependency Specification
+
 - **PEP 508**: Dependency specification for Python Software Packages
 - **Status**: Universal adoption
 - **Purpose**: Standardizes how dependencies are declared and resolved
@@ -28,12 +33,14 @@ This document provides a comprehensive overview of the Python packaging ecosyste
 ### Build System Standards
 
 #### 4. Build Interface
+
 - **PEP 517**: A build-system independent format for source trees
 - **PEP 518**: Specifying Minimum Build System Requirements
 - **Status**: Modern standard
 - **Purpose**: Defines how packages are built from source
 
 #### 5. Source Distribution Format
+
 - **PEP 643**: Metadata for Python Software Packages 2.2
 - **Status**: Draft/Future
 - **Purpose**: Next generation metadata format
@@ -42,7 +49,7 @@ This document provides a comprehensive overview of the Python packaging ecosyste
 
 ### Historical Progression
 
-```
+```text
 1998: distutils (basic setup.py)
      ↓
 2004: setuptools (enhanced setup.py, eggs)
@@ -74,11 +81,13 @@ This document provides a comprehensive overview of the Python packaging ecosyste
 ### 1. Core Metadata (PEP 566)
 
 **Required Fields:**
+
 - `Metadata-Version`: Format version identifier
 - `Name`: Package name
 - `Version`: Package version
 
 **Common Optional Fields:**
+
 - `Summary`: One-line description
 - `Description`: Long description
 - `Author`: Package author
@@ -91,7 +100,8 @@ This document provides a comprehensive overview of the Python packaging ecosyste
 ### 2. Wheel Metadata (PEP 427/491)
 
 **WHEEL File Contents:**
-```
+
+```text
 Wheel-Version: 1.0
 Generator: bdist_wheel (0.37.1)
 Root-Is-Purelib: true
@@ -100,6 +110,7 @@ Build: 1
 ```
 
 **Key Components:**
+
 - **Wheel-Version**: Wheel format version
 - **Generator**: Tool that created the wheel
 - **Root-Is-Purelib**: Whether package is pure Python
@@ -109,24 +120,28 @@ Build: 1
 ### 3. Installation Metadata
 
 **RECORD File:**
+
 - Lists all installed files
 - Includes SHA256 hashes
 - Tracks file sizes
 - Enables clean uninstallation
 
 **INSTALLER File:**
+
 - Records installation tool
 - Enables tool-specific behavior
 
 ## Trove Classifiers System
 
 ### Purpose
+
 Trove classifiers provide standardized categorization of packages.
 
 ### Categories
 
 #### Development Status
-```
+
+```text
 Development Status :: 1 - Planning
 Development Status :: 2 - Pre-Alpha
 Development Status :: 3 - Alpha
@@ -137,7 +152,8 @@ Development Status :: 7 - Inactive
 ```
 
 #### Intended Audience
-```
+
+```text
 Intended Audience :: Developers
 Intended Audience :: End Users/Desktop
 Intended Audience :: Science/Research
@@ -145,14 +161,16 @@ Intended Audience :: System Administrators
 ```
 
 #### License Categories
-```
+
+```text
 License :: OSI Approved :: MIT License
 License :: OSI Approved :: Apache Software License
 License :: OSI Approved :: GNU General Public License v3 (GPLv3)
 ```
 
 #### Programming Language
-```
+
+```text
 Programming Language :: Python :: 3
 Programming Language :: Python :: 3.8
 Programming Language :: Python :: 3.9
@@ -162,7 +180,8 @@ Programming Language :: Python :: 3.12
 ```
 
 #### Topic Categories
-```
+
+```text
 Topic :: Software Development :: Libraries :: Python Modules
 Topic :: Internet :: WWW/HTTP :: Dynamic Content
 Topic :: Scientific/Engineering :: Artificial Intelligence
@@ -173,22 +192,26 @@ Topic :: Scientific/Engineering :: Artificial Intelligence
 ### PEP 508 Specification Format
 
 **Basic Dependency:**
-```
+
+```text
 requests >= 2.25.0
 ```
 
 **With Environment Markers:**
-```
+
+```text
 pywin32 >= 1.0; sys_platform == "win32"
 ```
 
 **With Extras:**
-```
+
+```text
 requests[security] >= 2.25.0
 ```
 
 **Complex Example:**
-```
+
+```text
 numpy >= 1.19.0, < 2.0.0; python_version >= "3.8"
 ```
 
@@ -203,7 +226,7 @@ numpy >= 1.19.0, < 2.0.0; python_version >= "3.8"
 | `platform_machine` | Machine type | `== "x86_64"` |
 | `platform_python_implementation` | Python implementation | `== "CPython"` |
 
-## Build System Standards
+## Build Configuration Standards
 
 ### pyproject.toml Structure (PEP 621)
 
@@ -254,25 +277,31 @@ example-tool = "example_package.tools:run"
 ### Validation Tools
 
 #### check-wheel-contents
+
 ```bash
 check-wheel-contents dist/*.whl
 ```
+
 - Validates wheel structure
 - Checks for common issues
 - Ensures standards compliance
 
 #### twine check
+
 ```bash
 twine check dist/*
 ```
+
 - Validates metadata
 - Checks description rendering
 - Ensures PyPI compatibility
 
 #### validate-pyproject
+
 ```bash
 validate-pyproject pyproject.toml
 ```
+
 - Validates pyproject.toml structure
 - Checks PEP 621 compliance
 - Ensures build system compatibility
@@ -280,6 +309,7 @@ validate-pyproject pyproject.toml
 ### Metadata Extraction Tools
 
 #### pkginfo
+
 ```python
 from pkginfo import Wheel
 wheel = Wheel('package-1.0-py3-none-any.whl')
@@ -287,6 +317,7 @@ print(wheel.name, wheel.version)
 ```
 
 #### importlib.metadata
+
 ```python
 from importlib import metadata
 dist = metadata.distribution('package-name')
@@ -298,26 +329,31 @@ print(dist.metadata['Summary'])
 ### Current Limitations
 
 #### 1. Unstructured Content
+
 - **Problem**: Free-form text descriptions
 - **Impact**: Agents cannot parse semantic meaning
 - **Example**: "This library does many things..."
 
 #### 2. Missing Context
+
 - **Problem**: No complexity indicators
 - **Impact**: Agents cannot assess difficulty
 - **Example**: No distinction between beginner and advanced usage
 
 #### 3. Scattered Examples
+
 - **Problem**: Code samples in various locations
 - **Impact**: Agents must search multiple sources
 - **Example**: README, docs, Stack Overflow
 
 #### 4. Limited Relationships
+
 - **Problem**: Basic dependency information only
 - **Impact**: Agents cannot understand usage patterns
 - **Example**: No indication of common package combinations
 
 #### 5. No Learning Paths
+
 - **Problem**: No structured progression
 - **Impact**: Agents cannot guide users through capabilities
 - **Example**: No "start here, then try this" guidance
@@ -325,6 +361,7 @@ print(dist.metadata['Summary'])
 ### Miri Standard Solutions
 
 #### 1. Structured Metadata
+
 ```json
 {
   "miri_version": "1.0",
@@ -335,7 +372,8 @@ print(dist.metadata['Summary'])
 ```
 
 #### 2. Organized Examples
-```
+
+```text
 miri-examples/
 ├── basic/
 │   ├── hello_world.py
@@ -349,6 +387,7 @@ miri-examples/
 ```
 
 #### 3. Rich Templates
+
 ```python
 # Template: Basic API Client
 import {package_name}
@@ -385,7 +424,7 @@ Miri enhancements are additive:
 
 ### Standards Evolution Path
 
-```
+```text
 Current Standards (PEP 566, 621)
          ↓
 Miri Extensions (additive)
@@ -400,11 +439,13 @@ Official Standard (long-term goal)
 ## References
 
 ### Official Documentation
+
 - [Python Packaging User Guide](https://packaging.python.org/)
 - [PyPA Specifications](https://packaging.python.org/specifications/)
 - [PEP Index](https://peps.python.org/)
 
 ### Key PEPs
+
 - [PEP 427: Wheel Binary Package Format 1.0](https://peps.python.org/pep-0427/)
 - [PEP 491: Wheel Binary Package Format 1.9](https://peps.python.org/pep-0491/)
 - [PEP 566: Metadata for Python Software Packages 2.1](https://peps.python.org/pep-0566/)
@@ -412,6 +453,7 @@ Official Standard (long-term goal)
 - [PEP 508: Dependency specification](https://peps.python.org/pep-0508/)
 
 ### Tools and Resources
+
 - [Python Packaging Authority](https://www.pypa.io/)
 - [PyPI - Python Package Index](https://pypi.org/)
 - [Warehouse (PyPI codebase)](https://github.com/pypa/warehouse)

@@ -4,7 +4,8 @@ This directory contains specifications and documentation for Python-specific imp
 
 ## Overview
 
-Python serves as the foundation language for the Miri Standard. This section documents both the existing Python packaging ecosystem and how the Miri Standard extends it to enable enhanced agent-package communication.
+Python serves as the foundation language for the Miri Standard. This section documents both the existing Python
+packaging ecosystem and how the Miri Standard extends it to enable enhanced agent-package communication.
 
 ## Current Standards
 
@@ -19,11 +20,15 @@ Python serves as the foundation language for the Miri Standard. This section doc
 ### Current Specifications
 
 - **[Miri Wheel Extensions](miri-wheel-extensions.md)** - Complete specification for agent-friendly wheel format extensions
-- **[Agent Metadata Specification](agent-metadata-specification.md)** - Pre-parsed metadata formats for eliminating agent re-parsing
+- **[Agent Metadata Specification](agent-metadata-specification.md)** - Pre-parsed metadata formats for eliminating
+  agent re-parsing
 - **[Implementation Guide](implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
-- **[Lifecycle and Security Metadata](lifecycle-security-metadata.md)** - Package identity (purl), advisory sources, update checks, and deprecation state for open source and private packages
-- **[Linter Checklist](linter-checklist.md)** - The 40 numbered checks (MIRI-PY-001…040) with standards references and scoring weights summing to 100
-- **[Artifact Lifecycle](artifact-lifecycle.md)** - Every stage from build to EOL, the nested interface lifecycle, and the three-clocks model (diagrammed PDF available)
+- **[Lifecycle and Security Metadata](lifecycle-security-metadata.md)** - Package identity (purl), advisory sources,
+  update checks, and deprecation state for open source and private packages
+- **[Linter Checklist](linter-checklist.md)** - The 40 numbered checks (MIRI-PY-001…040) with standards references and
+  scoring weights summing to 100
+- **[Artifact Lifecycle](artifact-lifecycle.md)** - Every stage from build to EOL, the nested interface lifecycle, and
+  the three-clocks model (diagrammed PDF available)
 
 ### Planned Specifications
 

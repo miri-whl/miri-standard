@@ -6,7 +6,10 @@
 
 ## Abstract
 
-This specification defines extensions to the Python wheel format (PEP 427/491) that enable enhanced communication between Python packages and autonomous agents. The Miri Standard addresses the "thought-string gaps" in current Python packaging by adding structured metadata, embedded examples, and discovery mechanisms that allow agents to immediately understand and use packages without external documentation lookups.
+This specification defines extensions to the Python wheel format (PEP 427/491) that enable enhanced communication
+between Python packages and autonomous agents. The Miri Standard addresses the "thought-string gaps" in current Python
+packaging by adding structured metadata, embedded examples, and discovery mechanisms that allow agents to immediately
+understand and use packages without external documentation lookups.
 
 ## Table of Contents
 
@@ -24,7 +27,9 @@ This specification defines extensions to the Python wheel format (PEP 427/491) t
 
 ### 1.1 Goal
 
-Enable autonomous agents (code assistants, code generators, automated development tools) to immediately understand and utilize Python packages after installation via standard package managers, without requiring external documentation lookups or sequential text processing.
+Enable autonomous agents (code assistants, code generators, automated development tools) to immediately understand and
+utilize Python packages after installation via standard package managers, without requiring external documentation
+lookups or sequential text processing.
 
 ### 1.2 Current Limitations
 
@@ -51,6 +56,7 @@ The Miri Standard fills these gaps by extending the wheel format with:
 ### 2.1 Backward Compatibility
 
 All Miri extensions MUST maintain full compatibility with existing Python packaging tools:
+
 - Standard `pip install` workflow unchanged
 - Existing metadata formats preserved
 - Non-Miri-aware tools continue to function normally
@@ -58,6 +64,7 @@ All Miri extensions MUST maintain full compatibility with existing Python packag
 ### 2.2 Additive Enhancement
 
 Miri metadata supplements rather than replaces existing information:
+
 - New files added to `.dist-info/` directory
 - Optional package data directories
 - Enhanced but compatible docstrings
@@ -66,6 +73,7 @@ Miri metadata supplements rather than replaces existing information:
 ### 2.3 Immediate Discovery
 
 All agent-relevant information MUST be accessible without external lookups:
+
 - Complete examples bundled in the package
 - Structured metadata for instant parsing
 - Self-contained documentation
@@ -74,6 +82,7 @@ All agent-relevant information MUST be accessible without external lookups:
 ### 2.4 Multi-Dimensional Information
 
 Information provided in multiple formats simultaneously:
+
 - JSON metadata for programmatic access
 - Markdown documentation for human readers
 - Executable code examples for immediate use
@@ -88,17 +97,22 @@ The Miri Standard leverages three extension points in the Python packaging ecosy
 #### 3.1.1 Custom Metadata Files in `.dist-info/`
 
 The wheel format allows custom files in the `.dist-info/` directory. Miri adds:
+
 - `AGENT_EXAMPLES.json` - Example index and metadata
 - `USAGE_PATTERNS.md` - Structured usage guide
 - `API_REFERENCE.json` - Machine-readable API metadata
 - `AGENT_GUIDE.md` - Agent-specific documentation
 - `TEMPLATES.json` - Code template index
 
-This extension point now has accepted upstream precedent: [PEP 770](https://peps.python.org/pep-0770/) (accepted 2025) standardizes an `sboms/` directory inside `.dist-info/` for Software Bill-of-Materials documents. Miri does not redefine SBOMs — packages bundling non-Python components MUST use PEP 770 as specified in [Lifecycle and Security Metadata §3.2](lifecycle-security-metadata.md).
+This extension point now has accepted upstream precedent: [PEP 770](https://peps.python.org/pep-0770/) (accepted 2025)
+standardizes an `sboms/` directory inside `.dist-info/` for Software Bill-of-Materials documents. Miri does not redefine
+SBOMs — packages bundling non-Python components MUST use PEP 770 as specified in
+[Lifecycle and Security Metadata §3.2](lifecycle-security-metadata.md).
 
 #### 3.1.2 Enhanced Package Data
 
 Structured directories within the main package:
+
 - `agent-metadata/` - Pre-parsed, structured data for agent consumption
 - `examples/` - Categorized code samples
 - `docs/` - Embedded documentation
@@ -107,6 +121,7 @@ Structured directories within the main package:
 #### 3.1.3 Pre-Parsed Agent Metadata
 
 The `agent-metadata/` directory contains optimized data structures that eliminate agent re-parsing:
+
 - `sdk-manifest.json` - Core API index with structured signatures
 - `usage-patterns.json` - Pre-extracted, categorized code patterns
 - `migration-guide.json` - Structured version change documentation
@@ -116,6 +131,7 @@ The `agent-metadata/` directory contains optimized data structures that eliminat
 #### 3.1.4 Discovery APIs
 
 Runtime functions for accessing Miri metadata:
+
 - Package-level discovery functions
 - Metadata extraction utilities
 - Example enumeration and loading
@@ -124,7 +140,7 @@ Runtime functions for accessing Miri metadata:
 
 ### 3.2 Wheel Structure Extensions
 
-```
+```text
 package-1.0.0-py3-none-any.whl
 ├── package/                          # Standard package code
 │   ├── __init__.py                   # Enhanced with discovery APIs
@@ -173,6 +189,7 @@ package-1.0.0-py3-none-any.whl
 **Purpose**: Structured index of all examples with metadata for agent consumption.
 
 **Schema**:
+
 ```json
 {
   "$schema": "https://miri-standard.org/schemas/agent-examples-v1.json",
@@ -210,6 +227,7 @@ package-1.0.0-py3-none-any.whl
 ```
 
 **Example**:
+
 ```json
 {
   "version": "1.0",
@@ -261,7 +279,8 @@ package-1.0.0-py3-none-any.whl
 **Purpose**: Extend standard PEP 566 metadata with Miri-specific fields.
 
 **Additional Fields**:
-```
+
+```text
 # Miri Standard Extensions
 Agent-Examples-Dir: examples
 Agent-Docs-Dir: docs
@@ -275,7 +294,8 @@ Miri-Compliance: full|partial|none
 ```
 
 **Example**:
-```
+
+```text
 Metadata-Version: 2.1
 Name: example-sdk
 Version: 1.0.0
@@ -307,6 +327,7 @@ that enable autonomous agents to immediately understand and use the package.
 **Purpose**: Machine-readable API metadata for programmatic consumption.
 
 **Schema**:
+
 ```json
 {
   "$schema": "https://miri-standard.org/schemas/api-reference-v1.json",
@@ -351,6 +372,7 @@ that enable autonomous agents to immediately understand and use the package.
 **Purpose**: Index of available code templates with metadata.
 
 **Schema**:
+
 ```json
 {
   "$schema": "https://miri-standard.org/schemas/templates-v1.json",
@@ -379,7 +401,7 @@ that enable autonomous agents to immediately understand and use the package.
 
 ### 5.1 Examples Directory Structure
 
-```
+```text
 examples/
 ├── __init__.py                    # Example discovery and loading
 ├── quickstart.py                  # Required: Basic usage
@@ -402,20 +424,21 @@ examples/
 Each example file MUST include:
 
 1. **Header Comment Block**:
-```python
-#!/usr/bin/env python3
-"""
-Example Title
 
-Brief description of what this example demonstrates.
-Perfect for AI agents to understand specific functionality.
-
-Complexity: beginner|intermediate|advanced
-Tags: tag1, tag2, tag3
-Estimated time: X minutes
-Prerequisites: other_example_names
-"""
-```
+   ```python
+   #!/usr/bin/env python3
+   """
+   Example Title
+   
+   Brief description of what this example demonstrates.
+   Perfect for AI agents to understand specific functionality.
+   
+   Complexity: beginner|intermediate|advanced
+   Tags: tag1, tag2, tag3
+   Estimated time: X minutes
+   Prerequisites: other_example_names
+   """
+   ```
 
 2. **Runnable Code**: Complete, executable examples
 3. **Error Handling**: Proper exception management
@@ -424,7 +447,7 @@ Prerequisites: other_example_names
 
 ### 5.3 Documentation Directory
 
-```
+```text
 docs/
 ├── __init__.py                   # Doc discovery
 ├── api_reference.md             # Complete API documentation
@@ -438,7 +461,7 @@ docs/
 
 ### 5.4 Templates Directory
 
-```
+```text
 templates/
 ├── __init__.py                  # Template discovery
 ├── basic_project.py            # Basic project structure
@@ -540,12 +563,14 @@ Build systems SHOULD generate AI_EXAMPLES.json automatically by scanning example
 #### 7.2.1 Required Files
 
 **Minimum Compliance**:
+
 - `examples/quickstart.py` - Basic usage example
 - `AI_EXAMPLES.json` - Example metadata
 - Enhanced METADATA with Miri fields
 - `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
 
 **Full Compliance**:
+
 - Complete examples directory structure
 - All metadata files (AI_EXAMPLES.json, API_REFERENCE.json, TEMPLATES.json)
 - Documentation directory
@@ -585,6 +610,7 @@ New packages SHOULD implement full Miri compliance from the start using provided
 ### 8.3 Graceful Degradation
 
 Miri-enhanced packages MUST work normally when:
+
 - Miri tools are not available
 - Examples directory is missing
 - Metadata files are absent
@@ -627,6 +653,7 @@ miri-validate --report package-name
 #### 9.2.2 JSON Schema Validation
 
 All JSON metadata files MUST validate against published schemas:
+
 - `https://miri-standard.org/schemas/ai-examples-v1.json`
 - `https://miri-standard.org/schemas/api-reference-v1.json`
 - `https://miri-standard.org/schemas/templates-v1.json`
@@ -634,6 +661,7 @@ All JSON metadata files MUST validate against published schemas:
 ### 9.3 Testing Requirements
 
 Miri-compliant packages SHOULD include tests that verify:
+
 - All examples execute without errors
 - All discovery APIs return valid data
 - All metadata files are valid JSON

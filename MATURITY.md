@@ -1,16 +1,18 @@
 # Project Maturity Model
 
-This document describes the maturity model for the miri-standard project, defining the different phases of project development and the criteria for advancement between phases.
+This document describes the maturity model for the miri-standard project, defining the different phases of project
+development and the criteria for advancement between phases.
 
 ## Maturity Phases
 
 ### Phase 1: Incubation
 
-**Current Phase: Incubation**
+**Current Phase: Incubation.**
 
 The project is in its initial development phase, establishing foundational elements and building community.
 
-#### Criteria for Incubation Phase:
+#### Criteria for Incubation Phase
+
 - [x] Basic project structure established
 - [x] Initial governance documents created
 - [x] Code of Conduct adopted
@@ -20,7 +22,8 @@ The project is in its initial development phase, establishing foundational eleme
 - [ ] Community engagement initiated
 - [ ] Basic CI/CD pipeline established
 
-#### Goals for Incubation Phase:
+#### Goals for Incubation Phase
+
 - Establish core project infrastructure
 - Define initial standards and specifications
 - Build initial community of contributors
@@ -31,7 +34,8 @@ The project is in its initial development phase, establishing foundational eleme
 
 The project has established its foundation and is actively developing standards and building community.
 
-#### Criteria for Development Phase:
+#### Criteria for Development Phase
+
 - [ ] At least 3 active maintainers from different organizations
 - [ ] Published initial version of core standards
 - [ ] Active community participation (issues, discussions, contributions)
@@ -40,7 +44,8 @@ The project has established its foundation and is actively developing standards 
 - [ ] Reference implementation or examples available
 - [ ] Established testing and validation processes
 
-#### Goals for Development Phase:
+#### Goals for Development Phase
+
 - Mature the core standards and specifications
 - Grow the contributor community
 - Establish interoperability testing
@@ -51,7 +56,8 @@ The project has established its foundation and is actively developing standards 
 
 The project has mature standards with proven adoption and a thriving community.
 
-#### Criteria for Stable Phase:
+#### Criteria for Stable Phase
+
 - [ ] Standards have been implemented by multiple independent organizations
 - [ ] Demonstrated interoperability between implementations
 - [ ] Active community with regular contributions
@@ -61,7 +67,8 @@ The project has mature standards with proven adoption and a thriving community.
 - [ ] Performance benchmarks established
 - [ ] Backward compatibility guarantees
 
-#### Goals for Stable Phase:
+#### Goals for Stable Phase
+
 - Maintain stability and backward compatibility
 - Continue evolution through community-driven process
 - Support ecosystem growth
@@ -71,7 +78,8 @@ The project has mature standards with proven adoption and a thriving community.
 
 The project has achieved widespread adoption and is considered a mature, stable standard in its domain.
 
-#### Criteria for Graduated Phase:
+#### Criteria for Graduated Phase
+
 - [ ] Widespread industry adoption
 - [ ] Multiple conformant implementations
 - [ ] Proven production usage at scale
@@ -80,7 +88,8 @@ The project has achieved widespread adoption and is considered a mature, stable 
 - [ ] Integration with other major standards or frameworks
 - [ ] Regular security audits and updates
 
-#### Goals for Graduated Phase:
+#### Goals for Graduated Phase
+
 - Maintain the standard as a stable, reliable foundation
 - Continue innovation through extensions and new versions
 - Mentor related projects and standards
@@ -111,7 +120,8 @@ Advancement between phases requires:
 
 ### Progress Tracking
 
-#### Incubation Phase Progress:
+#### Incubation Phase Progress
+
 - [x] Project structure: Complete
 - [x] Governance documents: Complete
 - [x] Code of Conduct: Complete
@@ -125,21 +135,24 @@ Advancement between phases requires:
 
 The project tracks the following metrics to assess maturity:
 
-#### Community Metrics:
+#### Community Metrics
+
 - Number of contributors
 - Number of organizations represented
 - Community meeting attendance
 - Issue and PR activity
 - Discussion participation
 
-#### Technical Metrics:
+#### Technical Metrics
+
 - Standards coverage and completeness
 - Implementation adoption
 - Interoperability test results
 - Security assessment status
 - Performance benchmarks
 
-#### Adoption Metrics:
+#### Adoption Metrics
+
 - Number of implementations
 - Production deployments
 - Industry feedback and case studies
@@ -147,16 +160,19 @@ The project tracks the following metrics to assess maturity:
 
 ## Resources
 
-### Documentation:
+### Documentation
+
 - [Project Roadmap](docs/roadmap.md) *(to be created)*
 - [Technical Specifications](standards/) *(to be populated)*
 - [Implementation Guide](docs/implementation.md) *(to be created)*
 
-### Community:
+### Community
+
 - [Community Guidelines](community/) *(to be created)*
 - [Meeting Notes](community/meetings/) *(to be created)*
 - [Special Interest Groups](community/sigs/) *(to be created)*
 
 ---
 
-This maturity model is based on best practices from successful open source standards projects and will be updated as the project evolves.
+This maturity model is based on best practices from successful open source standards projects and will be updated as the
+project evolves.

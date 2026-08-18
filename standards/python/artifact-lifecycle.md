@@ -6,7 +6,10 @@
 
 ## Overview
 
-Every stage a Miri-compliant Python package moves through, from first build to end-of-life — with the metadata state each stage requires, the signal consumers see, and the standard each transition derives from. Two state machines compose: the **artifact lifecycle** (the package as a whole) and, nested inside its active years, the **interface lifecycle** (individual APIs deprecating independently — see [Lifecycle Spec §6](lifecycle-security-metadata.md)).
+Every stage a Miri-compliant Python package moves through, from first build to end-of-life — with the metadata state
+each stage requires, the signal consumers see, and the standard each transition derives from. Two state machines
+compose: the **artifact lifecycle** (the package as a whole) and, nested inside its active years, the **interface
+lifecycle** (individual APIs deprecating independently — see [Lifecycle Spec §6](lifecycle-security-metadata.md)).
 
 ## The Artifact Lifecycle
 
@@ -68,17 +71,26 @@ stateDiagram-v2
 
 Transition requirements (enforced by [coherence checks MIRI-PY-028…035](linter-checklist.md)):
 
-1. **Active → Deprecated**: `@deprecated` marker added ([PEP 702](https://peps.python.org/pep-0702/)); build extracts it into `migration-guide.json` with `replacement` and `removal_version`; runtime `DeprecationWarning` fires ([PEP 565](https://peps.python.org/pep-0565/)).
-2. **Deprecated (holding)**: survives ≥2 releases ([PEP 387](https://peps.python.org/pep-0387/) shape); every release's migration-guide keeps the entry.
-3. **Deprecated → Removed**: only at/after `removal_version`; the replacement must exist in the new `sdk-manifest.json`. **Removal without a prior Deprecated state is a conformance failure** (no silent removals, MIRI-PY-030).
+1. **Active → Deprecated**: `@deprecated` marker added ([PEP 702](https://peps.python.org/pep-0702/)); build extracts it
+   into `migration-guide.json` with `replacement` and `removal_version`; runtime `DeprecationWarning` fires ([PEP
+   565](https://peps.python.org/pep-0565/)).
+2. **Deprecated (holding)**: survives ≥2 releases ([PEP 387](https://peps.python.org/pep-0387/) shape); every release's
+   migration-guide keeps the entry.
+3. **Deprecated → Removed**: only at/after `removal_version`; the replacement must exist in the new `sdk-manifest.json`.
+   **Removal without a prior Deprecated state is a conformance failure** (no silent removals, MIRI-PY-030).
 
 ## The Three Clocks
 
-Throughout the lifecycle, three versions advance independently (see [Landscape §5](../cli/landscape-and-prior-art.md)): the **package version** (PEP 440), the **Miri metadata format version** (`miri_lifecycle_version`, schema `$id`s), and — for packages fronting services — the **backing API version**. Collapsing any two loses the ability to change one without a major bump in the other.
+Throughout the lifecycle, three versions advance independently (see [Landscape §5](../cli/landscape-and-prior-art.md)):
+the **package version** (PEP 440), the **Miri metadata format version** (`miri_lifecycle_version`, schema `$id` s), and
+— for packages fronting services — the **backing API version**. Collapsing any two loses the ability to change one
+without a major bump in the other.
 
 ## PDF
 
-A diagrammed PDF rendering is committed at [assets/miri-python-artifact-lifecycle.pdf](../../assets/miri-python-artifact-lifecycle.pdf). This markdown is the source of truth; regenerate the PDF when it changes.
+A diagrammed PDF rendering is committed at
+[assets/miri-python-artifact-lifecycle.pdf](../../assets/miri-python-artifact-lifecycle.pdf). This markdown is the
+source of truth; regenerate the PDF when it changes.
 
 ## Companion
 

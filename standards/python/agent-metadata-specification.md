@@ -6,7 +6,10 @@
 
 ## Abstract
 
-This specification defines pre-parsed, structured metadata formats that eliminate the need for autonomous agents to continuously re-parse documentation and examples. By providing agent-optimized data structures directly within Python wheel packages, we enable instant consumption and significantly improve agent performance when working with SDKs and libraries.
+This specification defines pre-parsed, structured metadata formats that eliminate the need for autonomous agents to
+continuously re-parse documentation and examples. By providing agent-optimized data structures directly within Python
+wheel packages, we enable instant consumption and significantly improve agent performance when working with SDKs and
+libraries.
 
 ## Table of Contents
 
@@ -34,6 +37,7 @@ Autonomous agents face significant performance bottlenecks when working with Pyt
 ### 1.2 Performance Impact
 
 These inefficiencies result in:
+
 - **Slow Integration**: 30-60 seconds to understand a new SDK
 - **Repeated Work**: Same parsing operations across multiple projects
 - **Inconsistent Results**: Varying interpretation of unstructured documentation
@@ -62,7 +66,7 @@ The Miri Standard addresses these issues by providing:
 
 ### 3.1 Enhanced Wheel Structure
 
-```
+```text
 package-1.0.0-py3-none-any.whl
 ├── package/                          # Standard package code
 │   ├── __init__.py
@@ -98,6 +102,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 **Purpose**: Core API index with structured signatures and metadata.
 
 **Schema**:
+
 ```json
 {
   "$schema": "https://miri-standard.org/schemas/sdk-manifest-v1.json",
@@ -190,6 +195,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 **Purpose**: Pre-extracted, categorized code patterns for common use cases.
 
 **Schema**:
+
 ```json
 {
   "$schema": "https://miri-standard.org/schemas/usage-patterns-v1.json",
@@ -279,6 +285,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 **Purpose**: Structured documentation of version changes and migration paths.
 
 **Schema**:
+
 ```json
 {
   "$schema": "https://miri-standard.org/schemas/migration-guide-v1.json",
@@ -345,7 +352,10 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 }
 ```
 
-**Generation source for `deprecations`**: entries MUST be derived from the code's [PEP 702](https://peps.python.org/pep-0702/) `@deprecated` markers at build time (see [Lifecycle and Security Metadata §6](lifecycle-security-metadata.md)) — the decorators are the source of truth, the JSON is the derived inventory.
+**Generation source for `deprecations`**: entries MUST be derived from the code's
+[PEP 702](https://peps.python.org/pep-0702/) `@deprecated` markers at build time (see
+[Lifecycle and Security Metadata §6](lifecycle-security-metadata.md)) — the decorators are the source of truth, the JSON
+is the derived inventory.
 
 ### 4.4 prompt-templates.md (Optional)
 
@@ -358,25 +368,31 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 
 ### For Code Generation
 ```
+
 Generate code using {package_name} to {task_description}.
 Use the patterns from usage-patterns.json, specifically the "{pattern_id}" pattern.
 Follow the API signatures from sdk-manifest.json.
-```
+
+```text
 
 ### For Debugging
 ```
+
 Help debug this {package_name} code: {code_snippet}
 Check against common errors in sdk-manifest.json error_handling section.
 Suggest fixes based on usage patterns.
-```
+
+```text
 
 ### For Migration
 ```
+
 Migrate this code from {package_name} v{old_version} to v{new_version}:
 {code_snippet}
 
 Use migration-guide.json for breaking changes and new features.
-```
+
+```text
 
 ## Agent-Specific Optimizations
 
@@ -401,6 +417,7 @@ Use migration-guide.json for breaking changes and new features.
 **Purpose**: Relationship graph between API components for advanced agent reasoning.
 
 **Schema**:
+
 ```json
 {
   "$schema": "https://miri-standard.org/schemas/api-graph-v1.json",
@@ -445,9 +462,14 @@ Use migration-guide.json for breaking changes and new features.
 
 ### 4.6 lifecycle.json (Required)
 
-**Purpose**: Package identity (purl), authoritative advisory sources, update-check endpoint, and support status — so agents and scanners can answer "is this package vulnerable?" and "is this package current?" at call time, for both open source and private packages.
+**Purpose**: Package identity (purl), authoritative advisory sources, update-check endpoint, and support status — so
+agents and scanners can answer "is this package vulnerable?" and "is this package current?" at call time, for both open
+source and private packages.
 
-This file is fully specified in [Lifecycle and Security Metadata](lifecycle-security-metadata.md), including the open source defaults (PyPI + public OSV), the private/internal package requirements (private purl namespaces, internal OSV-schema advisory sources), and the relationship to PEP 770 SBOMs. Like all files in this directory, it MUST be generated at build time.
+This file is fully specified in [Lifecycle and Security Metadata](lifecycle-security-metadata.md), including the open
+source defaults (PyPI + public OSV), the private/internal package requirements (private purl namespaces, internal
+OSV-schema advisory sources), and the relationship to PEP 770 SBOMs. Like all files in this directory, it MUST be
+generated at build time.
 
 ## 5. Automated Generation
 
@@ -701,7 +723,7 @@ def integrate_with_cursor():
 
 ### 6.2 .cursorrules Integration
 
-```
+```text
 # .cursorrules for projects using Miri-compliant packages
 
 ## Agent Metadata Integration
@@ -805,11 +827,13 @@ class AgentPerformanceTracker:
 ### 8.1 Required Files
 
 **Minimum Compliance**:
+
 - `agent-metadata/sdk-manifest.json` - Core API index
 - `agent-metadata/usage-patterns.json` - Basic usage patterns
 - `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
 
 **Full Compliance**:
+
 - All metadata files present and valid
 - Automated generation integrated into build process
 - Performance optimization implemented
@@ -890,4 +914,6 @@ build-backend = "miri_build_tools.build_meta"
 
 ---
 
-This specification provides the foundation for eliminating agent re-parsing inefficiencies while maintaining full compatibility with the existing Miri Standard. The pre-parsed metadata approach significantly improves agent performance and enables more sophisticated code assistance capabilities.
+This specification provides the foundation for eliminating agent re-parsing inefficiencies while maintaining full
+compatibility with the existing Miri Standard. The pre-parsed metadata approach significantly improves agent performance
+and enables more sophisticated code assistance capabilities.

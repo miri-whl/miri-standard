@@ -6,9 +6,16 @@
 
 ## Abstract
 
-This specification defines how a Miri-compliant CLI declares its identity, advisory sources, update state, and deprecation metadata so that agents and scanners can answer at call time: **"is this tool vulnerable?"**, **"is this tool current?"**, and **"is this flag going away?"**. It is the normative counterpart to the two background documents in this directory ([landscape](landscape-and-prior-art.md), [signaling](update-and-vulnerability-signaling.md)).
+This specification defines how a Miri-compliant CLI declares its identity, advisory sources, update state, and
+deprecation metadata so that agents and scanners can answer at call time: **"is this tool vulnerable?"**, **"is this
+tool current?"**, and **"is this flag going away?"**. It is the normative counterpart to the two background documents in
+this directory ([landscape](landscape-and-prior-art.md), [signaling](update-and-vulnerability-signaling.md)).
 
-The library world's security machinery — [purl](https://github.com/package-url/purl-spec) identity joined against [OSV](https://ossf.github.io/osv-schema/) advisories — cannot see a standalone CLI binary because nothing standard makes the binary legible. This specification supplies the missing legs: mandatory self-identification in the introspection output, declared advisory sources, a standard update-check primitive, a machine-readable changelog, and structured deprecation metadata. It covers both open source and private/internal CLIs with the same structure.
+The library world's security machinery — [purl](https://github.com/package-url/purl-spec) identity joined against
+[OSV](https://ossf.github.io/osv-schema/) advisories — cannot see a standalone CLI binary because nothing standard makes
+the binary legible. This specification supplies the missing legs: mandatory self-identification in the introspection
+output, declared advisory sources, a standard update-check primitive, a machine-readable changelog, and structured
+deprecation metadata. It covers both open source and private/internal CLIs with the same structure.
 
 ## Table of Contents
 
@@ -26,37 +33,49 @@ The library world's security machinery — [purl](https://github.com/package-url
 
 ## 1. Problem Statement
 
-An agent's knowledge of a CLI comes from three sources that go stale at different rates: frozen model weights (never updatable), skill files (updated only when regenerated), and live introspection (current only if consulted). For libraries, staleness and vulnerability are detected externally by joining installed identity+version against advisory databases. For CLIs that join usually cannot be performed:
+An agent's knowledge of a CLI comes from three sources that go stale at different rates: frozen model weights (never
+updatable), skill files (updated only when regenerated), and live introspection (current only if consulted). For
+libraries, staleness and vulnerability are detected externally by joining installed identity+version against advisory
+databases. For CLIs that join usually cannot be performed:
 
 - A standalone binary has no standard identity a scanner can read (Go's embedded buildinfo is the lone exception).
-- No standard exists for asking a CLI whether a newer version exists; every vendor ships a homegrown notifier against a homegrown endpoint.
-- Deprecations live in changelogs and release notes that a meaningful fraction of consumers — frozen weights — are structurally incapable of reading.
+- No standard exists for asking a CLI whether a newer version exists; every vendor ships a homegrown notifier against a
+  homegrown endpoint.
+- Deprecations live in changelogs and release notes that a meaningful fraction of consumers — frozen weights — are
+  structurally incapable of reading.
 
 ## 2. Design Principles
 
 ### 2.1 Declare Sources, Not Verdicts
 
-A CLI MUST NOT embed claims about its own security status. It declares identity and pointers to live sources; verdicts are computed by the consumer at call time.
+A CLI MUST NOT embed claims about its own security status. It declares identity and pointers to live sources; verdicts
+are computed by the consumer at call time.
 
 ### 2.2 Reuse the Existing Stack
 
-Identity is a purl. Advisories are OSV records. This specification defines no advisory format, no version-comparison rules, and no vulnerability-severity vocabulary.
+Identity is a purl. Advisories are OSV records. This specification defines no advisory format, no version-comparison
+rules, and no vulnerability-severity vocabulary.
 
 ### 2.3 One Source of Truth, Derived Outputs
 
-The identity, deprecation, and lifecycle data specified here MUST come from the same schema-as-data structure that generates `--help` and `--describe` — never from parsing the CLI's own help text. Skill files regenerated from the binary (landscape doc §4.5) inherit the same data.
+The identity, deprecation, and lifecycle data specified here MUST come from the same schema-as-data structure that
+generates `--help` and `--describe` — never from parsing the CLI's own help text. Skill files regenerated from the
+binary (landscape doc §4.5) inherit the same data.
 
 ### 2.4 Same Shape for Open Source and Private
 
-A private CLI differs from a public one only in values (a private purl, an internal advisory endpoint, an internal release manifest) — never in structure.
+A private CLI differs from a public one only in values (a private purl, an internal advisory endpoint, an internal
+release manifest) — never in structure.
 
 ### 2.5 Machine Channel Discipline
 
-All output defined here is JSON on **stdout** with exit code 0 on success. Deprecation and update *warnings* go to **stderr** only, so they never corrupt a payload.
+All output defined here is JSON on **stdout** with exit code 0 on success. Deprecation and update *warnings* go to
+**stderr** only, so they never corrupt a payload.
 
 ## 3. Self-Identification
 
-The CLI's introspection output (`<cli> --describe`, or the Miri introspection command once specified) MUST include an `identity` block:
+The CLI's introspection output (`<cli> --describe`, or the Miri introspection command once specified) MUST include an
+`identity` block:
 
 ```json
 {
@@ -91,7 +110,8 @@ This single block is what converts a CLI from CPE-guessing territory into a norm
 
 ### 3.2 Artifact-Level Support Status
 
-The introspection output MUST also carry a `support` block — the CLI's own end-of-life state, same shape and semantics as the Python specification's [`support` object](../python/lifecycle-security-metadata.md):
+The introspection output MUST also carry a `support` block — the CLI's own end-of-life state, same shape and semantics
+as the Python specification's [`support` object](../python/lifecycle-security-metadata.md):
 
 ```json
 {
@@ -105,9 +125,17 @@ The introspection output MUST also carry a `support` block — the CLI's own end
 }
 ```
 
-`status` is `"active"`, `"maintenance"`, `"deprecated"`, or `"eol"`; `deprecated`/`eol` require `replacement` (a purl for a successor tool, or a subcommand path when the successor is absorption into another CLI). This is the one lifecycle statement the artifact carries directly rather than pointing to — it is vendor-authored *intent*, not a computed verdict. The status values are deliberately mappable onto the [OpenEoX](https://www.oasis-open.org/tc-openeox/) stages (GA / End-of-Sales / EoL / End-of-Security-Support; Core Schema 1.0 in public review as of July 2026, ratification expected 2027) — a pointer field to published OpenEoX statements will be added once that standard is ratified.
+`status` is `"active"`, `"maintenance"`, `"deprecated"`, or `"eol"`; `deprecated`/`eol` require `replacement` (a purl
+for a successor tool, or a subcommand path when the successor is absorption into another CLI). This is the one lifecycle
+statement the artifact carries directly rather than pointing to — it is vendor-authored *intent*, not a computed
+verdict. The status values are deliberately mappable onto the [OpenEoX](https://www.oasis-open.org/tc-openeox/) stages
+(GA / End-of-Sales / EoL / End-of-Security-Support; Core Schema 1.0 in public review as of July 2026, ratification
+expected 2027) — a pointer field to published OpenEoX statements will be added once that standard is ratified.
 
-EOL is thereby handled at three levels, each with its own mechanism: the **CLI itself** via `support` (read locally from `--describe`); the CLI's **bundled components** via the SBOM-purl join against external EoL sources (endoflife.date today, OpenEoX once ratified) — never written into the SBOM itself, per §6.2; and **deprecated surfaces within the CLI** via the per-flag `lifecycle` blocks of §6.
+EOL is thereby handled at three levels, each with its own mechanism: the **CLI itself** via `support` (read locally from
+`--describe`); the CLI's **bundled components** via the SBOM-purl join against external EoL sources (endoflife.date
+today, OpenEoX once ratified) — never written into the SBOM itself, per §6.2; and **deprecated surfaces within the CLI**
+via the per-flag `lifecycle` blocks of §6.
 
 ## 4. Advisory Sources
 
@@ -122,7 +150,9 @@ The introspection output MUST include `advisory_sources` — the same structure 
 }
 ```
 
-Types: `"osv"` (public OSV.dev), `"osv-internal"` (private endpoint serving OSV-schema records), `"osv-local"` (offline OSV database archive). At least one entry is required. Consumers MUST NOT treat an empty public-OSV result as "not vulnerable" for a `distribution: "private"` CLI unless public OSV is explicitly listed.
+Types: `"osv"` (public OSV.dev), `"osv-internal"` (private endpoint serving OSV-schema records), `"osv-local"` (offline
+OSV database archive). At least one entry is required. Consumers MUST NOT treat an empty public-OSV result as "not
+vulnerable" for a `distribution: "private"` CLI unless public OSV is explicitly listed.
 
 ## 5. Update Check and Machine-Readable Changelog
 
@@ -130,7 +160,7 @@ Types: `"osv"` (public OSV.dev), `"osv-internal"` (private endpoint serving OSV-
 
 A conforming CLI MUST implement:
 
-```
+```text
 <cli> check-update --json
 ```
 
@@ -147,19 +177,25 @@ A conforming CLI MUST implement:
 }
 ```
 
-- `urgency`: `"none"`, `"routine"`, `"recommended"`, or `"security"`. `"security"` MUST be set when any listed advisory affects the running version.
-- The check MUST be **passive by default**: never run implicitly on normal invocations in non-interactive contexts, never print to stdout of other commands. An offline environment returns `"update_available": null` with exit code 0, not an error.
+- `urgency`: `"none"`, `"routine"`, `"recommended"`, or `"security"`. `"security"` MUST be set when any listed advisory
+  affects the running version.
+- The check MUST be **passive by default**: never run implicitly on normal invocations in non-interactive contexts,
+  never print to stdout of other commands. An offline environment returns `"update_available": null` with exit code 0,
+  not an error.
 - `manifest` names the latest-version manifest consulted — the standard replacement for per-vendor notifier endpoints.
 
 ### 5.2 `changelog --since`
 
 A conforming CLI MUST implement:
 
-```
+```text
 <cli> changelog --since <version> --json
 ```
 
-returning, per release between `<version>` and the current version: added/removed/deprecated subcommands and flags, wire-schema changes (`schema_version` bumps), and exit-code meaning changes. This is the primitive that lets an agent that has been away for three releases ask *what moved* — the counterpart of `check-update`, which only says *that* it moved. Full shape to be defined alongside the introspection schema; the categories above are normative.
+returning, per release between `<version>` and the current version: added/removed/deprecated subcommands and flags,
+wire-schema changes (`schema_version` bumps), and exit-code meaning changes. This is the primitive that lets an agent
+that has been away for three releases ask *what moved* — the counterpart of `check-update`, which only says *that* it
+moved. Full shape to be defined alongside the introspection schema; the categories above are normative.
 
 ## 6. Deprecation Metadata
 
@@ -189,32 +225,53 @@ Additionally, invoking a **removed** flag or subcommand MUST produce a structure
 }
 ```
 
-This converts the frozen-weights failure mode — agent constructs a command from stale knowledge, hits a dead-end error, retries blind — into a one-turn recovery. Deprecation *warnings* during the grace period go to stderr only (§2.5).
+This converts the frozen-weights failure mode — agent constructs a command from stale knowledge, hits a dead-end error,
+retries blind — into a one-turn recovery. Deprecation *warnings* during the grace period go to stderr only (§2.5).
 
 ### 6.1 Prior Art and Field Vocabulary
 
-The `lifecycle` block deliberately mirrors the converged deprecation shape of the adjacent standards, so each field carries a citation trail rather than being invented here:
+The `lifecycle` block deliberately mirrors the converged deprecation shape of the adjacent standards, so each field
+carries a citation trail rather than being invented here:
 
-- `deprecated_since` / `removed_in` are the CLI equivalent of the two-phase HTTP lifecycle: the `Deprecation` header field ([RFC 9745](https://www.rfc-editor.org/info/rfc9745/)) marking the start, the `Sunset` header ([RFC 8594](https://www.rfc-editor.org/info/rfc8594/)) marking end-of-life, with `migration` playing RFC 9745's deprecation link relation.
-- `replacement` plus a human-readable reason follows Python's [PEP 702](https://peps.python.org/pep-0702/) `@deprecated` decorator, GraphQL's `@deprecated(reason:)` directive, Java's `@Deprecated(since, forRemoval)`, and Rust's `#[deprecated(since, note)]`.
-- The grace-period requirement (§7.3) follows the [Kubernetes deprecation policy for CLI elements](https://kubernetes.io/docs/reference/using-api/deprecation-policy/), the only shipped CLI-specific deprecation policy.
+- `deprecated_since` / `removed_in` are the CLI equivalent of the two-phase HTTP lifecycle: the `Deprecation` header
+  field ([RFC 9745](https://www.rfc-editor.org/info/rfc9745/)) marking the start, the `Sunset` header ([RFC
+  8594](https://www.rfc-editor.org/info/rfc8594/)) marking end-of-life, with `migration` playing RFC 9745's deprecation
+  link relation.
+- `replacement` plus a human-readable reason follows Python's [PEP 702](https://peps.python.org/pep-0702/) `@deprecated`
+  decorator, GraphQL's `@deprecated(reason:)` directive, Java's `@Deprecated(since, forRemoval)`, and Rust's
+  `#[deprecated(since, note)]`.
+- The grace-period requirement (§7.3) follows the
+  [Kubernetes deprecation policy for CLI elements](https://kubernetes.io/docs/reference/using-api/deprecation-policy/),
+  the only shipped CLI-specific deprecation policy.
 
 ### 6.2 Where Deprecation State Lives
 
-Deprecation is *interface lifecycle*, not *composition*: it is carried in the introspection output and in `changelog --since`, both derived from the same schema-as-data source (§2.3). It MUST NOT be recorded in the SBOM, which describes bundled components — a scanner reading the SBOM asks "what is inside this binary?", while an agent reading `--describe` asks "which of these surfaces is going away?". Keeping the two artifacts single-purpose keeps both joins clean.
+Deprecation is *interface lifecycle*, not *composition*: it is carried in the introspection output and in
+`changelog --since`, both derived from the same schema-as-data source (§2.3). It MUST NOT be recorded in the SBOM, which
+describes bundled components — a scanner reading the SBOM asks "what is inside this binary?", while an agent reading
+`--describe` asks "which of these surfaces is going away?". Keeping the two artifacts single-purpose keeps both joins
+clean.
 
-The same rule covers end-of-life: the artifact's own EOL is the `support` block (§3.2); EOL of *bundled components* is computed by joining the SBOM's purls against external EoL sources — neither is ever written into the SBOM.
+The same rule covers end-of-life: the artifact's own EOL is the `support` block (§3.2); EOL of *bundled components* is
+computed by joining the SBOM's purls against external EoL sources — neither is ever written into the SBOM.
 
 ### 6.3 Deprecation Coherence (Verification)
 
-No existing tooling verifies that deprecation markers, the changelog, and actual removals agree — for CLIs or otherwise; ecosystem prior art stops at changelog-entry bots (towncrier-style CI, which enforce that *an entry exists*) and API-diff tools (cargo-semver-checks, griffe, japicmp, which detect changes without cross-checking declarations). The Miri conformance tool MUST therefore verify, per release:
+No existing tooling verifies that deprecation markers, the changelog, and actual removals agree — for CLIs or otherwise;
+ecosystem prior art stops at changelog-entry bots (towncrier-style CI, which enforce that *an entry exists*) and
+API-diff tools (cargo-semver-checks, griffe, japicmp, which detect changes without cross-checking declarations). The
+Miri conformance tool MUST therefore verify, per release:
 
-1. Every surface whose `lifecycle.status` is `deprecated` appears in the `changelog --since` output of the release that introduced the deprecation.
-2. Every surface removed since a prior version appeared as `deprecated` in at least one earlier release (the §7.3 grace period) — **no silent removals**.
+1. Every surface whose `lifecycle.status` is `deprecated` appears in the `changelog --since` output of the release that
+   introduced the deprecation.
+2. Every surface removed since a prior version appeared as `deprecated` in at least one earlier release (the §7.3 grace
+   period) — **no silent removals**.
 3. Every `replacement` names a surface that exists in the current introspection output.
 4. Invoking each removed surface produces the structured teaching error of §6, not a generic parse failure.
 
-In a conforming implementation, checks 1–3 hold *by construction*, because help, `--describe`, and `changelog` all derive from one schema struct (§2.3); the verifier exists to catch drift in implementations that hand-maintain any of the three.
+In a conforming implementation, checks 1–3 hold *by construction*, because help, `--describe`, and `changelog` all
+derive from one schema struct (§2.3); the verifier exists to catch drift in implementations that hand-maintain any of
+the three.
 
 ## 7. Open Source CLIs
 
@@ -222,16 +279,25 @@ For `distribution: "open-source"` CLIs:
 
 ### 7.1 Distribution and Identity
 
-- When distributed through a package registry (npm, PyPI, crates.io, Homebrew…), `purl` MUST use that registry's purl type; the CLI then inherits the registry's update and advisory machinery, and `check-update` SHOULD consult the registry rather than a bespoke endpoint.
-- When distributed as direct binaries (GitHub Releases, download page), each release MUST publish an SBOM and reference it from `identity.sbom`; the latest-version manifest referenced by `check-update` SHOULD be the forge's releases API or a static manifest adjacent to the artifacts.
+- When distributed through a package registry (npm, PyPI, crates.io, Homebrew…), `purl` MUST use that registry's purl
+  type; the CLI then inherits the registry's update and advisory machinery, and `check-update` SHOULD consult the
+  registry rather than a bespoke endpoint.
+- When distributed as direct binaries (GitHub Releases, download page), each release MUST publish an SBOM and reference
+  it from `identity.sbom`; the latest-version manifest referenced by `check-update` SHOULD be the forge's releases API
+  or a static manifest adjacent to the artifacts.
 
 ### 7.2 Publishing Advisories
 
-Vulnerabilities follow the standard home-database path: a repository security advisory (GHSA, optionally with CVE) or the distribution ecosystem's advisory database, flowing to OSV.dev automatically. `advisory_sources` lists public OSV with the matching ecosystem. No Miri-specific publication step exists.
+Vulnerabilities follow the standard home-database path: a repository security advisory (GHSA, optionally with CVE) or
+the distribution ecosystem's advisory database, flowing to OSV.dev automatically. `advisory_sources` lists public OSV
+with the matching ecosystem. No Miri-specific publication step exists.
 
 ### 7.3 Deprecation in Public
 
-Because open source CLIs cannot know their consumers, the grace period between `deprecated_since` and `removed_in` MUST span at least one minor release in which the deprecated surface still functions while emitting the stderr warning and carrying the `lifecycle` block — so both live-introspecting agents and skill-file regeneration cycles have a release in which to observe the change before it breaks.
+Because open source CLIs cannot know their consumers, the grace period between `deprecated_since` and `removed_in` MUST
+span at least one minor release in which the deprecated surface still functions while emitting the stderr warning and
+carrying the `lifecycle` block — so both live-introspecting agents and skill-file regeneration cycles have a release in
+which to observe the change before it breaks.
 
 ## 8. Private and Internal CLIs
 
@@ -239,12 +305,16 @@ For `distribution: "private"` CLIs (internal developer tools, org-specific autom
 
 ### 8.1 Identity
 
-- `purl` uses `pkg:generic/<org>/<name>@<version>?repository_url=<internal releases URL>`, or the internal registry's purl type if distributed through one (private npm/PyPI/Artifactory).
-- Internal CLIs are exactly the population where CPE-guessing scanners fail completely and public OSV silently returns empty — self-identification is therefore MANDATORY, not merely useful.
+- `purl` uses `pkg:generic/<org>/<name>@<version>?repository_url=<internal releases URL>`, or the internal registry's
+  purl type if distributed through one (private npm/PyPI/Artifactory).
+- Internal CLIs are exactly the population where CPE-guessing scanners fail completely and public OSV silently returns
+  empty — self-identification is therefore MANDATORY, not merely useful.
 
 ### 8.2 Internal Advisory Sources
 
-`advisory_sources` points at the organization's OSV-compatible endpoint or offline OSV database (same options as the Python spec §5.2). Organization-local record IDs (e.g. `ACME-2026-0007`) attach to the CLI's private purl. Public OSV MAY be listed additionally to cover the CLI's open source dependency tree (via the SBOM or embedded buildinfo).
+`advisory_sources` points at the organization's OSV-compatible endpoint or offline OSV database (same options as the
+Python spec §5.2). Organization-local record IDs (e.g. `ACME-2026-0007`) attach to the CLI's private purl. Public OSV
+MAY be listed additionally to cover the CLI's open source dependency tree (via the SBOM or embedded buildinfo).
 
 ### 8.3 Update Checks
 
@@ -255,21 +325,28 @@ For `distribution: "private"` CLIs (internal developer tools, org-specific autom
   "releases": { "3.4.1": { "urgency": "security", "advisories": ["ACME-2026-0007"] } } }
 ```
 
-This replaces the per-vendor notifier pattern with a declared, auditable endpoint. Air-gapped environments set `advisory_sources` to `osv-local` and `check-update` degrades to `"update_available": null`.
+This replaces the per-vendor notifier pattern with a declared, auditable endpoint. Air-gapped environments set
+`advisory_sources` to `osv-local` and `check-update` degrades to `"update_available": null`.
 
 ### 8.4 Fleet Enforcement
 
-Because internal CLIs have a known consumer population, organizations SHOULD couple `check-update`'s `urgency: "security"` with policy: CI images and agent harnesses refuse to run a CLI whose running version is covered by an open internal advisory. The structured output exists precisely so this can be a mechanical gate rather than a wiki page.
+Because internal CLIs have a known consumer population, organizations SHOULD couple `check-update`'s
+`urgency: "security"` with policy: CI images and agent harnesses refuse to run a CLI whose running version is covered by
+an open internal advisory. The structured output exists precisely so this can be a mechanical gate rather than a wiki
+page.
 
 ## 9. Conformance Requirements
 
 A CLI conforms to this specification if:
 
-1. Its introspection output contains a valid `identity` block whose `purl` version matches the binary's actual version, and a `support` block per §3.2 (with `replacement` when status is `deprecated`/`eol`).
+1. Its introspection output contains a valid `identity` block whose `purl` version matches the binary's actual version,
+   and a `support` block per §3.2 (with `replacement` when status is `deprecated`/`eol`).
 2. `advisory_sources` has at least one entry; private CLIs do not rely solely on public OSV.
 3. `check-update --json` and `changelog --since <v> --json` are implemented per §5, passive by default, JSON-on-stdout, warnings-on-stderr.
-4. Every deprecated surface carries a `lifecycle` block, and every removed surface produces the structured teaching error of §6.
-5. The deprecation coherence checks of §6.3 pass: introspection lifecycle state, `changelog --since` output, and actual removals agree, with no silent removals.
+4. Every deprecated surface carries a `lifecycle` block, and every removed surface produces the structured teaching
+   error of §6.
+5. The deprecation coherence checks of §6.3 pass: introspection lifecycle state, `changelog --since` output, and actual
+   removals agree, with no silent removals.
 6. All of the above derive from the same schema-as-data source as `--help` (§2.3).
 
 A conformance test suite is a planned deliverable alongside the introspection schema (landscape doc §4.1).
@@ -280,16 +357,16 @@ A conformance test suite is a planned deliverable alongside the introspection sc
 
 - Background: [landscape-and-prior-art.md](landscape-and-prior-art.md) · [update-and-vulnerability-signaling.md](update-and-vulnerability-signaling.md)
 - Companion Python spec: [lifecycle-security-metadata.md](../python/lifecycle-security-metadata.md)
-- purl spec — https://github.com/package-url/purl-spec
-- OSV schema — https://ossf.github.io/osv-schema/ · OSV.dev API — https://google.github.io/osv.dev/api/
-- Go embedded buildinfo / govulncheck — https://go.dev/blog/govulncheck
-- CycloneDX — https://cyclonedx.org/ · SPDX — https://spdx.dev/
-- OpenEoX TC (OASIS) — https://www.oasis-open.org/tc-openeox/ · Core Schema 1.0 CSD01 — http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/
-- OWASP CLE and OpenEoX — https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox
-- endoflife.date — https://endoflife.date/
-- OpenVEX — https://github.com/openvex/spec
-- RFC 9745 — The Deprecation HTTP Response Header Field — https://www.rfc-editor.org/info/rfc9745/
-- RFC 8594 — The Sunset HTTP Header Field — https://www.rfc-editor.org/info/rfc8594/
-- PEP 702 — Marking deprecations using the type system — https://peps.python.org/pep-0702/
-- Kubernetes deprecation policy (CLI elements) — https://kubernetes.io/docs/reference/using-api/deprecation-policy/
-- The `kubectl get --export` removal case study — https://www.infoq.com/articles/ai-agent-cli/
+- purl spec — <https://github.com/package-url/purl-spec>
+- OSV schema — <https://ossf.github.io/osv-schema/> · OSV.dev API — <https://google.github.io/osv.dev/api/>
+- Go embedded buildinfo / govulncheck — <https://go.dev/blog/govulncheck>
+- CycloneDX — <https://cyclonedx.org/> · SPDX — <https://spdx.dev/>
+- OpenEoX TC (OASIS) — <https://www.oasis-open.org/tc-openeox/> · Core Schema 1.0 CSD01 — <http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/>
+- OWASP CLE and OpenEoX — <https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox>
+- endoflife.date — <https://endoflife.date/>
+- OpenVEX — <https://github.com/openvex/spec>
+- RFC 9745 — The Deprecation HTTP Response Header Field — <https://www.rfc-editor.org/info/rfc9745/>
+- RFC 8594 — The Sunset HTTP Header Field — <https://www.rfc-editor.org/info/rfc8594/>
+- PEP 702 — Marking deprecations using the type system — <https://peps.python.org/pep-0702/>
+- Kubernetes deprecation policy (CLI elements) — <https://kubernetes.io/docs/reference/using-api/deprecation-policy/>
+- The `kubectl get --export` removal case study — <https://www.infoq.com/articles/ai-agent-cli/>

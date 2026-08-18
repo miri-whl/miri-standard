@@ -8,13 +8,15 @@
 
 ## Abstract
 
-[Provide a brief, 2-3 sentence summary of the proposal. This should be understandable to someone not familiar with the technical details.]
+[Provide a brief, 2-3 sentence summary of the proposal. This should be understandable to someone not familiar with the
+technical details.]
 
 ## Motivation
 
 ### Problem Statement
 
 [Clearly describe the problem this proposal aims to solve. Include:]
+
 - What is the current situation?
 - What are the pain points or limitations?
 - Who is affected by this problem?
@@ -23,6 +25,7 @@
 ### Goals
 
 [List the specific goals this proposal aims to achieve:]
+
 - Goal 1
 - Goal 2
 - Goal 3
@@ -30,6 +33,7 @@
 ### Non-Goals
 
 [List what this proposal explicitly does NOT aim to address:]
+
 - Non-goal 1
 - Non-goal 2
 
@@ -63,7 +67,7 @@
 
 [Provide concrete examples showing how the specification would work in practice]
 
-```
+```text
 [Include code examples, configuration samples, or usage scenarios]
 ```
 
@@ -90,6 +94,7 @@
 ### Testing Strategy
 
 [Describe how the implementation will be tested:]
+
 - Unit tests
 - Integration tests
 - Conformance tests
@@ -98,6 +103,7 @@
 ### Documentation Requirements
 
 [List documentation that needs to be created or updated:]
+
 - Specification documents
 - Implementation guides
 - Examples and tutorials
@@ -136,6 +142,7 @@
 ## Performance Considerations
 
 [Analyze performance implications:]
+
 - Computational overhead
 - Memory usage
 - Network impact
@@ -146,6 +153,7 @@
 ### Alternative 1: [Name]
 
 [Describe alternative approach]
+
 - **Pros**: [List advantages]
 - **Cons**: [List disadvantages]
 - **Why not chosen**: [Explanation]
@@ -153,6 +161,7 @@
 ### Alternative 2: [Name]
 
 [Describe alternative approach]
+
 - **Pros**: [List advantages]
 - **Cons**: [List disadvantages]
 - **Why not chosen**: [Explanation]

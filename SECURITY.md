@@ -46,6 +46,7 @@ When reporting a vulnerability, please include:
 ### Security Updates
 
 Security updates will be:
+
 - Released as soon as possible after validation
 - Announced through project communication channels
 - Documented in release notes with appropriate severity levels

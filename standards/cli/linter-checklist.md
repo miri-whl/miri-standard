@@ -6,13 +6,18 @@
 
 ## Purpose
 
-The explicit, numbered list of every check a Miri-conformance linter runs against a CLI, with the standard each check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-CLI-001` … `MIRI-CLI-043`); the weights sum to exactly **100**, so a CLI's Miri score is the sum of the weights of its passing checks.
+The explicit, numbered list of every check a Miri-conformance linter runs against a CLI, with the standard each check
+derives from and a scoring weight. Linter projects implement checks by number (`MIRI-CLI-001` … `MIRI-CLI-043`); the
+weights sum to exactly **100**, so a CLI's Miri score is the sum of the weights of its passing checks.
 
 ## Scoring Model
 
-Identical to the [Python checklist](../python/linter-checklist.md): **Score** = Σ weights of passing checks; **M** checks are required for conformance (any M failure caps the reported score at 74); *conditional* checks score automatically when inapplicable.
+Identical to the [Python checklist](../python/linter-checklist.md): **Score** = Σ weights of passing checks; **M**
+checks are required for conformance (any M failure caps the reported score at 74); *conditional* checks score
+automatically when inapplicable.
 
-**Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible) · <50 non-conforming.
+**Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
+· <50 non-conforming.
 
 ## The Checks
 
@@ -103,10 +108,15 @@ Identical to the [Python checklist](../python/linter-checklist.md): **Score** = 
 
 ## Notes for Linter Implementers
 
-- Report each check by its stable ID (`MIRI-CLI-NNN`); IDs are never renumbered — retired checks are marked *withdrawn* and their weight redistributed in a new minor version of this checklist.
-- Coherence checks E-036/037 require a prior release for comparison; linters SHOULD obtain it via `check-update`'s `manifest` and degrade to *skipped (weight forfeited, reported)* when unavailable.
-- References marked *(informative)* cite community practice (clig.dev, anc.dev, Agent-First CLI principles) that has no normative authority — the normative source for those checks is the Miri CLI specification itself; the citation records lineage per the [landscape survey](landscape-and-prior-art.md).
-- Machine-readable form: a `checklist.json` derived from this table is a planned deliverable — this document and the JSON must be generated from one source.
+- Report each check by its stable ID (`MIRI-CLI-NNN`); IDs are never renumbered — retired checks are marked *withdrawn*
+  and their weight redistributed in a new minor version of this checklist.
+- Coherence checks E-036/037 require a prior release for comparison; linters SHOULD obtain it via `check-update`'s
+  `manifest` and degrade to *skipped (weight forfeited, reported)* when unavailable.
+- References marked *(informative)* cite community practice (clig.dev, anc.dev, Agent-First CLI principles) that has no
+  normative authority — the normative source for those checks is the Miri CLI specification itself; the citation records
+  lineage per the [landscape survey](landscape-and-prior-art.md).
+- Machine-readable form: a `checklist.json` derived from this table is a planned deliverable — this document and the
+  JSON must be generated from one source.
 
 ## Companion
 

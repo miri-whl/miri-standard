@@ -1,6 +1,7 @@
 # Sample Weather SDK - Miri Standard Example
 
-This is a complete example of a Python SDK that implements the Miri Standard for agent-friendly packaging. It demonstrates all the key features:
+This is a complete example of a Python SDK that implements the Miri Standard for agent-friendly packaging. It
+demonstrates all the key features:
 
 - **Agent Metadata**: Pre-parsed JSON files for instant agent consumption
 - **Structured Examples**: Categorized code samples with complexity levels
@@ -9,7 +10,7 @@ This is a complete example of a Python SDK that implements the Miri Standard for
 
 ## Project Structure
 
-```
+```text
 weather-sdk/
 ├── src/weather_sdk/
 │   ├── __init__.py              # Main module with discovery APIs

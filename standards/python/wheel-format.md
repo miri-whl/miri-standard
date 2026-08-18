@@ -2,11 +2,14 @@
 
 ## Overview
 
-This document provides comprehensive documentation of the current Python wheel (.whl) format, serving as the foundation for understanding how the Miri Standard extends Python packaging for enhanced agent communication.
+This document provides comprehensive documentation of the current Python wheel (.whl) format, serving as the foundation
+for understanding how the Miri Standard extends Python packaging for enhanced agent communication.
 
 ## What is a Python Wheel?
 
-A Python wheel is a built-package format for Python that provides faster installation compared to building from source. Wheels are ZIP archives with a specially formatted filename and contain all the files needed to install a Python package.
+A Python wheel is a built-package format for Python that provides faster installation compared to building from source.
+Wheels are ZIP archives with a specially formatted filename and contain all the files needed to install a Python
+package.
 
 ## Historical Context
 
@@ -28,7 +31,8 @@ A Python wheel is a built-package format for Python that provides faster install
 ### Filename Convention
 
 Wheels follow a strict naming convention:
-```
+
+```text
 {distribution}-{version}(-{build tag})?-{python tag}-{abi tag}-{platform tag}.whl
 ```
 
@@ -44,7 +48,7 @@ Wheels follow a strict naming convention:
 
 A wheel is a ZIP archive containing:
 
-```
+```text
 package_name/
     __init__.py
     module.py
@@ -67,7 +71,7 @@ package_name-version.dist-info/
 
 Contains package metadata in RFC 5322 format (email header style):
 
-```
+```text
 Metadata-Version: 2.1
 Name: example-package
 Version: 1.0.0
@@ -93,7 +97,7 @@ Long description content here...
 
 Contains wheel-specific metadata:
 
-```
+```text
 Wheel-Version: 1.0
 Generator: bdist_wheel (0.37.1)
 Root-Is-Purelib: true
@@ -104,7 +108,7 @@ Tag: py3-none-any
 
 Contains a list of all files in the wheel with their hash and size:
 
-```
+```text
 package_name/__init__.py,sha256=hash_value,file_size
 package_name/module.py,sha256=hash_value,file_size
 package_name-version.dist-info/METADATA,sha256=hash_value,file_size
@@ -117,55 +121,64 @@ package_name-version.dist-info/RECORD,,
 ### Primary Standards
 
 #### PEP 427: The Wheel Binary Package Format 1.0
+
 - **Status**: Final
 - **Created**: 2012
 - **Summary**: Defines the basic wheel format structure
-- **URL**: https://peps.python.org/pep-0427/
+- **URL**: <https://peps.python.org/pep-0427/>
 
 #### PEP 491: The Wheel Binary Package Format 1.9  
+
 - **Status**: Final
 - **Created**: 2015
 - **Summary**: Updates to wheel format, adds build numbers
-- **URL**: https://peps.python.org/pep-0491/
+- **URL**: <https://peps.python.org/pep-0491/>
 
 #### PEP 566: Metadata for Python Software Packages 2.1
+
 - **Status**: Final
 - **Created**: 2017
 - **Summary**: Defines metadata format used in METADATA file
-- **URL**: https://peps.python.org/pep-0566/
+- **URL**: <https://peps.python.org/pep-0566/>
 
 #### PEP 621: Storing project metadata in pyproject.toml
+
 - **Status**: Final
 - **Created**: 2020
 - **Summary**: Standardizes metadata in pyproject.toml files
-- **URL**: https://peps.python.org/pep-0621/
+- **URL**: <https://peps.python.org/pep-0621/>
 
 ### Supporting Standards
 
 #### PEP 314: Metadata for Python Software Packages 1.1
+
 - **Status**: Final
 - **Summary**: Earlier metadata format
-- **URL**: https://peps.python.org/pep-0314/
+- **URL**: <https://peps.python.org/pep-0314/>
 
 #### PEP 345: Metadata for Python Software Packages 1.2
+
 - **Status**: Final
 - **Summary**: Intermediate metadata format
-- **URL**: https://peps.python.org/pep-0345/
+- **URL**: <https://peps.python.org/pep-0345/>
 
 #### PEP 508: Dependency specification for Python Software Packages
+
 - **Status**: Final
 - **Summary**: Defines how to specify dependencies
-- **URL**: https://peps.python.org/pep-0508/
+- **URL**: <https://peps.python.org/pep-0508/>
 
 #### PEP 517: A build-system independent format for source trees
+
 - **Status**: Final
 - **Summary**: Defines build system interface
-- **URL**: https://peps.python.org/pep-0517/
+- **URL**: <https://peps.python.org/pep-0517/>
 
 #### PEP 518: Specifying Minimum Build System Requirements
+
 - **Status**: Final
 - **Summary**: Defines build requirements in pyproject.toml
-- **URL**: https://peps.python.org/pep-0518/
+- **URL**: <https://peps.python.org/pep-0518/>
 
 ## Metadata Fields Reference
 
@@ -252,13 +265,15 @@ Agents face challenges with current wheels:
 ### Python Packaging Authority (PyPA)
 
 The PyPA maintains the core packaging tools and standards:
-- **Website**: https://www.pypa.io/
-- **GitHub**: https://github.com/pypa
-- **Specifications**: https://packaging.python.org/specifications/
+
+- **Website**: <https://www.pypa.io/>
+- **GitHub**: <https://github.com/pypa>
+- **Specifications**: <https://packaging.python.org/specifications/>
 
 ### Python Enhancement Proposal Process
 
 New packaging standards go through the PEP process:
+
 1. **Draft**: Initial proposal
 2. **Discussion**: Community feedback
 3. **Acceptance**: BDFL/Steering Council approval
@@ -289,6 +304,7 @@ The Miri Standard will enhance wheels by adding:
 ### Backward Compatibility
 
 Miri-enhanced wheels maintain full compatibility:
+
 - Standard tools can still install and use the packages
 - Additional Miri metadata is optional and non-breaking
 - Existing metadata formats remain unchanged

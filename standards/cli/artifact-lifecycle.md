@@ -6,7 +6,10 @@
 
 ## Overview
 
-Every stage a Miri-compliant CLI moves through, from first release to end-of-life — with the metadata state each stage requires, the signal consumers see, and the standard each transition derives from. Two state machines compose: the **artifact lifecycle** (the tool as a whole) and, nested inside its active years, the **surface lifecycle** (individual flags and subcommands deprecating independently — see [CLI Spec §6](cli-lifecycle-specification.md)).
+Every stage a Miri-compliant CLI moves through, from first release to end-of-life — with the metadata state each stage
+requires, the signal consumers see, and the standard each transition derives from. Two state machines compose: the
+**artifact lifecycle** (the tool as a whole) and, nested inside its active years, the **surface lifecycle** (individual
+flags and subcommands deprecating independently — see [CLI Spec §6](cli-lifecycle-specification.md)).
 
 ## The Artifact Lifecycle
 
@@ -66,17 +69,27 @@ stateDiagram-v2
 
 Transition requirements (enforced by [coherence checks MIRI-CLI-031…038](linter-checklist.md)):
 
-1. **Active → Deprecated**: `lifecycle` block set (`deprecated_since`, `removed_in`, `replacement`, `migration` — the [RFC 9745](https://www.rfc-editor.org/info/rfc9745/)/[8594](https://www.rfc-editor.org/info/rfc8594/) two-phase shape); the deprecating release's `changelog --since` records it; warnings go to stderr only.
-2. **Deprecated (holding)**: functions for ≥1 minor release ([K8s policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/) shape) so live introspection and skill-regeneration cycles observe it before breakage.
-3. **Deprecated → Removed**: only at/after `removed_in`; the surface then serves the **structured teaching error** — converting an agent's stale-weights invocation into a one-turn recovery. **Removal without a prior Deprecated state is a conformance failure** (no silent removals, MIRI-CLI-037).
+1. **Active → Deprecated**: `lifecycle` block set (`deprecated_since`, `removed_in`, `replacement`, `migration` — the
+   [RFC 9745](https://www.rfc-editor.org/info/rfc9745/) /[8594](https://www.rfc-editor.org/info/rfc8594/) two-phase
+   shape); the deprecating release's `changelog --since` records it; warnings go to stderr only.
+2. **Deprecated (holding)**: functions for ≥1 minor release ([K8s
+   policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/) shape) so live introspection and
+   skill-regeneration cycles observe it before breakage.
+3. **Deprecated → Removed**: only at/after `removed_in`; the surface then serves the **structured teaching error** —
+   converting an agent's stale-weights invocation into a one-turn recovery. **Removal without a prior Deprecated state
+   is a conformance failure** (no silent removals, MIRI-CLI-037).
 
 ## The Three Clocks
 
-Throughout the lifecycle, three versions advance independently (see [Landscape §5](landscape-and-prior-art.md)): the **release version**, the **wire schema version** (`schema_version`), and — for CLIs fronting services — the **backing API version**. Collapsing any two loses the ability to change one without a major bump in the other.
+Throughout the lifecycle, three versions advance independently (see [Landscape §5](landscape-and-prior-art.md)): the
+**release version**, the **wire schema version** (`schema_version`), and — for CLIs fronting services — the **backing
+API version**. Collapsing any two loses the ability to change one without a major bump in the other.
 
 ## PDF
 
-A diagrammed PDF rendering is committed at [assets/miri-cli-artifact-lifecycle.pdf](../../assets/miri-cli-artifact-lifecycle.pdf). This markdown is the source of truth; regenerate the PDF when it changes.
+A diagrammed PDF rendering is committed at
+[assets/miri-cli-artifact-lifecycle.pdf](../../assets/miri-cli-artifact-lifecycle.pdf). This markdown is the source of
+truth; regenerate the PDF when it changes.
 
 ## Companion
 

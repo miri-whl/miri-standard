@@ -1,10 +1,11 @@
 # Miri Standard Implementation Guide
 
-*A practical guide to implementing agent-friendly Python wheel extensions*
+*A practical guide to implementing agent-friendly Python wheel extensions.*
 
 ## Quick Start
 
-This guide walks you through implementing the Miri Standard in your Python package, from basic compliance to full AI-friendly features.
+This guide walks you through implementing the Miri Standard in your Python package, from basic compliance to full
+AI-friendly features.
 
 ## Table of Contents
 
@@ -12,9 +13,9 @@ This guide walks you through implementing the Miri Standard in your Python packa
 2. [Basic Implementation](#2-basic-implementation)
 3. [Enhanced Package Structure](#3-enhanced-package-structure)
 4. [Metadata Generation](#4-metadata-generation)
-5. [Discovery APIs](#5-discovery-apis)
-6. [Build System Integration](#6-build-system-integration)
-7. [Testing and Validation](#7-testing-and-validation)
+5. [Build System Integration](#5-build-system-integration)
+6. [Testing and Validation](#6-testing-and-validation)
+7. [Complete Build Process](#7-complete-build-process)
 8. [Complete Examples](#8-complete-examples)
 
 ## 1. Prerequisites
@@ -29,7 +30,7 @@ This guide walks you through implementing the Miri Standard in your Python packa
 
 Starting with a typical Python package:
 
-```
+```text
 my_package/
 ├── pyproject.toml
 ├── README.md
@@ -321,7 +322,7 @@ def _extract_description(file_path: Path) -> str:
 
 Expand your package to include all Miri components:
 
-```
+```text
 src/my_package/
 ├── __init__.py                   # Enhanced with discovery APIs
 ├── client.py                     # Main functionality
@@ -452,9 +453,10 @@ Main client class for interacting with the service.
 
 ```python
 MyClient(api_key: str, base_url: str = None, timeout: int = 30)
-```
+```text
 
 **Parameters:**
+
 - `api_key` (str): Your API key for authentication
 - `base_url` (str, optional): Custom base URL for the service
 - `timeout` (int, optional): Request timeout in seconds (default: 30)
@@ -466,20 +468,24 @@ MyClient(api_key: str, base_url: str = None, timeout: int = 30)
 Process data through the service.
 
 **Parameters:**
+
 - `data` (dict): Data to process
 
 **Returns:**
+
 - `dict`: Processed result
 
 **Raises:**
+
 - `MyError`: If processing fails
 - `AuthenticationError`: If API key is invalid
 
 **Example:**
+
 ```python
 client = MyClient(api_key="your-key")
 result = client.process({"message": "hello"})
-```
+```text
 
 ## Exceptions
 
@@ -490,6 +496,7 @@ Base exception for all package errors.
 ### AuthenticationError
 
 Raised when authentication fails.
+
 ```
 
 ## 4. Metadata Generation
@@ -1110,16 +1117,19 @@ if __name__ == "__main__":
 ### 7.2 Usage Instructions
 
 1. **Install build dependencies**:
+
    ```bash
    pip install build pytest
    ```
 
 2. **Run the build**:
+
    ```bash
    python scripts/build.py
    ```
 
 3. **Install and test**:
+
    ```bash
    pip install dist/my_package-1.0.0-py3-none-any.whl
    python -c "import my_package; print(my_package.show_quickstart())"
@@ -1145,4 +1155,5 @@ For full compliance, add:
 4. Metadata generation scripts
 5. Validation and testing
 
-This implementation guide provides everything needed to create AI-friendly Python packages that follow the Miri Standard, enabling autonomous agents to immediately understand and use your code.
+This implementation guide provides everything needed to create AI-friendly Python packages that follow the Miri
+Standard, enabling autonomous agents to immediately understand and use your code.

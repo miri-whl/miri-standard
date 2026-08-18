@@ -1,6 +1,7 @@
 # Miri Standard JSON Schemas
 
-This directory contains JSON Schema definitions for validating Miri Standard metadata files. These schemas ensure consistency and enable automated validation of agent metadata.
+This directory contains JSON Schema definitions for validating Miri Standard metadata files. These schemas ensure
+consistency and enable automated validation of agent metadata.
 
 ## Available Schemas
 
@@ -94,7 +95,9 @@ jsonschema -i examples/sample-sdk/src/weather_sdk/agent-metadata/usage-patterns.
 Most modern IDEs support JSON Schema validation:
 
 #### VS Code
+
 Add to your workspace settings:
+
 ```json
 {
   "json.schemas": [
@@ -119,6 +122,7 @@ Add to your workspace settings:
 ```
 
 #### JetBrains IDEs (PyCharm, IntelliJ)
+
 1. Go to Settings → Languages & Frameworks → Schemas and DTDs → JSON Schema Mappings
 2. Add mappings for each schema file and corresponding file patterns
 

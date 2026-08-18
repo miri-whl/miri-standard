@@ -1,16 +1,20 @@
 # Proposals
 
-This directory contains proposals for new specifications, significant changes to existing specifications, and other major project initiatives.
+This directory contains proposals for new specifications, significant changes to existing specifications, and other
+major project initiatives.
 
 ## Overview
 
-The proposal process allows community members to suggest new standards, modifications to existing standards, or other significant changes to the project. All proposals go through a structured review process before being accepted for development.
+The proposal process allows community members to suggest new standards, modifications to existing standards, or other
+significant changes to the project. All proposals go through a structured review process before being accepted for
+development.
 
 ## Proposal Process
 
 ### 1. Initial Discussion
 
 Before creating a formal proposal:
+
 - Discuss the idea in GitHub Discussions
 - Get feedback from the community
 - Ensure the proposal aligns with project goals
@@ -19,6 +23,7 @@ Before creating a formal proposal:
 ### 2. Proposal Creation
 
 Create a new proposal by:
+
 1. Copying the [proposal template](template.md)
 2. Creating a new file: `YYYYMMDD-proposal-title.md`
 3. Filling out all sections of the template
@@ -34,6 +39,7 @@ Create a new proposal by:
 ### 4. Implementation
 
 Accepted proposals move to implementation:
+
 - Draft specification created in [standards/](../standards/)
 - Implementation work begins
 - Regular progress updates provided
@@ -42,15 +48,15 @@ Accepted proposals move to implementation:
 
 ### Active Proposals
 
-*(No active proposals at this time)*
+*(No active proposals at this time).*
 
 ### Accepted Proposals
 
-*(Accepted proposals will be listed here)*
+*(Accepted proposals will be listed here).*
 
 ### Rejected Proposals
 
-*(Rejected proposals are archived for reference)*
+*(Rejected proposals are archived for reference).*
 
 ## Proposal Template
 
@@ -78,6 +84,7 @@ Use the [proposal template](template.md) for all new proposals. The template inc
 ### Review Criteria
 
 Proposals are evaluated on:
+
 - **Technical Merit**: Is the solution technically sound?
 - **Community Need**: Does this address a real community need?
 - **Feasibility**: Can this be realistically implemented?
