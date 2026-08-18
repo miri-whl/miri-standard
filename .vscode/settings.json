@@ -1,0 +1,25 @@
+{
+  // Miri Standard workspace theme — muted gold, so this project is recognizable at a glance
+  "workbench.colorCustomizations": {
+    "titleBar.activeBackground": "#8A7420",
+    "titleBar.activeForeground": "#F5EFD5",
+    "titleBar.inactiveBackground": "#5E5016",
+    "titleBar.inactiveForeground": "#B8AE8A",
+    "activityBar.background": "#746016",
+    "activityBar.foreground": "#F5EFD5",
+    "activityBar.inactiveForeground": "#C7B76A",
+    "activityBar.activeBorder": "#F0D060",
+    "activityBarBadge.background": "#F0D060",
+    "activityBarBadge.foreground": "#2E2600",
+    "statusBar.background": "#6E5C1A",
+    "statusBar.foreground": "#F5EFD5",
+    "statusBar.noFolderBackground": "#6E5C1A",
+    "statusBar.debuggingBackground": "#A05A00",
+    "statusBar.debuggingForeground": "#FFFFFF",
+    "statusBarItem.remoteBackground": "#2E2600",
+    "statusBarItem.remoteForeground": "#F0D060",
+    "tab.activeBorderTop": "#D4B840",
+    "focusBorder": "#A08A2A",
+    "progressBar.background": "#D4B840"
+  }
+}
