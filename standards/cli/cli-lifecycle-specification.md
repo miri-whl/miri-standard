@@ -89,6 +89,26 @@ The CLI's introspection output (`<cli> --describe`, or the Miri introspection co
 
 This single block is what converts a CLI from CPE-guessing territory into a normal scanner target.
 
+### 3.2 Artifact-Level Support Status
+
+The introspection output MUST also carry a `support` block — the CLI's own end-of-life state, same shape and semantics as the Python specification's [`support` object](../python/lifecycle-security-metadata.md):
+
+```json
+{
+  "support": {
+    "status": "active",
+    "supported_versions": [">=3.0,<4.0"],
+    "eol_date": null,
+    "replacement": null,
+    "security_policy": "https://github.com/acme/acme-cli/blob/main/SECURITY.md"
+  }
+}
+```
+
+`status` is `"active"`, `"maintenance"`, `"deprecated"`, or `"eol"`; `deprecated`/`eol` require `replacement` (a purl for a successor tool, or a subcommand path when the successor is absorption into another CLI). This is the one lifecycle statement the artifact carries directly rather than pointing to — it is vendor-authored *intent*, not a computed verdict. The status values are deliberately mappable onto the [OpenEoX](https://www.oasis-open.org/tc-openeox/) stages (GA / End-of-Sales / EoL / End-of-Security-Support; Core Schema 1.0 in public review as of July 2026, ratification expected 2027) — a pointer field to published OpenEoX statements will be added once that standard is ratified.
+
+EOL is thereby handled at three levels, each with its own mechanism: the **CLI itself** via `support` (read locally from `--describe`); the CLI's **bundled components** via the SBOM-purl join against external EoL sources (endoflife.date today, OpenEoX once ratified) — never written into the SBOM itself, per §6.2; and **deprecated surfaces within the CLI** via the per-flag `lifecycle` blocks of §6.
+
 ## 4. Advisory Sources
 
 The introspection output MUST include `advisory_sources` — the same structure as the Python specification's [lifecycle.json](../python/lifecycle-security-metadata.md):
@@ -171,6 +191,31 @@ Additionally, invoking a **removed** flag or subcommand MUST produce a structure
 
 This converts the frozen-weights failure mode — agent constructs a command from stale knowledge, hits a dead-end error, retries blind — into a one-turn recovery. Deprecation *warnings* during the grace period go to stderr only (§2.5).
 
+### 6.1 Prior Art and Field Vocabulary
+
+The `lifecycle` block deliberately mirrors the converged deprecation shape of the adjacent standards, so each field carries a citation trail rather than being invented here:
+
+- `deprecated_since` / `removed_in` are the CLI equivalent of the two-phase HTTP lifecycle: the `Deprecation` header field ([RFC 9745](https://www.rfc-editor.org/info/rfc9745/)) marking the start, the `Sunset` header ([RFC 8594](https://www.rfc-editor.org/info/rfc8594/)) marking end-of-life, with `migration` playing RFC 9745's deprecation link relation.
+- `replacement` plus a human-readable reason follows Python's [PEP 702](https://peps.python.org/pep-0702/) `@deprecated` decorator, GraphQL's `@deprecated(reason:)` directive, Java's `@Deprecated(since, forRemoval)`, and Rust's `#[deprecated(since, note)]`.
+- The grace-period requirement (§7.3) follows the [Kubernetes deprecation policy for CLI elements](https://kubernetes.io/docs/reference/using-api/deprecation-policy/), the only shipped CLI-specific deprecation policy.
+
+### 6.2 Where Deprecation State Lives
+
+Deprecation is *interface lifecycle*, not *composition*: it is carried in the introspection output and in `changelog --since`, both derived from the same schema-as-data source (§2.3). It MUST NOT be recorded in the SBOM, which describes bundled components — a scanner reading the SBOM asks "what is inside this binary?", while an agent reading `--describe` asks "which of these surfaces is going away?". Keeping the two artifacts single-purpose keeps both joins clean.
+
+The same rule covers end-of-life: the artifact's own EOL is the `support` block (§3.2); EOL of *bundled components* is computed by joining the SBOM's purls against external EoL sources — neither is ever written into the SBOM.
+
+### 6.3 Deprecation Coherence (Verification)
+
+No existing tooling verifies that deprecation markers, the changelog, and actual removals agree — for CLIs or otherwise; ecosystem prior art stops at changelog-entry bots (towncrier-style CI, which enforce that *an entry exists*) and API-diff tools (cargo-semver-checks, griffe, japicmp, which detect changes without cross-checking declarations). The Miri conformance tool MUST therefore verify, per release:
+
+1. Every surface whose `lifecycle.status` is `deprecated` appears in the `changelog --since` output of the release that introduced the deprecation.
+2. Every surface removed since a prior version appeared as `deprecated` in at least one earlier release (the §7.3 grace period) — **no silent removals**.
+3. Every `replacement` names a surface that exists in the current introspection output.
+4. Invoking each removed surface produces the structured teaching error of §6, not a generic parse failure.
+
+In a conforming implementation, checks 1–3 hold *by construction*, because help, `--describe`, and `changelog` all derive from one schema struct (§2.3); the verifier exists to catch drift in implementations that hand-maintain any of the three.
+
 ## 7. Open Source CLIs
 
 For `distribution: "open-source"` CLIs:
@@ -220,11 +265,12 @@ Because internal CLIs have a known consumer population, organizations SHOULD cou
 
 A CLI conforms to this specification if:
 
-1. Its introspection output contains a valid `identity` block whose `purl` version matches the binary's actual version.
+1. Its introspection output contains a valid `identity` block whose `purl` version matches the binary's actual version, and a `support` block per §3.2 (with `replacement` when status is `deprecated`/`eol`).
 2. `advisory_sources` has at least one entry; private CLIs do not rely solely on public OSV.
 3. `check-update --json` and `changelog --since <v> --json` are implemented per §5, passive by default, JSON-on-stdout, warnings-on-stderr.
 4. Every deprecated surface carries a `lifecycle` block, and every removed surface produces the structured teaching error of §6.
-5. All of the above derive from the same schema-as-data source as `--help` (§2.3).
+5. The deprecation coherence checks of §6.3 pass: introspection lifecycle state, `changelog --since` output, and actual removals agree, with no silent removals.
+6. All of the above derive from the same schema-as-data source as `--help` (§2.3).
 
 A conformance test suite is a planned deliverable alongside the introspection schema (landscape doc §4.1).
 
@@ -238,5 +284,12 @@ A conformance test suite is a planned deliverable alongside the introspection sc
 - OSV schema — https://ossf.github.io/osv-schema/ · OSV.dev API — https://google.github.io/osv.dev/api/
 - Go embedded buildinfo / govulncheck — https://go.dev/blog/govulncheck
 - CycloneDX — https://cyclonedx.org/ · SPDX — https://spdx.dev/
+- OpenEoX TC (OASIS) — https://www.oasis-open.org/tc-openeox/ · Core Schema 1.0 CSD01 — http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/
+- OWASP CLE and OpenEoX — https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox
+- endoflife.date — https://endoflife.date/
 - OpenVEX — https://github.com/openvex/spec
+- RFC 9745 — The Deprecation HTTP Response Header Field — https://www.rfc-editor.org/info/rfc9745/
+- RFC 8594 — The Sunset HTTP Header Field — https://www.rfc-editor.org/info/rfc8594/
+- PEP 702 — Marking deprecations using the type system — https://peps.python.org/pep-0702/
+- Kubernetes deprecation policy (CLI elements) — https://kubernetes.io/docs/reference/using-api/deprecation-policy/
 - The `kubectl get --export` removal case study — https://www.infoq.com/articles/ai-agent-cli/

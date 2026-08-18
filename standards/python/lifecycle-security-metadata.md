@@ -17,8 +17,9 @@ The design reuses the existing open source security stack — [purl](https://git
 3. [The lifecycle.json File](#3-the-lifecyclejson-file)
 4. [Open Source Packages](#4-open-source-packages)
 5. [Private and Internal Packages](#5-private-and-internal-packages)
-6. [Agent Consumption Workflow](#6-agent-consumption-workflow)
-7. [Conformance Requirements](#7-conformance-requirements)
+6. [Deprecating Interfaces](#6-deprecating-interfaces)
+7. [Agent Consumption Workflow](#7-agent-consumption-workflow)
+8. [Conformance Requirements](#8-conformance-requirements)
 
 ---
 
@@ -120,6 +121,17 @@ Like all Miri agent metadata, `lifecycle.json` SHOULD be generated at build time
 
 The two artifacts divide cleanly: advisories against the *package* join on `identity.purl` via `advisory_sources`; advisories against *bundled components* join on the purls inside the PEP 770 SBOM. Consumers performing a full vulnerability check evaluate both.
 
+The same division applies to **end-of-life of bundled components**: whether a vendored OpenSSL is past its support window is never written into the SBOM — the SBOM contributes the component purls, and the consumer joins them against external EoL data sources (endoflife.date today; [OpenEoX](https://www.oasis-open.org/tc-openeox/) once ratified). The SBOM makes the join possible; the verdict is computed at call time, like every other verdict in this specification.
+
+### 3.3 End-of-Life Signaling for the Package Itself
+
+The package's own end-of-life is the one lifecycle statement the artifact carries directly, because it is a vendor-authored *intent*, not a computed verdict: `support.status: "eol"` with `eol_date` and `replacement` (§3.1). Emerging prior art:
+
+- **[OpenEoX](https://www.oasis-open.org/tc-openeox/)** (OASIS) standardizes machine-readable EoL exchange with four stages — General Availability, End-of-Sales, End-of-Life, End-of-Security-Support. [Core Schema 1.0 entered public review in July 2026](http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/); ratification is expected in 2027. Miri's `support.status` values map onto it deliberately: `active` ≈ GA, `maintenance` ≈ the window where only security support remains (pre-EoSSec), `eol` ≈ EoL/EoSSec passed. Organizations MAY additionally publish OpenEoX statements; a future version of this specification will add a pointer field to them once OpenEoX 1.0 is ratified, rather than pre-standardizing against a draft.
+- **OWASP CLE** (Common Lifecycle Enumeration) is the complementary effort for naming lifecycle states across vendors; see [how the two compose](https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox).
+
+Consumers therefore handle EOL at three levels, each with its own mechanism: the **package itself** via `support` (read locally, no network); **direct dependencies** via their own `lifecycle.json`/`support` blocks; **bundled components** via the SBOM-purl join against external EoL sources (above).
+
 ## 4. Open Source Packages
 
 For `distribution: "open-source"` packages published to PyPI:
@@ -171,7 +183,38 @@ Public dependencies of a private package are still covered by public OSV; `advis
 
 Organizations that ship affected-but-not-exploitable components SHOULD publish an internal VEX document and reference it in `vex`, so internal scanners can suppress false positives with an auditable statement rather than an ignore-list.
 
-## 6. Agent Consumption Workflow
+## 6. Deprecating Interfaces
+
+Lifecycle state at package granularity (§3 `support`) is not enough: individual functions, classes, and parameters deprecate independently. This section binds Miri to the existing Python deprecation standards — each requirement cites the PEP it derives from — and adds the machine-readable inventory and coherence verification those standards lack.
+
+### 6.1 Code-Level Marking (PEP 702)
+
+- Deprecated interfaces MUST be marked with the `@deprecated` decorator standardized by [PEP 702](https://peps.python.org/pep-0702/) — `warnings.deprecated` on Python ≥3.13, `typing_extensions.deprecated` earlier. This makes deprecations visible to static type checkers and IDEs at call sites without executing code, and emits a runtime `DeprecationWarning`.
+- Runtime warning behavior follows the standard `warnings` categories with the default-visibility semantics of [PEP 565](https://peps.python.org/pep-0565/).
+- The decorator message SHOULD name the replacement interface and the planned removal version.
+- The deprecation window SHOULD follow the policy shape of [PEP 387](https://peps.python.org/pep-0387/): the marked interface keeps working, warning, for at least two releases before removal.
+
+### 6.2 The Machine-Readable Inventory
+
+PEP 702 markers are discoverable only by importing or type-checking the code — invisible to an agent inspecting metadata. The build MUST therefore extract them into the `deprecations` array of [migration-guide.json](agent-metadata-specification.md) (fields: `deprecated`, `replacement`, `removal_version`, `migration`). The decorators are the single source of truth; the JSON inventory is derived at build time, never hand-written — the same schema-as-data rule as the [CLI specification §2.3](../cli/cli-lifecycle-specification.md).
+
+### 6.3 Registry-Level State
+
+Interface deprecation composes with, and does not replace, the registry mechanisms:
+
+- Whole releases are withdrawn from dependency resolution by yanking, per [PEP 592](https://peps.python.org/pep-0592/).
+- Whole projects signal `archived` / `quarantined` through the status markers of [PEP 792](https://peps.python.org/pep-0792/), served by the index APIs. PEP 792 defines no successor pointer — `support.replacement` in `lifecycle.json` (§3) carries what PEP 792 cannot.
+
+### 6.4 Deprecation Coherence (Verification)
+
+No existing ecosystem tool verifies that deprecation markers, the changelog, and actual removals agree — changelog bots (towncrier-style CI) enforce only that *an entry exists per change*, and API-diff tools (griffe, cargo-semver-checks, japicmp) detect surface changes without cross-checking them against declared deprecations. Miri validation tooling MUST therefore check, per release:
+
+1. Every interface carrying a PEP 702 marker appears in `migration-guide.json` `deprecations`.
+2. Every public interface removed since the previous release appeared in `deprecations` of at least one earlier release — **no silent removals**.
+3. Every `deprecations` entry names a `replacement` that exists in the new release's `sdk-manifest.json`, and a `removal_version` greater than the release's own version.
+4. Package-level `support.status` of `deprecated`/`eol` carries `replacement` (schema-enforced, [lifecycle-v1.json](../../schemas/lifecycle-v1.json)).
+
+## 7. Agent Consumption Workflow
 
 ```python
 import json, importlib.resources
@@ -197,7 +240,7 @@ if meta["support"]["status"] in ("deprecated", "eol"):
 
 The agent-facing consequence: a package resolved from frozen model weights can be validated in two calls, converting silent staleness into a call-time check.
 
-## 7. Conformance Requirements
+## 8. Conformance Requirements
 
 A package conforms to this specification if:
 
@@ -207,8 +250,9 @@ A package conforms to this specification if:
 4. `distribution: "private"` packages do not list public OSV as their sole authoritative source.
 5. `support.status` of `deprecated` or `eol` is accompanied by `replacement` when a successor exists.
 6. Wheels bundling non-Python components include PEP 770 SBOM data in `.dist-info/sboms/` covering those components.
+7. The deprecation coherence checks of §6.4 pass: PEP 702 markers, the `migration-guide.json` inventory, and actual removals agree, with no silent removals.
 
-Validation tooling (planned, see [Python README](README.md)) will check 1–6 and additionally verify that the declared registry serves the declared version.
+Validation tooling (planned, see [Python README](README.md)) will check 1–7 and additionally verify that the declared registry serves the declared version.
 
 ---
 
@@ -221,5 +265,13 @@ Validation tooling (planned, see [Python README](README.md)) will check 1–6 an
 - PyPA Advisory Database — https://github.com/pypa/advisory-database
 - GitHub Advisory Database — https://github.com/github/advisory-database
 - PEP 691/700 — JSON-based simple index API
+- PEP 387 — Backwards compatibility policy — https://peps.python.org/pep-0387/
+- PEP 565 — DeprecationWarning visibility — https://peps.python.org/pep-0565/
+- PEP 592 — Yanked releases — https://peps.python.org/pep-0592/
+- PEP 702 — Marking deprecations using the type system — https://peps.python.org/pep-0702/
 - PEP 770 — SBOMs in Python packages — https://peps.python.org/pep-0770/
+- PEP 792 — Project status markers in the index APIs — https://peps.python.org/pep-0792/
 - OpenVEX — https://github.com/openvex/spec
+- OpenEoX TC (OASIS) — https://www.oasis-open.org/tc-openeox/ · Core Schema 1.0 CSD01 — http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/
+- OWASP CLE and OpenEoX — https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox
+- endoflife.date — https://endoflife.date/

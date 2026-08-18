@@ -40,10 +40,14 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **[Agent CLI Landscape and Prior Art](cli/landscape-and-prior-art.md)** - Survey of existing CLI standards, 2026 agent-CLI efforts, and the open gaps (lifecycle, versioning, introspection) that scope Miri's CLI work
 - **[Update and Vulnerability Signaling](cli/update-and-vulnerability-signaling.md)** - How the library world computes "must be updated" (purl + OSV + installed inventory), why standalone CLIs are illegible to that machinery, and what Miri should require (self-identification, update-check primitive)
 
+### Go Standards
+- **[Go Overview](go/)** - Scope sketch: agent metadata for modules, lifecycle metadata, structured examples, and the Go CLI conformance profile — building on embedded buildinfo, govulncheck, and testable examples
+
+### Rust Standards
+- **[Rust Overview](rust/)** - Scope sketch: agent metadata for crates, lifecycle metadata, structured examples, and the Rust CLI conformance profile — building on `#[deprecated]`, RustSec, cargo-semver-checks, and cargo auditable
+
 ### Future Language Standards
-- **JavaScript/npm** *(Planned for Q2 2025)*
-- **Rust/Cargo** *(Planned)*
-- **Go Modules** *(Planned)*
+- **JavaScript/npm** *(Planned)*
 
 ## Specification Status
 

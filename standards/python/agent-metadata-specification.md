@@ -345,6 +345,8 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 }
 ```
 
+**Generation source for `deprecations`**: entries MUST be derived from the code's [PEP 702](https://peps.python.org/pep-0702/) `@deprecated` markers at build time (see [Lifecycle and Security Metadata §6](lifecycle-security-metadata.md)) — the decorators are the source of truth, the JSON is the derived inventory.
+
 ### 4.4 prompt-templates.md (Optional)
 
 **Purpose**: Agent-specific interaction guides and prompt templates.
