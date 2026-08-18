@@ -26,6 +26,11 @@ This directory contains JSON Schema definitions for validating Miri Standard met
   - Required fields: `version`, `nodes`, `edges`
   - Validates graph structure and workflow definitions
 
+- **[lifecycle-v1.json](lifecycle-v1.json)** - Schema for `lifecycle.json`
+  - Package identity (purl), advisory sources, update check, and support status
+  - Required fields: `miri_lifecycle_version`, `generated_at`, `identity`, `advisory_sources`, `update_check`, `support`
+  - Validates open source and private distribution declarations; see [Lifecycle and Security Metadata](../standards/python/lifecycle-security-metadata.md)
+
 ## Usage
 
 ### Validation with Python

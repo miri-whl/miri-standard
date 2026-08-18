@@ -73,7 +73,8 @@ package-1.0.0-py3-none-any.whl
 │   ├── migration-guide.json         # Version-specific changes
 │   ├── prompt-templates.md          # Agent interaction guides
 │   ├── api-graph.json              # API relationship graph
-│   └── performance-hints.json      # Optimization suggestions
+│   ├── performance-hints.json      # Optimization suggestions
+│   └── lifecycle.json              # Identity, advisory sources (required)
 ├── package/examples/                # Miri: Example code
 └── package-1.0.0.dist-info/        # Standard + Miri metadata
     ├── METADATA
@@ -440,6 +441,12 @@ Use migration-guide.json for breaking changes and new features.
 }
 ```
 
+### 4.6 lifecycle.json (Required)
+
+**Purpose**: Package identity (purl), authoritative advisory sources, update-check endpoint, and support status — so agents and scanners can answer "is this package vulnerable?" and "is this package current?" at call time, for both open source and private packages.
+
+This file is fully specified in [Lifecycle and Security Metadata](lifecycle-security-metadata.md), including the open source defaults (PyPI + public OSV), the private/internal package requirements (private purl namespaces, internal OSV-schema advisory sources), and the relationship to PEP 770 SBOMs. Like all files in this directory, it MUST be generated at build time.
+
 ## 5. Automated Generation
 
 ### 5.1 Build-Time Generation
@@ -798,6 +805,7 @@ class AgentPerformanceTracker:
 **Minimum Compliance**:
 - `agent-metadata/sdk-manifest.json` - Core API index
 - `agent-metadata/usage-patterns.json` - Basic usage patterns
+- `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
 
 **Full Compliance**:
 - All metadata files present and valid
@@ -818,7 +826,7 @@ def validate_agent_metadata(package_path: Path) -> List[str]:
         return errors
     
     # Validate required files
-    required_files = ["sdk-manifest.json", "usage-patterns.json"]
+    required_files = ["sdk-manifest.json", "usage-patterns.json", "lifecycle.json"]
     for filename in required_files:
         file_path = metadata_dir / filename
         if not file_path.exists():
@@ -843,6 +851,12 @@ def validate_file_schema(filename: str, data: Dict) -> List[str]:
             if field not in data:
                 errors.append(f"sdk-manifest.json missing required field: {field}")
     
+    elif filename == "lifecycle.json":
+        required_fields = ["identity", "advisory_sources", "update_check", "support"]
+        for field in required_fields:
+            if field not in data:
+                errors.append(f"lifecycle.json missing required field: {field}")
+
     elif filename == "usage-patterns.json":
         if "patterns" not in data:
             errors.append("usage-patterns.json missing 'patterns' field")

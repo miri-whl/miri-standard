@@ -21,6 +21,7 @@ Python serves as the foundation language for the Miri Standard. This section doc
 - **[Miri Wheel Extensions](miri-wheel-extensions.md)** - Complete specification for agent-friendly wheel format extensions
 - **[Agent Metadata Specification](agent-metadata-specification.md)** - Pre-parsed metadata formats for eliminating agent re-parsing
 - **[Implementation Guide](implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
+- **[Lifecycle and Security Metadata](lifecycle-security-metadata.md)** - Package identity (purl), advisory sources, update checks, and deprecation state for open source and private packages
 
 ### Planned Specifications
 

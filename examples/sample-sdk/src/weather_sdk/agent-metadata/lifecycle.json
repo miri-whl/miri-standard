@@ -1,0 +1,31 @@
+{
+  "$schema": "https://miri-standard.org/schemas/lifecycle-v1.json",
+  "miri_lifecycle_version": "0.1",
+  "generated_at": "2026-08-18T12:00:00Z",
+  "identity": {
+    "purl": "pkg:pypi/weather-sdk@1.2.0",
+    "distribution": "open-source",
+    "registry": "https://pypi.org/simple/",
+    "source_repository": "https://github.com/miri-whl/miri-standard"
+  },
+  "advisory_sources": [
+    {
+      "type": "osv",
+      "ecosystem": "PyPI",
+      "url": "https://api.osv.dev/v1/query",
+      "authoritative": true
+    }
+  ],
+  "update_check": {
+    "type": "pypi-json",
+    "url": "https://pypi.org/pypi/weather-sdk/json"
+  },
+  "support": {
+    "status": "active",
+    "supported_versions": [">=1.0,<2.0"],
+    "eol_date": null,
+    "replacement": null,
+    "security_policy": "https://github.com/miri-whl/miri-standard/blob/main/SECURITY.md"
+  },
+  "vex": null
+}

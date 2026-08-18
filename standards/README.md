@@ -34,6 +34,12 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **[Packaging Standards Overview](python/packaging-standards.md)** - Summary of existing Python packaging standards and PEPs
 - **[Metadata Standards](python/metadata-standards.md)** *(Planned)*
 
+### CLI Standards
+- **[CLI Overview](cli/)** - CLI standards, background research, and planned specifications
+- **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - Self-identification, advisory sources, update checks, and deprecation metadata for open source and private CLIs
+- **[Agent CLI Landscape and Prior Art](cli/landscape-and-prior-art.md)** - Survey of existing CLI standards, 2026 agent-CLI efforts, and the open gaps (lifecycle, versioning, introspection) that scope Miri's CLI work
+- **[Update and Vulnerability Signaling](cli/update-and-vulnerability-signaling.md)** - How the library world computes "must be updated" (purl + OSV + installed inventory), why standalone CLIs are illegible to that machinery, and what Miri should require (self-identification, update-check primitive)
+
 ### Future Language Standards
 - **JavaScript/npm** *(Planned for Q2 2025)*
 - **Rust/Cargo** *(Planned)*
@@ -52,6 +58,8 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **[Miri Wheel Extensions](python/miri-wheel-extensions.md)** - Agent-friendly Python wheel format extensions specification
 - **[Agent Metadata Specification](python/agent-metadata-specification.md)** - Pre-parsed metadata formats for performance optimization
 - **[Python Implementation Guide](python/implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
+- **[Python Lifecycle and Security Metadata](python/lifecycle-security-metadata.md)** - Package identity, advisory sources, and lifecycle state for open source and private packages
+- **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - CLI self-identification, advisory sources, update checks, and deprecation metadata
 
 ### Proposed Standards
 

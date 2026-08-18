@@ -94,6 +94,8 @@ The wheel format allows custom files in the `.dist-info/` directory. Miri adds:
 - `AGENT_GUIDE.md` - Agent-specific documentation
 - `TEMPLATES.json` - Code template index
 
+This extension point now has accepted upstream precedent: [PEP 770](https://peps.python.org/pep-0770/) (accepted 2025) standardizes an `sboms/` directory inside `.dist-info/` for Software Bill-of-Materials documents. Miri does not redefine SBOMs — packages bundling non-Python components MUST use PEP 770 as specified in [Lifecycle and Security Metadata §3.2](lifecycle-security-metadata.md).
+
 #### 3.1.2 Enhanced Package Data
 
 Structured directories within the main package:
@@ -109,6 +111,7 @@ The `agent-metadata/` directory contains optimized data structures that eliminat
 - `usage-patterns.json` - Pre-extracted, categorized code patterns
 - `migration-guide.json` - Structured version change documentation
 - `api-graph.json` - Relationship mapping between API components
+- `lifecycle.json` - Identity (purl), advisory sources, update check, and support status ([full specification](lifecycle-security-metadata.md))
 
 #### 3.1.4 Discovery APIs
 
@@ -132,7 +135,8 @@ package-1.0.0-py3-none-any.whl
 │   │   ├── migration-guide.json     # Version-specific changes
 │   │   ├── prompt-templates.md      # Agent interaction guides
 │   │   ├── api-graph.json          # API relationship graph
-│   │   └── performance-hints.json  # Optimization suggestions
+│   │   ├── performance-hints.json  # Optimization suggestions
+│   │   └── lifecycle.json          # Identity, advisory sources, support status (required)
 │   ├── examples/                     # Miri: Embedded examples
 │   │   ├── __init__.py              # Example discovery
 │   │   ├── quickstart.py            # Basic usage
@@ -154,6 +158,7 @@ package-1.0.0-py3-none-any.whl
     ├── METADATA                      # Standard (enhanced)
     ├── WHEEL                         # Standard
     ├── RECORD                        # Standard
+    ├── sboms/                        # Standard: PEP 770 SBOMs (when bundling non-Python components)
     ├── AGENT_EXAMPLES.json           # Miri: Example index
 ├── USAGE_PATTERNS.md             # Miri: Usage guide
 ├── API_REFERENCE.json            # Miri: API metadata
@@ -538,6 +543,7 @@ Build systems SHOULD generate AI_EXAMPLES.json automatically by scanning example
 - `examples/quickstart.py` - Basic usage example
 - `AI_EXAMPLES.json` - Example metadata
 - Enhanced METADATA with Miri fields
+- `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
 
 **Full Compliance**:
 - Complete examples directory structure
@@ -545,6 +551,7 @@ Build systems SHOULD generate AI_EXAMPLES.json automatically by scanning example
 - Documentation directory
 - Templates directory
 - All discovery APIs implemented
+- PEP 770 SBOM data in `.dist-info/sboms/` when the wheel bundles non-Python components
 
 #### 7.2.2 Content Requirements
 
@@ -640,6 +647,8 @@ Miri-compliant packages SHOULD include tests that verify:
 - [PEP 491: The Wheel Binary Package Format 1.9](https://peps.python.org/pep-0491/)
 - [PEP 566: Metadata for Python Software Packages 2.1](https://peps.python.org/pep-0566/)
 - [PEP 621: Storing project metadata in pyproject.toml](https://peps.python.org/pep-0621/)
+- [PEP 770: Improving measurability of Python packages with SBOMs](https://peps.python.org/pep-0770/)
+- [Miri Lifecycle and Security Metadata](lifecycle-security-metadata.md)
 - [Miri Standard Origin Story](../../docs/origin-story.md)
 
 ---
