@@ -8,6 +8,8 @@ level: MUST
 category: Deprecation & Lifecycle Coherence
 weight: 5
 conditional: false
+requirements:
+- previous-release
 severity:
   default: CRITICAL
   violation_unit: each silently removed interface

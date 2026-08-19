@@ -8,6 +8,8 @@ level: SHOULD
 category: Deprecation & Lifecycle Coherence
 weight: 2
 conditional: false
+requirements:
+- previous-release
 severity:
   default: MINOR
   violation_unit: each interface removed early

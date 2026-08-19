@@ -8,6 +8,8 @@ level: MUST
 category: Deprecation Coherence
 weight: 3
 conditional: false
+requirements:
+- previous-release
 severity:
   default: HIGH
   violation_unit: each surface removed without grace

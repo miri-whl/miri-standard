@@ -8,6 +8,8 @@ level: MUST
 category: Examples
 weight: 3
 conditional: false
+requirements:
+- execution
 severity:
   default: MEDIUM
   violation_unit: each example that fails to compile or execute

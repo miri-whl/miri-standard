@@ -8,6 +8,8 @@ level: MUST
 category: Deprecation Coherence
 weight: 3
 conditional: false
+requirements:
+- previous-release
 severity:
   default: MEDIUM
   violation_unit: each deprecation absent from the changelog

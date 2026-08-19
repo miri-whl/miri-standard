@@ -122,7 +122,9 @@ The severity assignment exists so that magnitude-aware health scoring is compara
 defined by the standard, never by the linter. Linter implementations MUST consume these definitions rather than
 maintaining their own copies, and MUST NOT override severity or violation units. Per-instance checks additionally carry a
 committee-defined `population_unit` — the denominator for report-level violation density; populations are reported,
-never scored, and never invented by implementations.
+never scored, and never invented by implementations. Definitions also declare `requirements` — the operating capabilities
+(`network`, `previous-release`, `execution`) beyond the target's baseline analysis mode a check needs; a linter
+lacking one MUST skip with the fixed reason, and MUST NOT skip otherwise.
 
 This table is the human rendering of the same data; the YAML files are authoritative, and coherence between the two
 (IDs, levels, weights, and the 100-point sum) is verified mechanically.
@@ -131,8 +133,10 @@ This table is the human rendering of the same data; the YAML files are authorita
 
 - Report each check by its stable ID (`MIRI-CLI-NNN`); IDs are never renumbered — retired checks are marked *withdrawn*
   and their weight redistributed in a new minor version of this checklist.
-- Coherence checks E-036/037 require a prior release for comparison; linters SHOULD obtain it via `check-update`'s
-  `manifest` and degrade to *skipped (weight forfeited, reported)* when unavailable.
+- Checks declaring `previous-release` in their definition's `requirements` (030/033/035/036/037) need a prior
+  release; linters SHOULD obtain it via `check-update`'s `manifest` and degrade to *skipped (weight forfeited,
+  reported)* when unavailable. The `requirements` field in each check definition is the authoritative list of such
+  constraints and their fixed skip reasons.
 - References marked *(informative)* cite community practice (clig.dev, anc.dev, Agent-First CLI principles) that has no
   normative authority — the normative source for those checks is the Miri CLI specification itself; the citation records
   lineage per the [landscape survey](landscape-and-prior-art.md).

@@ -8,6 +8,8 @@ level: MUST
 category: Agent Metadata Core
 weight: 3
 conditional: true
+requirements:
+- network
 severity:
   default: MEDIUM
   violation_unit: each schema violation in migration-guide.json

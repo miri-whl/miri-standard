@@ -8,6 +8,8 @@ level: MUST
 category: Discovery & Degradation
 weight: 2
 conditional: false
+requirements:
+- execution
 severity:
   default: HIGH
   violation_unit: the package

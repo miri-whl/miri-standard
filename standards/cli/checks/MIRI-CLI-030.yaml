@@ -8,6 +8,8 @@ level: MUST
 category: Update & Changelog
 weight: 1
 conditional: false
+requirements:
+- previous-release
 severity:
   default: MEDIUM
   violation_unit: each missing changelog category

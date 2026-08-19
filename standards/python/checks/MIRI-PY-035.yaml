@@ -8,6 +8,8 @@ level: SHOULD
 category: Deprecation & Lifecycle Coherence
 weight: 2
 conditional: false
+requirements:
+- execution
 severity:
   default: MINOR
   violation_unit: each silent deprecated interface

@@ -122,7 +122,9 @@ The severity assignment exists so that magnitude-aware health scoring is compara
 defined by the standard, never by the linter. Linter implementations MUST consume these definitions rather than
 maintaining their own copies, and MUST NOT override severity or violation units. Per-instance checks additionally carry a
 committee-defined `population_unit` — the denominator for report-level violation density; populations are reported,
-never scored, and never invented by implementations.
+never scored, and never invented by implementations. Definitions also declare `requirements` — the operating capabilities
+(`network`, `previous-release`, `execution`) beyond the target's baseline analysis mode a check needs; a linter
+lacking one MUST skip with the fixed reason, and MUST NOT skip otherwise.
 
 This table is the human rendering of the same data; the YAML files are authoritative, and coherence between the two
 (IDs, levels, weights, and the 100-point sum) is verified mechanically.
@@ -131,8 +133,10 @@ This table is the human rendering of the same data; the YAML files are authorita
 
 - Report each check by its stable ID (`MIRI-PY-NNN`); IDs are never renumbered — retired checks are marked *withdrawn*
   and their weight redistributed in a new minor version of this checklist.
-- Checks E-029/030/031 require the *previous* release for comparison; linters SHOULD fetch it via the declared
-  `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable.
+- Checks declaring `previous-release` in their definition's `requirements` (currently MIRI-PY-030 and 034 alone —
+  029/031 are computable from the current wheel) need the prior release; linters SHOULD fetch it via the declared
+  `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable. The `requirements`
+  field in each check definition is the authoritative list of such constraints and their fixed skip reasons.
 - Machine-readable form: the [`checks/`](checks/) directory is the per-check source of truth; an aggregated
   `checklist.json` remains a planned convenience deliverable, following the same
   schema-as-data rule as everything else in Miri — this document and the JSON must be generated from one source.

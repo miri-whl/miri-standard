@@ -8,6 +8,8 @@ level: SHOULD
 category: Identity & Security
 weight: 1
 conditional: false
+requirements:
+- network
 severity:
   default: LOW
   violation_unit: the support declaration

@@ -8,6 +8,8 @@ level: MUST
 category: Discovery & Degradation
 weight: 3
 conditional: false
+requirements:
+- execution
 severity:
   default: MEDIUM
   violation_unit: the discovery API surface

@@ -166,6 +166,19 @@
         }
       },
       "additionalProperties": false
+    },
+    "requirements": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "network",
+          "previous-release",
+          "execution"
+        ]
+      },
+      "description": "Operating capabilities beyond the target's baseline analysis mode (static inspection for wheels; local invocation for CLIs) that this check needs. A linter lacking a listed capability MUST skip the check (forfeited, reported) with the fixed reason: network -> network_unavailable, previous-release -> previous_release_unavailable, execution -> execution_disabled; a linter satisfying them MUST NOT skip. Absent or empty means computable from the artifact alone - skipping is non-conforming."
     }
   },
   "additionalProperties": false,

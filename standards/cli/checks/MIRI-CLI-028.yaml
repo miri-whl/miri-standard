@@ -8,6 +8,8 @@ level: MUST
 category: Update & Changelog
 weight: 2
 conditional: false
+requirements:
+- network
 severity:
   default: HIGH
   violation_unit: the urgency signal

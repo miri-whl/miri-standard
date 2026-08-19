@@ -8,6 +8,8 @@ level: MUST
 category: Deprecation Coherence
 weight: 4
 conditional: false
+requirements:
+- previous-release
 severity:
   default: HIGH
   violation_unit: each removed surface with a dead-end error
