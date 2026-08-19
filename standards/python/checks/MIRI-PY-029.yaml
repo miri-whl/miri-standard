@@ -16,11 +16,32 @@ short_description: Every PEP 702 marker appears in `migration-guide.json` `depre
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every PEP 702 marker appears in `migration-guide.json`
   `deprecations`.'
+rationale: 'PEP 702 markers are discoverable only by importing or type-checking the code; agents and scanners read metadata
+  (§6.2). A marker that never reaches `migration-guide.json` splits the audience: developers in IDEs see the strikethrough
+  while every metadata-reading consumer keeps recommending the deprecated interface right up until the release that removes
+  it. §6.2 therefore makes the decorators the single source of truth and requires the JSON inventory to be derived at build
+  time — hand-maintained inventories drift in exactly this direction, because adding a decorator and updating a JSON file
+  are two edits that nothing forces to happen together.'
+fires_when:
+- An interface carrying a PEP 702 marker has no matching entry in the `deprecations` array of `migration-guide.json`
+- A matching entry exists but its `replacement` or `removal_version` contradicts the decorator message
+remediation:
+- Extract markers mechanically at build time — PEP 702 sets `__deprecated__` on decorated objects, so an import-time walk
+  (or an AST scan for the decorator) yields the complete set
+- Emit the `deprecations` array (`deprecated`, `replacement`, `removal_version`, `migration`) from that extraction in the
+  same build step that writes the other agent metadata
+- Fail the build on any marker/inventory mismatch; never hand-edit the generated file
 examples:
-  violation: '@deprecated on old_query() has no migration-guide.json entry'
-  compliant: Every PEP 702 marker has a matching migration-guide.json deprecations entry
+  violation: "code:  @deprecated(\"Use query() instead; removed in 3.0.0\")\n       def old_query(sql: str): ...\nmigration-guide.json:\
+    \  \"deprecations\": []\n# metadata consumers keep suggesting old_query() until 3.0.0 deletes it"
+  compliant: "\"deprecations\": [{\n  \"deprecated\": \"old_query\", \"replacement\": \"query\",\n  \"removal_version\"\
+    : \"3.0.0\", \"migration\": \"query() accepts the same SQL string\"\n}]  # generated at build time from the PEP 702\
+    \ marker"
 suggested_fix: Derive the deprecations array from PEP 702 markers at build time.
 references:
 - title: Lifecycle §6.2/§6.4-1
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-029.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-029.html

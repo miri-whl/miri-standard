@@ -18,11 +18,40 @@ short_description: Every public interface removed since the prior release was li
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every public interface removed since
   the prior release was listed in an earlier release''s `deprecations`.'
+rationale: 'A silent removal converts every dependent from working to broken with zero machine-readable warning — the first
+  signal any consumer receives is `AttributeError` in production, and agents working from frozen model weights keep generating
+  calls to the vanished interface indefinitely. The reference incident is kubectl''s `--export` flag: deprecated in v1.14
+  and removed in v1.18, it still broke CI pipelines and resource-cloning scripts at removal because the deprecation lived
+  in a human-readable warning no automation consumed; a removal with no deprecation trail at all is strictly worse. §6.4-2
+  exists because no ecosystem tool checks this — API-diff tools detect the removal but never cross-check it against declared
+  deprecations.'
+fires_when:
+- A public interface present in the previous release's `sdk-manifest.json` is absent from the current release's
+- That interface appears in no earlier release's `migration-guide.json` `deprecations` array
+remediation:
+- Reinstate the interface in a patch release — the removal shipped without its contract
+- 'Deprecate it properly: PEP 702 marker naming replacement and `removal_version` (MIRI-PY-028), derived inventory entry
+  (MIRI-PY-029), and a grace period of at least two releases per the PEP 387 policy shape'
+- Remove it only in the announced version, and gate releases on the §6.4-2 coherence check in CI so the diff-against-previous-release
+  runs before publish, not after
 examples:
-  violation: execute() vanished in 2.0.0 without ever being listed as deprecated
-  compliant: execute() was deprecated in 1.8, warned for two releases, and removed in 2.0
+  violation: '1.9.0 sdk-manifest.json:  functions: ["execute", "query", "connect"]
+
+    2.0.0 sdk-manifest.json:  functions: ["query", "connect"]
+
+    # execute() gone; no release''s deprecations array ever listed it —
+
+    # callers learn via AttributeError: module has no attribute ''execute'''
+  compliant: '1.8.0: @deprecated("Use query() instead; removed in 2.0.0") + deprecations entry
+
+    1.8.x–1.9.x: execute() works, warns, for two minor releases
+
+    2.0.0: execute() removed; the removal matches its announced removal_version'
 suggested_fix: 'Deprecate first: marker + inventory entry + grace period, then remove.'
 references:
 - title: Lifecycle §6.4-2
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-030.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-030.html

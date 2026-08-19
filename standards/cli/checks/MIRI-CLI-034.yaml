@@ -15,9 +15,46 @@ short_description: Grace-period deprecation warnings never touch stdout
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Grace-period deprecation warnings
   never touch stdout.'
+rationale: 'Spec §2.5 confines machine payloads to stdout and all deprecation and update warnings to stderr, because the
+  two channels have different consumers: stdout feeds a parser, stderr feeds a diagnostician. A warning line prepended to
+  a JSON payload fails every downstream `json.loads` and `jq` invocation simultaneously — and it fails precisely for the
+  consumers who just invoked the deprecated surface, the ones the warning was written to migrate. The grace period of §7.3
+  only works if the deprecated surface keeps functioning, and a corrupted payload means it does not.'
+fires_when:
+- Invoking a surface whose `lifecycle.status` is `deprecated` with the JSON output flag produces stdout that is not a single
+  parseable JSON document
+- Deprecation notice text (e.g. a line matching /deprecat/i naming the surface) appears in captured stdout rather than in
+  captured stderr
+- Warning output interleaves with or prefixes the payload only when the deprecated surface is used — the clean-payload check
+  (MIRI-CLI-011) passes on non-deprecated invocations of the same command
+remediation:
+- Route all warning emission through a diagnostics writer bound to stderr (`fprintf(stderr, ...)`, Rust `eprintln!`, Python
+  `print(..., file=sys.stderr)` — Python's `warnings` module already defaults there)
+- Derive the warning text from the surface's `lifecycle` block per §2.3 so the message, `--describe`, and `changelog --since`
+  cannot disagree
+- 'Add a pipeline test to CI: `cli <cmd> --deprecated-flag --json 1>out.json 2>err.txt && jq -e . out.json && grep -qi deprecated
+  err.txt`'
 examples:
-  violation: Deprecation warning corrupts the JSON payload
-  compliant: The deprecation warning goes to stderr; stdout JSON parses clean
+  violation: '$ tool export --json > out.json
+
+    $ cat out.json
+
+    WARNING: --export is deprecated, use --output archive
+
+    {"ok": true, "schema_version": "1", ...}
+
+    $ jq . out.json
+
+    jq: error (at out.json:1): Invalid literal — every downstream parser fails at once'
+  compliant: '$ tool export --json 1>out.json 2>err.txt
+
+    $ cat err.txt
+
+    warning: --export deprecated since 1.14.0, removed in 1.18.0; use --output archive
+
+    $ jq -e .ok out.json
+
+    true — the payload parses clean, the warning reached the diagnostic channel'
 suggested_fix: Emit grace-period warnings on stderr only.
 references:
 - title: CLI Spec §2.5
@@ -26,3 +63,6 @@ references:
 - title: Signaling §3.3-5
   url: update-and-vulnerability-signaling.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-034.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-034.html

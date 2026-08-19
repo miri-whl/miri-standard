@@ -2,6 +2,7 @@
 # comes from the check YAMLs and docs/, structure comes from here, look comes from
 # static/css/, markup comes from templates/).
 github: https://github.com/miri-whl/miri-standard
+site_url: https://miri-whl.github.io
 version: 0.1-draft
 status_badge: Incubation
 

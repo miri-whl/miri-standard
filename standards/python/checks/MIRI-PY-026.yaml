@@ -17,11 +17,38 @@ short_description: '`vex` URL, if present, serves an OpenVEX/CycloneDX VEX docum
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: `vex` URL, if
   present, serves an OpenVEX/CycloneDX VEX document.'
+rationale: 'VEX is the only standardized vendor-authored exploitability statement — an OpenVEX document carries per-vulnerability
+  status (`not_affected`, `affected`, `fixed`, `under_investigation`) that consumers use to suppress false positives with
+  an auditable record instead of an ignore-list (§5.4). A declared `vex` URL that serves nothing is worse than none: a consumer
+  that planned to apply suppressions on its authority either fails the fetch and re-raises every finding, or retries and
+  fails open. A pointer field, once set, must point at a live document.'
+fires_when:
+- '`vex` is non-null and fetching the URL returns a non-2xx status'
+- The URL resolves but the body parses as neither an OpenVEX document (`@context` of `https://openvex.dev/ns/...`) nor a
+  CycloneDX document containing a `vulnerabilities[]` analysis
+remediation:
+- If no VEX document exists yet, set `vex` to `null` — absence is a valid state; a dead pointer is not
+- Serve the document from a stable, versioned location and validate it with `vexctl` (OpenVEX) or CycloneDX schema validation
+  before publishing
+- Regenerate `lifecycle.json` so the field tracks the served location
 examples:
-  violation: vex points at a 404
-  compliant: vex points at a served OpenVEX document
+  violation: 'lifecycle.json:  "vex": "https://acme.example/security/vex/latest.json"
+
+    $ curl -s -o /dev/null -w ''%{http_code}'' https://acme.example/security/vex/latest.json
+
+    404'
+  compliant: '"vex": "https://acme.example/security/vex/acme-billing-3.2.0.openvex.json"
+
+    # serves: {"@context": "https://openvex.dev/ns/v0.2.0",
+
+    #   "statements": [{"vulnerability": {"name": "CVE-2026-1234"},
+
+    #     "status": "not_affected", "justification": "vulnerable_code_not_present"}]}'
 suggested_fix: Fix or remove the VEX URL; if present it must serve an OpenVEX/CycloneDX VEX document.
 references:
 - title: OpenVEX
   url: https://github.com/openvex/spec
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-026.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-026.html

@@ -18,11 +18,43 @@ short_description: Every removed surface was deprecated in ≥1 earlier release
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every removed surface was deprecated
   in ≥1 earlier release.'
+rationale: 'Spec §6.3-2 forbids removing any surface that was never published as deprecated. `kubectl get --export` announced
+  its removal four releases ahead and its disappearance in 1.18 still broke Helm chart template generation and CI/CD backup
+  pipelines; a silent removal grants dependents not even that chance. The failure mode with agent consumers is worse and
+  quieter: frozen model weights keep constructing the dead invocation forever, the agent hits an unrecognized-argument error,
+  retries hallucinated variants, and no bug report is ever filed — the maintainer never learns the interface degraded (landscape
+  §3.1).'
+fires_when:
+- 'Diffing the previous release''s `--describe` against the current one: a subcommand or flag present before is absent now
+  and never appeared with `lifecycle.status: deprecated` in any earlier release'
+- '`changelog --since <previous>` lists a surface under removed with no matching deprecated entry in any prior release''s
+  section'
+- The check declares the `previous-release` requirement; a linter without access to a prior release skips with the fixed
+  reason rather than passing
+remediation:
+- 'Reinstate the removed surface in a patch release, attaching a full `lifecycle` block (`status: deprecated`, `deprecated_since`,
+  `removed_in`, `replacement`)'
+- Hold the §7.3 grace period — the surface functions and warns on stderr for at least one minor release — then remove it,
+  keeping the structured `FLAG_REMOVED` teaching error of §6 in place
+- 'Gate releases in CI on the no-silent-removals diff: compare the release candidate''s `--describe` against the previous
+  release''s and fail on any undeprecated disappearance'
 examples:
-  violation: --export vanished without ever appearing as deprecated
-  compliant: Every removed flag appears as deprecated in at least one earlier release's changelog
+  violation: '2.5.0: --describe lists subcommand "snapshot"; no lifecycle block, no changelog notice
+
+    2.6.0: "snapshot" is gone from --describe
+
+    $ tool snapshot
+
+    error: unknown command "snapshot" — a dead-end parse failure; agents built on 2.5.0 knowledge retry blind'
+  compliant: "2.6.0: \"snapshot\" carries lifecycle {status: deprecated, removed_in: \"2.7.0\", replacement: \"backup create\"\
+    }, functions, warns on stderr\n2.7.0: \"snapshot\" removed; invoking it returns\n{\"ok\": false, \"error\": {\"code\"\
+    : \"COMMAND_REMOVED\", \"removed_in\": \"2.7.0\",\n  \"retryable\": false, \"suggestions\": [\"use 'tool backup create'\
+    \ instead\"]}}"
 suggested_fix: 'Deprecate first: lifecycle block + changelog entry + grace period, then remove.'
 references:
 - title: CLI Spec §6.3-2
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-037.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-037.html

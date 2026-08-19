@@ -14,11 +14,37 @@ severity:
 short_description: '`docs/` directory with API reference and troubleshooting'
 long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
   This check verifies: `docs/` directory with API reference and troubleshooting.'
+rationale: 'Embedded docs are the delivery channel for the environments the standard''s private-distribution story targets:
+  an agent sandbox or air-gapped network that can `pip install` from an internal index but has no route to a hosted docs
+  site receives exactly what the wheel carries and nothing else. §5.3 names the two files that make a package self-sufficient
+  there — `api_reference.md` for what the API is, `troubleshooting.md` for what to do when it misbehaves — because those
+  are the two lookups agents otherwise perform against the open web. Generating both from the same source as the hosted
+  documentation costs one build step and prevents divergence.'
+fires_when:
+- The installed package contains no `docs/` directory
+- '`docs/` exists but lacks `api_reference.md` or `troubleshooting.md`'
+- Either file is a stub — zero-length or headings with no body content
+remediation:
+- Generate `docs/api_reference.md` and `docs/troubleshooting.md` at build time from the same source as the external documentation
+  (Sphinx with a markdown builder, or `mkdocs build`), never as hand-maintained copies
+- Include the directory as package data so it ships inside the wheel
+- 'Assert presence against the artifact in CI: `unzip -l dist/*.whl | grep docs/api_reference.md`'
 examples:
-  violation: No embedded docs/ directory
-  compliant: docs/ ships api_reference.md and troubleshooting.md inside the package
+  violation: '$ unzip -l weather_sdk-1.2.0-py3-none-any.whl | grep docs/
+
+    (no output)
+
+    # README points at https://docs.example.com — unreachable from the air-gapped index this wheel is served from'
+  compliant: 'weather_sdk/docs/
+
+    ├── api_reference.md      # generated from the Sphinx source at build time
+
+    └── troubleshooting.md    # same error catalog as the hosted site, readable offline'
 suggested_fix: Embed api_reference.md and troubleshooting.md in the package.
 references:
 - title: Miri Wheel Ext. §5.3
   url: miri-wheel-extensions.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-037.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-037.html

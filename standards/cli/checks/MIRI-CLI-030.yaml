@@ -17,11 +17,38 @@ short_description: Output covers added/removed/deprecated surfaces, schema bumps
 long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
   passive, and honest offline. This check verifies: Output covers added/removed/deprecated surfaces, schema bumps, exit-code
   changes.'
+rationale: '§5.2 makes five categories normative — added, removed, and deprecated surfaces, `schema_version` bumps, and
+  exit-code meaning changes — because these are precisely the change classes that break machine consumers. A changelog that
+  reports new flags but omits the wire-schema bump answers "what moved" incompletely: the consumer updates its command model
+  and still breaks on the payload shape that went unreported, restoring the exact blind spot the command exists to remove.
+  Ecosystem prior art (towncrier-style CI bots) only enforces that *an entry exists*, never that it is complete (§6.3).'
+fires_when:
+- diffing the previous release's `--describe` against the current one yields an added, removed, or deprecated surface absent
+  from the `changelog --since <previous>` output
+- a `schema_version` transition or an exit-code meaning change occurred between the releases but does not appear in the
+  output
+- one of the five normative §5.2 categories has no representation in the output shape at all
+remediation:
+- Generate the changelog mechanically from the schema-as-data diff between releases (§2.3), so surface changes cannot be
+  omitted by hand
+- Include `schema_version` transitions and the exit-code table in the diffed struct, not just flags and subcommands
+- 'Add a release-CI fixture: cut a test release that removes a flag and bumps `schema_version`, and assert both appear in
+  `changelog --since`'
 examples:
-  violation: Schema bumps are not reported by changelog --since
-  compliant: The changelog reports the schema_version bump shipped in 3.2.0
+  violation: '# 3.2.0 bumped schema_version 1 -> 2 and changed exit code 3''s meaning
+
+    $ acme-cli changelog --since 3.1.0 --json
+
+    {"releases": [{"version": "3.2.0", "added": ["--format"]}]}
+
+    # consumer re-learns the flags, then breaks on the unreported payload shape'
+  compliant: "{\"releases\": [{\"version\": \"3.2.0\", \"added\": [\"--format\"],\n  \"schema_version\": {\"from\": \"1\"\
+    , \"to\": \"2\"},\n  \"exit_codes\": [{\"code\": 3, \"was\": \"not found\", \"now\": \"permission denied\"}]}]}"
 suggested_fix: Cover added/removed/deprecated surfaces, schema bumps, and exit-code changes.
 references:
 - title: CLI Spec §5.2
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-030.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-030.html

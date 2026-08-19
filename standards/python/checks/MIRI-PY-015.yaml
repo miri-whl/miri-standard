@@ -17,11 +17,40 @@ severity:
 short_description: Every example compiles; executes in sandbox (except external credentials)
 long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
   lesson at machine speed. This check verifies: Every example compiles; executes in sandbox (except external credentials).'
+rationale: 'Miri Wheel Extensions §7.2.2 requires every example to run without modification (credentials excepted) because
+  agents treat shipped examples as ground truth and reproduce them verbatim in generated code. Wrong-but-plausible instructions
+  propagate at machine speed: Lasso Security''s 2023–2024 research showed LLMs repeatedly recommending the nonexistent huggingface-cli
+  PyPI package, and the registered proof-of-concept drew tens of thousands of downloads — even landing in Alibaba''s GraphTranslator
+  install instructions. A broken example inside the wheel seeds the same loop from a source agents are told to trust; it
+  is strictly worse than no example.'
+fires_when:
+- py_compile fails on any example listed in AGENT_EXAMPLES.json
+- an example exits nonzero or raises when executed in a clean venv containing only the built wheel plus the dependencies
+  its index entry declares
+- an example imports a module provided neither by the package's Requires-Dist nor by its AGENT_EXAMPLES.json dependencies
+  entry
+- an example needs live credentials but carries no documented placeholder (e.g. YOUR_API_KEY) marking it exempt from sandbox
+  execution
+remediation:
+- 'Execute every indexed example in CI in a fresh venv: pip install dist/*.whl, install exactly the dependencies each index
+  entry declares, run each file, fail on nonzero exit'
+- Declare per-example extra dependencies in AGENT_EXAMPLES.json dependencies so the sandbox and the reader see the same
+  prerequisites
+- Gate credential-dependent sections behind documented placeholders (api_key = "YOUR_API_KEY" with a header note) so the
+  file still compiles and its offline portion still executes
+- Fix or remove any example the sandbox cannot run — do not mark it as an exception
 examples:
-  violation: examples/advanced.py raises ImportError on an optional dependency
-  compliant: Every example executes cleanly with only documented prerequisites
+  violation: "examples/advanced.py:\n  import pandas as pd   # not in Requires-Dist, not in its AGENT_EXAMPLES.json dependencies\n\
+    \  from example_sdk import Client\n  ...\n  Clean-venv run: ModuleNotFoundError: No module named 'pandas' -> exit 1;\
+    \ agents now reproduce the undeclared import"
+  compliant: "examples/quickstart.py:\n  from example_sdk import Client        # only the package itself\n  client = Client(api_key=\"\
+    YOUR_API_KEY\")  # placeholder documented in the file header\n  print(client.fetch(\"users\"))\n  CI: fresh venv + built\
+    \ wheel -> runs, exits 0"
 suggested_fix: Fix or guard the example; examples must run with only documented prerequisites.
 references:
 - title: Miri Wheel Ext. §7.2.2
   url: miri-wheel-extensions.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-015.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-015.html

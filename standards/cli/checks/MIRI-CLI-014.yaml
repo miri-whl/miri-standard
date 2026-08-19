@@ -14,9 +14,29 @@ severity:
 short_description: Errors carry `retryable` and `suggestions`
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: Errors carry `retryable` and `suggestions`.'
+rationale: 'A bare error leaves an agent its only fallback strategy — blind retry — which loops on permanent failures and
+  abandons transient ones. The `retryable` boolean is the classification that makes AWS SDK retry machinery work (throttling
+  errors are retried with backoff, validation errors are not), and `suggestions` follows the shipped `desk` pattern (landscape
+  §2.3): dynamically generated next actions that convert a dead end into a one-turn recovery, such as naming the login command
+  on an auth failure or the replacement surface on a removal (§6).'
+fires_when:
+- Error envelopes carry no `retryable` boolean
+- Transient failures (timeout, rate limit) and permanent ones (validation, auth, removed flag) are indistinguishable in
+  the payload
+- '`suggestions` is absent, empty, or static boilerplate not derived from the failing context'
+remediation:
+- Extend the §6 error envelope with `retryable` and `suggestions[]`
+- 'Classify the error taxonomy once: network timeouts and rate limits set retryable: true; validation, authentication, and
+  removed-surface errors set retryable: false'
+- Generate suggestions from the failing context — the nearest-match flag for a typo, the exact login command for AUTH_EXPIRED,
+  the `lifecycle.replacement` value for FLAG_REMOVED
+- Document both fields in the wire schema so consumers can rely on their presence
 examples:
-  violation: Errors lack retryable and suggestions
-  compliant: 'Errors carry retryable: true and suggestions: ["run tool login"]'
+  violation: '{"ok": false, "error": {"code": "AUTH_EXPIRED"}}
+
+    # the agent cannot tell whether to retry as-is, re-authenticate, or abort'
+  compliant: "{\"ok\": false, \"error\": {\"code\": \"AUTH_EXPIRED\", \"retryable\": false,\n  \"suggestions\": [\"run `acme\
+    \ login --sso`, then re-issue the command\"]}}"
 suggested_fix: Add retryable and suggestions to the error object.
 references:
 - title: CLI Spec §6
@@ -25,3 +45,6 @@ references:
 - title: Signaling §3.3-3
   url: update-and-vulnerability-signaling.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-014.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-014.html

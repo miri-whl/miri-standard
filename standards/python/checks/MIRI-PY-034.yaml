@@ -18,9 +18,35 @@ short_description: Deprecated interfaces survive ≥2 releases before removal
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Deprecated interfaces survive ≥2 releases
   before removal.'
+rationale: 'PEP 387 fixes the floor this check enforces: a deprecation warning must appear in at least two minor versions
+  before the interface may be removed, with a five-year window preferred. The floor exists because consumers synchronize
+  on release cadence — a pinned dependency, a regenerated agent skill, a rebuilt CI image each observe one release at a
+  time, so a deprecate-in-N, remove-in-N+1 window means the first signal many consumers ever see is the breakage itself.
+  NumPy''s removal of the `np.float` aliases (warned from 1.20, removed in 1.24) still produced mass downstream `AttributeError`
+  failures despite a four-release window — evidence that two releases is a minimum, not a target.'
+fires_when:
+- 'Comparing against the previous release (requirement: `previous-release`): a public interface absent from the current
+  sdk-manifest.json first appeared in a `deprecations` inventory only one release before its removal'
+- A new `deprecations` entry declares a `removal_version` that is the release immediately following the one introducing
+  the deprecation
+remediation:
+- Keep the deprecated interface working, and warning, for at least two releases before deleting it (PEP 387 shape; Lifecycle
+  §6.1)
+- Set `removal_version` at deprecation time to at least two minor versions ahead; when plans change, lengthen the window
+  rather than shorten it
+- If an early removal already shipped, restore the interface in a patch release with the deprecation intact and reschedule
+  the removal
 examples:
-  violation: Deprecated in 2.0.0, removed in 2.1.0 (one release)
-  compliant: Deprecated in 1.8.0, functioning and warning through 1.9.x, removed in 2.0.0
+  violation: '2.0.0: legacy_connect() gains @deprecated and a deprecations entry
+
+    2.1.0: legacy_connect() deleted
+
+    # consumers pinned to 2.0.x never see a release in which the warning exists but the interface still works'
+  compliant: '1.8.0: legacy_connect() gains @deprecated ("use connect(); removal in 2.0.0")
+
+    1.9.0-1.9.x: interface still present, still warning
+
+    2.0.0: removed — two releases of observable warning preceded deletion'
 suggested_fix: Keep deprecated interfaces working for at least two releases (PEP 387 shape).
 references:
 - title: PEP 387
@@ -29,3 +55,6 @@ references:
 - title: Lifecycle §6.1
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-034.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-034.html

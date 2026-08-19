@@ -15,9 +15,34 @@ short_description: Present and validates against schema
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
   and validates against schema.'
+rationale: 'Agent Metadata §4.1 defines sdk-manifest.json as the agent''s substitute for parsing source: quick_reference
+  for orientation, api_index for signatures, error_handling for recovery. Agents do not read it skeptically — an api_index
+  entry that omits its parameters, or a common_imports line naming a module that moved, is transcribed directly into generated
+  code, and the defect reproduces at machine speed across every consumer of the package instead of surfacing in one developer''s
+  editor. Schema validation at build time is the cheapest point to stop that class of error.'
+fires_when:
+- '`agent-metadata/sdk-manifest.json` is absent from the wheel'
+- The document fails validation against sdk-manifest-v1.json (any of sdk_version, generated_at, miri_version, quick_reference,
+  api_index missing)
+- '`quick_reference` lacks primary_classes, key_methods, or common_imports'
+- An `api_index` entry lacks `type` or `purpose`, or uses a `type` outside the schema's allowed values
+remediation:
+- Generate the manifest from source with the Miri build tooling (AST extraction per Agent Metadata §5.1); never write it
+  by hand
+- 'Validate before packaging: `check-jsonschema --schemafile sdk-manifest-v1.json src/example_sdk/agent-metadata/sdk-manifest.json`'
+- Fail the build on any validation error rather than shipping a partial manifest
 examples:
-  violation: sdk-manifest.json is missing the api_index field
-  compliant: sdk-manifest.json validates against sdk-manifest-v1.json with a populated api_index
+  violation: 'sdk-manifest.json:
+
+    {"sdk_version": "2.1.0", "generated_at": "2026-08-01T12:00:00Z"}
+
+    # no miri_version, no quick_reference, no api_index —
+
+    # an agent loading this finds nothing to index'
+  compliant: "{\"sdk_version\": \"2.1.0\", \"generated_at\": \"2026-08-01T12:00:00Z\",\n \"miri_version\": \"1.0\",\n \"\
+    quick_reference\": {\"primary_classes\": [\"Client\"],\n   \"key_methods\": [\"connect\", \"query\"],\n   \"common_imports\"\
+    : [\"from example_sdk import Client\"]},\n \"api_index\": {\"Client\": {\"type\": \"class\", \"purpose\": \"Main API\
+    \ entry point\"}}}"
 suggested_fix: Regenerate sdk-manifest.json with the Miri build tooling; validate against sdk-manifest-v1.json.
 references:
 - title: Agent Metadata §4.1
@@ -26,3 +51,6 @@ references:
 - title: schema
   url: ../../schemas/sdk-manifest-v1.json
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-007.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-007.html

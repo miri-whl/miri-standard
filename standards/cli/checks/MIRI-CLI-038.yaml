@@ -16,11 +16,48 @@ short_description: Every `replacement` names a surface in the current `--describ
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every `replacement` names a
   surface in the current `--describe`.'
+rationale: The `replacement` field is read at exactly the moment a consumer's old invocation stopped working, so spec §6.3-3
+  requires it to name a surface present in the current `--describe`. A pointer at a flag that was renamed before shipping,
+  mistyped, or never built sends the migrating consumer into a second failure worse than the first, because it followed
+  the tool's own instruction to get there. In a conforming implementation the property holds by construction (§2.3, one
+  schema struct); the check catches hand-maintained replacement strings that nothing ever resolved.
+fires_when:
+- A `lifecycle.replacement` value names a flag or subcommand path that does not resolve against the same binary's current
+  `--describe` output
+- A replacement names a surface whose own `lifecycle.status` is `deprecated` or which has itself been removed — the pointer
+  leads into another dead end
+- The structured removal error's `suggestions` name a surface absent from `--describe` (the teaching error and the lifecycle
+  block must draw from the same resolved data)
+remediation:
+- 'Resolve every `replacement` value against the release build''s own `--describe` in CI: parse the introspection output,
+  and assert each replacement matches an existing subcommand path or flag (including any argument value against that flag''s
+  enum)'
+- Reference replacement surfaces by their schema-as-data identifier rather than free-form strings, so a rename propagates
+  automatically (§2.3)
+- Where a deprecated surface's successor lives in another tool entirely, use the `support` block's purl-based `replacement`
+  (§3.2) instead of a dangling in-tool pointer
 examples:
-  violation: replacement names '--output archive' which does not exist
-  compliant: replacement --output archive exists in the current --describe
+  violation: '--describe entry:
+
+    {"name": "--export", "lifecycle": {"status": "deprecated", "replacement": "--output archive"}}
+
+    but --describe lists no --output flag — it shipped as --format after a late rename.
+
+    The migrating agent runs `tool get --format? --output archive` and fails again, this time on the tool''s own advice.'
+  compliant: '--describe lists:
+
+    {"name": "--output", "type": "enum", "values": ["json", "archive", "table"]}
+
+    and the deprecated entry points at it:
+
+    {"name": "--export", "lifecycle": {"status": "deprecated", "replacement": "--output archive"}}
+
+    CI resolves "--output archive" against the same describe document and passes.'
 suggested_fix: Point replacement at a surface present in the current --describe.
 references:
 - title: CLI Spec §6.3-3
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-038.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-038.html

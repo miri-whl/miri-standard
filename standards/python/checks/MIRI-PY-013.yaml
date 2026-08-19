@@ -16,8 +16,31 @@ short_description: All metadata files parse as strict UTF-8 JSON (no NaN/Infinit
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: All
   metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments).'
+rationale: RFC 8259 §6 forbids NaN and Infinity tokens and §8.1 requires UTF-8 for JSON exchanged between systems, yet Python's
+  json.dump emits NaN by default (allow_nan=True), so one unscrubbed float('nan') yields a file the build wrote without
+  complaint and JSON.parse, serde_json, and Go's encoding/json all reject outright. Because a strict parser fails the whole
+  document, a single bad token degrades the consumer from full metadata to none — a silent downgrade that surfaces as no
+  error anywhere in the package's own toolchain.
+fires_when:
+- any agent-metadata/*.json fails a strict RFC 8259 parse (json.loads with parse_constant configured to raise)
+- a file contains NaN, Infinity, or -Infinity tokens
+- a file contains // or /* comments, trailing commas, or single-quoted strings
+- the file bytes are not valid UTF-8, or begin with a byte-order mark
+remediation:
+- Serialize with json.dump(data, fh, allow_nan=False, ensure_ascii=False) to a file opened with encoding='utf-8' (no BOM)
+- Scrub non-finite floats at the source — convert to null or drop the field — so allow_nan=False raises at build time instead
+  of shipping the token
+- 'Re-parse every file in CI with a strict parser (json.loads plus parse_constant=lambda c: raise) so output from any lenient
+  tool in the pipeline is caught before packaging'
 examples:
-  violation: usage-patterns.json contains NaN as a value
-  compliant: All metadata files parse as strict UTF-8 JSON with no NaN/Infinity
+  violation: "usage-patterns.json as shipped:\n  {\n    \"patterns\": [{\"id\": \"basic\", \"estimated_seconds\": NaN}],\
+    \  // TODO: measure\n  }\n  Python wrote it (allow_nan default); JSON.parse and serde_json reject the entire file: metadata\
+    \ silently gone for those consumers"
+  compliant: "Every agent-metadata file passes strict validation in CI:\n  python3 -c \"import json,sys; json.loads(open(sys.argv[1],\
+    \ encoding='utf-8').read(),\n      parse_constant=lambda c: (_ for _ in ()).throw(ValueError(c)))\" agent-metadata/usage-patterns.json\n\
+    \  UTF-8 throughout, no NaN/Infinity, no comments, no trailing commas"
 suggested_fix: 'Emit strict RFC 8259 JSON: UTF-8, no NaN/Infinity, no comments.'
 references: []
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-013.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-013.html

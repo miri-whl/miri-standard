@@ -15,11 +15,50 @@ severity:
 short_description: No ANSI codes, prose, or warnings mixed into stdout JSON
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: No ANSI codes, prose, or warnings mixed into stdout JSON.'
+rationale: 'CLI Spec §2.5 reserves stdout for the JSON payload and sends all warnings to stderr, because the channels fail
+  differently: a warning on stderr is ignorable, but one stray notice printed into stdout makes the document unparseable
+  — `jq` aborts with `Invalid literal`, and every downstream consumer fails simultaneously the day the notice ships, not
+  the day the schema changes. This is the highest-blast-radius mistake available to a machine-output CLI precisely because
+  the trigger is routine (a deprecation notice, an update banner, a stray `print` in a logging path) while the failure is
+  total.'
+fires_when:
+- stdout of any JSON-mode invocation fails a strict JSON parse (`jq -e .` non-zero)
+- Prose lines — update banners, deprecation notices, progress text — precede, follow, or interleave the JSON document on
+  stdout
+- ESC bytes (0x1b) appear inside stdout in JSON mode
+remediation:
+- Route every diagnostic through a channel that writes to stderr; audit logging configuration — many logging frameworks
+  default handlers to stdout
+- In JSON mode, write stdout exactly once, from the shared response envelope (one serialized document, then exit)
+- Keep decoration out of JSON mode entirely, independent of TTY state (see MIRI-CLI-005)
+- 'Parse your own stdout in CI: for every command, `<cmd> --json | jq -e . >/dev/null` and assert the byte stream contains
+  no 0x1b'
 examples:
-  violation: A deprecation notice is printed into the middle of the JSON stream
-  compliant: stdout carries only the JSON document; all notices go to stderr
+  violation: '$ tool list --json
+
+    WARNING: --legacy-ids is deprecated, use --ids
+
+    {"schema_version": "1", "items": []}
+
+    $ tool list --json | jq .
+
+    jq: error (at <stdin>:1): Invalid literal at line 1, column 8
+
+    # every consumer broke the day the warning shipped'
+  compliant: '$ tool list --json 2>warnings.txt
+
+    {"schema_version": "1", "items": []}
+
+    $ cat warnings.txt
+
+    WARNING: --legacy-ids is deprecated, use --ids
+
+    # payload parses; the notice survives on its own channel'
 suggested_fix: Keep stdout pure JSON; warnings go to stderr.
 references:
 - title: CLI Spec §2.5
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-011.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-011.html

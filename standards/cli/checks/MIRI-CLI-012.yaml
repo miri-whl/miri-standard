@@ -14,11 +14,43 @@ severity:
 short_description: Same inputs produce identically ordered output
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: Same inputs produce identically ordered output.'
+rationale: 'Agent-First CLI principle 03 (deterministic ordering) exists because the commonest container types are nondeterministic
+  by construction: Go''s runtime deliberately randomizes map iteration order, Python randomizes string hashing per process
+  (PYTHONHASHSEED), and readdir() returns filesystem-dependent order — so a CLI that serializes any of these directly emits
+  differently ordered output for identical state. Every consumer that compares runs then breaks: caches miss, diffs show
+  phantom changes, and an agent comparing before/after output infers a state change that never happened. The reproducible-builds
+  project documents the same failure class for build outputs and prescribes the same fix: sort by a stable key before emission.'
+fires_when:
+- Two invocations of the same command with identical inputs and state emit the same elements in different order
+- Array order in JSON output tracks map/hash iteration or directory-read order rather than a documented sort key
+- Output ordering changes with the locale environment (LC_ALL, LC_COLLATE) for identical inputs
+remediation:
+- Sort every collection by a stable, documented key immediately before serialization (e.g. name, then version) — never emit
+  insertion or iteration order
+- Sort bytewise or with an explicit collation rather than the ambient locale; pin LC_ALL=C in tests
+- Serialize maps with sorted keys (json.dumps(sort_keys=True) in Python; Go's encoding/json already sorts map keys)
+- 'Add a CI determinism test: run the command twice — including under different PYTHONHASHSEED or locale values — and diff
+  the outputs'
 examples:
-  violation: Result ordering changes across identical runs
-  compliant: Two identical runs produce identically ordered output
+  violation: '$ acme list --json | jq -c ''[.items[].name]''
+
+    ["web","auth","db"]
+
+    $ acme list --json | jq -c ''[.items[].name]''
+
+    ["db","web","auth"]   # same state, map-iteration order leaked into output'
+  compliant: '$ acme list --json | jq -c ''[.items[].name]''
+
+    ["auth","db","web"]
+
+    $ acme list --json | jq -c ''[.items[].name]''
+
+    ["auth","db","web"]   # collections sorted by name before emission'
 suggested_fix: Sort output deterministically.
 references:
 - title: Landscape §2.1 P03
   url: landscape-and-prior-art.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-012.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-012.html

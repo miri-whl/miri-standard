@@ -16,9 +16,26 @@ short_description: '`deprecated_since` and `removed_in`/`replacement` populated'
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: `deprecated_since` and `removed_in`/`replacement`
   populated.'
+rationale: 'The two-phase shape carries a citation trail rather than invention (§6.1): `deprecated_since` is the CLI analogue
+  of RFC 9745''s `Deprecation` header marking that the phase has begun, `removed_in` of RFC 8594''s `Sunset` header marking
+  when the surface stops working, and `replacement` follows PEP 702''s `@deprecated`, GraphQL''s `@deprecated(reason:)`,
+  and Java''s `@Deprecated(since, forRemoval)`. A block carrying only `deprecated_since` is half a contract: consumers know
+  to leave, but neither when the door closes nor where to go — so migration can be neither scheduled nor automated.'
+fires_when:
+- 'a `lifecycle` block with `status: "deprecated"` lacks `deprecated_since`'
+- neither `removed_in` nor `replacement` is populated on a deprecated surface
+- populated fields are unusable — `removed_in` is not a valid version, or `replacement` is an empty string
+remediation:
+- Populate `deprecated_since` with the release that introduced the deprecation
+- Populate `removed_in` honoring the §7.3 grace period (at least one minor release in which the surface still functions)
+  and `replacement` with the successor surface — which must exist in the current `--describe` (§6.3-3)
+- Add a `migration` URL when the replacement alone does not capture the behavioral change
+- Validate lifecycle blocks against the introspection schema in release CI so incomplete blocks fail before shipping
 examples:
-  violation: lifecycle has deprecated_since but neither removed_in nor replacement
-  compliant: deprecated_since 1.14.0, removed_in 1.18.0, replacement --output archive
+  violation: "{\"name\": \"--export\",\n \"lifecycle\": {\"status\": \"deprecated\", \"deprecated_since\": \"1.14.0\"}}\n\
+    # no removed_in, no replacement: consumers know to leave, not when or where to go"
+  compliant: "{\"name\": \"--export\",\n \"lifecycle\": {\"status\": \"deprecated\", \"deprecated_since\": \"1.14.0\",\n\
+    \   \"removed_in\": \"1.18.0\", \"replacement\": \"--output archive\"}}"
 suggested_fix: Populate the two-phase fields (RFC 9745/8594 shape).
 references:
 - title: CLI Spec §6.1
@@ -30,3 +47,6 @@ references:
 - title: RFC 8594
   url: https://www.rfc-editor.org/info/rfc8594/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-032.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-032.html

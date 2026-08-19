@@ -17,11 +17,29 @@ short_description: '`support.security_policy` present and resolvable'
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: `support.security_policy`
   present and resolvable.'
+rationale: 'The security policy is where a reporter — human or agent — is told how to disclose the vulnerability they just
+  found. Without a declared channel, reports default to the public issue tracker: the vulnerability is published before
+  the maintainer has triaged it, which is full disclosure by accident. GitHub''s private vulnerability reporting and the
+  SECURITY.md convention exist precisely to prevent this; `support.security_policy` makes the channel discoverable from
+  the installed wheel without a repository lookup.'
+fires_when:
+- '`support.security_policy` is null or absent from `lifecycle.json`'
+- The declared URL does not resolve (non-2xx response)
+remediation:
+- Publish a SECURITY.md naming a private reporting channel (GitHub private vulnerability reporting, or a monitored security@
+  address) and a response expectation
+- Set `support.security_policy` to its stable URL in the Miri build configuration so every generated `lifecycle.json` carries
+  it
 examples:
-  violation: security_policy is null
-  compliant: security_policy links the project's SECURITY.md
+  violation: "\"support\": {\n  \"status\": \"active\",\n  \"security_policy\": null\n}\n# a reporter's only visible channel\
+    \ is the public issue tracker"
+  compliant: "\"support\": {\n  \"status\": \"active\",\n  \"security_policy\": \"https://github.com/example/example-package/blob/main/SECURITY.md\"\
+    \n}\n# resolves to a policy naming private vulnerability reporting"
 suggested_fix: Link the project's SECURITY.md or equivalent policy.
 references:
 - title: Lifecycle §3.1
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-027.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-027.html

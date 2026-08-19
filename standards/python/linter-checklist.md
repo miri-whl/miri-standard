@@ -114,7 +114,9 @@ The standard's vocabulary: each *requirement* in a spec is verified by a *check*
 Every check in this table has a committee-owned definition file in [`checks/`](checks/) — one YAML document per check
 (`checks/MIRI-PY-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
-references, versioning (`added_in`/`withdrawn_in`), and — critically — the **committee-assigned severity**: a default
+references, versioning (`added_in`/`withdrawn_in`), canonical
+URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —
+the **committee-assigned severity**: a default
 severity (`LOW`/`MINOR`/`MEDIUM`/`HIGH`/`CRITICAL`, numeric 1–5) and the `violation_unit` defining what counts as one
 violation.
 

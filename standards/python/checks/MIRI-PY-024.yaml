@@ -15,9 +15,31 @@ short_description: Wheels with non-Python components carry `.dist-info/sboms/`
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: Wheels with non-Python
   components carry `.dist-info/sboms/`.'
+rationale: 'Vendored native components are the phantom-dependency problem: `pip`-level scanners see only dist-info name
+  and version, so a wheel statically bundling OpenSSL exposes real CVEs that no scan of the Python surface can find. This
+  is routine, not hypothetical — cryptography 38.0.3 re-released its wheels solely to bundle OpenSSL 3.0.7 and resolve CVE-2022-3602/3786,
+  and 41.0.4 did the same for OpenSSL 3.1.3; a consumer on the prior wheel showed a clean `pip` inventory throughout. PEP
+  770 (accepted 2025) closes the gap by placing SBOM documents in `.dist-info/sboms/`, where scanners discover them without
+  any Miri-specific pointer; §3.2 makes them mandatory exactly when non-Python components are bundled.'
+fires_when:
+- The wheel contains native extensions or vendored shared libraries (`.so`/`.pyd`/`.dylib` files, an auditwheel-style `<pkg>.libs/`
+  directory, statically linked components declared by the build) but no `.dist-info/sboms/` directory
+- '`.dist-info/sboms/` exists but its documents cover no component matching a bundled library found in the wheel''s file
+  inventory'
+- SBOM files are present but unlisted in `RECORD`
+remediation:
+- Repair the wheel with auditwheel ≥6.5.0 (`auditwheel repair dist/*.whl`), which generates PEP 770 SBOM data for every
+  library it grafts into the wheel
+- For components auditwheel cannot see (statically linked OpenSSL, Rust/Cargo dependencies in an extension), emit a CycloneDX
+  or SPDX document into `.dist-info/sboms/` from the build backend
+- Verify each bundled component appears in an SBOM document with a purl, and that `RECORD` lists the SBOM files
 examples:
-  violation: The wheel bundles a vendored OpenSSL but ships no .dist-info/sboms/
-  compliant: auditwheel-generated CycloneDX SBOM in .dist-info/sboms/ covers the vendored OpenSSL
+  violation: "unzip -l example_package-2.1.0-cp312-...whl:\n  example_package/_native.cpython-312-x86_64-linux-gnu.so\n\
+    \  example_package.libs/libssl-a54bcc32.so.3\n  example_package-2.1.0.dist-info/METADATA\n# no dist-info/sboms/ — the\
+    \ bundled OpenSSL is invisible to every scanner"
+  compliant: "  example_package.libs/libssl-a54bcc32.so.3\n  example_package-2.1.0.dist-info/sboms/auditwheel.cdx.json\n\
+    # auditwheel-generated CycloneDX listing pkg:generic/openssl@3.1.3\n# → scanners join the bundled OpenSSL against its\
+    \ CVEs"
 suggested_fix: Let auditwheel (>=6.5.0) generate PEP 770 SBOM data, or add it in the build.
 references:
 - title: PEP 770
@@ -26,3 +48,6 @@ references:
 - title: Lifecycle §3.2
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-024.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-024.html

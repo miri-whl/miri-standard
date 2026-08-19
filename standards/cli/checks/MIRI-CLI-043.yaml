@@ -14,11 +14,47 @@ severity:
 short_description: SIGINT/SIGTERM cleans up partial state before exit
 long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
   marked, and safe to repeat. This check verifies: SIGINT/SIGTERM cleans up partial state before exit.'
+rationale: 'Agent invocations are cancelled routinely — harness timeouts, user interrupts, scheduler preemption — so Agent-First
+  CLI principle 11 demands cleanup over corruption. The failure class is real: Terraform 1.1.0–1.1.2 contained a condition
+  where interrupting a run could write an empty state file (hashicorp/terraform #30266), turning a cancellation into loss
+  of the record of all managed infrastructure. Git shows the long-standing correct pattern: refs are updated by writing
+  a lockfile and atomically renaming it into place, so a killed process leaves at worst a stale `.lock` to remove — never
+  a half-written ref.'
+fires_when:
+- Sending SIGINT or SIGTERM during a mutation leaves a truncated or partially written file, temporary residue that blocks
+  re-runs, or an unreleased lock
+- State files are rewritten in place (open, truncate, write) rather than written to a temporary and renamed atomically —
+  static evidence that any interrupt window corrupts
+- A re-run after an interrupt fails or behaves differently because of leftovers from the cancelled run
+remediation:
+- Write new state to a temporary file in the destination directory, `fsync`, then `rename(2)` into place, so the visible
+  file is always the old version or the new one — never a mixture
+- 'Trap SIGINT/SIGTERM: complete or roll back the current atomic unit, remove temporaries, release locks, and exit via the
+  structured error channel with a `CANCELLED` code (conventionally exit status 130 for SIGINT)'
+- 'Test cancellation in CI: repeatedly `kill -INT` the tool at random points during a mutation against a fixture, then assert
+  the resulting state is either fully old or fully new and that an immediate re-run succeeds'
 examples:
-  violation: SIGINT leaves a half-written state file
-  compliant: SIGINT during apply rolls back the partial state file before exit
+  violation: '$ tool apply &  # agent harness times out and sends SIGINT mid-write
+
+    $ tool apply
+
+    error: state.json: unexpected end of JSON input
+
+    $ wc -c state.json
+
+    4096 state.json — truncated at a buffer boundary; every cancellation is now a corruption incident'
+  compliant: '$ tool apply &  # SIGINT arrives mid-run
+
+    {"ok": false, "error": {"code": "CANCELLED", "retryable": true}}   # on stderr channel, exit 130
+
+    $ ls state.json*   # state.json.tmp was removed by the signal handler
+
+    state.json — still the previous complete version; the re-run starts clean and succeeds'
 suggested_fix: Clean up partial state on SIGINT/SIGTERM.
 references:
 - title: Landscape §2.1 P11
   url: landscape-and-prior-art.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-043.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-043.html

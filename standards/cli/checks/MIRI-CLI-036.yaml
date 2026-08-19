@@ -18,11 +18,43 @@ short_description: Every deprecation appears in `changelog --since` of the depre
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecation appears in
   `changelog --since` of the deprecating release.'
+rationale: 'Spec §6.3-1 requires every deprecation to appear in the `changelog --since` output of the release that introduced
+  it, because `changelog --since` is the primitive an agent runs to ask what moved after being away — if a deprecation is
+  missing there, the consumer who diligently checks still walks into the removal. No existing tooling verifies this coherence:
+  towncrier-style CI bots enforce that an entry exists, and API-diff tools (cargo-semver-checks, griffe, japicmp) detect
+  changes without cross-checking them against declared lifecycle state. In a conforming implementation the property holds
+  by construction, since `--describe` and `changelog` derive from one schema struct (§2.3); the check exists to catch drift
+  where either is hand-maintained.'
+fires_when:
+- A surface whose `lifecycle.deprecated_since` is release X does not appear among the deprecated entries of `changelog --since
+  <release before X> --json`
+- The changelog entry for the deprecating release exists but omits the surface's name or names a different surface than
+  the `lifecycle` block
+- The requirement's `previous-release` capability is available and the deprecation set extracted from successive `--describe`
+  outputs is not a subset of the changelog's deprecated entries
+remediation:
+- Derive `changelog --since` entries and per-surface `lifecycle` blocks from the same schema-as-data structure (§2.3) so
+  divergence is impossible by construction
+- 'Where the changelog is hand-maintained, add a CI diff: extract surfaces newly carrying `lifecycle.status: deprecated`
+  between release N-1 and N, and assert each appears in `changelog --since <N-1> --json` under the N entry'
+- Backfill any missing entry in a patch release before the removal ships, so `changelog --since` becomes truthful for consumers
+  catching up later
 examples:
-  violation: --export deprecated in 1.14 but changelog --since 1.13 does not mention it
-  compliant: changelog --since 1.13 lists the --export deprecation in the 1.14 entry
+  violation: '$ tool --describe | jq ''.flags[] | select(.name=="--export") | .lifecycle''
+
+    {"status": "deprecated", "deprecated_since": "1.14.0", "replacement": "--output archive"}
+
+    $ tool changelog --since 1.13.0 --json | jq ''.releases["1.14.0"].deprecated''
+
+    [] — the agent that checked what moved learns nothing and keeps emitting --export'
+  compliant: "$ tool changelog --since 1.13.0 --json\n{\"releases\": {\"1.14.0\": {\"deprecated\": [\n  {\"surface\": \"\
+    --export\", \"removed_in\": \"1.18.0\", \"replacement\": \"--output archive\"}\n]}}} — changelog and --describe agree\
+    \ because both render one schema struct"
 suggested_fix: Derive changelog and lifecycle blocks from the same schema struct.
 references:
 - title: CLI Spec §6.3-1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-036.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-036.html

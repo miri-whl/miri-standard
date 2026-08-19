@@ -15,10 +15,10 @@
   {% for r in check.references %}{{ m.tag(r.title) }}{% endfor %}
 </div>
 
-<div class="codeblock">
-  <div class="filename">{{ meta.dir }}/{{ check.id }}.yaml</div>
-  <pre>{{ yaml_text }}</pre>
-</div>
+<p class="deffile">Definition:
+<span class="mono">{{ meta.dir }}/{{ check.id }}.yaml</span> ·
+<a href="{{ check.urls.definition }}">view</a> ·
+<a href="https://raw.githubusercontent.com/miri-whl/miri-standard/main/{{ meta.dir }}/{{ check.id }}.yaml">raw</a></p>
 
 <div class="cardgrid">
   <div class="card"><div class="card-title">Violation</div>
@@ -27,11 +27,22 @@
     <span class="mono example-good">{{ check.examples.compliant | codeish }}</span></div>
 </div>
 
+<h2>Why this matters</h2>
+<p>{{ check.rationale | codeish }}</p>
+
 <h2>Definition</h2>
 <p>{{ check.long_description | codeish }}</p>
 
-<h2>Suggested fix</h2>
+<h2>When it fires</h2>
+<ul class="plain">
+  {% for f in check.fires_when %}<li>{{ f | codeish }}</li>{% endfor %}
+</ul>
+
+<h2>How to fix it</h2>
 <p>{{ check.suggested_fix | codeish }}</p>
+<ol class="plain">
+  {% for step in check.remediation %}<li>{{ step | codeish }}</li>{% endfor %}
+</ol>
 
 <h2>Fields</h2>
 <dl class="meta">
@@ -59,8 +70,9 @@
 </ul>
 
 <p class="source-note">Source of truth:
-<a href="{{ site.github }}/blob/main/{{ meta.dir }}/{{ check.id }}.yaml" class="mono">{{ check.id }}.yaml</a> ·
-schema <a href="{{ site.github }}/blob/main/schemas/check-v1.json" class="mono">check-v1.json</a></p>
+<a href="{{ check.urls.definition }}" class="mono">{{ check.id }}.yaml</a> ·
+schema <a href="{{ site.github }}/blob/main/schemas/check-v1.json" class="mono">check-v1.json</a> ·
+canonical <a href="{{ check.urls.html }}" class="mono">{{ check.id }}.html</a></p>
 
 <div class="prevnext">
   {% if prev_id %}<a href="{{ prev_id }}.html">← {{ prev_id }}</a>{% else %}<span></span>{% endif %}

@@ -14,9 +14,27 @@ severity:
 short_description: '`METADATA` parses as Core Metadata 2.x; name normalized'
 long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
   baseline cannot carry trustworthy agent metadata. This check verifies: `METADATA` parses as Core Metadata 2.x; name normalized.'
+rationale: 'The Name and Version in METADATA are the identity every downstream join keys on: pip resolution, OSV advisory
+  matching, and Miri''s own purl-coherence check (MIRI-PY-019). PEP 503 defines a single canonical form — lowercase, with
+  runs of `-`, `_`, and `.` collapsed to one `-` — precisely so that `Example_SDK` and `example-sdk` cannot be treated as
+  distinct projects; Birsan''s 2021 dependency-confusion research ran code inside more than 35 companies, Apple, Microsoft,
+  and PayPal among them, by exploiting exactly the gap between the name a build referenced and the project an index resolved
+  it to. A METADATA file that fails Core Metadata parsing removes the package from every automated pipeline at once.'
+fires_when:
+- METADATA fails to parse as Core Metadata 2.x (RFC 822 header syntax with a known 2.x `Metadata-Version`)
+- '`Name` or `Version` is absent'
+- '`Name` differs from its PEP 503 normalization, i.e. from `re.sub(r''[-_.]+'', ''-'', name).lower()`'
+remediation:
+- Declare `name` and `version` in pyproject.toml's `[project]` table and let the backend emit METADATA rather than writing
+  it
+- Use the PEP 503 normalized form (`example-sdk`, never `Example_SDK`) everywhere the name appears — pyproject.toml, the
+  purl in lifecycle.json, index URLs
+- Gate releases on `twine check dist/*` and a parse with `packaging.metadata` in CI
 examples:
-  violation: METADATA is missing the Name field or uses an unnormalized project name
-  compliant: METADATA parses as Metadata 2.x with the PEP 503-normalized name example-package
+  violation: "METADATA:\n  Metadata-Version: 2.1\n  Name: Example_SDK\n  Version: 2.1.0\n# normalizes to 'example-sdk';\
+    \ consumers keyed on the normalized name\n# join this wheel to a different (or no) project"
+  compliant: "METADATA:\n  Metadata-Version: 2.1\n  Name: example-sdk\n  Version: 2.1.0\n# parses under packaging.metadata;\
+    \ Name equals its PEP 503 normalization"
 suggested_fix: Regenerate METADATA from pyproject.toml; normalize the name per PEP 503.
 references:
 - title: PEP 566
@@ -25,3 +43,6 @@ references:
 - title: PEP 503
   url: https://peps.python.org/pep-0503/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-002.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-002.html

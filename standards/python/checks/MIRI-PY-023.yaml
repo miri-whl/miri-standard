@@ -15,9 +15,26 @@ short_description: '`update_check` type/URL valid (PyPI JSON or PEP 700 index)'
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: `update_check`
   type/URL valid (PyPI JSON or PEP 700 index).'
+rationale: 'Currency is computed by comparing the installed version against the latest the index serves: the PyPI JSON API
+  (`GET https://pypi.org/pypi/<name>/json`) returns it in `info.version`, and PEP 700 adds a `versions` list to the PEP
+  691 JSON simple index so private indexes answer the same question with the same machinery. An `update_check` URL that
+  points at a project homepage returns HTML — a consumer either fails the check or scrapes, and either way the standard
+  "is this package current?" call (§7 step 2) stops working for every agent at once.'
+fires_when:
+- '`update_check` is absent, or its `type` is neither `pypi-json` nor `pep700-index`'
+- The `url` is not a queryable index endpoint (for `pypi-json`, not of the form `https://<index>/pypi/{name}/json`; for
+  `pep700-index`, not a simple-index project URL)
+- The project name embedded in the URL does not match the PEP 503-normalized name in `identity.purl`
+remediation:
+- 'For PyPI-published packages, set `{"type": "pypi-json", "url": "https://pypi.org/pypi/<normalized-name>/json"}`'
+- 'For private indexes, set `{"type": "pep700-index", "url": "https://pypi.internal.example/simple/<normalized-name>/"}`
+  and confirm the index serves the PEP 691/700 JSON content type (`application/vnd.pypi.simple.v1+json`)'
+- Generate the field from `pyproject.toml` plus the publish target at build time (§2.4) so the name can never drift
 examples:
-  violation: update_check.url points at a project page, not a queryable index API
-  compliant: update_check points at https://pypi.org/pypi/example-package/json
+  violation: "\"update_check\": {\n  \"type\": \"pypi-json\",\n  \"url\": \"https://github.com/example/example-package\"\
+    \n}\n# GET returns an HTML repo page; no version field exists to compare against"
+  compliant: "\"update_check\": {\n  \"type\": \"pypi-json\",\n  \"url\": \"https://pypi.org/pypi/example-package/json\"\
+    \n}\n# info.version = \"2.2.0\" vs installed 2.1.0 → update available"
 suggested_fix: Point update_check at the PyPI JSON API or a PEP 691/700 index.
 references:
 - title: Lifecycle §3.1
@@ -29,3 +46,6 @@ references:
 - title: '700'
   url: https://peps.python.org/pep-0700/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-023.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-023.html

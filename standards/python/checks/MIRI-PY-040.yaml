@@ -16,11 +16,41 @@ severity:
 short_description: Package imports and functions normally with all Miri metadata stripped
 long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
   This check verifies: Package imports and functions normally with all Miri metadata stripped.'
+rationale: 'Miri''s adoption contract is that the metadata is purely additive (Wheel Ext. §8.1/§8.3): a consumer who has
+  never heard of the standard must see an ordinary wheel. The failure mechanism is import-time coupling — an `__init__.py`
+  that opens `agent-metadata/` files or imports discovery machinery eagerly turns a stripped, repackaged, or partially installed
+  wheel into an `ImportError` for every consumer, converting an enhancement into a hard dependency. Mature libraries treat
+  optional surfaces exactly this way: pandas routes optional engines through `import_optional_dependency`, which raises
+  only when the optional feature is actually used, so a missing pyarrow can never break `import pandas`. Miri metadata is
+  held to the same discipline.'
+fires_when:
+- Importing the package fails, or its core (non-discovery) functions change behavior, after `agent-metadata/`, `docs/`,
+  `examples/`, and `templates/` are deleted from an installed copy
+- The package's `__init__.py` reads Miri metadata at module import time (top-level `open()`/`json.load` of `agent-metadata/`
+  paths, or an unconditional import of discovery machinery that can raise)
+- With the metadata absent, discovery functions raise unhandled exceptions instead of returning the documented degraded
+  result
+remediation:
+- Move all metadata reads inside the discovery functions; nothing Miri-related executes at module top level
+- 'Wrap the reads in failure-tolerant loading — `try: ... except (FileNotFoundError, ModuleNotFoundError): return None`
+  — and document the degraded return value'
+- Add a CI job that installs the wheel, deletes the Miri directories from site-packages, then imports the package and runs
+  the core test suite
 examples:
-  violation: Import fails when agent-metadata/ is stripped
-  compliant: pip install and import behave identically with agent-metadata/ stripped
+  violation: '# weather_sdk/__init__.py
+
+    _META = json.load(open(Path(__file__).parent / "agent-metadata" / "sdk-manifest.json"))
+
+    # any repackaging that drops agent-metadata/ makes `import weather_sdk` raise FileNotFoundError for everyone'
+  compliant: "def get_agent_metadata() -> dict | None:\n    try:\n        return json.loads((_PKG / \"agent-metadata\" /\
+    \ \"sdk-manifest.json\").read_text())\n    except FileNotFoundError:\n        return None   # documented; WeatherClient\
+    \ works identically\n# CI: pip install dist/*.whl; rm -rf site-packages/weather_sdk/agent-metadata; python -c 'import\
+    \ weather_sdk'"
 suggested_fix: Guard all Miri integration so the package works identically without it.
 references:
 - title: Miri Wheel Ext. §8.3
   url: miri-wheel-extensions.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-040.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-040.html

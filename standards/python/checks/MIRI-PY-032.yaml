@@ -16,9 +16,31 @@ short_description: Every `removal_version` is greater than the current release
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every `removal_version` is greater
   than the current release.'
+rationale: '`removal_version` is the field an agent uses to decide urgency — migrate now, or at the next regeneration cycle.
+  A value at or below the shipping version is self-refuting: the interface demonstrably still exists in a release that claims
+  to postdate its removal, and the consumer cannot tell whether the schedule went stale or the deletion was forgotten, so
+  the whole inventory loses its authority as a schedule. The usual cause is mechanical — the removal plan slips, the version
+  rolls past the promised release, and a hand-maintained field is never touched — which is why Lifecycle §6.2 requires the
+  inventory to be derived from the PEP 702 decorators at build time. Comparison uses PEP 440 ordering, the same total order
+  pip resolves with.'
+fires_when:
+- A `deprecations[].removal_version` in migration-guide.json compares less than or equal to the wheel's own version from
+  `dist-info/METADATA` under PEP 440 ordering (`packaging.version.Version`)
+- A `removal_version` does not parse as a valid PEP 440 version at all
+remediation:
+- Derive `removal_version` from the `@deprecated` decorator message at build time (Lifecycle §6.2) so a slipped plan is
+  corrected in one place
+- When a removal slips, update the decorator to the new target release before cutting the release; regeneration propagates
+  the change to the JSON
+- 'Gate the release in CI: compare every `removal_version` against the version being built with `packaging.version.Version`
+  and fail on `<=`'
 examples:
-  violation: removal_version 1.9.0 is below the current 2.0.0
-  compliant: removal_version 3.0.0 declared on a 2.x release
+  violation: "weather-sdk 2.0.0 ships migration-guide.json:\n  {\"deprecated\": \"WeatherClient.legacy_connect()\", \"replacement\"\
+    : \"WeatherClient.connect()\",\n   \"removal_version\": \"1.9.0\"}\n# legacy_connect() still exists in 2.0.0 — the metadata\
+    \ claims a removal that never happened"
+  compliant: "weather-sdk 2.0.0 ships migration-guide.json:\n  {\"deprecated\": \"WeatherClient.legacy_connect()\", \"replacement\"\
+    : \"WeatherClient.connect()\",\n   \"removal_version\": \"3.0.0\"}\n# 2.0.0 < 3.0.0 under PEP 440 — the interface still\
+    \ shipping is exactly what the schedule predicts"
 suggested_fix: Set removal_version to a future release.
 references:
 - title: Lifecycle §6.4-3
@@ -27,3 +49,6 @@ references:
 - title: PEP 440
   url: https://peps.python.org/pep-0440/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-032.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-032.html

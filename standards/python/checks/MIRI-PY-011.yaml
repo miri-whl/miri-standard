@@ -16,11 +16,35 @@ short_description: '`generated_at` timestamps within the build window; not hand-
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: `generated_at`
   timestamps within the build window; not hand-edited afterward.'
+rationale: Agent Metadata §5.1 makes generation a build step precisely because hand-maintained metadata drifts from the
+  code within one release cycle, and the generated_at stamp is the only audit trail an external linter has. An agent trusts
+  stale metadata more than stale prose, because the standard promises the file was derived from this exact build — a timestamp
+  outside the build window breaks that promise silently, with no runtime error to surface it.
+fires_when:
+- generated_at in any agent-metadata file is absent or does not parse as an RFC 3339 / ISO 8601 timestamp
+- generated_at predates the wheel's build (dist-info METADATA creation or the release tag) by more than the linter's build-window
+  tolerance
+- generated_at values across agent-metadata files spread wider than one build run's tolerance (files stamped by different
+  generator runs)
+- generated_at is later than the wheel's own build timestamp (file edited after packaging)
+remediation:
+- Run the metadata generator as a build-backend hook (Agent Metadata §5.1) — a hatchling/setuptools build step that writes
+  agent-metadata/ into the sdist and wheel — never as a manual pre-release chore
+- Capture one datetime.now(timezone.utc) per build and stamp every generated file with the same value
+- In CI, compare each file's generated_at against the build's own timestamp and fail on any file outside the window
+- 'Reject commits that modify agent-metadata/ without a generator run: regenerate in CI and fail on diff (or compare checksums)'
 examples:
-  violation: generated_at predates the release commit by three weeks
-  compliant: generated_at falls inside the release build window
+  violation: "agent-metadata/ inside a wheel built 2026-08-15:\n  sdk-manifest.json    \"generated_at\": \"2026-08-15T14:02:07Z\"\
+    \n  usage-patterns.json  \"generated_at\": \"2026-08-15T14:02:07Z\"\n  lifecycle.json       \"generated_at\": \"2026-05-12T09:31:44Z\"\
+    \  <- three months stale, hand-carried from the previous release"
+  compliant: "All files stamped from one build clock, inside the build window:\n  sdk-manifest.json    \"generated_at\"\
+    : \"2026-08-15T14:02:07Z\"\n  usage-patterns.json  \"generated_at\": \"2026-08-15T14:02:07Z\"\n  lifecycle.json    \
+    \   \"generated_at\": \"2026-08-15T14:02:07Z\"\n  (wheel built 2026-08-15T14:02–14:03Z; CI regenerates and diffs clean)"
 suggested_fix: Generate agent metadata inside the build, never by hand afterward.
 references:
 - title: Agent Metadata §5
   url: agent-metadata-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-011.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-011.html

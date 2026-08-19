@@ -15,11 +15,34 @@ short_description: '`identity.schema_version` present, independent of release ve
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: `identity.schema_version` present, independent of release
   version.'
+rationale: 'The wire schema and the product move on different clocks: Docker''s agent CLI stamps "schema_version": "1" on
+  every payload precisely so the product can reach 2.0 without the contract moving, and Terry Li''s envelope pattern versions
+  the envelope because the envelope shape is the API (landscape §2.3, §3.3-1). A schema_version that merely mirrors the
+  release version destroys the signal in both directions: a consumer pinning it must either treat every routine release
+  as a contract break or learn nothing when the payload genuinely breaks mid-series.'
+fires_when:
+- '`identity.schema_version` is absent from --describe'
+- Its value is identical to `identity.version` and moves in lockstep with releases
+- No documented policy states which changes bump it
+remediation:
+- Declare a small independent contract version (e.g. "1") in identity.schema_version and stamp the same value on every JSON
+  payload (MIRI-CLI-010)
+- 'Document the bump policy: it increments only on breaking payload changes — removed or renamed fields, changed types or
+  semantics — never on releases that leave the shape intact'
+- Record each bump as a wire-schema change in `changelog --since` output (§5.2), and consider serving prior shapes via --schema-version
+  pinning (landscape §3.3-6)
 examples:
-  violation: No schema_version independent of the release version
-  compliant: identity.schema_version "1" declared alongside release version 3.2.0
+  violation: '"identity": {"version": "3.4.1", "schema_version": "3.4.1"}
+
+    # the contract version is the release number restated; pins are meaningless'
+  compliant: '"identity": {"version": "3.4.1", "schema_version": "1"}
+
+    # payload contract unchanged across the 3.x series; a breaking change would make it "2"'
 suggested_fix: Version the wire schema separately and declare it in identity.
 references:
 - title: CLI Spec §3.1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-018.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-018.html

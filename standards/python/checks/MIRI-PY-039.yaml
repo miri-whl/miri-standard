@@ -14,11 +14,43 @@ severity:
 short_description: '`prompt-templates.md`, if present, follows the specified structure'
 long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
   This check verifies: `prompt-templates.md`, if present, follows the specified structure.'
+rationale: 'prompt-templates.md is the one metadata file agents ingest as operating instructions rather than as data: §4.4
+  defines its structure — Quick Start Prompts for code generation, debugging, and migration, each cross-referencing the
+  shipped metadata files by name (usage-patterns.json pattern IDs, sdk-manifest.json signatures, migration-guide.json).
+  An integration that loads it substitutes the `{placeholders}` and follows those references mechanically, so a file missing
+  the expected sections, or citing metadata the wheel does not ship, degrades precisely the integrations that opted into
+  it. The file is optional; the check applies only when it is present.'
+fires_when:
+- '`prompt-templates.md` is present but lacks the §4.4 section structure (Quick Start Prompts with code-generation, debugging,
+  and migration templates)'
+- A template references a metadata file the wheel does not ship (e.g. cites api-graph.json when none is present)
+- Placeholder syntax is inconsistent within the file, defeating mechanical substitution
+remediation:
+- Structure the file per Agent Metadata Specification §4.4, keeping the three Quick Start template categories
+- Derive the metadata-file references from the wheel's actual contents so a template never cites an absent file
+- Validate the heading structure and reference targets in CI alongside the JSON schema checks
 examples:
-  violation: prompt-templates.md has no Quick Start section
-  compliant: prompt-templates.md follows the Agent Metadata Specification §4.4 structure
+  violation: '# prompt-templates.md
+
+    ## Tips
+
+    Just read the README before using this package.
+
+    # no Quick Start Prompts section; no reference to usage-patterns.json or sdk-manifest.json'
+  compliant: '# Agent Prompt Templates
+
+    ## Quick Start Prompts
+
+    ### For Code Generation
+
+    Generate code using weather-sdk to {task_description}.
+
+    Use the "{pattern_id}" pattern from usage-patterns.json; follow signatures in sdk-manifest.json.'
 suggested_fix: Follow the structure in the Agent Metadata Specification §4.4.
 references:
 - title: Agent Metadata §4.4
   url: agent-metadata-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-039.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-039.html

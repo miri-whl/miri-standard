@@ -15,11 +15,45 @@ severity:
 short_description: Mutations support idempotency keys or optimistic-lock version guards
 long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
   marked, and safe to repeat. This check verifies: Mutations support idempotency keys or optimistic-lock version guards.'
+rationale: 'Agents retry on timeout as a matter of course, and without protection a retried create duplicates the resource
+  while a retried update clobbers a concurrent change (the classic lost update). Stripe''s `Idempotency-Key` is the canonical
+  design: the server stores the first outcome per key for at least 24 hours and replays it on retry, so a network-failed
+  charge can be resent without charging twice; desk carries the same mechanism into CLI form with `--idempotency-key`, where
+  a retried command is a safe no-op returning the original result. Docker''s Agent CLI supplies the complementary guard
+  for updates: mutations require `--expected-version <n>` (optimistic lock, version conflict exits 3) or an explicit `--force`.'
+fires_when:
+- No mutating command in `--describe` accepts an idempotency key or an optimistic-lock version guard
+- 'Behavioral evidence: running an identical create twice yields two resources, or repeating a call with the same key does
+  not return the original result'
+- Updates apply unconditionally — no `--expected-version` equivalent exists, and a conflicting concurrent write produces
+  no distinct exit code or structured conflict error
+remediation:
+- Accept `--idempotency-key <key>` on create-shaped mutations; persist the first outcome keyed by it for a bounded window
+  (Stripe prunes keys after 24 hours) and replay the stored result on reuse
+- 'Accept `--expected-version <n>` on update-shaped mutations; on mismatch, exit with a distinct code (Docker uses 3) and
+  a structured conflict error carrying `retryable: false`'
+- Declare which commands support keys and guards in `--describe`, as desk's `--capabilities` does, so a harness knows before
+  its first call which retries are safe
 examples:
-  violation: Re-running a create duplicates the resource
-  compliant: Retrying tool create --idempotency-key abc123 returns the original result, no duplicate
+  violation: '$ tool create-webhook --url https://x.example    # times out at the client; the agent retries
+
+    $ tool create-webhook --url https://x.example
+
+    $ tool list-webhooks --json | jq length
+
+    2 — both endpoints registered, both now firing on every event'
+  compliant: '$ tool create-webhook --url https://x.example --idempotency-key 7f3a-...
+
+    {"id": "wh_1", "created": true}
+
+    $ tool create-webhook --url https://x.example --idempotency-key 7f3a-...
+
+    {"id": "wh_1", "created": true}   # replayed original result; one webhook exists'
 suggested_fix: Support idempotency keys or optimistic-lock version guards.
 references:
 - title: Landscape §2.3 (desk) / §2.4 (Docker)
   url: landscape-and-prior-art.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-042.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-042.html

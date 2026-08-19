@@ -18,11 +18,37 @@ short_description: Importing/calling deprecated interfaces emits `DeprecationWar
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Importing/calling deprecated interfaces
   emits `DeprecationWarning`.'
+rationale: 'Since PEP 565 (Python 3.7) the default filters display a `DeprecationWarning` only when it is triggered by code
+  running in `__main__`; inside imported libraries it is silent unless a test runner or `-W`/`-X dev` re-enables it — and
+  pytest surfaces warnings by default, which makes consumers'' CI the one channel that reliably reaches people who read
+  neither metadata nor type checkers. That channel carries nothing unless the warning is actually emitted: a deprecation
+  recorded only in a docstring, changelog, or migration-guide.json gives the filters nothing to show. The PEP 702 decorator
+  (`warnings.deprecated` on Python ≥3.13, `typing_extensions.deprecated` earlier) closes both routes at once — static call-site
+  flagging plus the runtime `DeprecationWarning` (Lifecycle §6.1).'
+fires_when:
+- Calling or importing an interface listed in migration-guide.json `deprecations` under `warnings.catch_warnings(record=True)`
+  with `simplefilter("always")` captures no warning
+- A warning is emitted but its category is not `DeprecationWarning` or a subclass (e.g. `UserWarning`, or a bare print to
+  stderr)
+- The deprecation exists only as docstring or comment text, with no PEP 702 decorator and no `warnings.warn` call on the
+  executable path
+remediation:
+- Decorate the interface with `warnings.deprecated(...)` (Python ≥3.13) or `typing_extensions.deprecated(...)`; the decorator
+  emits `DeprecationWarning` at call time and marks call sites for type checkers
+- For deprecated module attributes, emit from a module-level `__getattr__` via `warnings.warn(msg, DeprecationWarning, stacklevel=2)`
+- 'Pin the behavior in the test suite: `with pytest.warns(DeprecationWarning, match="legacy_connect"): client.legacy_connect()`'
 examples:
-  violation: Calling legacy_connect() emits no DeprecationWarning
-  compliant: Calling legacy_connect() emits DeprecationWarning at runtime
+  violation: "def legacy_connect(self):\n    \"\"\"Deprecated: use connect() instead.\"\"\"   # docstring only\n    return\
+    \ self.connect()\n# catch_warnings(record=True) captures nothing — consumer CI logs stay clean until the removal breaks\
+    \ them"
+  compliant: "@deprecated(\"legacy_connect() is deprecated; use connect(). Removal: 3.0.0\")\ndef legacy_connect(self):\n\
+    \    return self.connect()\n# pytest output: DeprecationWarning: legacy_connect() is deprecated; use connect(). Removal:\
+    \ 3.0.0"
 suggested_fix: Ensure the PEP 702 decorator (or warnings call) fires at runtime.
 references:
 - title: PEP 565
   url: https://peps.python.org/pep-0565/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-035.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-035.html

@@ -130,13 +130,13 @@ def main():
         d = out / "checks" / target
         d.mkdir()
         ctx = {"site": site, "root": "../../", "active": f"checks/{target}/index.html",
-               "meta": meta, "sev_tone": SEV_TONE}
+               "meta": meta, "sev_tone": SEV_TONE, "sev_order": SEV_ORDER}
         (d / "index.html").write_text(env.get_template("checks_index.html").render(
             **ctx, checks=[c["doc"] for c in checks], musts=musts, rows=category_rows(checks)))
         for i, c in enumerate(checks):
             doc = c["doc"]
             (d / f'{doc["id"]}.html').write_text(env.get_template("check.html").render(
-                **ctx, target=target, check=doc, yaml_text=c["path"].read_text().strip(),
+                **ctx, target=target, check=doc,
                 sev_num=SEV_ORDER.index(doc["severity"]["default"]) + 1,
                 prev_id=checks[i - 1]["doc"]["id"] if i > 0 else None,
                 next_id=checks[i + 1]["doc"]["id"] if i + 1 < len(checks) else None))

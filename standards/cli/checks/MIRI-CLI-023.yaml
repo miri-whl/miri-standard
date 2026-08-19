@@ -15,11 +15,36 @@ short_description: '`distribution: private` does not rely solely on public OSV'
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: `distribution: private` does not rely solely on public
   OSV.'
+rationale: 'A public OSV query for a package the database has never seen returns an empty result — byte-identical to the
+  response a healthy, advisory-free package gets. For a `distribution: "private"` CLI whose purl exists only inside the
+  organization, public OSV therefore always reads clean, which is why §4 forbids consumers from treating an empty public-OSV
+  result as "not vulnerable" for private CLIs. A private CLI that lists public OSV as its only source ships a security signal
+  permanently stuck on green.'
+fires_when:
+- '`identity.distribution` in the `--describe` output is `"private"`'
+- 'every `advisory_sources` entry has `type: "osv"` (public OSV.dev), or public OSV is the only entry marked `authoritative:
+  true`'
+- no `osv-internal` or `osv-local` entry is present
+remediation:
+- 'Stand up an OSV-schema source for the CLI''s private purl: an `osv-internal` query endpoint, or an `osv-local` offline
+  archive of plain OSV JSON records for air-gapped fleets (the format `osv-scanner` offline mode already reads)'
+- 'Declare it in `advisory_sources` with `authoritative: true`, attaching org-local record IDs (e.g. `ACME-2026-0007`) to
+  the private purl per §8.2'
+- Retain the public OSV entry only for the open source dependency tree, joined via the SBOM or embedded buildinfo — not
+  as an authority on the CLI itself
 examples:
-  violation: A private CLI lists only public OSV
-  compliant: The private CLI declares its internal endpoint authoritative; public OSV covers only the dependency tree
+  violation: "--describe:\n  \"identity\": {\"distribution\": \"private\", \"purl\": \"pkg:generic/acme/acme-cli@3.2.0\"\
+    },\n  \"advisory_sources\": [\n    {\"type\": \"osv\", \"url\": \"https://api.osv.dev/v1/query\", \"authoritative\"\
+    : true}\n  ]\n# public OSV has never heard of acme-cli — every query returns {} and reads as healthy"
+  compliant: "\"advisory_sources\": [\n  {\"type\": \"osv-internal\", \"url\": \"https://advisories.corp.acme.example/v1/query\"\
+    , \"authoritative\": true},\n  {\"type\": \"osv\", \"ecosystem\": \"Go\", \"url\": \"https://api.osv.dev/v1/query\"\
+    , \"authoritative\": false}\n]\n# internal endpoint is authoritative for acme-cli; public OSV covers only the dependency\
+    \ tree"
 suggested_fix: Add the internal OSV endpoint as authoritative.
 references:
 - title: CLI Spec §4
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-023.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-023.html

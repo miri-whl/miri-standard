@@ -16,11 +16,36 @@ short_description: Every deprecated flag/subcommand carries a `lifecycle` object
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecated flag/subcommand
   carries a `lifecycle` object.'
+rationale: '`kubectl get --export` was deprecated in v1.14 with well-documented release notes, and its v1.18 removal still
+  broke Helm chart template generation and CI backup pipelines — documentation-only deprecation fails even for humans who
+  could in principle read the notes. A frozen-weights consumer is structurally incapable of reading them at all (landscape
+  §3.1). The `lifecycle` block places the deprecation where every consumer already looks at call time: the introspection
+  output that live agents consult and that skill-file regeneration inherits (§2.3).'
+fires_when:
+- a surface emits a deprecation warning on stderr, or appears as deprecated in `changelog --since` or the documentation,
+  but its `--describe` entry carries no `lifecycle` object
+- a `--describe` entry for such a surface has a `lifecycle` object whose `status` is not `"deprecated"`
+remediation:
+- 'Attach `lifecycle: {status, deprecated_since, removed_in, replacement, migration}` to the flag or subcommand entry in
+  the schema-as-data source, so `--help`, `--describe`, and `changelog` all inherit it from one edit (§2.3)'
+- Emit the grace-period stderr warning from that same block, never from a separate hand-maintained list (§2.5)
+- Run the §6.3 coherence checks in release CI to catch markers that exist in one output but not the others
 examples:
-  violation: --export is deprecated in docs only; --describe shows nothing
-  compliant: '--export carries lifecycle {status: deprecated, deprecated_since, replacement}'
+  violation: 'CHANGELOG.md: "--export is deprecated; use --output archive"
+
+    $ acme-cli --describe | jq ''.flags[] | select(.name == "--export")''
+
+    {"name": "--export", "type": "boolean"}
+
+    # nothing at call time — every agent keeps using --export until it vanishes'
+  compliant: "{\"name\": \"--export\",\n \"lifecycle\": {\"status\": \"deprecated\", \"deprecated_since\": \"1.14.0\",\n\
+    \   \"removed_in\": \"1.18.0\", \"replacement\": \"--output archive\",\n   \"migration\": \"https://docs.acme.example/migrate-export\"\
+    }}"
 suggested_fix: Attach a lifecycle object to every deprecated flag and subcommand.
 references:
 - title: CLI Spec §6
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-031.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-031.html

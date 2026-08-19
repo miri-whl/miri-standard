@@ -15,9 +15,26 @@ short_description: If present, validates against schema
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: If
   present, validates against schema.'
+rationale: 'api-graph.json is consumed for relationship reasoning — which classes cooperate, what a workflow touches — and
+  its value inverts when the data is wrong: an edge whose `from` or `to` names a node that does not exist reads, to a consumer,
+  exactly like a real relationship, so the agent asserts cooperation between components that were never connected. Because
+  the file is optional, an absent graph degrades gracefully to manifest-only reasoning, while a present-but-broken graph
+  is strictly worse than none; the check therefore validates only what actually ships.'
+fires_when:
+- '`agent-metadata/api-graph.json` is present and fails api-graph-v1.json validation (version, nodes, or edges missing)'
+- An edge lacks `from`, `to`, or `relationship`, or either endpoint names a key absent from `nodes`
+- A workflow's `steps` reference components that appear nowhere in `nodes`
+remediation:
+- Regenerate the graph in the same build pass that produces sdk-manifest.json, so both derive from one source scan
+- 'Fail the build on dangling references: every edge endpoint and workflow step must resolve to a `nodes` key'
+- If the graph cannot be generated reliably, omit the file — this check does not fire on absence
 examples:
-  violation: An edge references a node that does not exist
-  compliant: api-graph.json validates; every edge references an existing node
+  violation: "api-graph.json:\n{\"version\": \"1.0\",\n \"nodes\": {\"Client\": {\"type\": \"class\"}},\n \"edges\": [{\"\
+    from\": \"QueryBuilder\", \"to\": \"Client\", \"relationship\": \"uses\"}]}\n# QueryBuilder is not in nodes — the edge\
+    \ asserts a relationship\n# for a component the graph never declares"
+  compliant: "{\"version\": \"1.0\",\n \"nodes\": {\"Client\": {\"type\": \"class\"}, \"QueryBuilder\": {\"type\": \"class\"\
+    }},\n \"edges\": [{\"from\": \"QueryBuilder\", \"to\": \"Client\", \"relationship\": \"uses\"}]}\n# every edge endpoint\
+    \ resolves to a declared node"
 suggested_fix: Regenerate api-graph.json or fix the dangling edge.
 references:
 - title: Agent Metadata §4.5
@@ -26,3 +43,6 @@ references:
 - title: schema
   url: ../../schemas/api-graph-v1.json
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-010.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-010.html

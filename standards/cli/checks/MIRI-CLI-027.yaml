@@ -14,11 +14,36 @@ severity:
 short_description: 'Offline returns `update_available: null`, exit 0 — not an error'
 long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
   passive, and honest offline. This check verifies: Offline returns `update_available: null`, exit 0 — not an error.'
+rationale: 'Air-gapped fleets are a first-class deployment in the private-distribution story, not an edge case: §8.3 has
+  them set `advisory_sources` to `osv-local` and expects `check-update` to degrade honestly. A `check-update` that exits
+  non-zero when the manifest is unreachable makes correct scripts fail in exactly the environments the standard is designed
+  to serve. `update_available: null` with exit 0 keeps the tri-state honest — "could not determine" is distinguishable from
+  both "current" (`false`) and "stale" (`true`) without forcing consumers to parse an error.'
+fires_when:
+- with network egress blocked, `check-update --json` exits non-zero
+- 'the offline output is an error object instead of the §5.1 shape with `update_available: null`'
+- '`update_available` is reported `true` or `false` without the manifest having been reached (answering from a stale cache
+  as if it were live)'
+remediation:
+- 'Catch manifest fetch failures and emit the normal shape with `latest: null`, `update_available: null`, exit code 0'
+- Write the transport diagnostic (timeout, DNS failure) to stderr only, preserving the stdout JSON channel (§2.5)
+- 'Add a CI case that runs `check-update` with egress blocked (e.g. `unshare -n`) and asserts `update_available: null` and
+  exit 0'
 examples:
-  violation: check-update exits 1 when the manifest is unreachable
-  compliant: 'Offline, check-update returns update_available: null with exit 0'
+  violation: '$ acme-cli check-update --json   # no route to releases.acme.example
+
+    Error: Get "https://releases.acme.example/acme-cli/manifest.json": dial tcp: i/o timeout
+
+    $ echo $?
+
+    1'
+  compliant: "$ acme-cli check-update --json\n{\"schema_version\": \"1\", \"current\": \"3.2.0\", \"latest\": null,\n \"\
+    update_available\": null, \"urgency\": \"none\"}\n$ echo $?\n0    # stderr: manifest unreachable; update state unknown"
 suggested_fix: 'Return update_available: null with exit 0 when offline.'
 references:
 - title: CLI Spec §5.1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-027.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-027.html

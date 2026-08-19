@@ -14,11 +14,41 @@ severity:
 short_description: '`identity.version` equals the binary''s actual `--version`'
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: `identity.version` equals the binary''s actual `--version`.'
+rationale: 'The usual drift mechanism is two version sources: --version stamped at build time (a git tag injected via -ldflags)
+  while --describe carries a hard-coded constant nobody bumps, or the reverse. Once they disagree, the tool''s two identity
+  surfaces contradict each other with no way to tell which is lying — and the consumers diverge: scanners compute vulnerability
+  verdicts from --describe''s version while humans and scripts read --version, so a fix can look applied on one surface
+  and absent on the other. Spec §9-1 makes agreement, including the purl''s version segment, a conformance requirement.'
+fires_when:
+- The version printed by --version differs from `identity.version` in --describe
+- The `@version` segment of `identity.purl` differs from `identity.version`
+remediation:
+- Keep exactly one version constant, injected at build time (go build -ldflags "-X main.version=$TAG"; the package.json
+  version field; importlib.metadata.version() in Python)
+- Derive --version, identity.version, and the purl's @version segment from that constant
+- 'Add a CI gate: [ "$(acme --version)" = "$(acme --describe | jq -r .identity.version)" ]'
 examples:
-  violation: --describe says 3.2.0 but --version prints 3.4.0
-  compliant: identity.version equals the output of tool --version
+  violation: '$ acme --version
+
+    3.4.0
+
+    $ acme --describe | jq -r .identity.version
+
+    3.2.0   # a scanner judges 3.2.0''s advisories against a binary that is 3.4.0'
+  compliant: '$ acme --version
+
+    3.4.0
+
+    $ acme --describe | jq -r ''.identity.version, .identity.purl''
+
+    3.4.0
+
+    pkg:brew/acme-cli@3.4.0'
 suggested_fix: Derive both from the single version source in the build.
 references:
 - title: CLI Spec §9-1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-017.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-017.html

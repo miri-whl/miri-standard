@@ -16,11 +16,42 @@ short_description: The read-vs-write nature of each command is determinable from
 long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
   marked, and safe to repeat. This check verifies: The read-vs-write nature of each command is determinable from `--describe`/`--help`
   alone.'
+rationale: 'anc.dev states as a MUST that the read-vs-write distinction be visible from the command name and `--help` alone,
+  because the read/write partition is the cheapest safety property a CLI can offer: reads can be freely retried, parallelized,
+  and run speculatively, while writes need the full apparatus of dry runs, idempotency, and confirmation. When a verb like
+  `sync` or `update` leaves the direction ambiguous, a careful agent must treat every command as a write — forfeiting parallelism
+  — and a careless one guesses, which is how unintended mutations happen.'
+fires_when:
+- A command's `--describe` entry carries no machine-readable read/write field (`mutating`, `mode`, or equivalent declared
+  in the introspection schema)
+- Neither the command name nor its `--help` text determines whether invocation changes state (e.g. `sync` with no stated
+  direction)
+- 'A field is present but false to behavior: a command declared read-only observably writes when run against a fixture'
+remediation:
+- 'Declare `mutating: true|false` per command in the schema-as-data definition so `--describe` and `--help` derive it together
+  (§2.3)'
+- For ambiguous verbs, state the direction in the first help sentence ("Upload local changes to the remote") or split the
+  command (`push`/`pull`) rather than documenting around the ambiguity
+- 'Verify the declaration in CI: run every command marked read-only against a fixture and assert a state fingerprint taken
+  before and after is identical'
 examples:
-  violation: Whether 'tool sync' writes is not determinable from --describe
-  compliant: Each command's describe entry declares whether it reads or writes
+  violation: '$ tool sync --help
+
+    Synchronize the workspace.
+
+    $ tool --describe | jq ''.commands[] | select(.name=="sync")''
+
+    {"name": "sync", "summary": "Synchronize the workspace."}
+
+    Whether sync uploads, downloads, or both is undeterminable; the agent must assume it writes.'
+  compliant: "$ tool --describe | jq '.commands[] | select(.name==\"sync\")'\n{\"name\": \"sync\", \"mutating\": true,\n\
+    \ \"summary\": \"Upload local changes to the remote workspace.\"}\nReads elsewhere in the same describe carry \"mutating\"\
+    : false and can be parallelized freely."
 suggested_fix: Make the read-vs-write nature explicit per command.
 references:
 - title: Landscape §2.2 (anc.dev)
   url: landscape-and-prior-art.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-041.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-041.html

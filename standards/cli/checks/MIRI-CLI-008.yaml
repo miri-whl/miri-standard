@@ -15,11 +15,31 @@ severity:
 short_description: Every command supports JSON output
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: Every command supports JSON output.'
+rationale: The stability contract (landscape §3.4) explicitly excludes human-readable text and its wording from SemVer coverage
+  — so a command without JSON output forces agents to scrape prose the vendor is free to reword at any time, making every
+  copy-edit a de-facto breaking change that ships without a version bump. This is the mechanism behind a decade of screen-scraping
+  breakage that pushed docker, kubectl, and gh to grow structured-output flags command by command; CLI Spec §2.5 closes
+  the gap by making JSON-on-stdout the defined machine channel for every command, not a per-command afterthought.
+fires_when:
+- Any command enumerated in `--describe` lacks the JSON output mode
+- The standard output flag is rejected (`unknown flag`) on some commands
+- A command's JSON mode emits output that a strict JSON parser rejects
+remediation:
+- Derive JSON output from the same data structures that feed the human formatter — one struct, two renderers (CLI Spec §2.3)
+  — rather than retrofitting per command
+- Register the output flag once at the root parser so new subcommands inherit it (see MIRI-CLI-009)
+- 'Add a CI loop: for every command in `--describe`, run it with the JSON flag and pipe stdout through `jq -e .` (or `python3
+  -m json.tool`) to assert a parseable document'
 examples:
-  violation: '''tool status'' has no machine-readable form'
-  compliant: Every command accepts --json and emits a machine-readable document
+  violation: "$ tool status --json\nerror: unknown flag: --json\n$ tool status\n  NAME     STATE    UPTIME\n  api      running\
+    \  4d       # only a human table; agents must scrape it"
+  compliant: "$ tool status --json\n{\"schema_version\": \"1\", \"services\": [\n  {\"name\": \"api\", \"state\": \"running\"\
+    , \"uptime_seconds\": 350400}]}\n$ tool status --json | jq -e .services[0].state\n\"running\""
 suggested_fix: Support the JSON output flag on every command.
 references:
 - title: CLI Spec §2.5
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-008.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-008.html

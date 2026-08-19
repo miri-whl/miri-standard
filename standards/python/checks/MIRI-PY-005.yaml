@@ -16,11 +16,41 @@ severity:
 short_description: Release carries index-hosted attestations (provenance)
 long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
   baseline cannot carry trustworthy agent metadata. This check verifies: Release carries index-hosted attestations (provenance).'
+rationale: 'PEP 740 attestations bind each uploaded file to the exact source repository and CI workflow that built it; the
+  index verifies them against a Trusted Publisher identity and republishes them under the `provenance` key of the PEP 691
+  JSON API. PyPI has accepted attestations since 14 November 2024, and `pypa/gh-action-pypi-publish` generates them by default
+  under trusted publishing, so their absence is now a configuration choice rather than a tooling gap. The December 2024
+  ultralytics compromise showed both halves of the mechanism: malicious wheels reached PyPI through an injected GitHub Actions
+  workflow, and the release''s published provenance is what let responders reconstruct which workflow run produced the poisoned
+  artifacts.'
+fires_when:
+- '`GET https://pypi.org/simple/<name>/` with `Accept: application/vnd.pypi.simple.v1+json` returns `"provenance": null`
+  for the release''s files'
+- The declared registry is a public index and no PEP 740 attestation objects exist for any distribution file of the release
+- Attestations cover some files of the release but not others (e.g. the wheel is attested, the sdist is not)
+remediation:
+- Configure a Trusted Publisher for the project on PyPI (Manage project -> Publishing), scoped to the release workflow
+- Publish from CI with `pypa/gh-action-pypi-publish`, which generates and uploads attestations by default, or with `twine
+  upload --attestations`
+- Revoke long-lived project API tokens once trusted publishing is in place
+- Verify after release that the `provenance` key in the index JSON is populated (the `pypi-attestations` tool can verify
+  the attestation chain)
 examples:
-  violation: No attestations are published alongside the release
-  compliant: Release uploaded via trusted publishing with PEP 740 attestations attached
+  violation: "curl -H 'Accept: application/vnd.pypi.simple.v1+json' \\\n  https://pypi.org/simple/example-sdk/\n# files[]:\
+    \ {\"filename\": \"example_sdk-2.1.0-py3-none-any.whl\",\n#           \"provenance\": null}\n# uploaded with a long-lived\
+    \ API token; no attestations exist"
+  compliant: '# same request returns:
+
+    # {"filename": "example_sdk-2.1.0-py3-none-any.whl",
+
+    #  "provenance": "https://pypi.org/integrity/example-sdk/2.1.0/example_sdk-2.1.0-py3-none-any.whl/provenance"}
+
+    # attested by Trusted Publisher github.com/example/sdk release.yml'
 suggested_fix: Publish via trusted publishing so PEP 740 attestations are attached.
 references:
 - title: PEP 740
   url: https://peps.python.org/pep-0740/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-005.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-005.html

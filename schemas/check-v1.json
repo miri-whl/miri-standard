@@ -18,8 +18,12 @@
     "short_description",
     "long_description",
     "examples",
+    "rationale",
+    "fires_when",
+    "remediation",
     "suggested_fix",
-    "references"
+    "references",
+    "urls"
   ],
   "properties": {
     "id": {
@@ -179,6 +183,48 @@
         ]
       },
       "description": "Operating capabilities beyond the target's baseline analysis mode (static inspection for wheels; local invocation for CLIs) that this check needs. A linter lacking a listed capability MUST skip the check (forfeited, reported) with the fixed reason: network -> network_unavailable, previous-release -> previous_release_unavailable, execution -> execution_disabled; a linter satisfying them MUST NOT skip. Absent or empty means computable from the artifact alone - skipping is non-conforming."
+    },
+    "rationale": {
+      "type": "string",
+      "minLength": 40,
+      "description": "Why violating this check is harmful and why the standard checks for it - the editorial case for the check's existence"
+    },
+    "fires_when": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "Concrete trigger conditions: the situations in which a conforming linter raises this check"
+    },
+    "remediation": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      },
+      "description": "Ordered steps to resolve violations; suggested_fix remains the one-line summary"
+    },
+    "urls": {
+      "type": "object",
+      "description": "Canonical locations of this check: the committee-owned YAML definition on GitHub and the published HTML page. Embedded so linter reports can link both without deriving them.",
+      "required": [
+        "definition",
+        "html"
+      ],
+      "properties": {
+        "definition": {
+          "type": "string",
+          "format": "uri",
+          "description": "GitHub URL of this YAML file on main"
+        },
+        "html": {
+          "type": "string",
+          "format": "uri",
+          "description": "Published page for this check"
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false,

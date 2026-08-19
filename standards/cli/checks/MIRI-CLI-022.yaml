@@ -14,9 +14,29 @@ severity:
 short_description: ≥1 valid entry in `advisory_sources`
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: ≥1 valid entry in `advisory_sources`.'
+rationale: 'Miri''s first design principle is declare sources, not verdicts (§2.1): the CLI names where advisories live
+  and consumers compute the verdict at call time, so `advisory_sources` is the pointer every vulnerability answer about
+  the tool passes through. An empty or missing list opts the tool out of that join while the rest of --describe still looks
+  compliant — and the omission is silent, because OSV-style endpoints return an empty result for names they have never seen,
+  indistinguishable from an audited clean bill. Spec §4 therefore requires at least one entry of a valid type (osv, osv-internal,
+  osv-local).'
+fires_when:
+- --describe carries no `advisory_sources`, or the array is empty
+- An entry's `type` is outside osv / osv-internal / osv-local, or its `url` is missing
+- An entry of type "osv" omits the `ecosystem` field needed to scope the OSV.dev query
+remediation:
+- 'Declare the source matching the distribution channel; for open source, public OSV with the shipping ecosystem: {"type":
+  "osv", "ecosystem": "npm", "url": "https://api.osv.dev/v1/query", "authoritative": true}'
+- 'For private CLIs, point at the internal OSV-schema endpoint or offline archive: {"type": "osv-internal", "url": "https://advisories.corp.acme.example/v1/query"},
+  or an osv-local database path for air-gapped installs (§8.2–8.3)'
+- 'Set `authoritative: true` on the source that carries advisories against the tool itself, as opposed to sources covering
+  only its dependency tree'
 examples:
-  violation: advisory_sources is absent
-  compliant: advisory_sources lists an OSV-compatible endpoint with a valid URL
+  violation: '$ acme --describe | jq .advisory_sources
+
+    []   # no join possible; every scanner reports the tool clean by omission'
+  compliant: "\"advisory_sources\": [\n  {\"type\": \"osv\", \"ecosystem\": \"npm\", \"url\": \"https://api.osv.dev/v1/query\"\
+    , \"authoritative\": true}\n]"
 suggested_fix: Declare at least one OSV-compatible advisory endpoint.
 references:
 - title: CLI Spec §4
@@ -25,3 +45,6 @@ references:
 - title: OSV schema
   url: https://ossf.github.io/osv-schema/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-022.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-022.html

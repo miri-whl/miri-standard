@@ -15,11 +15,33 @@ severity:
 short_description: Examples demonstrate the package's error/exception handling
 long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
   lesson at machine speed. This check verifies: Examples demonstrate the package''s error/exception handling.'
+rationale: 'Miri Wheel Extensions §7.2.2 requires examples to include proper error handling because agents copy handling
+  structure verbatim into generated integrations. sdk-manifest.json already declares the package''s exception types and
+  recovery guidance (Agent Metadata §4.1 error_handling), but a declaration no example exercises never reaches generated
+  code: the agent reproduces the happy path it saw, and every downstream integration lets ConnectionError and its kin propagate
+  uncaught.'
+fires_when:
+- no example listed in AGENT_EXAMPLES.json contains a try/except (or equivalent guard) around a fallible call
+- none of the exception types declared in sdk-manifest.json error_handling or common_errors appears in any example's AST
+- the examples/ tree lacks an error-handling example even though sdk-manifest.json declares package exception types
+remediation:
+- Wrap each example's fallible calls in try/except for the package's own exception types, demonstrating the recovery path
+  (retry, re-authenticate, clean exit) rather than a bare pass
+- Keep the demonstrated types aligned with sdk-manifest.json error_handling and common_errors so the two surfaces teach
+  the same lesson
+- Ship a dedicated examples/error_handling.py per §5.1 and reference it from the quickstart's related entries
 examples:
-  violation: quickstart.py lets connection errors propagate uncaught
-  compliant: quickstart.py catches ConnectionError and demonstrates the recovery path
+  violation: "examples/quickstart.py:\n  client = Client(api_key=\"YOUR_API_KEY\")\n  print(client.fetch(\"users\"))   #\
+    \ ConnectionError and AuthenticationError propagate uncaught;\n                                 # sdk-manifest.json\
+    \ declares both, but no shipped example shows either"
+  compliant: "examples/quickstart.py:\n  try:\n      print(client.fetch(\"users\"))\n  except example_sdk.AuthenticationError:\n\
+    \      sys.exit(\"invalid key: set EXAMPLE_SDK_API_KEY\")  # the canonical recovery path\n  except example_sdk.ConnectionError\
+    \ as e:\n      print(f\"retrying once: {e}\"); print(client.fetch(\"users\"))"
 suggested_fix: Demonstrate the package's exception handling in each example.
 references:
 - title: Miri Wheel Ext. §7.2.2
   url: miri-wheel-extensions.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-017.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-017.html

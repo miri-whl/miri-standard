@@ -16,11 +16,38 @@ short_description: Every `deprecations[].replacement` exists in the new `sdk-man
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every `deprecations[].replacement`
   exists in the new `sdk-manifest.json`.'
+rationale: 'An agent consuming migration-guide.json rewrites call sites mechanically: it swaps the deprecated interface
+  for the string in `replacement`, so a replacement absent from the release''s sdk-manifest.json converts every migrated
+  call site into an AttributeError — the consumer breaks at the exact moment it complies with the deprecation. CPython''s
+  distutils deprecation shows how migration paths dead-end even under review: PEP 632''s migration advice leaves `distutils.util.strtobool`,
+  `distutils.util.change_root`, and `distutils.dir_util.create_tree` with no successor, telling users to "reimplement the
+  functionality yourself". Lifecycle §6.4-3 forbids discovering that outcome downstream: the named replacement MUST resolve
+  in the manifest of the same release that names it.'
+fires_when:
+- A `deprecations[].replacement` value in migration-guide.json names an interface path with no matching entry in the same
+  wheel's sdk-manifest.json `api_index` (as a class, a method under `key_methods`, or a module-level function)
+- '`replacement` is null, empty, or free-form prose from which no interface path can be parsed'
+- '`replacement` names an interface that is itself listed in the same release''s `deprecations` (a chain into another dead
+  end)'
+remediation:
+- Land the replacement interface in or before the release that first publishes the deprecation entry, never in a later one
+- 'Generate both files in one build step so they cannot drift: derive `deprecations` from the PEP 702 markers and `api_index`
+  from the module surface (Agent Metadata §5.1)'
+- Add a CI assertion that every `deprecations[].replacement` resolves against sdk-manifest.json before `twine upload`
+- If no successor will exist, do not mark the interface deprecated yet — the standard has no "reimplement it yourself" escape
+  hatch
 examples:
-  violation: deprecations names replacement query_v2() which is not in sdk-manifest.json
-  compliant: replacement query() exists in the 2.0.0 sdk-manifest.json
+  violation: "migration-guide.json:\n  {\"deprecated\": \"DatabaseClient.execute()\", \"replacement\": \"DatabaseClient.query_v2()\"\
+    , \"removal_version\": \"3.0.0\"}\nsdk-manifest.json api_index.DatabaseClient.key_methods:\n  {\"connect\": {...}, \"\
+    query\": {...}}   # no query_v2 — every migrated call site raises AttributeError"
+  compliant: "migration-guide.json:\n  {\"deprecated\": \"DatabaseClient.execute()\", \"replacement\": \"DatabaseClient.query()\"\
+    , \"removal_version\": \"3.0.0\"}\nsdk-manifest.json api_index.DatabaseClient.key_methods:\n  {\"connect\": {...}, \"\
+    query\": {\"signature\": \"query(sql: str) -> QueryResult\"}}   # replacement resolves"
 suggested_fix: Point replacement at an interface that exists in the release performing the removal.
 references:
 - title: Lifecycle §6.4-3
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-031.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-031.html

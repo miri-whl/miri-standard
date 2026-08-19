@@ -17,9 +17,30 @@ short_description: Every interface listed as deprecated carries `@deprecated`; d
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every interface listed as deprecated
   carries `@deprecated`; decorator message names replacement + removal version.'
+rationale: 'The PEP 702 `@deprecated` decorator (`warnings.deprecated` on Python ≥3.13, `typing_extensions.deprecated` ≥4.5
+  earlier) is the one marking mechanism that reaches every consumer class at once: static type checkers and IDEs flag call
+  sites without executing code, the runtime emits `DeprecationWarning` under PEP 565 semantics, and §6.2 derives the machine-readable
+  inventory from it at build time. A deprecation recorded only in a changelog is invisible to type checkers; one expressed
+  only as `warnings.warn` in the function body is invisible statically — each leaves at least one consumer class calling
+  the interface until it vanishes. Without the replacement and removal version in the message, the warning says stop but
+  not what to do instead or by when.'
+fires_when:
+- An interface listed in `migration-guide.json` `deprecations` carries no `@deprecated` decorator (neither `warnings.deprecated`
+  nor `typing_extensions.deprecated`)
+- A decorator message names no replacement interface
+- A decorator message names no planned removal version
+remediation:
+- 'Apply the marker: `from warnings import deprecated` on ≥3.13, `from typing_extensions import deprecated` below (dual-import
+  via a compatibility shim if the package supports both)'
+- Write the message as replacement plus deadline, e.g. `@deprecated("Use connect() instead; legacy_connect() will be removed
+  in 3.0.0")`
+- Keep the marked implementation working through the PEP 387-shaped grace period (§6.1) — the marker announces removal,
+  it does not perform it
 examples:
-  violation: legacy_connect() is listed as deprecated but carries no @deprecated decorator
-  compliant: legacy_connect() carries @deprecated naming connect() and removal in 3.0.0
+  violation: "# migration-guide.json lists legacy_connect() as deprecated, but the code reads:\ndef legacy_connect(host:\
+    \ str) -> Connection:\n    return connect(host)  # no marker: IDEs, type checkers, runtime all silent"
+  compliant: "@deprecated(\"Use connect() instead; legacy_connect() will be removed in 3.0.0\")\ndef legacy_connect(host:\
+    \ str) -> Connection:\n    return connect(host)\n# pyright/mypy flag every call site; calling emits DeprecationWarning"
 suggested_fix: Mark it with warnings.deprecated (PEP 702) naming the replacement and removal version.
 references:
 - title: PEP 702
@@ -28,3 +49,6 @@ references:
 - title: Lifecycle §6.1
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-028.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-028.html

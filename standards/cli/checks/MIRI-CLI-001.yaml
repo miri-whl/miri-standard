@@ -15,11 +15,46 @@ short_description: '`-` short options, `--` terminator, options-before-operands 
 long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
   invisible or hangs silently in a non-interactive context. This check verifies: `-` short options, `--` terminator, options-before-operands
   accepted.'
+rationale: 'POSIX XBD §12.2 is the one option grammar every shell user, script, and agent already knows: Guideline 5 permits
+  grouping no-argument options behind a single `-`, Guideline 9 has options precede operands, and Guideline 10 reserves
+  `--` as the end-of-options delimiter. An agent composes invocations from that shared grammar, not from the tool''s private
+  one, so a parser that rejects `-ab` bundling or ignores `--` makes conventionally correct commands fail — and a missing
+  `--` terminator makes operands that begin with `-` (a file literally named `-rf`, a branch named `--force`) impossible
+  to pass safely at all.'
+fires_when:
+- A grouped invocation `-ab` is rejected while `-a -b` is accepted, for options taking no argument
+- An operand placed after `--` is parsed as an option (or `--` itself is reported as an unknown option)
+- '`-o value` and `-ovalue` are not treated as equivalent for an option that takes an argument'
+- Options appearing before operands are rejected or silently treated as operands
+remediation:
+- Replace any hand-rolled argv loop with a getopt-family parser that implements POSIX XBD §12.2 (argparse, clap, cobra/pflag,
+  getopt_long)
+- 'Add parser conformance tests covering the three §12.2 trouble spots: `-ab` bundling, the `--` terminator, and `-o value`/`-ovalue`
+  equivalence'
+- If the tool must deviate (single-dash long options, ordered operands), declare the deviation in `--describe` rather than
+  leaving it discoverable only by failure
 examples:
-  violation: -abc bundling of no-argument flags is rejected
-  compliant: -o out, -oout, and -abc bundling all parse; -- terminates option parsing
+  violation: '$ tool -ab target/          # -a and -b are both valid no-arg flags
+
+    error: unknown option ''-ab''
+
+    $ tool delete -- --force    # operand named ''--force''
+
+    error: unknown option ''--force'''
+  compliant: '$ tool -ab target/          # equivalent to: tool -a -b target/
+
+    $ tool -o out.json target/  # and: tool -oout.json target/
+
+    $ tool delete -- --force    # deletes the entry literally named ''--force''
+
+    $ echo $?
+
+    0'
 suggested_fix: Follow POSIX XBD §12.2 option syntax, including the -- terminator.
 references:
 - title: POSIX XBD §12.2
   url: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-001.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-001.html

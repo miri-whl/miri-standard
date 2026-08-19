@@ -14,11 +14,36 @@ severity:
 short_description: '`changelog --since <v> --json` implemented'
 long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
   passive, and honest offline. This check verifies: `changelog --since <v> --json` implemented.'
+rationale: '`check-update` says only *that* the tool moved; `changelog --since` says *what* moved. It is the recovery primitive
+  for consumers whose knowledge froze at an older release — frozen weights can never read release notes, and a skill file
+  is only as fresh as its last regeneration (landscape §3.1). Without it, an agent returning after three releases rediscovers
+  surface changes by trial and error: construct from stale knowledge, hit an error, retry with hallucinated variants — the
+  silent degradation loop in which no bug report is ever filed.'
+fires_when:
+- no `changelog` subcommand exists, or `changelog --since <v> --json` exits non-zero for a version that exists in the published
+  release history
+- '`--since` rejects valid prior versions or ignores the bound and dumps the full history'
+- output is not a JSON document on stdout grouped per release between `<v>` and the current version
+remediation:
+- Implement `changelog --since <version> --json` per §5.2, emitting one entry per release between `<version>` and `current`
+- Derive it from the same schema-as-data struct that generates `--help` and `--describe` (§2.3) — a mechanical diff of the
+  schema between releases, never hand-written notes
+- Validate accepted `--since` values against the same release manifest `check-update` consults, so every published version
+  is accepted
 examples:
-  violation: No changelog --since command exists
-  compliant: tool changelog --since 3.0.0 --json lists surface changes per release
+  violation: '$ acme-cli changelog --since 3.0.0 --json
+
+    Error: unknown command "changelog" for "acme-cli"
+
+    # the only changelog is prose on the forge — nothing a returning agent can query'
+  compliant: "$ acme-cli changelog --since 3.0.0 --json\n{\"schema_version\": \"1\", \"releases\": [\n  {\"version\": \"\
+    3.1.0\", \"added\": [\"--output archive\"], \"deprecated\": [\"--export\"]},\n  {\"version\": \"3.2.0\", \"removed\"\
+    : [\"--export\"]}]}"
 suggested_fix: Implement changelog --since <version> --json per CLI Spec §5.2.
 references:
 - title: CLI Spec §5.2
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-029.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-029.html

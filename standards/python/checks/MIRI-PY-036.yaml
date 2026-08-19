@@ -16,11 +16,47 @@ severity:
 short_description: Package-level discovery functions importable and return coherent data
 long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
   This check verifies: Package-level discovery functions importable and return coherent data.'
+rationale: 'The §6.1 functions (`get_examples_dir`, `get_agent_metadata`, `show_quickstart`, …) are the runtime entry point
+  to everything else the standard ships — the wheel-side equivalent of a CLI''s `--describe`; when they raise or return
+  paths that do not exist, agents fall back to guessing file locations by convention, the exact behavior the standard exists
+  to end. The characteristic failure is wheel-versus-source drift: the functions work in the developer''s checkout, but
+  the data directories were never declared as package data, so the built wheel omits them and `get_examples_dir()` returns
+  a path that exists nowhere after `pip install`. Only executing the functions against the installed wheel detects this
+  class.'
+fires_when:
+- Any §6.1 discovery function is absent from the package's top-level namespace after installing the wheel into a clean venv
+- Calling a discovery function raises, or returns a path that does not exist in the installed distribution
+- Returned data contradicts the shipped files — e.g. `list_examples()` disagrees with `AGENT_EXAMPLES.json` or with the
+  contents of `examples/`, or `get_agent_metadata()` disagrees with `agent-metadata/`
+remediation:
+- Implement each function as a thin reader over the installed files via `importlib.resources.files(...)`, never over remembered
+  build-tree paths
+- Declare `examples/`, `docs/`, `templates/`, and `agent-metadata/` as package data (`[tool.setuptools.package-data]` or
+  the build backend's equivalent) so they actually enter the wheel
+- 'Test the artifact, not the source tree: `pip install dist/*.whl` into a fresh venv in CI, call every §6.1 function, and
+  assert on the results'
 examples:
-  violation: miri_overview() raises AttributeError
-  compliant: miri_overview() returns the package summary from the generated metadata
+  violation: '$ pip install weather_sdk-1.2.0-py3-none-any.whl
+
+    $ python -c "import weather_sdk; weather_sdk.show_quickstart()"
+
+    AttributeError: module ''weather_sdk'' has no attribute ''show_quickstart''
+
+    # examples/ is also missing from the wheel: package data was never declared, only the source tree had it'
+  compliant: '>>> import weather_sdk
+
+    >>> weather_sdk.list_examples()
+
+    [''quickstart'', ''authentication'', ''error_handling'']
+
+    >>> weather_sdk.get_agent_metadata()["package"]["version"]
+
+    ''1.2.0''   # matches dist-info/METADATA and the files under agent-metadata/'
 suggested_fix: Implement the package-level discovery functions over the generated metadata.
 references:
 - title: Miri Wheel Ext. §6
   url: miri-wheel-extensions.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-036.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-036.html

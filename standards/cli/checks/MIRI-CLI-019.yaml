@@ -14,11 +14,30 @@ severity:
 short_description: '`identity.distribution` is `open-source` or `private`'
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: `identity.distribution` is `open-source` or `private`.'
+rationale: The declaration selects which security defaults apply. OSV's /v1/query returns an empty result both when a package
+  is known and clean and when the database has simply never heard of the name — so for a private CLI an empty public-OSV
+  response is silence, not clearance, and spec §4 forbids treating it as "not vulnerable" unless public OSV is explicitly
+  listed. A scanner can only apply that rule if the artifact states which population it belongs to; an undeclared distribution
+  defaults private tools into a false clean bill.
+fires_when:
+- '`identity.distribution` is absent from --describe'
+- Its value is anything other than the exact strings "open-source" or "private"
+remediation:
+- Declare `distribution` in the build-time identity block; the value is structural, not per-install, so it belongs with
+  the version and purl constants
+- For "private", pair the declaration with an osv-internal or osv-local advisory source (§8.2) so the §4 empty-result rule
+  has an authoritative source to defer to
 examples:
-  violation: distribution is missing
-  compliant: 'identity.distribution: private'
+  violation: '"identity": {"purl": "pkg:generic/acme/acme-cli@3.2.0"}
+
+    # no distribution: a scanner cannot tell whether an empty public-OSV result means clean or merely unknown'
+  compliant: "\"identity\": {\"purl\": \"pkg:generic/acme/acme-cli@3.2.0?repository_url=https://releases.acme.example\"\
+    ,\n  \"distribution\": \"private\"}"
 suggested_fix: Declare open-source or private.
 references:
 - title: CLI Spec §3.1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-019.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-019.html

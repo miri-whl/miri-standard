@@ -14,11 +14,32 @@ severity:
 short_description: '`support` present with valid `status`'
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: `support` present with valid `status`.'
+rationale: The support block is the one lifecycle statement the artifact carries directly — vendor-authored intent rather
+  than a computed verdict — and --describe is the only channel that reaches consumers at call time, including agents whose
+  frozen weights will never see the release note announcing maintenance mode (landscape §3.1). Its status vocabulary (active
+  / maintenance / deprecated / eol) is shared with the Python specification's support object, validated by lifecycle-v1.json,
+  and deliberately mappable onto the OASIS OpenEoX stages, so one reader covers every Miri artifact type.
+fires_when:
+- --describe carries no top-level `support` block
+- '`support.status` is missing or outside the enum active / maintenance / deprecated / eol'
+- The block fails validation against the shared support shape of lifecycle-v1.json (e.g. status expressed as free text instead
+  of the enum)
+remediation:
+- 'Add a `support` block per CLI Spec §3.2: `status`, plus `supported_versions`, `eol_date`, `replacement`, and `security_policy`'
+- Source it from the same schema-as-data structure as the rest of --describe (§2.3), so a status change is one field edit
+  propagated to every output
+- Validate in CI against the shared shape, e.g. jsonschema.validate(describe["support"], lifecycle_schema["properties"]["support"])
 examples:
-  violation: --describe has no support block
-  compliant: 'support.status: active with supported_versions declared'
+  violation: '$ acme --describe | jq .support
+
+    null   # the tool entered maintenance at 3.0; only the release notes say so'
+  compliant: "\"support\": {\"status\": \"maintenance\", \"supported_versions\": [\">=3.0,<4.0\"],\n  \"eol_date\": \"2027-06-30\"\
+    , \"replacement\": null,\n  \"security_policy\": \"https://github.com/acme/acme-cli/blob/main/SECURITY.md\"}"
 suggested_fix: Add support with a valid status per CLI Spec §3.2.
 references:
 - title: CLI Spec §3.2
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-020.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-020.html

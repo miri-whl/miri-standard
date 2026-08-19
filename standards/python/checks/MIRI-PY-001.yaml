@@ -15,9 +15,33 @@ short_description: '`.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive ma
 long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
   baseline cannot carry trustworthy agent metadata. This check verifies: `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`;
   archive matches RECORD.'
+rationale: 'PEP 427 makes RECORD the wheel''s own integrity manifest: every file except RECORD itself MUST be listed with
+  an sha256-or-better hash, and the spec directs installers to fail when a file is absent from RECORD or hashed incorrectly.
+  In practice pip has never enforced this at install time (pypa/pip#2752 has tracked the gap since 2015), so a wheel modified
+  after build — by a patching script, a caching proxy, or a hand edit — installs without complaint; a conformance check
+  is often the only point where the mismatch surfaces. Every other Miri check also reads its inputs out of this archive,
+  so a wheel whose RECORD disagrees with its contents cannot be trusted about anything else it declares.'
+fires_when:
+- '`.dist-info/` lacks any of `METADATA`, `WHEEL`, or `RECORD`'
+- RECORD lists a path absent from the archive, or the archive contains a file (other than RECORD and its signature companions)
+  that RECORD omits
+- A recomputed sha256 digest (urlsafe base64, unpadded) or byte size differs from the RECORD entry for that file
+- A RECORD entry uses a forbidden hash algorithm (md5, sha1)
+remediation:
+- Rebuild the wheel with a standard PEP 517 backend via `python -m build`; never modify the archive after the backend writes
+  RECORD
+- If a build plugin injects files, make it re-emit a RECORD row (path, `sha256=<urlsafe-b64>`, size) for everything it adds
+- Gate publishing on `check-wheel-contents dist/*.whl` plus a RECORD audit that recomputes each archived file's digest
 examples:
-  violation: RECORD lists a file missing from the archive
-  compliant: unzip -l and RECORD agree file-for-file; dist-info carries METADATA, WHEEL, RECORD
+  violation: 'RECORD: example_sdk/core.py,sha256=q2h5w...Ero,4131
+
+    unzip -p example_sdk-2.1.0-py3-none-any.whl example_sdk/core.py | shasum -a 256
+
+    # digest differs from the RECORD row; the archive also carries
+
+    # example_sdk/_patched.py, which RECORD does not list'
+  compliant: "example_sdk-2.1.0.dist-info/ contains METADATA, WHEEL, RECORD;\nevery archived file matches its RECORD row,\
+    \ e.g.\n  example_sdk/core.py,sha256=q2h5w...Ero,4131\nand no file exists in the archive that RECORD omits"
 suggested_fix: Rebuild the wheel with a standard build backend; do not hand-edit the archive.
 references:
 - title: PEP 427
@@ -26,3 +50,6 @@ references:
 - title: PEP 491
   url: https://peps.python.org/pep-0491/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-001.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-001.html

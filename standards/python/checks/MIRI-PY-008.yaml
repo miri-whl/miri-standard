@@ -15,9 +15,29 @@ short_description: Present and validates against schema
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
   and validates against schema.'
+rationale: 'Usage patterns exist so agents insert vetted idioms instead of re-deriving them, which is why usage-patterns-v1.json
+  makes id, name, description, complexity, category, and code mandatory for every pattern. The id is load-bearing beyond
+  this file: sdk-manifest.json''s usage_patterns arrays, migration-guide.json''s affected_patterns, and prompt templates
+  all reference patterns by id, so an entry with no stable id — or no code body — breaks cross-referencing for every file
+  that points at it, not just this one.'
+fires_when:
+- '`agent-metadata/usage-patterns.json` is absent'
+- The top level lacks version, generated_at, or patterns
+- A pattern entry lacks any of id, name, description, complexity, category, or code
+- A `categories` or `learning_paths` entry lists a pattern id that no pattern defines
+remediation:
+- Regenerate usage-patterns.json at build time from curated sources (examples/, tests/) per Agent Metadata §5.1
+- 'Assign every pattern a stable snake_case id and treat a rename like an API rename: update every referencing file in the
+  same change'
+- 'Validate before packaging: `check-jsonschema --schemafile usage-patterns-v1.json src/example_sdk/agent-metadata/usage-patterns.json`'
 examples:
-  violation: A pattern entry has no code field
-  compliant: usage-patterns.json validates; every pattern carries id and code
+  violation: "usage-patterns.json:\n{\"version\": \"1.0\", \"generated_at\": \"2026-08-01T12:00:00Z\",\n \"patterns\": [{\"\
+    name\": \"Basic connection\",\n               \"description\": \"Connect and query\"}]}\n# the pattern has no id (nothing\
+    \ can reference it) and no code (nothing to insert)"
+  compliant: "{\"version\": \"1.0\", \"generated_at\": \"2026-08-01T12:00:00Z\",\n \"patterns\": [{\"id\": \"basic_connection\"\
+    , \"name\": \"Basic connection\",\n   \"description\": \"Connect and run one query\", \"complexity\": \"beginner\",\n\
+    \   \"category\": \"connection\",\n   \"code\": \"from example_sdk import Client\\nclient = Client(dsn)\\nclient.connect()\"\
+    }]}"
 suggested_fix: Regenerate usage-patterns.json; every pattern needs id and code.
 references:
 - title: Agent Metadata §4.2
@@ -26,3 +46,6 @@ references:
 - title: schema
   url: ../../schemas/usage-patterns-v1.json
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-008.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-008.html

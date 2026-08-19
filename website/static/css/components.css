@@ -145,5 +145,26 @@ ul.plain { margin: 0 0 var(--space-4) var(--space-6); font-size: var(--text-sm);
 .stat-link { font-size: var(--text-sm); text-decoration: none; font-weight: var(--weight-medium); }
 .example-bad { font-size: var(--text-xs); color: var(--red-600); }
 .example-good { font-size: var(--text-xs); color: var(--green-600); }
+.example-bad, .example-good { display: block; white-space: pre-wrap; line-height: var(--leading-relaxed); }
 .source-note { font-size: var(--text-xs); color: var(--text-faint); }
 .origin-avatar { margin: var(--space-6) 0; }
+
+/* Site-level overrides of the token aliases: the vendored --text-body/--text-muted read
+   too light on paper at 15px — darkened one ink step each (tokens/ stays vendored verbatim). */
+:root { --text-body: var(--ink-800); --text-muted: var(--ink-600); }
+td { color: var(--ink-800); }
+
+/* Whole-row click-through on check indexes */
+tr.rowlink { cursor: pointer; }
+a.rowname { color: var(--ink-800); text-decoration: none; font-weight: var(--weight-medium); }
+a.rowname:hover { color: var(--gold-700); text-decoration: underline; }
+
+/* Sortable table headers */
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { color: var(--gold-700); }
+th.sortable::after { content: " ↕"; opacity: 0.35; }
+th.sortable[data-dir="asc"]::after { content: " ↑"; opacity: 1; color: var(--gold-700); }
+th.sortable[data-dir="desc"]::after { content: " ↓"; opacity: 1; color: var(--gold-700); }
+
+/* Definition-file link line on check pages */
+.deffile { font-size: var(--text-sm); color: var(--text-muted); margin: 0 0 var(--space-6); }

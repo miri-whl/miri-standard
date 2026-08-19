@@ -15,11 +15,42 @@ short_description: Handles SIGPIPE cleanly; accepts stdin where input is expecte
 long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
   invisible or hangs silently in a non-interactive context. This check verifies: Handles SIGPIPE cleanly; accepts stdin
   where input is expected.'
+rationale: 'Pipelines are how a CLI''s output becomes the next tool''s input, and the classic failure is documented in Python''s
+  own signal docs: piping to `head(1)` sends SIGPIPE when the reader closes early, which unhandled Python surfaces as a
+  `BrokenPipeError: [Errno 32] Broken pipe` traceback (Rust similarly ignores SIGPIPE at startup, turning the same event
+  into a panic on write). The consumer already got its data, but stderr fills with a crash report and the exit status reads
+  as failure — so `set -e` scripts abort and agents burn turns diagnosing a phantom error. Refusing stdin has the mirror
+  cost: output must detour through temp files instead of composing.'
+fires_when:
+- '`<cli> list | head -1` leaves a traceback, panic message, or crash report on stderr'
+- The tool's exit after a closed pipe reflects an internal crash rather than clean termination (a plain SIGPIPE death, shell
+  status 141, is acceptable)
+- A command that conceptually consumes input can read only from file arguments — neither bare stdin nor the `-` convention
+  works
+remediation:
+- 'Handle EPIPE as clean shutdown: in Python, catch `BrokenPipeError`, redirect stdout to `os.devnull`, and exit quietly
+  per the documented pattern; in Rust, restore default SIGPIPE disposition or map `ErrorKind::BrokenPipe` to a silent exit'
+- Accept stdin wherever input is expected, honoring `-` as the conventional stdin operand
+- 'Add CI assertions: `<cli> list | head -1` produces empty stderr, and `echo <input> | <cli> <consume-cmd>` succeeds'
 examples:
-  violation: Tool panics with a stack trace on SIGPIPE from head
-  compliant: tool list | head -1 exits cleanly with no stack trace
+  violation: "$ tool list | head -1\nitem-001\nTraceback (most recent call last):\n  File \"tool\", line 88, in main\nBrokenPipeError:\
+    \ [Errno 32] Broken pipe\n# set -e pipeline aborts although head got its line"
+  compliant: '$ tool list | head -1
+
+    item-001
+
+    $ tool list | head -1 2>err.txt; wc -c < err.txt
+
+    0            # early reader exit produces no crash output
+
+    $ cat ids.txt | tool resolve -    # ''-'' reads stdin
+
+    '
 suggested_fix: Handle SIGPIPE; read stdin where input is expected.
 references:
 - title: clig.dev
   url: https://clig.dev/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-007.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-007.html

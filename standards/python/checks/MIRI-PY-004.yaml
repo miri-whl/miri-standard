@@ -15,9 +15,28 @@ short_description: '`pyproject.toml` with `[project]` table drives the build'
 long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
   baseline cannot carry trustworthy agent metadata. This check verifies: `pyproject.toml` with `[project]` table drives
   the build.'
+rationale: 'A setup.py is executed code: the only way to learn the metadata inside it is to run it, which is why static
+  analyzers, index scanners, and Miri''s own generators cannot see it — and why sdist installs remain an arbitrary-code-execution
+  point. PEP 621''s `[project]` table makes name, version, dependencies, and entry points readable by parsing one TOML file,
+  the same property the Miri build step relies on to generate agent-metadata/ without importing the package. PEP 517''s
+  `[build-system]` table lets any frontend build the wheel deterministically instead of guessing at a setup.py invocation.'
+fires_when:
+- The project ships no pyproject.toml, or pyproject.toml lacks a `[project]` table
+- Name, version, or dependencies are discoverable only by executing setup.py or reading setup.cfg
+- No `[build-system]` table declares `requires` and `build-backend`
+- '`[project]` marks a field `dynamic` without a declared tool source that supplies it'
+remediation:
+- Move name, version, dependencies, optional-dependencies, and entry points into `[project]` (PEP 621); if the version is
+  computed, declare `dynamic = ["version"]` backed by setuptools-scm or hatch-vcs rather than code in setup.py
+- Declare `[build-system]` with `requires` and `build-backend` (PEP 517/518)
+- Keep setup.py only as an empty `setup()` shim if a legacy toolchain still requires one
+- Validate the file in CI with `validate-pyproject pyproject.toml`
 examples:
-  violation: Package metadata lives only in setup.py
-  compliant: The [project] table in pyproject.toml declares name, version, and dependencies
+  violation: "pyproject.toml: absent\nsetup.py:\n  version = subprocess.check_output(['git', 'describe']).decode()\n  setup(name='example-sdk',\
+    \ version=version,\n        install_requires=open('reqs.txt').read().splitlines())\n# nothing here is knowable without\
+    \ executing the file"
+  compliant: "pyproject.toml:\n  [build-system]\n  requires = [\"hatchling\"]\n  build-backend = \"hatchling.build\"\n \
+    \ [project]\n  name = \"example-sdk\"\n  version = \"2.1.0\"\n  dependencies = [\"httpx>=0.27\"]"
 suggested_fix: Move project metadata to the [project] table of pyproject.toml.
 references:
 - title: PEP 621
@@ -26,3 +45,6 @@ references:
 - title: PEP 517
   url: https://peps.python.org/pep-0517/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-004.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-004.html

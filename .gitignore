@@ -90,3 +90,4 @@ secrets.yaml
 # Generated site (published via CI, never committed)
 site/
 .generated/
+.claude/settings.local.json

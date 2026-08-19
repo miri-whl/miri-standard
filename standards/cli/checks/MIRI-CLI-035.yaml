@@ -18,9 +18,35 @@ short_description: Deprecated surfaces function for ≥1 minor release before re
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Deprecated surfaces function
   for ≥1 minor release before removal.'
+rationale: 'Spec §7.3 requires at least one minor release in which the deprecated surface still functions while warning
+  on stderr and carrying its `lifecycle` block, following the Kubernetes deprecation policy — the only shipped CLI-specific
+  policy, whose rules 5a/5b require deprecated GA CLI elements of admin-facing components to keep functioning for 6 months
+  or 1 release and of user-facing components for 12 months or 2 releases. The floor exists because an agent CLI''s consumers
+  sync on release cadence: skill files regenerated per release, vendored `--describe` snapshots, pinned automations all
+  need one release in which the old surface works while announcing its end. `kubectl get --export` had a four-release runway
+  (deprecated 1.14, removed 1.18) and its removal still broke Helm chart generation and CI backup pipelines — one minor
+  release is the minimum, not a comfortable target.'
+fires_when:
+- 'Diffing the previous release''s `--describe` against the current one: a surface removed in this release never appeared
+  with `lifecycle.status: deprecated` in a release where it still functioned'
+- A `lifecycle` block declares `removed_in` in the same minor series as `deprecated_since`
+- '`changelog --since` shows the same surface entering `deprecated` and `removed` within one release entry'
+remediation:
+- Set `removed_in` at least one minor release after `deprecated_since` in the surface's `lifecycle` block, and publish both
+  fields in the deprecating release
+- Keep the surface fully functional during the window, emitting the stderr warning of §7.3 on each use
+- 'Gate releases in CI: parse the previous release''s `--describe` (obtained via `check-update`''s `manifest`), and fail
+  if any surface it lists is absent from the current build without an intervening deprecated-and-functioning release'
 examples:
-  violation: Flag deprecated and removed in the same release
-  compliant: --export functioned and warned from 1.14 through 1.17 before removal in 1.18
+  violation: "release 2.3.0 --describe:\n  {\"name\": \"--legacy-auth\", \"lifecycle\": {\"status\": \"deprecated\", \"\
+    deprecated_since\": \"2.3.0\"}}\n$ tool login --legacy-auth   # same release 2.3.0\n{\"ok\": false, \"error\": {\"code\"\
+    : \"FLAG_REMOVED\"}} — announced and dead in the same release; no consumer could have observed the warning while the\
+    \ flag still worked"
+  compliant: '1.14.0: --export marked deprecated, functions, warns on stderr
+
+    1.15.0–1.17.x: --export still functions, lifecycle block carries removed_in: "1.18.0"
+
+    1.18.0: --export removed; invoking it returns the structured FLAG_REMOVED teaching error'
 suggested_fix: Keep deprecated surfaces functioning for at least one minor release.
 references:
 - title: CLI Spec §7.3
@@ -29,3 +55,6 @@ references:
 - title: K8s deprecation policy
   url: https://kubernetes.io/docs/reference/using-api/deprecation-policy/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-035.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-035.html

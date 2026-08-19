@@ -15,9 +15,28 @@ short_description: '`support.status` in enum; `deprecated`/`eol` ⇒ `replacemen
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: `support.status` in enum; `deprecated`/`eol`
   ⇒ `replacement` present.'
+rationale: 'nose is the terminal state this check prevents: its final release (1.3.7, June 2015) carried no machine-readable
+  abandonment signal, so it stayed quietly installable for years until Python 3.10 moved `collections.Callable` and 3.11
+  removed `inspect.getargspec`, breaking it at import time — and nothing in its metadata ever pointed consumers at nose2
+  or pytest. PEP 792 status markers can now say `archived` at the index, but PEP 792 deliberately defines no successor field;
+  `support.replacement` in lifecycle.json is the channel Miri adds for exactly that gap. A `deprecated` or `eol` status
+  without a replacement tells consumers to leave without saying where to go, so agents keep generating code against the
+  dying package and the status accelerates nothing.'
+fires_when:
+- '`support.status` in lifecycle.json is not one of `active`, `maintenance`, `deprecated`, `eol`'
+- '`support.status` is `deprecated` or `eol` while `support.replacement` is null, absent, or empty'
+- '`support.replacement` is present but does not parse as a purl (`pkg:` scheme)'
+remediation:
+- Set `support.replacement` to the successor's purl (e.g. `pkg:pypi/example-successor`) in the same release that flips status
+  to `deprecated` or `eol` (Lifecycle §4.3)
+- If no successor exists yet, hold status at `maintenance` until one does
+- Validate lifecycle.json against `lifecycle-v1.json` in CI — the schema enforces the status/replacement pairing so the
+  incoherent combination cannot ship
 examples:
-  violation: support.status is 'deprecated' but replacement is null
-  compliant: support.status deprecated with replacement pkg:pypi/example-successor
+  violation: "lifecycle.json:\n  \"support\": {\"status\": \"eol\", \"eol_date\": \"2026-06-30\", \"replacement\": null}\n\
+    # agents learn the package is dead but not what supersedes it — migration stalls on the dying package"
+  compliant: "lifecycle.json:\n  \"support\": {\"status\": \"deprecated\", \"eol_date\": \"2027-01-01\",\n             \
+    \  \"replacement\": \"pkg:pypi/weather-sdk-ng\"}"
 suggested_fix: Name the successor purl whenever status is deprecated or eol.
 references:
 - title: Lifecycle §3.1
@@ -26,3 +45,6 @@ references:
 - title: schema
   url: ../../schemas/lifecycle-v1.json
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-033.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-033.html

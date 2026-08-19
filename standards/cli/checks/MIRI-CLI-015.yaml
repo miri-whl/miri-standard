@@ -15,11 +15,41 @@ short_description: Machine-readable introspection output exists and is valid JSO
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: Machine-readable introspection output exists and is valid
   JSON.'
+rationale: '--describe is the substrate for every identity, support, and lifecycle check that follows: without it the CLI
+  has no purl to join against OSV, no support status, and no per-flag lifecycle — the agent is back to frozen training data
+  and help parsing, which is brittle by construction (on macOS, `git log --help` routes into a pager that blocks non-interactive
+  contexts). Go''s embedded buildinfo is the existence proof that binary self-identification works: because `go version
+  -m` can read any Go binary''s module list, govulncheck, osv-scanner, and Trivy scan Go CLIs with zero author effort, while
+  every other standalone binary is left to CPE guessing. --describe extends that legibility to CLIs in any language.'
+fires_when:
+- The binary accepts no --describe (or documented equivalent introspection command)
+- Invoking it exits non-zero or prints a usage/unknown-flag error
+- Its stdout does not parse as a single JSON document — prose banners, ANSI codes, or log lines are mixed in
+remediation:
+- Implement --describe emitting one JSON document to stdout with exit code 0
+- Populate it with `identity`, `support`, `advisory_sources`, and the full command/flag surface, generated from the same
+  schema-as-data structure as --help (§2.3) — never by parsing the CLI's own help text
+- Keep every human-facing notice on stderr so the document stays parseable (§2.5)
+- 'Gate releases in CI on parse and schema validation: `acme --describe | python3 -m json.tool > /dev/null`'
 examples:
-  violation: No --describe or equivalent exists
-  compliant: tool --describe emits the full introspection document as JSON
+  violation: '$ acme --describe
+
+    Error: unknown flag: --describe
+
+    Usage: acme <command> [flags]
+
+    $ echo $?
+
+    2'
+  compliant: "$ acme --describe\n{\"identity\": {\"purl\": \"pkg:brew/acme-cli@3.2.0\", \"version\": \"3.2.0\",\n  \"schema_version\"\
+    : \"1\", \"distribution\": \"open-source\"},\n \"support\": {\"status\": \"active\"},\n \"advisory_sources\": [{\"type\"\
+    : \"osv\", \"ecosystem\": \"Homebrew\", \"url\": \"https://api.osv.dev/v1/query\"}],\n \"commands\": [{\"name\": \"\
+    deploy\", \"flags\": [{\"name\": \"--output\"}]}]}"
 suggested_fix: Implement --describe emitting the identity, support, and surface data as JSON.
 references:
 - title: CLI Spec §3
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-015.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-015.html

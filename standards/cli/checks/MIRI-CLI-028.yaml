@@ -16,11 +16,34 @@ severity:
 short_description: '`urgency: security` set when an advisory covers the running version'
 long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
   passive, and honest offline. This check verifies: `urgency: security` set when an advisory covers the running version.'
+rationale: '`urgency: "security"` is the field fleet policy gates on: §8.4 has CI images and agent harnesses refuse to run
+  a version covered by an open internal advisory, a gate that is only mechanical because the signal is structured. A `check-update`
+  that answers `routine` while `ACME-2026-0007` covers the running version demotes a security release to one nobody prioritizes.
+  The value must be computed by joining the running version against the declared advisory sources at response time — a hand-set
+  release label drifts the first time an advisory lands after the release is cut.'
+fires_when:
+- a record in a declared authoritative advisory source lists the running version in its affected range, but `check-update`
+  reports `urgency` of `none`, `routine`, or `recommended`
+- the `advisories` array omits the identifier of the covering record while an update is reported available
+remediation:
+- 'When composing the `check-update` response, query each `authoritative: true` entry in `advisory_sources` for the CLI''s
+  purl at the running version'
+- 'Set `urgency: "security"` and populate `advisories` with the matching record IDs whenever any affected range covers `current`'
+- For private CLIs, carry per-release urgency and advisory IDs in the internal release manifest (§8.3 shape) so the join
+  degrades gracefully when the advisory endpoint is slow
+- 'Add a conformance fixture: publish a test advisory covering the running version and assert the response escalates to
+  `security`'
 examples:
-  violation: A known advisory covers the running version but urgency is 'routine'
-  compliant: 'urgency: security with advisories: ["ACME-2026-0007"] when the running version is affected'
+  violation: "# internal OSV record ACME-2026-0007: affected acme-cli >=3.0.0, fixed 3.4.1\n$ acme-cli check-update --json\
+    \    # running 3.2.0\n{\"current\": \"3.2.0\", \"latest\": \"3.4.1\", \"update_available\": true,\n \"urgency\": \"\
+    routine\", \"advisories\": []}\n# the fleet gate of §8.4 sees a routine update and lets the vulnerable version run"
+  compliant: "$ acme-cli check-update --json\n{\"current\": \"3.2.0\", \"latest\": \"3.4.1\", \"update_available\": true,\n\
+    \ \"urgency\": \"security\", \"advisories\": [\"ACME-2026-0007\"],\n \"install_hint\": \"brew upgrade acme-cli\"}"
 suggested_fix: 'Set urgency: security whenever an advisory affects the running version.'
 references:
 - title: CLI Spec §5.1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-028.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-028.html

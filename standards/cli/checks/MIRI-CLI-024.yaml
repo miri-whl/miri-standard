@@ -15,9 +15,35 @@ short_description: Standalone binary carries embedded module info or references 
 long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
   and agents can trust the surface they see. This check verifies: Standalone binary carries embedded module info or references
   a release SBOM.'
+rationale: 'Only the Go toolchain makes binaries legible by default — the embedded module list behind `go version -m` is
+  what govulncheck, Trivy, and osv-scanner read. Every other standalone binary falls into CPE-guessing territory, where
+  vendor/product strings are inferred from file names and cve-bin-tool resorts to byte-signature detection of roughly 400
+  known components; a stripped binary with no SBOM reference can carry a statically linked OpenSSL with last month''s CVE
+  through every scanner in the pipeline unnoticed. cargo auditable shows the fix is cheap: a zlib-compressed JSON dependency
+  list in a `.dep-v0` linker section, under 4 kB, already consumed by cargo-audit (≥0.17.3), Trivy (≥0.31.0), and osv-scanner
+  (≥2.0.1).'
+fires_when:
+- '`identity.purl` indicates direct binary distribution (`pkg:generic/` with `repository_url`) — registry-distributed CLIs
+  pass this conditional check automatically'
+- the binary yields no embedded module inventory (`go version -m` fails, no `.dep-v0` section) and `build_info.embedded_modules`
+  is absent or `false`
+- '`identity.sbom` is absent, or the referenced URL/path does not resolve to a CycloneDX/SPDX document for the release under
+  test'
+remediation:
+- Generate a per-release SBOM in the release pipeline (`syft <binary> -o cyclonedx-json > sbom.cdx.json`, or ecosystem-native
+  tools such as `cyclonedx-gomod` / `cargo cyclonedx`) and publish it next to the release artifacts (§7.1)
+- Reference it from `identity.sbom` in the `--describe` output
+- 'On Go, keep the default buildinfo embedding and set `build_info.embedded_modules: true`; on Rust, build with `cargo auditable
+  build --release`'
+- 'Verify legibility as a scanner would: `osv-scanner scan <binary>` or `trivy rootfs <dir>` must report the dependency
+  tree'
 examples:
-  violation: A stripped Rust binary ships with no SBOM reference
-  compliant: The release ships sbom.cdx.json referenced from identity.sbom
+  violation: "Release v3.2.0 assets:\n  acme-cli-linux-amd64   # stripped Rust binary, no .dep-v0 section\n  checksums.txt\n\
+    --describe identity: {\"purl\": \"pkg:generic/acme/acme-cli@3.2.0\"}   # no \"sbom\" key\n$ trivy rootfs .   # 0 packages\
+    \ found — the vendored OpenSSL is invisible"
+  compliant: "Release v3.2.0 assets:\n  acme-cli-linux-amd64   # built with `cargo auditable build --release`\n  sbom.cdx.json\
+    \          # CycloneDX, 214 components\n--describe identity:\n  \"sbom\": \"https://releases.acme.example/acme-cli/3.2.0/sbom.cdx.json\"\
+    ,\n  \"build_info\": {\"embedded_modules\": true}"
 suggested_fix: Publish a CycloneDX/SPDX SBOM per release (or use cargo auditable / Go buildinfo).
 references:
 - title: CLI Spec §3.1/§7.1
@@ -29,3 +55,6 @@ references:
 - title: SPDX
   url: https://spdx.dev/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-024.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-024.html

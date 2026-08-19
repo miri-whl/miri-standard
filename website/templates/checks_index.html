@@ -10,16 +10,20 @@ units are committee-assigned and feed the magnitude-aware health score. The YAML
 the <a href="{{ site.github }}/blob/main/{{ meta.checklist }}">checklist table</a> is the derived rendering.</p>
 
 <table>
-<thead><tr><th>ID</th><th>Check</th><th>Level</th><th>Severity</th><th>Wt</th><th>Verifies</th></tr></thead>
+<thead><tr><th>ID</th><th>Check</th>
+<th class="sortable" data-key="level">Level</th>
+<th class="sortable" data-key="sev">Severity</th>
+<th class="sortable" data-key="weight">Wt</th>
+<th>Verifies</th></tr></thead>
 <tbody>
 {% for row in rows %}
 {% if row.category %}
 <tr class="cat"><td colspan="6">{{ row.category }} · {{ row.points }} points</td></tr>
 {% else %}
 {% set d = row.check %}
-<tr>
+<tr class="rowlink" data-href="{{ d.id }}.html" data-level="{{ 0 if d.level == 'MUST' else 1 }}" data-sev="{{ sev_order.index(d.severity.default) + 1 }}" data-weight="{{ d.weight }}">
   <td class="id"><a href="{{ d.id }}.html">{{ d.id }}</a></td>
-  <td>{{ d.name }}{% for r in d.requirements or [] %} {{ m.tag(r) }}{% endfor %}</td>
+  <td><a class="rowname" href="{{ d.id }}.html">{{ d.name }}</a>{% for r in d.requirements or [] %} {{ m.tag(r) }}{% endfor %}</td>
   <td>{{ m.level_badge(d.level) }}</td>
   <td>{{ m.badge(sev_tone[d.severity.default], d.severity.default) }}</td>
   <td class="num">{{ d.weight }}</td>
@@ -29,4 +33,39 @@ the <a href="{{ site.github }}/blob/main/{{ meta.checklist }}">checklist table</
 {% endfor %}
 </tbody>
 </table>
+<script>
+document.querySelectorAll("tr.rowlink").forEach(function (row) {
+  row.addEventListener("click", function (e) {
+    if (e.target.closest("a")) return;
+    window.location = row.dataset.href;
+  });
+});
+
+// Column sorting: click cycles ascending -> descending -> original (category-grouped) order.
+(function () {
+  var tbody = document.querySelector("tbody");
+  var original = Array.from(tbody.children);
+  var state = { key: null, dir: 0 };
+  document.querySelectorAll("th.sortable").forEach(function (th) {
+    th.addEventListener("click", function () {
+      var key = th.dataset.key;
+      state.dir = state.key === key ? (state.dir + 1) % 3 : 1;
+      state.key = key;
+      document.querySelectorAll("th.sortable").forEach(function (h) { h.removeAttribute("data-dir"); });
+      if (state.dir === 0) {
+        original.forEach(function (r) { tbody.appendChild(r); });
+        return;
+      }
+      th.setAttribute("data-dir", state.dir === 1 ? "asc" : "desc");
+      var rows = original.filter(function (r) { return r.classList.contains("rowlink"); });
+      rows.sort(function (a, b) {
+        var d = Number(a.dataset[key]) - Number(b.dataset[key]);
+        return state.dir === 1 ? d : -d;
+      });
+      tbody.innerHTML = "";
+      rows.forEach(function (r) { tbody.appendChild(r); });
+    });
+  });
+})();
+</script>
 {% endblock %}

@@ -15,9 +15,27 @@ short_description: ≥1 entry in `advisory_sources`, valid type and URL
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: ≥1 entry in `advisory_sources`,
   valid type and URL.'
+rationale: 'Every vulnerability verdict in this specification is computed by the consumer, by POSTing the package''s purl
+  to a declared OSV-compatible endpoint (§2.1: sources, not verdicts). With `advisory_sources` empty there is no endpoint
+  to join against, so the security leg of the two-question workflow (§7) silently evaluates to nothing — and downstream
+  tooling routinely renders "no sources consulted" identically to "no known vulnerabilities". The package looks scanned
+  while nothing was ever queried.'
+fires_when:
+- '`advisory_sources` in `agent-metadata/lifecycle.json` is absent, null, or an empty array'
+- An entry's `type` is not one of `osv`, `osv-internal`, or `osv-local`
+- An entry's `url` fails URL parsing (or, for `osv-local`, names no readable path), or is a placeholder value such as `TODO`
+  or an `example.com` host
+- 'No entry carries `authoritative: true`'
+remediation:
+- 'For `distribution: open-source`, declare the public endpoint: `{"type": "osv", "ecosystem": "PyPI", "url": "https://api.osv.dev/v1/query",
+  "authoritative": true}` — per §4.1 build tools SHOULD inject this automatically'
+- 'For `distribution: private`, declare an internal source per §5.2 (`osv-internal` endpoint or `osv-local` archive)'
+- Regenerate `lifecycle.json` at build time (§2.4) rather than hand-patching the array
 examples:
-  violation: advisory_sources is an empty array
-  compliant: advisory_sources lists the public OSV endpoint with ecosystem PyPI
+  violation: "lifecycle.json:\n  \"identity\": {\"purl\": \"pkg:pypi/example-package@2.1.0\", ...},\n  \"advisory_sources\"\
+    : [],\n  \"update_check\": {...}\n# consumers skip the OSV join entirely and report the package clean"
+  compliant: "lifecycle.json:\n  \"advisory_sources\": [\n    {\"type\": \"osv\", \"ecosystem\": \"PyPI\",\n     \"url\"\
+    : \"https://api.osv.dev/v1/query\", \"authoritative\": true}\n  ]"
 suggested_fix: Declare at least one OSV-compatible advisory endpoint.
 references:
 - title: Lifecycle §3.1
@@ -26,3 +44,6 @@ references:
 - title: OSV schema
   url: https://ossf.github.io/osv-schema/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-021.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-021.html

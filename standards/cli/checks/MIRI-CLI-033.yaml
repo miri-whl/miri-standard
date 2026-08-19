@@ -19,11 +19,40 @@ short_description: 'Invoking a removed surface yields the structured error (code
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Invoking a removed surface
   yields the structured error (code, `retryable: false`, `suggestions`) — not a generic parse failure.'
+rationale: 'When kubectl v1.18 removed `get --export`, invocations answered with a bare unknown-flag parse error — a dead
+  end that broke Helm template generation and backup pipelines with nothing pointing at the successor. For an agent working
+  from stale weights, the dead end triggers the blind-retry loop of landscape §3.1: hallucinated variants, an eventual silent
+  workaround, and no bug report ever filed. The structured tombstone — stable `code`, `retryable: false`, non-empty `suggestions`
+  — converts that permanent failure into a one-turn recovery, which is why it is the single highest-value behavior for frozen-weights
+  consumers.'
+fires_when:
+- for a surface present in the previous release's `--describe` but absent from the current one, invoking it yields a generic
+  parse failure (usage dump, "unrecognized arguments", "unknown flag") instead of a JSON error on the machine channel
+- 'the error emitted lacks a stable `error.code`, `retryable: false`, or a non-empty `suggestions` array naming the replacement'
+remediation:
+- 'Keep removed surfaces registered in the schema-as-data source as tombstones (`status: "removed"`) rather than deleting
+  their entries, so the parser still recognizes them'
+- 'Route tombstone hits to the §6 structured error: `{"ok": false, "error": {"code": "FLAG_REMOVED", "flag": ..., "removed_in":
+  ..., "retryable": false, "suggestions": [...]}}`'
+- Derive `suggestions` from the tombstone's `lifecycle.replacement` field so the guidance cannot drift from the surface
+  that actually exists (§6.3-3)
+- 'Add the §6.3-4 verification to release CI: invoke every surface removed since the prior release and assert the structured
+  error, not a usage dump'
 examples:
-  violation: --export answers 'unrecognized argument' with no guidance
-  compliant: '--export answers {error: {code: FLAG_REMOVED, retryable: false, suggestions: ["use --output archive"]}}'
+  violation: '$ acme-cli get --export
+
+    Error: unknown flag: --export
+
+    Usage: acme-cli get [flags]
+
+    # dead end: nothing names --output archive; a stale agent retries blind'
+  compliant: "$ acme-cli get --export\n{\"ok\": false, \"error\": {\"code\": \"FLAG_REMOVED\", \"flag\": \"--export\",\n\
+    \  \"removed_in\": \"1.18.0\", \"retryable\": false,\n  \"suggestions\": [\"use --output archive instead\"]}}"
 suggested_fix: 'Serve the structured teaching error: code, retryable false, suggestions.'
 references:
 - title: CLI Spec §6/§6.3-4
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-033.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-033.html

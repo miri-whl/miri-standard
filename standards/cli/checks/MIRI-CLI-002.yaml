@@ -15,11 +15,31 @@ short_description: '`--help` prints to stdout, exits 0, never pages or blocks'
 long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
   invisible or hangs silently in a non-interactive context. This check verifies: `--help` prints to stdout, exits 0, never
   pages or blocks.'
+rationale: 'GNU Coding Standards §4.7 requires `--help` to print to stdout and exit successfully; help is also how an agent
+  learns a CLI at runtime, so it must work precisely in the non-interactive context where agents live. The canonical counterexample
+  is git, whose `git log --help` opens the man page in a pager — in CI or an agent harness that blocks on a dead terminal,
+  varies with `PAGER`, and emits terminal control codes, which is why `--no-pager` and `core.pager cat` are standing CI
+  folklore. Help on stderr or with a non-zero exit is equally corrosive: every wrapper that checks the exit code reads a
+  successful help request as a failure.'
+fires_when:
+- With stdin closed and stdout redirected, `<cli> --help` spawns a pager or the process blocks on a read
+- Help text is written to stderr instead of stdout
+- '`<cli> --help` exits non-zero, or exits 0 with empty stdout'
+remediation:
+- Print help to stdout and exit 0, ignoring other options once `--help` is seen (GNU §4.7)
+- Never spawn `$PAGER`, `less`, or `man` from the help path; if paging is offered interactively, gate it on `isatty(stdout)`
+- 'Add a CI assertion: `<cli> --help </dev/null >help.txt 2>err.txt` completes within a short timeout, exits 0, `help.txt`
+  is non-empty, `err.txt` is empty'
 examples:
-  violation: git-style help opens a pager and blocks in CI
-  compliant: tool --help prints usage to stdout and exits 0, even in a pipe
+  violation: "$ tool log --help\n(man page opens in less; with stdin closed the process\n blocks until the CI job timeout\
+    \ kills it)\n$ tool --help >/dev/null; echo $?\n1"
+  compliant: "$ tool deploy --help | cat\nUsage: tool deploy [OPTIONS] TARGET\n  --json    emit machine-readable output\n\
+    \  --yes     skip confirmation\n$ echo $?\n0"
 suggested_fix: Print help to stdout, exit 0, never invoke a pager.
 references:
 - title: GNU Coding Standards §4.7
   url: https://www.gnu.org/prep/standards/html_node/_002d_002dhelp.html
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-002.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-002.html

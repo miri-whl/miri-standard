@@ -15,9 +15,44 @@ severity:
 short_description: Every mutating command supports `--dry-run` with faithful simulation
 long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
   marked, and safe to repeat. This check verifies: Every mutating command supports `--dry-run` with faithful simulation.'
+rationale: 'anc.dev makes `--dry-run` on every write operation one of its six MUST-level requirements, and Agent-First CLI
+  principle 10 (faithful dry run — simulation over approximation) names the fidelity half: a preview computed by a separate
+  code path drifts from the real behavior and is worse than no preview, because the agent trusts it. `terraform plan` is
+  the archetype — the plan is produced by the same graph walk that `apply` executes, which is what makes gating a pipeline
+  on plan output defensible; `aws s3 rm --dryrun` shows the operations that would be performed without running them. A mutating
+  command without a faithful dry run forces every consumer, human or agent, to test in production.'
+fires_when:
+- A command marked mutating in `--describe` accepts no `--dry-run` flag (or a documented equivalent declared in the introspection
+  output)
+- Running the command with `--dry-run` changes observable state — files written, remote resources created or deleted, counters
+  advanced
+- The dry-run report names actions the subsequent real run does not perform, or the real run performs actions the dry run
+  did not report
+- The dry-run path is implemented separately from the execution planner rather than sharing it (static evidence of divergence
+  by construction)
+remediation:
+- Structure every write as plan-then-execute, and implement `--dry-run` as the shared planner with the execute step skipped
+  — the `terraform plan`/`apply` split
+- 'Emit the plan as JSON on stdout: the list of `{action, target}` pairs the real run would perform, so a harness can gate
+  on it'
+- Declare dry-run support per command in the schema-as-data source so it surfaces in `--describe` (§2.3)
+- 'Verify fidelity in CI: fingerprint state, run `--dry-run`, assert the fingerprint is unchanged; then run for real and
+  assert the performed actions equal the reported plan'
 examples:
-  violation: '''tool delete'' has no --dry-run'
-  compliant: tool delete --dry-run reports exactly what would be removed and touches nothing
+  violation: '$ tool delete --prefix tmp/ --dry-run
+
+    error: unknown flag --dry-run
+
+    The only way to learn which objects match the prefix is to delete them.'
+  compliant: '$ tool delete --prefix tmp/ --dry-run --json
+
+    {"schema_version": "1", "would_delete": ["tmp/a.log", "tmp/b.log"], "count": 2}
+
+    $ tool delete --prefix tmp/ --json
+
+    {"schema_version": "1", "deleted": ["tmp/a.log", "tmp/b.log"], "count": 2}
+
+    The dry run touched nothing and the real run performed exactly the reported plan.'
 suggested_fix: Add faithful --dry-run to every write operation.
 references:
 - title: Landscape §2.2 (anc.dev)
@@ -26,3 +61,6 @@ references:
 - title: CLI Spec §9
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-039.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-039.html

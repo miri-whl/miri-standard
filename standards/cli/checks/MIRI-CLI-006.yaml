@@ -16,9 +16,30 @@ short_description: No command blocks on a prompt when stdin is not a TTY
 long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
   invisible or hangs silently in a non-interactive context. This check verifies: No command blocks on a prompt when stdin
   is not a TTY.'
+rationale: 'A tool that prompts when stdin is not a TTY hangs silently: the agent never sees a question, only a stall that
+  ends when the harness or CI timeout kills the job — and the timeout error says nothing about the prompt that caused it.
+  This failure class recurs in shipped tools: `pnpm dlx` hangs CI jobs on its build-scripts approval prompt (pnpm/pnpm#12108),
+  and `opennextjs-cloudflare build` blocks non-TTY builds on a config prompt (opennextjs-cloudflare#1198). Failing fast
+  with a structured error naming the answering flag converts an unbounded hang into a one-turn recovery, which is why this
+  check is CRITICAL.'
+fires_when:
+- With stdin closed (`</dev/null`), any command prints a prompt and blocks on a read from stdin instead of exiting
+- Any command blocks awaiting input in a non-TTY context without printing anything at all
+- A confirmation exists that has no flag or environment equivalent recorded in `--describe`
+remediation:
+- Detect `!isatty(stdin)` and never prompt in that state — this must be the default, not opt-in via a `--non-interactive`
+  flag
+- 'Where confirmation is required, fail fast with a structured error naming the answering flag, e.g. `{"ok": false, "error":
+  {"code": "CONFIRMATION_REQUIRED", "retryable": true, "suggestions": ["re-run with --yes"]}}` (CLI Spec §6)'
+- Give every prompt a flag or environment equivalent (`--yes`, `--strategy <v>`) and record it in `--describe`
+- Add a CI matrix running every command with `</dev/null` under a short timeout; any timeout expiry is a failure of this
+  check
 examples:
-  violation: '''tool init'' waits on ''Continue? [y/N]'' with stdin closed'
-  compliant: With stdin closed, tool init fails fast with a structured error naming --yes
+  violation: "$ tool init </dev/null\nThis will create 3 resources. Continue? [y/N]\n(process blocks on read; the CI job\
+    \ burns 60 minutes\n and dies with a timeout that never mentions the prompt)"
+  compliant: "$ tool init </dev/null\n(stderr) confirmation required and stdin is not a TTY\n(stdout) {\"ok\": false, \"\
+    error\": {\"code\": \"CONFIRMATION_REQUIRED\",\n  \"retryable\": true, \"suggestions\": [\"re-run with --yes\"]}}\n\
+    $ echo $?\n1            # immediate, structured, recoverable in one turn"
 suggested_fix: Never prompt when stdin is not a TTY; fail fast or take flags.
 references:
 - title: CLI Spec §2.5
@@ -27,3 +48,6 @@ references:
 - title: anc.dev
   url: https://anc.dev/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-006.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-006.html

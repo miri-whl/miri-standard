@@ -15,11 +15,43 @@ severity:
 short_description: Every JSON payload carries top-level `schema_version`
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: Every JSON payload carries top-level `schema_version`.'
+rationale: 'CLI Spec §3.1 versions the wire schema independently of the release version because the two move on different
+  clocks (landscape §5): the product can reach 2.0 without the contract moving, and the contract can break at 1.4 with an
+  honest signal. `schema_version` on every payload is that signal — the shipped precedent is Docker''s Agent CLI, which
+  stamps `"schema_version": "1"` on every success document (landscape §3.3). Without the stamp, consumers cannot pin, negotiate,
+  or even detect a payload change: a renamed key simply starts producing nulls downstream, and the breakage arrives unannounced
+  and undiagnosable.'
+fires_when:
+- Any JSON document emitted on stdout lacks a top-level `schema_version` key
+- '`schema_version` is present but nested inside another object rather than top-level, or is empty/non-string'
+- '`identity.schema_version` in `--describe` disagrees with the value stamped on command payloads'
+remediation:
+- Emit every payload through a shared response envelope that stamps `schema_version` — one code path, so no command can
+  forget it
+- Source the value from the same constant as `identity.schema_version` in `--describe` (CLI Spec §3.1)
+- Bump it only on breaking payload changes, never in lockstep with the release version, and record bumps in `changelog --since`
+  output (CLI Spec §5.2)
+- 'Assert in CI: `<cmd> --json | jq -e ''.schema_version''` succeeds for every command'
 examples:
-  violation: '''tool list --json'' emits an unversioned payload'
-  compliant: 'Every JSON payload carries top-level schema_version: "1"'
+  violation: '$ tool list --json
+
+    {"items": [{"id": "a1", "state": "ready"}]}
+
+    # v3.3 renames ''state'' to ''status''; consumers get nulls
+
+    # with no version signal that anything changed'
+  compliant: '$ tool list --json
+
+    {"schema_version": "1", "items": [{"id": "a1", "state": "ready"}]}
+
+    # consumer pins: jq -e ''select(.schema_version == "1")'' fails loudly
+
+    # the day the contract moves'
 suggested_fix: Stamp top-level schema_version on every JSON document.
 references:
 - title: CLI Spec §3.1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-010.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-010.html

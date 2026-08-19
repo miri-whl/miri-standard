@@ -16,9 +16,26 @@ short_description: SBOM component purls are well-formed
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: SBOM component
   purls are well-formed.'
+rationale: 'SBOM components join against advisory and end-of-life data by purl (§3.2): scanners normalize each component
+  identifier and query with it. A component whose identifier fails purl parsing is not reported as an error — matching tools
+  skip what they cannot normalize — so the component silently drops out of every scan while the SBOM''s presence makes the
+  wheel look fully covered. One malformed purl converts MIRI-PY-024''s guarantee back into the phantom-dependency gap it
+  exists to close.'
+fires_when:
+- Any component in a `.dist-info/sboms/` document lacks a purl
+- Any component purl fails parsing under the purl specification grammar (`pkg:` scheme, type, name, optional version and
+  qualifiers)
+remediation:
+- 'Generate purls with a purl library (`packageurl-python`: `PackageURL(type="generic", name="openssl", version="3.1.3").to_string()`)
+  rather than string formatting'
+- Add a CI step that round-trips every SBOM component identifier through `PackageURL.from_string()` and fails the build
+  on a parse error
 examples:
-  violation: An SBOM component has purl 'openssl 3.0' (not a purl)
-  compliant: Every SBOM component carries a valid purl
+  violation: "sboms/vendored.cdx.json component:\n  {\"name\": \"openssl\", \"purl\": \"openssl 3.1.3\"}\n# not a purl;\
+    \ scanners skip the component — OpenSSL is unscanned again"
+  compliant: '  {"name": "openssl", "purl": "pkg:generic/openssl@3.1.3"}
+
+    # parses; joins against OSV affected ranges and endoflife.date EoL data'
 suggested_fix: Emit valid purls for every SBOM component.
 references:
 - title: PEP 770
@@ -27,3 +44,6 @@ references:
 - title: purl spec
   url: https://github.com/package-url/purl-spec
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-025.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-025.html

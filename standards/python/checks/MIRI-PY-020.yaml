@@ -15,11 +15,36 @@ short_description: '`distribution` set; `registry` a well-formed index URL'
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: `distribution`
   set; `registry` a well-formed index URL.'
+rationale: 'identity.distribution selects which specification defaults apply — §4 open source or §5 private — and identity.registry
+  names the index the artifact is published to, the one field that lets a consumer compare declared origin against actual
+  install origin, the dependency-confusion tell called out in §3.1. The stakes are asymmetric and silent: public OSV queried
+  for a private-only name returns an empty result indistinguishable from "not vulnerable" (§5.1), so a wheel that leaves
+  distribution undeclared defaults its consumers into exactly the lookup that lies to them.'
+fires_when:
+- identity.distribution is absent or not one of "open-source" / "private"
+- identity.registry is absent, not an absolute http(s) URL, or a placeholder value (e.g. "TBD")
+- 'the declarations contradict each other: distribution "private" with registry https://pypi.org/simple/, or "open-source"
+  with an internal-only index'
+- registry points at a project page (e.g. https://pypi.org/project/example-sdk/) rather than an installable index URL
+remediation:
+- Declare both fields in the Miri build configuration, e.g. [tool.miri.lifecycle] distribution = "open-source", registry
+  = "https://pypi.org/simple/"
+- For private packages set distribution = "private" and point registry at the internal index (e.g. https://pypi.internal.acme.example/simple/)
+  — the same URL carried in the purl's repository_url qualifier (§5.1)
+- Use the installable simple-index URL, not the project page, so consumers can compare it directly against pip's actual
+  install origin
 examples:
-  violation: distribution is missing so consumers cannot pick §4/§5 defaults
-  compliant: 'distribution: open-source with registry https://pypi.org/simple/'
+  violation: "lifecycle.json:\n  \"identity\": {\"purl\": \"pkg:pypi/acme-billing@3.2.0\"}\n  <- distribution and registry\
+    \ absent: a consumer defaults to public OSV for acme-billing,\n     an internal-only name, and the empty response reads\
+    \ as \"not vulnerable\""
+  compliant: "lifecycle.json:\n  \"identity\": {\n    \"purl\": \"pkg:pypi/acme-billing@3.2.0?repository_url=https://pypi.internal.acme.example/simple/\"\
+    ,\n    \"distribution\": \"private\",\n    \"registry\": \"https://pypi.internal.acme.example/simple/\"\n  }\n  (consumers\
+    \ skip public OSV as authoritative and can flag any install not originating from the declared registry)"
 suggested_fix: Declare distribution (open-source or private) and the publishing registry URL.
 references:
 - title: Lifecycle §3.1
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-020.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-020.html

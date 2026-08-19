@@ -15,11 +15,39 @@ short_description: Directory exists in the package
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Directory
   exists in the package.'
+rationale: 'Wheel Extensions §3.1.2 places agent-metadata/ inside the import package specifically so a plain `pip install`
+  delivers it and `importlib.resources` can read it with no network access; it is the root the entire Miri surface hangs
+  from, and without it an agent is back to the linear README-and-guesswork path the standard exists to eliminate. The characteristic
+  failure is packaging, not authorship, and it is silent: setuptools ships only `*.py` unless package-data names the JSON
+  files, and hatchling''s default file selection excludes git-ignored paths — which build-time-generated metadata usually
+  is — so the directory exists in the repository, vanishes from the built wheel, and nothing warns.'
+fires_when:
+- No `agent-metadata/` directory exists under any import package in the wheel (checked against RECORD and the archive listing)
+- The directory exists but contains none of the files the specification defines (sdk-manifest.json, usage-patterns.json,
+  lifecycle.json, ...)
+- The directory's files are present but unreadable (zero-byte or undecodable)
+remediation:
+- Run the Miri generation step at build time so `src/<package>/agent-metadata/` is populated before the backend collects
+  files
+- 'Make the backend include it: setuptools needs `[tool.setuptools.package-data] example_sdk = ["agent-metadata/*.json",
+  "agent-metadata/*.md"]`; hatchling needs `[tool.hatch.build] artifacts = ["*/agent-metadata/*"]` because its defaults
+  exclude git-ignored generated files'
+- 'Verify the built artifact, not the source tree: `unzip -l dist/example_sdk-*.whl | grep agent-metadata/`'
 examples:
-  violation: The package ships no agent-metadata/ directory
-  compliant: package/agent-metadata/ ships in the wheel with all required files
+  violation: 'src/example_sdk/agent-metadata/sdk-manifest.json   # exists in the repo
+
+    unzip -l dist/example_sdk-2.1.0-py3-none-any.whl | grep agent-metadata
+
+    # (no output) — the backend shipped only *.py; every installed copy
+
+    # of the package lacks the directory'
+  compliant: "unzip -l dist/example_sdk-2.1.0-py3-none-any.whl\n  example_sdk/agent-metadata/sdk-manifest.json\n  example_sdk/agent-metadata/usage-patterns.json\n\
+    \  example_sdk/agent-metadata/lifecycle.json"
 suggested_fix: Add the agent-metadata/ directory and generate its files at build time.
 references:
 - title: Miri Wheel Ext. §3.2
   url: miri-wheel-extensions.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-006.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-006.html

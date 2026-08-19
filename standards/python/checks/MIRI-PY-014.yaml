@@ -14,11 +14,33 @@ severity:
 short_description: '`examples/quickstart.py` present'
 long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
   lesson at machine speed. This check verifies: `examples/quickstart.py` present.'
+rationale: Miri Wheel Extensions §5.1 names examples/quickstart.py as the one required example and §9.1.1 makes its presence
+  the floor of basic conformance; the enhanced METADATA field Agent-Quickstart-File points to it by path. It is the first
+  artifact an agent executes to confirm its model of the API before generating integration code — in its absence the agent
+  synthesizes the install-to-first-result path from prose and signatures, which is exactly the guessing this standard exists
+  to remove.
+fires_when:
+- examples/quickstart.py is absent from the built wheel
+- METADATA Agent-Quickstart-File names a path that does not exist in the wheel
+- quickstart.py exists but never imports the package it ships in, or contains no executable statements (empty stub)
+remediation:
+- 'Add examples/quickstart.py demonstrating the minimal install-to-first-result flow: import, configure, one call, printed
+  result'
+- Keep it dependency-light — nothing beyond the package's own Requires-Dist; move auth, error, and async flows to authentication.py,
+  error_handling.py, and async/ per §5.1
+- 'Register it in AGENT_EXAMPLES.json with complexity "beginner" and set Agent-Quickstart-File: examples/quickstart.py in
+  the enhanced METADATA'
 examples:
-  violation: examples/quickstart.py is absent
-  compliant: examples/quickstart.py runs the minimal end-to-end flow
+  violation: "Wheel contents:\n  example_sdk/agent-metadata/sdk-manifest.json\n  example_sdk/examples/advanced.py\n  METADATA:\
+    \ Agent-Quickstart-File: examples/quickstart.py  <- points at a file the wheel does not contain"
+  compliant: "example_sdk/examples/quickstart.py:\n  from example_sdk import Client\n  client = Client(api_key=\"YOUR_API_KEY\"\
+    )  # placeholder documented in header\n  result = client.fetch(\"users\")\n  print(f\"fetched {len(result)} records\"\
+    )  # end-to-end in four lines, no extra dependencies"
 suggested_fix: Add a minimal runnable quickstart example.
 references:
 - title: Miri Wheel Ext. §5.1
   url: miri-wheel-extensions.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-014.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-014.html

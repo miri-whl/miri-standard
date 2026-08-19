@@ -15,9 +15,31 @@ short_description: '`identity.purl` name+version exactly match `METADATA`'
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: `identity.purl`
   name+version exactly match `METADATA`.'
+rationale: 'identity.purl is the join key for every advisory lookup (Lifecycle §3.1), and §8 item 2 requires it to match
+  dist-info METADATA name and version exactly; a mismatched purl queries OSV for an artifact the wheel is not, and the clean
+  empty response reads as "not vulnerable". Declared identity diverging from installed identity is also the signature of
+  dependency confusion — the mechanism of Birsan''s 2021 research, which reached code execution inside Apple, Microsoft,
+  PayPal, Shopify, and some thirty other companies by publishing internal package names to public registries. Exactness
+  includes PEP 503 normalization: OSV and the index APIs key on the normalized name, so a purl carrying Example_SDK never
+  joins against advisories filed for example-sdk.'
+fires_when:
+- the purl name does not equal the PEP 503 normalization of METADATA Name (re.sub(r'[-_.]+', '-', name).lower())
+- the purl @version does not equal METADATA Version exactly
+- the purl lacks an @version component, or fails the pkg:pypi/... pattern of lifecycle-v1.json
+- the purl type is not pkg:pypi for a wheel distributed through a Python index (type/channel mismatch)
+remediation:
+- 'Generate the purl at build time from the same variables that populate METADATA: f"pkg:pypi/{normalized_name}@{version}"
+  with the name normalized per PEP 503'
+- Assert purl name and version against the built wheel's METADATA in CI and treat any mismatch as release-blocking
+- For private packages, keep the standard pkg:pypi type and carry the internal index as a repository_url qualifier (Lifecycle
+  §5.1) rather than inventing a private purl type
 examples:
-  violation: purl says example-pkg@2.1.0 but METADATA says 2.1.1
-  compliant: purl pkg:pypi/example-package@2.1.0 matches METADATA name and version exactly
+  violation: "METADATA:        Name: Example_SDK\n                 Version: 2.1.1\nlifecycle.json:  \"purl\": \"pkg:pypi/Example_SDK@2.1.0\"\
+    \n  <- non-normalized name never matches OSV's key, and the version is one patch behind:\n     every advisory query\
+    \ runs against an artifact this wheel is not"
+  compliant: "METADATA:        Name: Example_SDK\n                 Version: 2.1.1\nlifecycle.json:  \"purl\": \"pkg:pypi/example-sdk@2.1.1\"\
+    \n  (name equals the PEP 503 normalization of METADATA Name; version equals METADATA Version exactly; CI asserts both\
+    \ before upload)"
 suggested_fix: Generate the purl from the same source as METADATA at build time.
 references:
 - title: purl spec
@@ -26,3 +48,6 @@ references:
 - title: Lifecycle §8.2
   url: lifecycle-security-metadata.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-019.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-019.html

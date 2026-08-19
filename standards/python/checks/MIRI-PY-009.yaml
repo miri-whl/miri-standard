@@ -17,9 +17,33 @@ short_description: Present for any non-initial release; validates against schema
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
   for any non-initial release; validates against schema.'
+rationale: 'A coding agent''s knowledge of an API is frozen at its training cutoff, and the effect is measured, not hypothetical:
+  empirical studies of LLM code completion report deprecated-API usage rates of 25-38% across eight popular Python libraries,
+  because the model writes for version N-1 against an installed version N. migration-guide.json is the machine-readable
+  delta that closes this gap at generation time, and per Agent Metadata §4.3 its `deprecations` MUST be derived from the
+  code''s PEP 702 `@deprecated` markers, so the guide cannot drift from what the interpreter itself warns about. A non-initial
+  release that ships without one strands every frozen-knowledge consumer with no structured path forward.'
+fires_when:
+- The wheel is not the project's first release and `agent-metadata/migration-guide.json` is absent
+- The document fails migration-guide-v1.json validation (any of from_version, to_version, migration_type, generated_at,
+  summary missing)
+- '`to_version` does not equal the wheel''s own version, or `from_version` names no actually published prior release line'
+- A `deprecations` entry lacks id, deprecated, or replacement
+remediation:
+- Generate migration-guide.json in the release build, deriving `deprecations` from PEP 702 markers (`warnings.deprecated`
+  on Python 3.13+, `typing_extensions.deprecated` earlier)
+- Set `to_version` to the release being built and `from_version` to the prior supported line (e.g. "2.0.x")
+- Populate `breaking_changes` with old_code/new_code pairs, adding `automated_fix` find/replace patterns where a mechanical
+  rewrite exists
+- Cover every release line still under support, not only N-1
 examples:
-  violation: Release 2.1.0 ships without a migration guide from 2.0.x
-  compliant: 2.1.0 ships migration-guide.json covering the changes from 2.0.x
+  violation: "example_sdk 2.1.0 wheel contents:\n  example_sdk/agent-metadata/sdk-manifest.json\n  example_sdk/agent-metadata/usage-patterns.json\n\
+    # no migration-guide.json — an agent trained on 2.0.x keeps calling\n# Client.execute(), renamed in 2.1, with no machine-readable\
+    \ correction"
+  compliant: "agent-metadata/migration-guide.json:\n{\"from_version\": \"2.0.x\", \"to_version\": \"2.1.0\", \"migration_type\"\
+    : \"minor\",\n \"generated_at\": \"2026-08-01T12:00:00Z\",\n \"summary\": {\"breaking_changes\": 1, \"new_features\"\
+    : 2, \"deprecations\": 1},\n \"deprecations\": [{\"id\": \"execute_rename\", \"deprecated\": \"Client.execute()\",\n\
+    \   \"replacement\": \"Client.query()\", \"removal_version\": \"3.0.0\"}]}"
 suggested_fix: Generate migration-guide.json for every non-initial release.
 references:
 - title: Agent Metadata §4.3
@@ -28,3 +52,6 @@ references:
 - title: schema
   url: ../../schemas/migration-guide-v1.json
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-009.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-009.html

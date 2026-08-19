@@ -15,11 +15,42 @@ short_description: No implicit update check on normal invocations; nothing print
 long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
   passive, and honest offline. This check verifies: No implicit update check on normal invocations; nothing printed to other
   commands'' stdout.'
+rationale: 'update-notifier''s default is the cautionary pattern: ordinary invocations spawn an unref''d child that phones
+  the npm registry on a daily interval, with opt-out left to the loose `NO_UPDATE_NOTIFIER` convention — a phone-home the
+  user never requested and cannot discover from `--help`. Worse than the privacy leak is channel corruption: an "update
+  available" banner printed to stdout lands inside the JSON payload and every downstream parser fails simultaneously (§2.5).
+  §5.1 therefore makes the check passive: update state is consulted only when `check-update` is explicitly invoked.'
+fires_when:
+- an ordinary command (e.g. `<cli> list --json`) issues network requests to a release manifest, registry, or notifier endpoint
+- update or upgrade text appears on the stdout of any command other than `check-update`, or on stderr of ordinary commands
+  in non-interactive contexts
+- update-check cache or interval-timestamp files change after invocations that were not `check-update`
+remediation:
+- Remove implicit update polling from command startup; confine manifest access to explicit `check-update` invocations
+- If an interactive hint is retained, gate it on stderr being a TTY and write it to stderr only — never stdout, never in
+  non-interactive contexts
+- Drop homegrown opt-out switches (`NO_UPDATE_NOTIFIER`-style) once the default is passive; there is nothing left to opt
+  out of
+- Add a CI test that runs ordinary commands under blocked egress and asserts zero update-related connections and byte-identical
+  stdout
 examples:
-  violation: Every invocation phones home and prints an upgrade banner
-  compliant: tool list makes no update-related network calls; update state only via check-update
+  violation: '$ acme-cli list --json | jq .
+
+    parse error: Invalid literal at line 1, column 9
+
+    # stdout began: Update available 3.2.0 -> 3.4.1  Run brew upgrade acme-cli
+
+    # packet capture shows a connection to releases.acme.example during `list`'
+  compliant: '$ acme-cli list --json      # sandboxed: zero network calls, clean payload
+
+    {"schema_version": "1", "items": ["alpha", "beta"]}
+
+    $ acme-cli check-update --json   # the only command that touches the manifest'
 suggested_fix: 'Make update checks passive: only on explicit check-update.'
 references:
 - title: CLI Spec §5.1
   url: cli-lifecycle-specification.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-026.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-026.html

@@ -15,9 +15,34 @@ short_description: Present and validates against schema
 long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
   databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: Present and validates
   against schema.'
+rationale: 'lifecycle.json is the package''s entire identity and advisory declaration (Lifecycle §3): vulnerability and
+  currency verdicts are joins computed by consumers, and without the file there is no join key and no source list, so the
+  package is silently exempt from every scan. The failure is worst exactly where §1 warns it is invisible — for private
+  packages, public OSV returns an empty result for an unknown name, indistinguishable from "not vulnerable". Schema validity
+  is equally load-bearing: consumers parse against lifecycle-v1.json, and a file missing identity or advisory_sources fails
+  the join the same way absence does.'
+fires_when:
+- agent-metadata/lifecycle.json is absent from the wheel
+- the file fails Draft-07 validation against lifecycle-v1.json (missing required members, enum violations, additionalProperties,
+  malformed purl pattern)
+- 'advisory_sources is empty, or an entry''s url is a placeholder rather than a well-formed URL or path (Lifecycle §8, item
+  3: reachable-by-construction)'
+remediation:
+- Generate agent-metadata/lifecycle.json at build time from pyproject.toml plus [tool.miri] configuration (Lifecycle §2.4)
+  — never hand-maintain it per release
+- 'Validate in CI: python3 -c "import json, jsonschema; jsonschema.validate(json.load(open(''src/pkg/agent-metadata/lifecycle.json'')),
+  json.load(open(''schemas/lifecycle-v1.json'')))"'
+- 'Populate at least one real advisory_sources entry: the public OSV endpoint (https://api.osv.dev/v1/query, ecosystem PyPI)
+  for open source per §4.1, or an osv-internal endpoint for private per §5.2'
 examples:
-  violation: lifecycle.json is absent so no advisory source is declared
-  compliant: lifecycle.json present and valid against lifecycle-v1.json
+  violation: "agent-metadata/ contains only:\n  sdk-manifest.json\n  usage-patterns.json\n  (no lifecycle.json: no purl,\
+    \ no advisory_sources — scanners have no join key,\n   and the package silently drops out of every vulnerability and\
+    \ currency check)"
+  compliant: "agent-metadata/lifecycle.json (validates against lifecycle-v1.json):\n  {\"miri_lifecycle_version\": \"0.1\"\
+    , \"generated_at\": \"2026-08-15T14:02:07Z\",\n   \"identity\": {\"purl\": \"pkg:pypi/example-sdk@1.2.0\", \"distribution\"\
+    : \"open-source\", \"registry\": \"https://pypi.org/simple/\"},\n   \"advisory_sources\": [{\"type\": \"osv\", \"ecosystem\"\
+    : \"PyPI\", \"url\": \"https://api.osv.dev/v1/query\", \"authoritative\": true}],\n   \"update_check\": {\"type\": \"\
+    pypi-json\", \"url\": \"https://pypi.org/pypi/example-sdk/json\"},\n   \"support\": {\"status\": \"active\"}}"
 suggested_fix: Add agent-metadata/lifecycle.json; validate against lifecycle-v1.json.
 references:
 - title: Lifecycle Spec §3
@@ -26,3 +51,6 @@ references:
 - title: schema
   url: ../../schemas/lifecycle-v1.json
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-018.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-018.html

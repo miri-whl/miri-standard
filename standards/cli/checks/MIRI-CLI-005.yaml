@@ -15,9 +15,33 @@ short_description: Honors `NO_COLOR`; detects non-TTY and drops decoration
 long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
   invisible or hangs silently in a non-interactive context. This check verifies: Honors `NO_COLOR`; detects non-TTY and
   drops decoration.'
+rationale: 'NO_COLOR (no-color.org, the informal standard dating from 2018) and isatty-based TTY detection are the two established
+  contracts for switching decoration off; adoption spans the mainstream — Node.js honors `NO_COLOR` alongside `NODE_DISABLE_COLORS`,
+  and no-color.org maintains a long registry of conforming software. Agents always consume the piped form, where decoration
+  is corruption: a value captured as `\x1b[32mok\x1b[0m` fails an equality check against `ok`, spinner redraw frames splice
+  `\r`-separated garbage into captured logs, and the failures are silent because the bytes are invisible in a terminal transcript.'
+fires_when:
+- ESC bytes (0x1b) appear on stdout or stderr when the stream is not a TTY
+- '`NO_COLOR` is set (any non-empty value) but SGR color sequences are still emitted'
+- Spinner or progress frames (`\r` redraws, cursor-movement sequences) appear in redirected output
+remediation:
+- Gate every decoration decision on `isatty()` for the stream being written and on the `NO_COLOR` environment variable;
+  prefer color libraries that implement both by default
+- Move progress animation behind the same gate; in non-TTY contexts emit either nothing or structured progress events
+- 'Add a CI snapshot test: `NO_COLOR=1 tool list | od -c` and a piped run both contain no 0x1b or bare `\r` bytes'
 examples:
-  violation: Spinner control codes appear when piped to a file
-  compliant: NO_COLOR=1 output is plain; piped output contains no control codes
+  violation: '$ tool list > out.txt; od -c out.txt | head -1
+
+    0000000  033 [ 3 2 m o k 033 [ 0 m \r \n
+
+    # a downstream ''grep -x ok'' finds nothing'
+  compliant: '$ NO_COLOR=1 tool list
+
+    ok
+
+    $ tool list | od -c | grep -c 033
+
+    0            # piped output carries no control bytes'
 suggested_fix: Detect TTY and honor NO_COLOR; drop decoration on non-TTY.
 references:
 - title: no-color.org
@@ -26,3 +50,6 @@ references:
 - title: clig.dev
   url: https://clig.dev/
   type: external
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-005.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-005.html

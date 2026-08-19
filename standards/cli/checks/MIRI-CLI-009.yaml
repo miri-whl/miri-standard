@@ -15,11 +15,44 @@ severity:
 short_description: The same flag (e.g. `--json`) selects it on every command — no per-command variants
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: The same flag (e.g. `--json`) selects it on every command — no per-command variants.'
+rationale: 'The ecosystem''s own fragmentation shows the cost: kubectl selects JSON with `-o json`, docker with `--format
+  json`, and gh with `--json <fields>` — three grammars for one concept, so nothing an agent learns on one tool transfers
+  to the next. Inside a single CLI the same inconsistency is strictly worse (Chow, landscape §2.3): an agent that learned
+  `--json` on one command constructs it on the next, gets `unknown flag`, and from then on treats the whole tool as unreliable,
+  re-verifying every invocation it should have been able to generalize.'
+fires_when:
+- Different commands select machine output with different flags (`--json` on some, `--output json` or `--format=json` on
+  others)
+- The root-level output flag exists but is rejected by some subcommands
+- '`--describe` records per-command output-flag names that differ from the root flag'
+remediation:
+- 'Define the output flag once at the root parser and inherit it everywhere: cobra `PersistentFlags()`, clap `global = true`,
+  argparse via a shared parent parser'
+- Migrate stragglers by aliasing the legacy per-command spelling to the root flag, marking the alias with a `lifecycle`
+  block (`deprecated_since`, `replacement`) per CLI Spec §6 until removal
+- 'Assert uniformity in CI: every command in `--describe` accepts the root output flag and lists no variant spellings'
 examples:
-  violation: Half the commands use --json, the rest --output json
-  compliant: --json is the output flag on every command, with no per-command variants
+  violation: '$ tool list --json
+
+    {"items": []}
+
+    $ tool status --json
+
+    error: unknown flag: --json (did you mean --output json?)
+
+    # same tool, two grammars for the same concept'
+  compliant: '$ tool list --json | jq -e .schema_version
+
+    "1"
+
+    $ tool status --json | jq -e .schema_version
+
+    "1"            # one flag, inherited by every command from the root parser'
 suggested_fix: Pick one output flag and use it everywhere.
 references:
 - title: Landscape §2.3 (Chow)
   url: landscape-and-prior-art.md
   type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-009.yaml
+  html: https://miri-whl.github.io/checks/cli/MIRI-CLI-009.html
