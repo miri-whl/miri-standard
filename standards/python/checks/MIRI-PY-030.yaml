@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: CRITICAL
   violation_unit: each silently removed interface
+  population_unit: all public interfaces removed since the previous release
 short_description: Every public interface removed since the prior release was listed in an earlier release's `deprecations`
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every public interface removed since

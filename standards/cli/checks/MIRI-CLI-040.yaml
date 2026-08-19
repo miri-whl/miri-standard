@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: each unmarked destructive operation
+  population_unit: all mutating commands in --describe
 short_description: Destructive operations flagged as such in `--describe`
 long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
   marked, and safe to repeat. This check verifies: Destructive operations flagged as such in `--describe`.'

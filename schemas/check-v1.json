@@ -100,6 +100,10 @@
         "violation_unit": {
           "type": "string",
           "description": "What counts as one violation - the countable unit that feeds magnitude-aware health scoring"
+        },
+        "population_unit": {
+          "type": "string",
+          "description": "Committee-defined countable population for per-instance checks (the denominator for report-level violation_density). Defined only where a natural population exists; reports MUST carry the population count when this field is present, and MUST omit it otherwise. Never an input to any score."
         }
       },
       "additionalProperties": false

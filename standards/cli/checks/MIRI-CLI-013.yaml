@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: each unstructured failure
+  population_unit: all commands in --describe
 short_description: Failures emit JSON with a stable machine `error.code`
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: Failures emit JSON with a stable machine `error.code`.'

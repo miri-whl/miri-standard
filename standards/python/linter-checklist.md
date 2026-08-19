@@ -120,7 +120,9 @@ violation.
 
 The severity assignment exists so that magnitude-aware health scoring is comparable across implementations: severity is
 defined by the standard, never by the linter. Linter implementations MUST consume these definitions rather than
-maintaining their own copies, and MUST NOT override severity or violation units.
+maintaining their own copies, and MUST NOT override severity or violation units. Per-instance checks additionally carry a
+committee-defined `population_unit` — the denominator for report-level violation density; populations are reported,
+never scored, and never invented by implementations.
 
 This table is the human rendering of the same data; the YAML files are authoritative, and coherence between the two
 (IDs, levels, weights, and the 100-point sum) is verified mechanically.

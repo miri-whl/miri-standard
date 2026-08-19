@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: CRITICAL
   violation_unit: each silently removed surface
+  population_unit: all surfaces removed since the previous release
 short_description: Every removed surface was deprecated in ≥1 earlier release
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every removed surface was deprecated

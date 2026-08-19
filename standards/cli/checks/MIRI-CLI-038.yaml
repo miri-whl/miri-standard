@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MEDIUM
   violation_unit: each unresolvable replacement
+  population_unit: all lifecycle blocks naming a replacement
 short_description: Every `replacement` names a surface in the current `--describe`
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every `replacement` names a

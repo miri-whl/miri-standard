@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MEDIUM
   violation_unit: each deprecation absent from the changelog
+  population_unit: all deprecated surfaces (per --describe and the changelog)
 short_description: Every deprecation appears in `changelog --since` of the deprecating release
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecation appears in

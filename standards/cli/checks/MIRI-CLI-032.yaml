@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MINOR
   violation_unit: each incomplete lifecycle block
+  population_unit: all surfaces carrying a lifecycle block
 short_description: '`deprecated_since` and `removed_in`/`replacement` populated'
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: `deprecated_since` and `removed_in`/`replacement`

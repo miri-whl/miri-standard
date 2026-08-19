@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MEDIUM
   violation_unit: each unresolvable replacement
+  population_unit: all deprecations entries in migration-guide.json
 short_description: Every `deprecations[].replacement` exists in the new `sdk-manifest.json`
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every `deprecations[].replacement`

@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: CRITICAL
   violation_unit: each blocking prompt
+  population_unit: all commands in --describe
 short_description: No command blocks on a prompt when stdin is not a TTY
 long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
   invisible or hangs silently in a non-interactive context. This check verifies: No command blocks on a prompt when stdin

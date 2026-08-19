@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MINOR
   violation_unit: each silent deprecated interface
+  population_unit: all PEP 702-marked interfaces in the package
 short_description: Importing/calling deprecated interfaces emits `DeprecationWarning`
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Importing/calling deprecated interfaces

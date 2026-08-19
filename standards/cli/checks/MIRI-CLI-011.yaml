@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: each polluted payload
+  population_unit: all commands emitting JSON
 short_description: No ANSI codes, prose, or warnings mixed into stdout JSON
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: No ANSI codes, prose, or warnings mixed into stdout JSON.'

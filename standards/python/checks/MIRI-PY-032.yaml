@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MINOR
   violation_unit: each invalid removal version
+  population_unit: all deprecations entries in migration-guide.json
 short_description: Every `removal_version` is greater than the current release
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Every `removal_version` is greater

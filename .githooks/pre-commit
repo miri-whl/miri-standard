@@ -10,11 +10,16 @@ echo "[miri pre-commit] cspell..."
 npx -y cspell@8 "**/*.md" --no-progress --no-summary
 
 echo "[miri pre-commit] relative links..."
+# tracked + staged files only — untracked scratch must not block commits
 python3 - <<'EOF'
-import re, pathlib, sys
+import re, pathlib, sys, subprocess
+files = set(subprocess.run(['git', 'ls-files', '*.md'], capture_output=True, text=True).stdout.split())
+files |= set(subprocess.run(['git', 'diff', '--no-ext-diff', '--cached', '--name-only', '--diff-filter=A', '--', '*.md'],
+                            capture_output=True, text=True).stdout.split())
 bad = []
-for md in pathlib.Path('.').rglob('*.md'):
-    if 'node_modules' in str(md): continue
+for name in sorted(files):
+    md = pathlib.Path(name)
+    if not md.exists(): continue
     for _, t in re.findall(r'\[([^\]]*)\]\(([^)]+)\)', md.read_text()):
         if not t.startswith(('http', 'mailto:', '#')) and not (md.parent / t.split('#')[0]).resolve().exists():
             bad.append(f"{md}: {t}")

@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MEDIUM
   violation_unit: each malformed file
+  population_unit: all files in agent-metadata/
 short_description: All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments)
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: All

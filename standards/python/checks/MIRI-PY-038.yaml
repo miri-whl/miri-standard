@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: LOW
   violation_unit: each index/template mismatch
+  population_unit: all entries in TEMPLATES.json plus all template files on disk
 short_description: '`TEMPLATES.json` entries ↔ template files; placeholders documented'
 long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
   This check verifies: `TEMPLATES.json` entries ↔ template files; placeholders documented.'

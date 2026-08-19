@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MINOR
   violation_unit: each interface removed early
+  population_unit: all interfaces removed since the previous release
 short_description: Deprecated interfaces survive ≥2 releases before removal
 long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
   inventoried in metadata, and never resolved by silent removal. This check verifies: Deprecated interfaces survive ≥2 releases

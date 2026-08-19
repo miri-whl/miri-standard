@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MEDIUM
   violation_unit: each inconsistent command
+  population_unit: all commands in --describe
 short_description: The same flag (e.g. `--json`) selects it on every command — no per-command variants
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: The same flag (e.g. `--json`) selects it on every command — no per-command variants.'

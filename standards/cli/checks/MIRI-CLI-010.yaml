@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MEDIUM
   violation_unit: each payload missing schema_version
+  population_unit: all commands emitting JSON
 short_description: Every JSON payload carries top-level `schema_version`
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: Every JSON payload carries top-level `schema_version`.'

@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: each command without JSON output
+  population_unit: all commands in --describe
 short_description: Every command supports JSON output
 long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
   turns. This check verifies: Every command supports JSON output.'

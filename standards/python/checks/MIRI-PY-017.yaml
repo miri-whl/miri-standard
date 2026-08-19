@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MINOR
   violation_unit: each example lacking error handling
+  population_unit: all example files listed in AGENT_EXAMPLES.json
 short_description: Examples demonstrate the package's error/exception handling
 long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
   lesson at machine speed. This check verifies: Examples demonstrate the package''s error/exception handling.'

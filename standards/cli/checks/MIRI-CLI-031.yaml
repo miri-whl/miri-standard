@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: MEDIUM
   violation_unit: each deprecated surface without a lifecycle block
+  population_unit: all deprecated surfaces (per --describe and the changelog)
 short_description: Every deprecated flag/subcommand carries a `lifecycle` object
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecated flag/subcommand

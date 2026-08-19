@@ -11,6 +11,7 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: each surface removed without grace
+  population_unit: all surfaces removed since the previous release
 short_description: Deprecated surfaces function for ≥1 minor release before removal
 long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
   a dead-end error strands every consumer working from stale knowledge. This check verifies: Deprecated surfaces function
