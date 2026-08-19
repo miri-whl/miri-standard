@@ -87,3 +87,6 @@ secrets.yaml
 *.bak
 *.backup
 *.orig
+# Generated site (published via CI, never committed)
+site/
+.generated/

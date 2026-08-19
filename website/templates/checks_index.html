@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+{% import '_macros.html' as m %}
+{% block title %}{{ meta.title }} checks{% endblock %}
+{% block content %}
+{{ m.spec_header(meta.title ~ ' — check definitions',
+                 [('Checks', checks | length), ('Levels', musts ~ ' MUST · ' ~ (checks | length - musts) ~ ' SHOULD'), ('Weights', 'Σ = 100')]) }}
+<p class="lede">Each requirement is verified by a check; each check failure instance is a violation.
+Conformance score = Σ weights of passing checks; any failing MUST caps the score at 74. Severity and violation
+units are committee-assigned and feed the magnitude-aware health score. The YAML definitions are authoritative;
+the <a href="{{ site.github }}/blob/main/{{ meta.checklist }}">checklist table</a> is the derived rendering.</p>
+
+<table>
+<thead><tr><th>ID</th><th>Check</th><th>Level</th><th>Severity</th><th>Wt</th><th>Verifies</th></tr></thead>
+<tbody>
+{% for row in rows %}
+{% if row.category %}
+<tr class="cat"><td colspan="6">{{ row.category }} · {{ row.points }} points</td></tr>
+{% else %}
+{% set d = row.check %}
+<tr>
+  <td class="id"><a href="{{ d.id }}.html">{{ d.id }}</a></td>
+  <td>{{ d.name }}{% for r in d.requirements or [] %} {{ m.tag(r) }}{% endfor %}</td>
+  <td>{{ m.level_badge(d.level) }}</td>
+  <td>{{ m.badge(sev_tone[d.severity.default], d.severity.default) }}</td>
+  <td class="num">{{ d.weight }}</td>
+  <td>{{ d.short_description | codeish }}</td>
+</tr>
+{% endif %}
+{% endfor %}
+</tbody>
+</table>
+{% endblock %}

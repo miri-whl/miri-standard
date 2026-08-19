@@ -1,0 +1,13 @@
+/* Motion. Short, flat, no bounce — state changes read as instant, like a linter result. */
+:root{
+  --duration-instant:60ms; /* @kind other */
+  --duration-fast:120ms; /* @kind other */
+  --duration-base:180ms; /* @kind other */
+  --duration-slow:260ms; /* @kind other */
+  --ease-standard:cubic-bezier(.2,0,.38,1); /* @kind other */
+  --ease-out:cubic-bezier(0,0,.35,1); /* @kind other */
+  --ease-in-out:cubic-bezier(.4,0,.2,1); /* @kind other */
+  --transition-ui:background-color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out),color var(--duration-fast) var(--ease-out);
+  --hover-tint:rgba(138,116,32,.08);--press-shift:1px;
+}

@@ -1,0 +1,39 @@
+/* Colors. Gold ramp is lifted verbatim from the repo's committed workspace theme
+   (.vscode/settings.json, "muted gold, so this project is recognizable at a glance").
+   Semantic hues are sampled from the Miri mascot colorways in assets/img/. */
+:root{
+  /* Gold — the brand ramp, from the committed VS Code theme */
+  --gold-950:#2E2600;--gold-900:#5E5016;--gold-800:#6E5C1A;--gold-700:#746016;--gold-600:#8A7420;
+  --gold-500:#A08A2A;--gold-400:#D4B840;--gold-300:#F0D060;--gold-200:#C7B76A;--gold-100:#B8AE8A;--gold-50:#F5EFD5;
+
+  /* Warm neutrals — sampled from the grey mascot colorway */
+  --ink-900:#232322;--ink-800:#2F2E2D;--ink-700:#424141;--ink-600:#464445;--ink-500:#6B6A68;
+  --ink-400:#808180;--ink-300:#A7A49B;--ink-200:#D1CBBB;--ink-100:#E7E2D6;--ink-50:#F3F0E7;
+  --paper:#FAF7EE;--paper-white:#FFFFFF;
+
+  /* Semantic hues — mascot colorways */
+  --green-600:#4C6224;--green-500:#61792F;--green-400:#98B455;--green-200:#C9D688;
+  --red-600:#7E231B;--red-500:#9E2E24;--red-400:#D25E51;--red-200:#F1B4AA;
+  --amber-600:#9A7018;--amber-500:#BB8A24;--amber-400:#E0B24D;--amber-200:#F3D59E;
+
+  /* Semantic aliases */
+  --text-strong:var(--ink-900);--text-body:var(--ink-700);--text-muted:var(--ink-500);
+  --text-faint:var(--ink-400);--text-inverse:var(--gold-50);--text-link:var(--gold-700);
+  --surface-page:var(--paper);--surface-card:var(--paper-white);--surface-sunken:var(--ink-50);
+  --surface-inset:var(--gold-50);--surface-code:var(--ink-900);--surface-brand:var(--gold-600);
+  --surface-brand-deep:var(--gold-950);
+  --border-hairline:var(--ink-200);--border-strong:var(--ink-700);--border-brand:var(--gold-500);
+  --focus-ring:var(--gold-500);
+
+  /* Status — lifecycle stages defined by the standard (active → maintenance → deprecated → eol) */
+  --status-active:var(--green-500);--status-active-bg:var(--green-200);
+  --status-maintenance:var(--amber-600);--status-maintenance-bg:var(--amber-200);
+  --status-deprecated:var(--red-500);--status-deprecated-bg:var(--red-200);
+  --status-eol:var(--ink-600);--status-eol-bg:var(--ink-200);
+
+  /* Conformance levels: M (MUST) vs S (SHOULD) */
+  --level-must:var(--red-500);--level-should:var(--ink-500);
+
+  /* Grade bands: 90–100 Gold · 75–89 Silver · 50–74 Bronze · <50 non-conforming */
+  --grade-gold:#D4B840;--grade-silver:#A7A49B;--grade-bronze:#B07A3C;--grade-fail:var(--red-500);
+}

@@ -1,0 +1,60 @@
+name: Publish Site
+
+# Regenerates the site from the committee-owned check definitions and publishes
+# it to the Pages repository whenever check definitions or the generator change
+# on main. The site is never committed here — the YAML files are the source of
+# truth and the site is a derived artifact (schema-as-data rule).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'standards/python/checks/**'
+      - 'standards/cli/checks/**'
+      - 'schemas/check-v1.json'
+      - 'docs/origin-story.md'
+      - 'website/**'
+      - 'tools/generate_site.py'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Generate and Publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml jsonschema jinja2
+
+      - name: Validate check definitions against schema
+        run: |
+          python3 - <<'EOF'
+          import json, pathlib, yaml, jsonschema
+          schema = json.load(open('schemas/check-v1.json'))
+          jsonschema.Draft7Validator.check_schema(schema)
+          n = 0
+          for f in pathlib.Path('standards').glob('*/checks/*.yaml'):
+              jsonschema.validate(yaml.safe_load(f.read_text()), schema); n += 1
+          print(f"{n} check definitions valid")
+          EOF
+
+      - name: Generate site
+        run: python3 tools/generate_site.py --out site
+
+      - name: Publish to Pages repository
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          # Fine-grained PAT with contents:write on the target repo,
+          # stored as the MIRI_SITE_PUBLISH_TOKEN repository secret.
+          personal_token: ${{ secrets.MIRI_SITE_PUBLISH_TOKEN }}
+          # For https://miri-whl.github.io/checks/... URLs (no repo prefix),
+          # the target repo must be named miri-whl.github.io.
+          external_repository: miri-whl/miri-whl.github.io
+          publish_branch: main
+          publish_dir: ./site
+          commit_message: 'site: regenerate from ${{ github.sha }}'

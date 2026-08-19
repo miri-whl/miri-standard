@@ -1,0 +1,20 @@
+/* Borders, radii, shadows. Near-square corners and hairline rules; the mascot's inset
+   picture-frame border is the brand's card motif (--frame-*). No soft ambient shadows. */
+:root{
+  --radius-none:0;--radius-xs:2px;--radius-sm:3px;--radius-md:4px;--radius-pill:999px;
+  --border-width:1px;--border-width-thick:2px;--border-width-frame:3px;
+
+  --shadow-none:none;
+  --shadow-crisp:2px 2px 0 var(--ink-200);
+  --shadow-crisp-brand:3px 3px 0 var(--gold-200);
+  --shadow-inset-top:inset 0 1px 0 rgba(255,255,255,.6);
+
+  /* Frame motif: outer rule + gap + inner rule, as in the mascot avatars */
+  --frame-outer:var(--border-width-frame) solid var(--gold-600);
+  --frame-gap:var(--space-2);
+  --frame-inner:var(--border-width) solid var(--gold-200);
+
+  --card-border:var(--border-width) solid var(--border-hairline);
+  --card-radius:var(--radius-xs);
+  --card-padding:var(--space-5);
+}

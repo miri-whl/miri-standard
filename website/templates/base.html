@@ -1,0 +1,28 @@
+{% import '_macros.html' as m %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}{% endblock %} · miri-standard</title>
+<link rel="icon" type="image/png" href="{{ root }}assets/miri-green.png">
+<link rel="stylesheet" href="{{ root }}style.css">
+</head>
+<body>
+<header class="topbar">
+  <a class="home" href="{{ root }}index.html">{{ m.avatar(root, 'grey', 28) }}
+    <span class="logotype">miri<span class="hyphen">-</span>standard</span></a>
+  {{ m.badge('gold', site.status_badge) }}
+  <div class="right"><a class="btn-secondary" href="{{ site.github }}">GitHub</a></div>
+</header>
+<div class="shell">
+{{ m.sidenav(site.nav, root, active) }}
+<main class="content"><div class="inner">
+{% block content %}{% endblock %}
+<div class="footer">
+  <span>miri-standard · {{ site.version }} · generated from the committee-owned check definitions</span>
+  <span><a href="{{ site.github }}/tree/main/schemas">schemas</a> · <a href="{{ site.github }}/tree/main/standards">specifications</a></span>
+</div>
+</div></main>
+</div>
+</body>
+</html>

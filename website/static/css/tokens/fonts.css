@@ -1,0 +1,5 @@
+/* Webfonts. The miri-standard repository ships no font files and specifies no typefaces;
+   these are SUBSTITUTIONS chosen for this design system (see readme.md → Visual foundations).
+   Served from Google Fonts. Replace with self-hosted @font-face rules when brand files exist. */
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Azeret+Mono:wght@400;500;600;700&display=swap");
+:root{--font-sans:"Space Grotesk",system-ui,sans-serif;--font-mono:"Azeret Mono",ui-monospace,"SF Mono",Menlo,monospace}

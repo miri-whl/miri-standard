@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% import '_macros.html' as m %}
+{% block title %}Miri Standard{% endblock %}
+{% block content %}
+<div class="hero-row">
+  <div class="hero-text">
+    {{ m.spec_header('The Miri Standard',
+                     [('Status', '🚧 incubation'), ('Version', site.version)],
+                     'Multi-language packaging standards that make software artifacts — Python wheels, command-line
+                      tools, eventually Go modules and Rust crates — legible to AI agents: structured metadata,
+                      identity and vulnerability signaling, and lifecycle contracts.') }}
+    <p>Named for Miranda Serena Sharifi of <em>Beggars in Spain</em>, whose thought-strings had
+    <em>"structural flaws from the beginning, gaps where information ought to go."</em>
+    Packages have the same flaw; the standard fills the gaps.
+    <a href="origin.html">Read the origin story →</a></p>
+  </div>
+  {{ m.avatar(root, 'green', 152, framed=true) }}
+</div>
+
+<div class="cardgrid">
+  {% for target, data in targets.items() %}
+  <div class="card">
+    <div class="card-title">{{ data.meta.title }}</div>
+    <div class="mono stat">{{ data.checks | length }}<span class="stat-unit"> checks</span></div>
+    <p class="stat-sub">{{ data.musts }} MUST · {{ data.checks | length - data.musts }} SHOULD · weights Σ = 100</p>
+    <a class="mono stat-link" href="checks/{{ target }}/index.html">{{ data.meta.prefix }}-001…{{ '%03d' | format(data.checks | length) }} →</a>
+  </div>
+  {% endfor %}
+</div>
+
+<h2>The model</h2>
+<p>Each <span class="principle">requirement</span> in a specification is verified by a
+<span class="principle">check</span>; each check failure instance is a
+<span class="principle">violation</span>. Two scores follow. The <span class="principle">conformance score</span> is
+additive — fixed weights summing to 100, any failing MUST caps at 74 — and comparable across independent linters.
+The <span class="principle">health score</span> is the severity-graded magnitude of what is wrong, computed from
+committee-assigned severities and violation units. Populations are reported, never scored.</p>
+
+<h2>Principles</h2>
+<ul class="plain">
+<li><span class="principle">Declare sources, not verdicts.</span> Artifacts declare identity (purl) and advisory
+sources; consumers compute verdicts at call time.</li>
+<li><span class="principle">Reuse the existing stack.</span> Identity is purl; advisories are OSV records; SBOMs
+follow PEP 770 and CycloneDX/SPDX.</li>
+<li><span class="principle">Same shape for open source and private.</span> Private artifacts differ only in values,
+never in structure.</li>
+<li><span class="principle">Schema as data, derived outputs.</span> One source generates human docs and machine
+metadata.</li>
+<li><span class="principle">Deprecation coherence.</span> Markers, changelog, and removals must agree; no silent
+removals.</li>
+<li><span class="principle">Citation trail.</span> Every normative statement cites the standard it derives from.</li>
+</ul>
+
+<h2>Resources</h2>
+<ul class="plain">
+<li><a href="{{ site.github }}">miri-standard on GitHub</a> — specifications, schemas, and the check definitions</li>
+<li><a href="{{ site.github }}/tree/main/standards/python">Python wheel standards</a> ·
+    <a href="{{ site.github }}/tree/main/standards/cli">CLI standards</a></li>
+<li><a href="{{ site.github }}/tree/main/schemas">JSON Schemas</a> — <span class="mono">check-v1</span>,
+    <span class="mono">lifecycle-v1</span>, <span class="mono">sdk-manifest-v1</span>, …</li>
+</ul>
+{% endblock %}

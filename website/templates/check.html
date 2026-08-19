@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% import '_macros.html' as m %}
+{% block title %}{{ check.id }} — {{ check.name }}{% endblock %}
+{% block content %}
+{{ m.spec_header(check.id ~ ' — ' ~ check.name,
+                 [('Schema', 'check-v1'), ('Status', 'committee-owned'), ('Added', check.added_in)],
+                 check.short_description | codeish) }}
+
+<div class="badgerow">
+  {{ m.level_badge(check.level) }}
+  {{ m.badge(sev_tone[check.severity.default], 'severity ' ~ check.severity.default ~ ' · ' ~ sev_num) }}
+  {{ m.tag('weight ' ~ check.weight) }}
+  {% if check.conditional %}{{ m.tag('conditional') }}{% endif %}
+  {% for r in check.requirements or [] %}{{ m.tag('requires ' ~ r) }}{% endfor %}
+  {% for r in check.references %}{{ m.tag(r.title) }}{% endfor %}
+</div>
+
+<div class="codeblock">
+  <div class="filename">{{ meta.dir }}/{{ check.id }}.yaml</div>
+  <pre>{{ yaml_text }}</pre>
+</div>
+
+<div class="cardgrid">
+  <div class="card"><div class="card-title">Violation</div>
+    <span class="mono example-bad">{{ check.examples.violation | codeish }}</span></div>
+  <div class="card"><div class="card-title">Compliant</div>
+    <span class="mono example-good">{{ check.examples.compliant | codeish }}</span></div>
+</div>
+
+<h2>Definition</h2>
+<p>{{ check.long_description | codeish }}</p>
+
+<h2>Suggested fix</h2>
+<p>{{ check.suggested_fix | codeish }}</p>
+
+<h2>Fields</h2>
+<dl class="meta">
+  <dt>severity.default</dt><dd>{{ check.severity.default }} (numeric {{ sev_num }} of 5)</dd>
+  <dt>violation_unit</dt><dd>{{ check.severity.violation_unit | codeish }}</dd>
+  {% if check.severity.population_unit %}
+  <dt>population_unit</dt><dd>{{ check.severity.population_unit | codeish }}</dd>
+  {% endif %}
+  {% if check.requirements %}
+  <dt>requirements</dt><dd>{{ check.requirements | join(', ') }}</dd>
+  {% endif %}
+  <dt>category</dt><dd>{{ check.category }}</dd>
+  <dt>status</dt><dd>{{ check.status }}</dd>
+  <dt>added_in</dt><dd>{{ check.added_in }}</dd>
+  {% if check.withdrawn_in %}
+  <dt>withdrawn_in</dt><dd>{{ check.withdrawn_in }}</dd>
+  {% endif %}
+</dl>
+
+<h2>References</h2>
+<ul class="plain">
+  {% for r in check.references %}
+  <li><a href="{{ r.url if r.type == 'external' else site.github ~ '/blob/main/standards/' ~ target ~ '/' ~ r.url }}">{{ r.title }}</a>{% if r.type == 'spec' %} <em>(spec)</em>{% endif %}</li>
+  {% endfor %}
+</ul>
+
+<p class="source-note">Source of truth:
+<a href="{{ site.github }}/blob/main/{{ meta.dir }}/{{ check.id }}.yaml" class="mono">{{ check.id }}.yaml</a> ·
+schema <a href="{{ site.github }}/blob/main/schemas/check-v1.json" class="mono">check-v1.json</a></p>
+
+<div class="prevnext">
+  {% if prev_id %}<a href="{{ prev_id }}.html">← {{ prev_id }}</a>{% else %}<span></span>{% endif %}
+  {% if next_id %}<a href="{{ next_id }}.html">{{ next_id }} →</a>{% else %}<span></span>{% endif %}
+</div>
+{% endblock %}

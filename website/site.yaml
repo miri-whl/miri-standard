@@ -1,0 +1,46 @@
+# Site configuration — data consumed by tools/generate_site.py (schema-as-data: content
+# comes from the check YAMLs and docs/, structure comes from here, look comes from
+# static/css/, markup comes from templates/).
+github: https://github.com/miri-whl/miri-standard
+version: 0.1-draft
+status_badge: Incubation
+
+targets:
+  python:
+    dir: standards/python/checks
+    title: Python wheels
+    prefix: MIRI-PY
+    checklist: standards/python/linter-checklist.md
+  cli:
+    dir: standards/cli/checks
+    title: Command-line tools
+    prefix: MIRI-CLI
+    checklist: standards/cli/linter-checklist.md
+
+# Sidebar navigation. href is site-relative; external links are absolute; planned rows
+# are inert (the repo's rule: planned documents are listed as plain text, never linked).
+nav:
+  - label: Project
+    items:
+      - { label: Overview, href: index.html }
+      - { label: Origin story, href: origin.html }
+  - label: Python
+    items:
+      - { label: Check definitions, href: checks/python/index.html }
+      - { label: "Linter checklist ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/python/linter-checklist.md" }
+      - { label: Agent metadata schema, planned: true }
+  - label: CLI
+    items:
+      - { label: Check definitions, href: checks/cli/index.html }
+      - { label: "Linter checklist ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/cli/linter-checklist.md" }
+      - { label: Introspection schema, planned: true }
+  - label: Go / Rust
+    items:
+      - { label: "Go scope sketch ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/go/README.md" }
+      - { label: "Rust scope sketch ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/rust/README.md" }
+
+# Assets copied from assets/img/ into the published site.
+assets:
+  - miri-grey.png
+  - miri-green.png
+  - mira-16.png

@@ -1,0 +1,13 @@
+/* Typography. Two families: Space Grotesk for prose and UI, Azeret Mono for identifiers,
+   check IDs, purls, versions, metadata keys, and code. Anything a machine reads is set in mono. */
+:root{
+  --text-2xs:11px;--text-xs:12px;--text-sm:13px;--text-base:15px;--text-md:17px;
+  --text-lg:20px;--text-xl:26px;--text-2xl:34px;--text-3xl:46px;--text-4xl:62px;
+
+  --leading-tight:1.08;--leading-snug:1.28;--leading-normal:1.55;--leading-relaxed:1.7;
+  --weight-regular:400;--weight-medium:500;--weight-semibold:600;--weight-bold:700;
+  --tracking-tight:-0.02em;--tracking-normal:0;--tracking-wide:0.04em;--tracking-caps:0.1em;
+
+  --font-display:var(--font-sans);--font-body:var(--font-sans);--font-code:var(--font-mono);
+  --font-meta:var(--font-mono);
+}

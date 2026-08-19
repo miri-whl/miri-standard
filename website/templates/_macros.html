@@ -1,0 +1,48 @@
+{# Component macros — static ports of the design system's Badge, Tag, MiriAvatar,
+   SideNav, and SpecHeader. Styling lives in static/css/components.css. #}
+
+{% macro badge(tone, text) -%}
+<span class="badge {{ tone }}">{{ text }}</span>
+{%- endmacro %}
+
+{% macro tag(text) -%}
+<span class="tag">{{ text }}</span>
+{%- endmacro %}
+
+{% macro level_badge(level) -%}
+{{ badge('deprecated' if level == 'MUST' else 'neutral', level | lower) }}
+{%- endmacro %}
+
+{% macro avatar(root, colorway, size, framed=false) -%}
+{%- set file = 'mira-16.png' if colorway == 'portrait' else 'miri-' ~ colorway ~ '.png' -%}
+{%- if framed -%}
+<span class="framed"><span><img class="avatar" src="{{ root }}assets/{{ file }}" alt="Miri" width="{{ size }}" height="{{ size }}"></span></span>
+{%- else -%}
+<img class="avatar" src="{{ root }}assets/{{ file }}" alt="Miri" width="{{ size }}" height="{{ size }}">
+{%- endif -%}
+{%- endmacro %}
+
+{% macro sidenav(nav, root, active) -%}
+<nav class="sidenav">
+  {% for section in nav %}
+  <div class="section">
+    <div class="label">{{ section.label }}</div>
+    {% for item in section['items'] %}
+    {% if item.planned %}
+    <span class="planned"><span>{{ item.label }}</span><span class="mark">planned</span></span>
+    {% else %}
+    <a {% if item.href == active %}class="active" {% endif %}href="{{ item.href if item.href.startswith('http') else root ~ item.href }}">{{ item.label }}</a>
+    {% endif %}
+    {% endfor %}
+  </div>
+  {% endfor %}
+</nav>
+{%- endmacro %}
+
+{% macro spec_header(title, eyebrow, lede=none) -%}
+<div class="spec-eyebrow">
+  {%- for k, v in eyebrow %}{% if v %}<span>{{ k }} <b>{{ v }}</b></span>{% endif %}{% endfor -%}
+</div>
+<h1>{{ title }}</h1>
+{% if lede %}<p class="lede">{{ lede }}</p>{% endif %}
+{%- endmacro %}
