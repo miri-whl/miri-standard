@@ -168,3 +168,6 @@ th.sortable[data-dir="desc"]::after { content: " ↓"; opacity: 1; color: var(--
 
 /* Definition-file link line on check pages */
 .deffile { font-size: var(--text-sm); color: var(--text-muted); margin: 0 0 var(--space-6); }
+
+/* Stacked full-width cards (check pages: violation above compliant) */
+.cardstack { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }

@@ -68,10 +68,10 @@ def md_to_html(text):
             quote = " ".join(l.lstrip().lstrip(">").strip() for l in lines)
             out.append(f"<blockquote>{md_inline(quote)}</blockquote>")
         elif re.match(r"^\s*[-*] ", lines[0]):
-            items = "".join(f"<li>{md_inline(re.sub(r'^\\s*[-*] ', '', l))}</li>" for l in lines)
+            items = "".join(f"<li>{md_inline(re.sub(r'^\s*[-*] ', '', l))}</li>" for l in lines)
             out.append(f"<ul>{items}</ul>")
         elif re.match(r"^\s*\d+\. ", lines[0]):
-            items = "".join(f"<li>{md_inline(re.sub(r'^\\s*\\d+\\. ', '', l))}</li>" for l in lines)
+            items = "".join(f"<li>{md_inline(re.sub(r'^\s*\d+\. ', '', l))}</li>" for l in lines)
             out.append(f"<ol>{items}</ol>")
         else:
             out.append(f"<p>{md_inline(' '.join(l.strip() for l in lines))}</p>")
