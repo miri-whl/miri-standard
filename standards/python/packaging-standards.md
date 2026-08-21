@@ -13,7 +13,7 @@ enhancements while maintaining compatibility.
 #### 1. Package Distribution Format
 
 - **PEP 427**: Wheel Binary Package Format 1.0
-- **PEP 491**: Wheel Binary Package Format 1.9
+- **PEP 491**: Wheel Binary Package Format 1.9 (Deferred; superseded by the Binary Distribution Format spec)
 - **Status**: Universal adoption
 - **Purpose**: Defines the .whl file structure and naming
 
@@ -56,7 +56,7 @@ enhancements while maintaining compatibility.
      ↓
 2012: PEP 427 (wheel format)
      ↓
-2015: PEP 491 (wheel 1.9)
+2015: PEP 491 (wheel 1.9, Deferred)
      ↓
 2017: PEP 566 (metadata 2.1)
      ↓
@@ -97,7 +97,7 @@ enhancements while maintaining compatibility.
 - `Requires-Dist`: Runtime dependencies
 - `Requires-Python`: Python version requirements
 
-### 2. Wheel Metadata (PEP 427/491)
+### 2. Wheel Metadata (PEP 427; Binary Distribution Format)
 
 **WHEEL File Contents:**
 
@@ -447,7 +447,7 @@ Official Standard (long-term goal)
 ### Key PEPs
 
 - [PEP 427: Wheel Binary Package Format 1.0](https://peps.python.org/pep-0427/)
-- [PEP 491: Wheel Binary Package Format 1.9](https://peps.python.org/pep-0491/)
+- [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/)
 - [PEP 566: Metadata for Python Software Packages 2.1](https://peps.python.org/pep-0566/)
 - [PEP 621: Storing project metadata in pyproject.toml](https://peps.python.org/pep-0621/)
 - [PEP 508: Dependency specification](https://peps.python.org/pep-0508/)

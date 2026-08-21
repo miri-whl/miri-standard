@@ -501,7 +501,7 @@ Raised when authentication fails.
 
 ## 4. Metadata Generation
 
-### 4.1 Create AI_EXAMPLES.json
+### 4.1 Create AGENT_EXAMPLES.json
 
 Create a build script `scripts/generate_metadata.py`:
 
@@ -802,7 +802,7 @@ def test_discovery_apis():
     assert hasattr(my_package, 'get_examples_dir')
     assert hasattr(my_package, 'list_examples')
     assert hasattr(my_package, 'show_quickstart')
-    assert hasattr(my_package, 'get_ai_metadata')
+    assert hasattr(my_package, 'get_agent_metadata')
     
     # Test functions return expected types
     examples_dir = my_package.get_examples_dir()
@@ -815,7 +815,7 @@ def test_discovery_apis():
     assert isinstance(quickstart, str)
     assert len(quickstart) > 0
     
-    metadata = my_package.get_ai_metadata()
+    metadata = my_package.get_agent_metadata()
     assert isinstance(metadata, dict)
     assert "version" in metadata
 
@@ -843,7 +843,7 @@ def test_examples_execution():
 
 def test_ai_metadata_structure():
     """Test AI metadata has required structure."""
-    metadata = my_package.get_ai_metadata()
+    metadata = my_package.get_agent_metadata()
     
     # Test required fields
     assert "version" in metadata
@@ -931,7 +931,7 @@ def validate_discovery_apis(package_dir: Path) -> List[str]:
         "get_examples_dir",
         "list_examples", 
         "show_quickstart",
-        "get_ai_metadata"
+        "get_agent_metadata"
     ]
     
     for func in required_functions:

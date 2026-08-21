@@ -6,7 +6,7 @@
 
 ## Abstract
 
-This specification defines extensions to the Python wheel format (PEP 427/491) that enable enhanced communication
+This specification defines extensions to the Python wheel format (PEP 427) that enable enhanced communication
 between Python packages and autonomous agents. The Miri Standard addresses the "thought-string gaps" in current Python
 packaging by adding structured metadata, embedded examples, and discovery mechanisms that allow agents to immediately
 understand and use packages without external documentation lookups.
@@ -514,7 +514,7 @@ examples = package_name.list_examples()
 quickstart = package_name.show_quickstart()
 
 # 4. Access metadata
-metadata = package_name.get_ai_metadata()
+metadata = package_name.get_agent_metadata()
 
 # 5. Import examples
 from package_name.examples import quickstart
@@ -556,7 +556,7 @@ quickstart_file = "examples/quickstart.py"
 
 #### 7.1.2 Build-Time Metadata Generation
 
-Build systems SHOULD generate AI_EXAMPLES.json automatically by scanning example files for metadata comments.
+Build systems SHOULD generate AGENT_EXAMPLES.json automatically by scanning example files for metadata comments.
 
 ### 7.2 Validation Requirements
 
@@ -565,14 +565,14 @@ Build systems SHOULD generate AI_EXAMPLES.json automatically by scanning example
 **Minimum Compliance**:
 
 - `examples/quickstart.py` - Basic usage example
-- `AI_EXAMPLES.json` - Example metadata
+- `AGENT_EXAMPLES.json` - Example metadata
 - Enhanced METADATA with Miri fields
 - `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
 
 **Full Compliance**:
 
 - Complete examples directory structure
-- All metadata files (AI_EXAMPLES.json, API_REFERENCE.json, TEMPLATES.json)
+- All metadata files (AGENT_EXAMPLES.json, API_REFERENCE.json, TEMPLATES.json)
 - Documentation directory
 - Templates directory
 - All discovery APIs implemented
@@ -599,7 +599,7 @@ Build systems SHOULD generate AI_EXAMPLES.json automatically by scanning example
 #### 8.2.1 Existing Packages
 
 1. **Phase 1**: Add basic examples directory and quickstart.py
-2. **Phase 2**: Add AI_EXAMPLES.json metadata
+2. **Phase 2**: Add AGENT_EXAMPLES.json metadata
 3. **Phase 3**: Implement discovery APIs
 4. **Phase 4**: Add full documentation and templates
 
@@ -623,7 +623,7 @@ Miri-enhanced packages MUST work normally when:
 #### 9.1.1 Basic Conformance
 
 - `examples/quickstart.py` exists and is runnable
-- `AI_EXAMPLES.json` includes quickstart metadata
+- `AGENT_EXAMPLES.json` includes quickstart metadata
 - Enhanced METADATA includes minimum Miri fields
 - Package `__init__.py` includes `show_quickstart()` function
 
@@ -654,7 +654,7 @@ miri-validate --report package-name
 
 All JSON metadata files MUST validate against published schemas:
 
-- `https://miri-standard.org/schemas/ai-examples-v1.json`
+- `https://miri-standard.org/schemas/agent-examples-v1.json`
 - `https://miri-standard.org/schemas/api-reference-v1.json`
 - `https://miri-standard.org/schemas/templates-v1.json`
 
@@ -672,7 +672,7 @@ Miri-compliant packages SHOULD include tests that verify:
 ## References
 
 - [PEP 427: The Wheel Binary Package Format 1.0](https://peps.python.org/pep-0427/)
-- [PEP 491: The Wheel Binary Package Format 1.9](https://peps.python.org/pep-0491/)
+- [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/)
 - [PEP 566: Metadata for Python Software Packages 2.1](https://peps.python.org/pep-0566/)
 - [PEP 621: Storing project metadata in pyproject.toml](https://peps.python.org/pep-0621/)
 - [PEP 770: Improving measurability of Python packages with SBOMs](https://peps.python.org/pep-0770/)

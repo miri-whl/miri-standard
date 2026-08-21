@@ -47,8 +47,8 @@ references:
 - title: PEP 427
   url: https://peps.python.org/pep-0427/
   type: external
-- title: PEP 491
-  url: https://peps.python.org/pep-0491/
+- title: Binary Distribution Format
+  url: https://packaging.python.org/en/latest/specifications/binary-distribution-format/
   type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-001.yaml

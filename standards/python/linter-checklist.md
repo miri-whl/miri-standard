@@ -28,7 +28,7 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [PEP 491](https://peps.python.org/pep-0491/) | 2 |
+| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/) | 2 |
 | MIRI-PY-002 | M | Core metadata valid | `METADATA` parses as Core Metadata 2.x; name normalized | [PEP 566](https://peps.python.org/pep-0566/) / [PEP 503](https://peps.python.org/pep-0503/) | 2 |
 | MIRI-PY-003 | M | Version scheme valid | Version parses under the canonical scheme | [PEP 440](https://peps.python.org/pep-0440/) | 2 |
 | MIRI-PY-004 | S | Declarative build config | `pyproject.toml` with `[project]` table drives the build | [PEP 621](https://peps.python.org/pep-0621/) / [PEP 517](https://peps.python.org/pep-0517/) | 2 |

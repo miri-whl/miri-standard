@@ -84,7 +84,7 @@ Python track:
       Minimum Compliance. _(packaging, security)_
 - [ ] Collapse the three conflicting "Minimum Compliance" definitions into the checklist as sole authority; delete
       the `Miri-Compliance: full|partial|none` vocabulary. _(packaging, agent-tooling)_
-- [ ] Rename all `AI_EXAMPLES.json` → `AGENT_EXAMPLES.json` and `get_ai_metadata` → `get_agent_metadata` across the
+- [x] Rename all `AI_EXAMPLES.json` → `AGENT_EXAMPLES.json` and `get_ai_metadata` → `get_agent_metadata` across the
       specs. _(agent-tooling, security)_
 - [ ] Fix or regenerate `implementation-guide.md` — broken `importlib` loader, invalid JSON example, `build_hooks`
       import mismatch, naive timestamp; it is superseded by a working implementation it does not reference.

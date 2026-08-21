@@ -22,7 +22,7 @@ package.
 ### Key Milestones
 
 - **PEP 427** (2012): The Wheel Binary Package Format 1.0
-- **PEP 491** (2015): The Wheel Binary Package Format 1.9
+- **PEP 491** (2015, Deferred): Wheel format 1.9 — superseded by the living Binary Distribution Format spec
 - **PEP 566** (2017): Metadata for Python Software Packages 2.1
 - **PEP 621** (2020): Storing project metadata in pyproject.toml
 
@@ -127,12 +127,12 @@ package_name-version.dist-info/RECORD,,
 - **Summary**: Defines the basic wheel format structure
 - **URL**: <https://peps.python.org/pep-0427/>
 
-#### PEP 491: The Wheel Binary Package Format 1.9  
+#### PEP 491: The Wheel Binary Package Format 1.9
 
-- **Status**: Final
+- **Status**: Deferred (wheel 1.9 never shipped; the living Binary Distribution Format specification is authoritative)
 - **Created**: 2015
-- **Summary**: Updates to wheel format, adds build numbers
-- **URL**: <https://peps.python.org/pep-0491/>
+- **Summary**: Proposed updates to the wheel format; never adopted
+- **URL**: <https://packaging.python.org/en/latest/specifications/binary-distribution-format/>
 
 #### PEP 566: Metadata for Python Software Packages 2.1
 
