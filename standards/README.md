@@ -82,8 +82,8 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **[Miri Wheel Extensions](python/miri-python-wheel-extensions.md)** - Agent-friendly Python wheel format extensions specification
 - **[Agent Metadata Specification](python/miri-agent-metadata-specification.md)** - Pre-parsed metadata formats for
   performance optimization
-- **[Python Implementation Guide](python/miri-implementation-guide.md)** - Practical guide to implementing Miri Standard in
-  Python packages
+- **[Python Implementation Guide](python/miri-implementation-guide.md)** - Practical guide to implementing the Miri
+  Standard in Python packages
 - **[Python Lifecycle and Security Metadata](python/lifecycle-security-metadata.md)** - Package identity, advisory
   sources, and lifecycle state for open source and private packages
 - **[Python Linter Checklist](python/linter-checklist.md)** - 40 numbered, weighted conformance checks for scoring
