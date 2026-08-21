@@ -114,3 +114,26 @@ specs cite these by section, so section numbers there are load-bearing.
 - `.vscode/settings.json` (muted-gold workspace theme) is intentionally committed; the rest of `.vscode/` is ignored.
 - The project name collides with Miri, the Rust UB interpreter — `standards/rust/README.md` carries the disambiguation
   note; keep it when touching Rust material.
+
+## Working in this repo
+
+### Memory bank
+
+Session-persistent project context lives in `memory-bank/` (git-tracked). At the start of any non-trivial session,
+read `memory-bank/activeContext.md` and `memory-bank/progress.md` first — they hold current focus, recent decisions,
+the roadmap, and known issues. The foundation files (`projectbrief.md`, `productContext.md`, `systemPatterns.md`,
+`techContext.md`) explain what the repo is and how it fits together. Update `activeContext.md` when direction changes
+or a decision is made, and `progress.md` when something ships or a new risk appears; when the user says **update
+memory bank**, review every file. Track discrete workstreams as files under `memory-bank/tasks/` (start from
+`memory-bank/tasks/task-template.md`) and move finished ones to `memory-bank/archive/`. This is a public repo — keep
+these files free of internal-only notes, private paths, and anything off-message from the project's public posture.
+`memory-bank/` and `.claude/` are excluded from the doc linters (`.markdownlintignore`, `.cspell.json`), so keep
+their cross-references as plain backticked paths, not markdown links.
+
+### Skills
+
+Project skills live in `.claude/skills/`. Load the matching one before the relevant work: `docs` for any prose/spec
+writing or review (it encodes the house style and the exact markdownlint/cspell/link rules CI gates on);
+`check-authoring` for adding, editing, or withdrawing a `standards/<target>/checks/*.yaml` definition;
+`schema-governance` for JSON Schema changes, check-weight/checklist edits, example validation, and the site
+generator (the weights-sum-to-100 and schema-enforces-the-spec invariants live there).

@@ -5,6 +5,9 @@
     "node_modules/**",
     "assets/**",
     ".vscode/**",
+    ".claude/**",
+    "memory-bank/**",
+    ".generated/**",
     "schemas/*.json"
   ],
   "words": [
