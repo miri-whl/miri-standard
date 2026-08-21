@@ -34,13 +34,13 @@ CLI track:
       the missing error-code table to the CLI spec §6. _(CLI author)_
 - [x] Pick one `changelog --since` shape (MIRI-CLI-029 array vs MIRI-CLI-036 object-keyed) and make both examples
       agree. _(CLI author)_
-- [ ] Make every spec example satisfy MIRI-CLI-010 (top-level `schema_version`): 8 error-envelope example files omit
+- [x] Make every spec example satisfy MIRI-CLI-010 (top-level `schema_version`): 8 error-envelope example files omit
       it and the `--describe` example nests it. _(CLI author)_
 - [x] Rewrite MIRI-CLI-003 to require a parseable first line (`<name> <version>`) per GNU §4.7, or stop citing GNU —
       the current compliant example contradicts the cited authority. _(CLI author)_
-- [ ] Replace the dead `pkg:brew` / `Homebrew` OSV join in MIRI-CLI-015/016 examples and fix MIRI-CLI-016's false
+- [x] Replace the dead `pkg:brew` / `Homebrew` OSV join in MIRI-CLI-015/016 examples and fix MIRI-CLI-016's false
       "joins directly against OSV records" claim. _(CLI author)_
-- [ ] Reconcile the sixth contradiction: the lint-report format stamps `report_version` while MIRI-CLI-010 mandates
+- [x] Reconcile the sixth contradiction: the lint-report format stamps `report_version` while MIRI-CLI-010 mandates
       `schema_version` — rename the field or define/exempt the report envelope in 010. _(CLI author)_
 
 Python track:

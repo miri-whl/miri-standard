@@ -29,7 +29,7 @@ fires_when:
 remediation:
 - Detect `!isatty(stdin)` and never prompt in that state — this must be the default, not opt-in via a `--non-interactive`
   flag
-- 'Where confirmation is required, fail fast with a structured error naming the answering flag, e.g. `{"ok": false, "error":
+- 'Where confirmation is required, fail fast with a structured error naming the answering flag, e.g. `{"schema_version": "1", "ok": false, "error":
   {"code": "CONFIRMATION_REQUIRED", "retryable": false, "suggestions": ["re-run with --yes"]}}` (CLI Spec §2.6)'
 - Give every prompt a flag or environment equivalent (`--yes`, `--strategy <v>`) and record it in `--describe`
 - Add a CI matrix running every command with `</dev/null` under a short timeout; any timeout expiry is a failure of this
@@ -37,7 +37,7 @@ remediation:
 examples:
   violation: "$ tool init </dev/null\nThis will create 3 resources. Continue? [y/N]\n(process blocks on read; the CI job\
     \ burns 60 minutes\n and dies with a timeout that never mentions the prompt)"
-  compliant: "$ tool init </dev/null\n(stderr) confirmation required and stdin is not a TTY\n(stdout) {\"ok\": false, \"\
+  compliant: "$ tool init </dev/null\n(stderr) confirmation required and stdin is not a TTY\n(stdout) {\"schema_version\": \"1\", \"ok\": false, \"\
     error\": {\"code\": \"CONFIRMATION_REQUIRED\",\n  \"retryable\": false, \"suggestions\": [\"re-run with --yes\"]}}\n\
     $ echo $?\n1            # immediate, structured, recoverable in one turn"
 suggested_fix: Never prompt when stdin is not a TTY; fail fast or take flags.

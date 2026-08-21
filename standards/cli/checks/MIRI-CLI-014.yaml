@@ -32,10 +32,10 @@ remediation:
   the `lifecycle.replacement` value for FLAG_REMOVED
 - Document both fields in the wire schema so consumers can rely on their presence
 examples:
-  violation: '{"ok": false, "error": {"code": "AUTH_EXPIRED"}}
+  violation: '{"schema_version": "1", "ok": false, "error": {"code": "AUTH_EXPIRED"}}
 
     # the agent cannot tell whether to retry as-is, re-authenticate, or abort'
-  compliant: "{\"ok\": false, \"error\": {\"code\": \"AUTH_EXPIRED\", \"retryable\": false,\n  \"suggestions\": [\"run `acme\
+  compliant: "{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\": \"AUTH_EXPIRED\", \"retryable\": false,\n  \"suggestions\": [\"run `acme\
     \ login --sso`, then re-issue the command\"]}}"
 suggested_fix: Add retryable and suggestions to the error object.
 references:

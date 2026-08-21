@@ -47,7 +47,7 @@ examples:
 
     error: unknown command "snapshot" — a dead-end parse failure; agents built on 2.5.0 knowledge retry blind'
   compliant: "2.6.0: \"snapshot\" carries lifecycle {status: deprecated, removed_in: \"2.7.0\", replacement: \"backup create\"\
-    }, functions, warns on stderr\n2.7.0: \"snapshot\" removed; invoking it returns\n{\"ok\": false, \"error\": {\"code\"\
+    }, functions, warns on stderr\n2.7.0: \"snapshot\" removed; invoking it returns\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\"\
     : \"COMMAND_REMOVED\", \"removed_in\": \"2.7.0\",\n  \"retryable\": false, \"suggestions\": [\"use 'tool backup create'\
     \ instead\"]}}"
 suggested_fix: 'Deprecate first: lifecycle block + changelog entry + grace period, then remove.'

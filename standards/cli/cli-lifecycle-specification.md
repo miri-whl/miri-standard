@@ -105,7 +105,9 @@ Standard error codes:
 | `FLAG_REMOVED` | `false` | The flag or subcommand was removed; the caller must use its replacement (§6) |
 
 Code-specific fields (e.g. `flag` and `removed_in` for `FLAG_REMOVED`) are added alongside these. This envelope is the
-canonical error format referenced by the error-handling checks.
+canonical error format referenced by the error-handling checks. `schema_version` is the ecosystem convention for the
+wire-schema version of *any* machine-readable JSON document these tools emit — including linter reports and other
+tooling output — so no document substitutes a per-format alias such as `report_version`.
 
 ## 3. Self-Identification
 
@@ -134,7 +136,7 @@ The CLI's introspection output (`<cli> --describe`, or the Miri introspection co
 
 | Field | Required | Meaning |
 |---|---|---|
-| `purl` | Yes | The join key for advisory lookups. Use the purl type of the actual distribution channel (`pkg:npm/`, `pkg:pypi/`, `pkg:cargo/`, `pkg:golang/`, `pkg:brew/`…); `pkg:generic/` with a `repository_url` qualifier for direct binary distribution. |
+| `purl` | Yes | The join key for advisory lookups. Use the purl type of the actual distribution channel (`pkg:npm/`, `pkg:pypi/`, `pkg:cargo/`, `pkg:golang/`…); `pkg:generic/` with a `repository_url` qualifier for direct binary distribution or channels OSV does not index (e.g. Homebrew). |
 | `version` | Yes | The CLI's release version (one of the three clocks — see landscape doc §5). |
 | `schema_version` | Yes | The wire-schema version of the JSON the CLI emits — versioned independently of `version`. |
 | `distribution` | Yes | `"open-source"` or `"private"`. |
@@ -335,9 +337,9 @@ For `distribution: "open-source"` CLIs:
 
 ### 7.1 Distribution and Identity
 
-- When distributed through a package registry (npm, PyPI, crates.io, Homebrew…), `purl` MUST use that registry's purl
-  type; the CLI then inherits the registry's update and advisory machinery, and `check-update` SHOULD consult the
-  registry rather than a bespoke endpoint.
+- When distributed through a package registry that OSV indexes (npm, PyPI, crates.io, Go…), `purl` MUST use that
+  registry's purl type; the CLI then inherits the registry's update and advisory machinery, and `check-update` SHOULD
+  consult the registry rather than a bespoke endpoint.
 - When distributed as direct binaries (GitHub Releases, download page), each release MUST publish an SBOM and reference
   it from `identity.sbom`; the latest-version manifest referenced by `check-update` SHOULD be the forge's releases API
   or a static manifest adjacent to the artifacts.

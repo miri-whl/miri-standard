@@ -32,7 +32,7 @@ fires_when:
 remediation:
 - 'Keep removed surfaces registered in the schema-as-data source as tombstones (`status: "removed"`) rather than deleting
   their entries, so the parser still recognizes them'
-- 'Route tombstone hits to the §6 structured error: `{"ok": false, "error": {"code": "FLAG_REMOVED", "flag": ..., "removed_in":
+- 'Route tombstone hits to the §6 structured error: `{"schema_version": "1", "ok": false, "error": {"code": "FLAG_REMOVED", "flag": ..., "removed_in":
   ..., "retryable": false, "suggestions": [...]}}`'
 - Derive `suggestions` from the tombstone's `lifecycle.replacement` field so the guidance cannot drift from the surface
   that actually exists (§6.3-3)
@@ -46,7 +46,7 @@ examples:
     Usage: acme-cli get [flags]
 
     # dead end: nothing names --output archive; a stale agent retries blind'
-  compliant: "$ acme-cli get --export\n{\"ok\": false, \"error\": {\"code\": \"FLAG_REMOVED\", \"flag\": \"--export\",\n\
+  compliant: "$ acme-cli get --export\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\": \"FLAG_REMOVED\", \"flag\": \"--export\",\n\
     \  \"removed_in\": \"1.18.0\", \"retryable\": false,\n  \"suggestions\": [\"use --output archive instead\"]}}"
 suggested_fix: 'Serve the structured teaching error: code, retryable false, suggestions.'
 references:

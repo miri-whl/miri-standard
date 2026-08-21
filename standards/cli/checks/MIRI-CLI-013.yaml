@@ -27,7 +27,7 @@ fires_when:
 - Error codes appear nowhere in the documented wire contract, leaving message text as the only branching surface
 - The same induced failure yields an `error.code` different from the documented one
 remediation:
-- 'Emit {"ok": false, "error": {"code": ...}} as JSON on the machine channel for every failure path, per CLI Spec §6'
+- 'Emit {"schema_version": "1", "ok": false, "error": {"code": ...}} as JSON on the machine channel for every failure path, per CLI Spec §6'
 - 'Assign UPPER_SNAKE codes from a closed, documented set (AUTH_EXPIRED, FLAG_REMOVED, RESOURCE_NOT_FOUND) and treat the
   set as API: codes are added, never repurposed or renumbered'
 - Keep the human explanation in a separate message field that may change freely; keep warnings on stderr so they never corrupt
@@ -42,7 +42,7 @@ examples:
     $ echo $?
 
     2   # prose only; nothing an agent can branch on survives a rewording'
-  compliant: "$ acme deploy --export\n{\"ok\": false, \"error\": {\"code\": \"FLAG_REMOVED\", \"flag\": \"--export\",\n\
+  compliant: "$ acme deploy --export\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\": \"FLAG_REMOVED\", \"flag\": \"--export\",\n\
     \  \"removed_in\": \"1.18.0\", \"retryable\": false,\n  \"suggestions\": [\"use --output archive instead\"]}}"
 suggested_fix: Emit structured errors with a stable machine error.code.
 references:
