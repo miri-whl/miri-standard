@@ -31,11 +31,11 @@ is unspecified.
   example, fix, and references — the machine-readable source of truth for linters
 - **[Artifact Lifecycle](artifact-lifecycle.md)** *(Draft)* - Every stage from release to withdrawal, the nested surface
   lifecycle, and the three-clocks model (diagrammed PDF available)
+- **[Introspection Schema](../../schemas/cli-describe-v1.json)** *(Draft)* - Normative JSON Schema for the `--describe`
+  introspection document (`cli-describe-v1.json`)
 
 ### Planned Specifications
 
-- **Introspection Schema** *(Planned)* - Normative JSON Schema for `--describe` output with conformance tests (landscape
-  doc §4.1)
 - **Stability Contract** *(Planned)* - Required artifact defining what SemVer covers for a CLI (landscape doc §3.4)
 - **Skill-File Regeneration** *(Planned)* - Specified command for regenerating `SKILL.md` from the installed binary
   (landscape doc §4.5)

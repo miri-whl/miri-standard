@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/cli-describe-v1.json",
+  "title": "Miri Standard CLI Introspection (--describe)",
+  "description": "Schema for the JSON document a conforming CLI emits from `--describe` (or its documented introspection command). See CLI Lifecycle Specification §3-6.",
+  "type": "object",
+  "required": ["schema_version", "identity", "support", "advisory_sources", "commands"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Wire-schema version of this document, carried top-level per MIRI-CLI-010 and versioned independently of identity.version"
+    },
+    "identity": {
+      "type": "object",
+      "required": ["purl", "version", "distribution"],
+      "properties": {
+        "purl": {
+          "type": "string",
+          "pattern": "^pkg:[a-z][a-z0-9.+-]*/.+@.+",
+          "description": "The join key for advisory lookups; purl of the actual distribution channel, or pkg:generic with a repository_url qualifier for direct binary distribution"
+        },
+        "version": {
+          "type": "string",
+          "description": "The CLI's release version"
+        },
+        "distribution": {
+          "type": "string",
+          "enum": ["open-source", "private"]
+        },
+        "source_repository": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https://"
+        },
+        "sbom": {
+          "type": "string",
+          "description": "URL or embedded path of a CycloneDX/SPDX SBOM for this release"
+        },
+        "build_info": {
+          "type": "object",
+          "properties": {
+            "commit": {"type": "string"},
+            "toolchain": {"type": "string"},
+            "embedded_modules": {"type": "boolean"}
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "support": {"$ref": "#/definitions/support"},
+    "advisory_sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/definitions/advisory_source"}
+    },
+    "update_check": {
+      "type": "object",
+      "description": "Optional pointer to the CLI's update-check mechanism; the check-update command emits its own document",
+      "properties": {
+        "type": {"type": "string"},
+        "url": {"type": "string", "format": "uri", "pattern": "^https://"}
+      },
+      "additionalProperties": false
+    },
+    "commands": {
+      "type": "array",
+      "description": "The command surface an agent can discover and drive",
+      "items": {"$ref": "#/definitions/command"}
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "support": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["active", "maintenance", "deprecated", "eol"]},
+        "supported_versions": {"type": "array", "items": {"type": "string"}},
+        "eol_date": {"type": ["string", "null"], "format": "date"},
+        "replacement": {
+          "type": ["string", "null"],
+          "description": "Purl of the successor tool, or a subcommand path when absorbed into another CLI; required (non-null) when status is deprecated or eol"
+        },
+        "security_policy": {"type": ["string", "null"], "format": "uri", "pattern": "^https://"}
+      },
+      "additionalProperties": false,
+      "if": {"properties": {"status": {"enum": ["deprecated", "eol"]}}},
+      "then": {"required": ["status", "replacement"], "properties": {"replacement": {"type": "string"}}}
+    },
+    "advisory_source": {
+      "type": "object",
+      "required": ["type", "url"],
+      "properties": {
+        "type": {"type": "string", "enum": ["osv", "osv-internal", "osv-local"]},
+        "ecosystem": {"type": "string", "description": "OSV ecosystem name; required when type is osv"},
+        "url": {"type": "string", "description": "Query endpoint URL, or path/URL of an offline database archive"},
+        "authoritative": {"type": "boolean", "default": true}
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {"if": {"properties": {"type": {"const": "osv"}}}, "then": {"required": ["type", "url", "ecosystem"]}},
+        {"if": {"properties": {"type": {"enum": ["osv", "osv-internal"]}}}, "then": {"properties": {"url": {"pattern": "^https://"}}}}
+      ]
+    },
+    "lifecycle": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": {"type": "string", "enum": ["active", "deprecated", "removed"]},
+        "deprecated_since": {"type": "string"},
+        "removed_in": {"type": "string"},
+        "replacement": {"type": "string"},
+        "migration": {"type": "string", "format": "uri"}
+      },
+      "additionalProperties": false
+    },
+    "flag": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "lifecycle": {"$ref": "#/definitions/lifecycle"}
+      },
+      "additionalProperties": false
+    },
+    "command": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        "lifecycle": {"$ref": "#/definitions/lifecycle"},
+        "flags": {"type": "array", "items": {"$ref": "#/definitions/flag"}},
+        "subcommands": {"type": "array", "items": {"$ref": "#/definitions/command"}}
+      },
+      "additionalProperties": false
+    }
+  }
+}

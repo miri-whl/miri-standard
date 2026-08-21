@@ -111,15 +111,17 @@ tooling output — so no document substitutes a per-format alias such as `report
 
 ## 3. Self-Identification
 
-The CLI's introspection output (`<cli> --describe`, or the Miri introspection command once specified) MUST include an
-`identity` block:
+The CLI's introspection output (`<cli> --describe`, or the Miri introspection command once specified) carries a
+top-level `schema_version` (§2.6, per MIRI-CLI-010) and an `identity` block. The complete document — identity,
+`support` (§3.2), `advisory_sources` (§4), and the `commands` surface (§6) — is defined by
+[`cli-describe-v1.json`](../../schemas/cli-describe-v1.json):
 
 ```json
 {
+  "schema_version": "1",
   "identity": {
     "purl": "pkg:generic/acme/acme-cli@3.2.0?repository_url=https://releases.acme.example",
     "version": "3.2.0",
-    "schema_version": "1",
     "distribution": "private",
     "source_repository": "https://github.com/acme/acme-cli",
     "sbom": "https://releases.acme.example/acme-cli/3.2.0/sbom.cdx.json",
@@ -138,7 +140,7 @@ The CLI's introspection output (`<cli> --describe`, or the Miri introspection co
 |---|---|---|
 | `purl` | Yes | The join key for advisory lookups. Use the purl type of the actual distribution channel (`pkg:npm/`, `pkg:pypi/`, `pkg:cargo/`, `pkg:golang/`…); `pkg:generic/` with a `repository_url` qualifier for direct binary distribution or channels OSV does not index (e.g. Homebrew). |
 | `version` | Yes | The CLI's release version (one of the three clocks — see landscape doc §5). |
-| `schema_version` | Yes | The wire-schema version of the JSON the CLI emits — versioned independently of `version`. |
+| `schema_version` (top-level) | Yes | The wire-schema version of the whole introspection document — a top-level field, not inside `identity` — versioned independently of `version`. |
 | `distribution` | Yes | `"open-source"` or `"private"`. |
 | `sbom` | MUST for direct binary distribution without embedded module info; SHOULD otherwise | URL or embedded path of a CycloneDX/SPDX SBOM for this release, making the dependency tree scannable for non-Go binaries (§7.1). Complementary to `purl`: the purl identifies the tool itself, the SBOM identifies what it bundles. |
 | `build_info.embedded_modules` | SHOULD | `true` when the binary carries toolchain-embedded dependency info (e.g. Go buildinfo) readable without the SBOM. |

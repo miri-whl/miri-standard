@@ -69,7 +69,7 @@ Python track:
       _(security)_
 - [ ] `lifecycle-v1.json`: `osv` source ⇒ `ecosystem` required; define `osv-local` base-path resolution; define
       `authoritative` default and list-order semantics. _(security)_
-- [ ] Ship the CLI `--describe` introspection JSON Schema — 33 of 43 CLI checks depend on it. _(CLI author; the
+- [x] Ship the CLI `--describe` introspection JSON Schema — 33 of 43 CLI checks depend on it. _(CLI author; the
       single biggest CLI-track blocker)_
 - [ ] Ship or de-reference the missing schemas: `agent-examples-v1.json` (aka `ai-examples`), `templates-v1.json`,
       `api-reference-v1.json`; specify or delete `performance-hints.json`; add `examples-index-v1.json`. _(agent-
