@@ -109,7 +109,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-036 | M | Discovery APIs work | Package-level discovery functions importable and return coherent data | [Miri Wheel Ext. §6](miri-wheel-extensions.md) | 3 |
+| MIRI-PY-036 | M | Discovery and manifest verification | Discovery functions work; `sdk-manifest` api_index resolves against the installed API surface | [Miri Wheel Ext. §6](miri-wheel-extensions.md) / [Agent Metadata §4.1](agent-metadata-specification.md) | 3 |
 | MIRI-PY-037 | S | Embedded docs present | `docs/` directory with API reference and troubleshooting | [Miri Wheel Ext. §5.3](miri-wheel-extensions.md) | 2 |
 | MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-wheel-extensions.md) | 2 |
 | MIRI-PY-039 | S | Prompt templates valid | `prompt-templates.md`, if present, follows the specified structure | [Agent Metadata §4.4](agent-metadata-specification.md) | 1 |

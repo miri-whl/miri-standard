@@ -126,6 +126,6 @@ Python track:
 - [x] Split the standard: promote the lifecycle/deprecation/identity layer as "Miri Core"; demote
       sdk-manifest/usage-patterns/api-graph to experimental / optional-derived. _(agent-tooling, AI researcher;
       four-panelist convergence)_
-- [ ] Add MIRI-PY-041 (or fold into 036): manifest↔code verification — every `api_index` symbol must exist in the
+- [x] Add MIRI-PY-041 (or fold into 036): manifest↔code verification — every `api_index` symbol must exist in the
       importable surface. Would make Miri the only _verified_ API-summary format. Coordinates with `miri-py.md`.
       _(agent-tooling)_
