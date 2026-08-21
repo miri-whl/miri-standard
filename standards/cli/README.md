@@ -10,6 +10,16 @@ Where the Python standards extend the wheel format so agents can understand a *l
 introspection, versioning, deprecation, update checks, and vulnerability signaling — for both open source and
 private/internal CLIs.
 
+## Platform Scope
+
+These specifications currently target **POSIX environments**. Several checks assume POSIX semantics — signal handling
+(SIGINT/SIGTERM/SIGPIPE), exit-code conventions (including 130 for interrupt), `/dev/null`, and standard stream
+behavior. A CLI is evaluated against these expectations on a POSIX platform.
+
+Windows is not yet in scope. A future appendix will map the POSIX-specific checks to their Windows equivalents
+(console control events, atomic-replace APIs, exit-code conventions); until then, the Windows behavior of those checks
+is unspecified.
+
 ## Current Specifications
 
 - **[CLI Lifecycle and Vulnerability Signaling](cli-lifecycle-specification.md)** *(Draft)* - Self-identification

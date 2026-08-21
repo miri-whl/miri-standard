@@ -1,6 +1,6 @@
 # Miri Standard: Agent-Friendly Python Wheel Extensions
 
-*Specification Version: 1.0-draft*  
+*Specification Version: 0.1-draft*  
 *Status: Draft*  
 *Created: 2025*
 

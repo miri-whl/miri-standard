@@ -1,6 +1,6 @@
 # Miri Standard: Pre-Parsed Agent Metadata Specification
 
-*Specification Version: 1.0-draft*  
+*Specification Version: 0.1-draft*  
 *Status: Draft*  
 *Created: 2025*
 
@@ -29,7 +29,7 @@ SDKs and libraries — is a design goal of the standard, not yet a measured resu
 Autonomous agents face significant performance bottlenecks when working with Python packages:
 
 - **Continuous Re-parsing**: Agents repeatedly parse the same documentation and examples
-- **Unstructured Data**: Free-form text requires complex NLP processing
+- **Unstructured Data**: Free-form text must be re-read and interpreted each session, at token cost
 - **Version Inconsistency**: Documentation often lags behind code changes
 - **Context Loss**: Agents lose learned patterns between sessions
 - **Slow Discovery**: Sequential reading of documentation prevents instant API comprehension
@@ -56,10 +56,10 @@ The Miri Standard addresses these issues by providing:
 
 ### 2.2 Key Benefits
 
-- **Instant Consumption**: Agents access structured data immediately
-- **Consistent Interpretation**: Standardized formats eliminate ambiguity
-- **Version Synchronization**: Automated generation ensures accuracy
-- **Performance Optimization**: Eliminate redundant parsing operations
+- **Direct Consumption**: Agents read structured data without re-deriving it from prose
+- **Consistent Structure**: Standardized formats reduce interpretation ambiguity
+- **Version Synchronization**: Build-time generation keeps metadata in step with the code
+- **Offline Availability**: Metadata ships with the artifact — no external fetch
 - **Context Preservation**: Structured patterns enable better code suggestions
 
 ## 3. Agent Metadata Directory Structure
@@ -314,7 +314,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
         "Update any error handling for new exception types"
       ],
       "automated_fix": {
-        "find_pattern": r"\.execute\(",
+        "find_pattern": "\\.execute\\(",
         "replace_pattern": ".query(",
         "confidence": "high"
       },
@@ -482,7 +482,7 @@ generated at build time.
 import inspect
 import json
 import ast
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 class AgentMetadataGenerator:
@@ -508,7 +508,7 @@ class AgentMetadataGenerator:
         """Generate sdk-manifest.json from source code inspection."""
         manifest = {
             "sdk_version": self.version,
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "miri_version": "1.0",
             "quick_reference": self._extract_quick_reference(),
             "api_index": self._extract_api_index(),
@@ -572,7 +572,7 @@ class AgentMetadataGenerator:
         
         usage_data = {
             "version": "1.0",
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "patterns": patterns,
             "categories": self._categorize_patterns(patterns),
             "learning_paths": self._generate_learning_paths(patterns)
@@ -651,12 +651,12 @@ class AgentMetadataLoader:
         if "manifest" not in self._cache:
             try:
                 # Try to load from installed package
-                with importlib.resources.files(f"{self.package_name}.agent-metadata") as metadata_dir:
-                    manifest_file = metadata_dir / "sdk-manifest.json"
-                    if manifest_file.exists():
-                        self._cache["manifest"] = json.loads(manifest_file.read_text())
-                    else:
-                        return None
+                metadata_dir = importlib.resources.files(self.package_name) / "agent-metadata"
+                manifest_file = metadata_dir / "sdk-manifest.json"
+                if manifest_file.exists():
+                    self._cache["manifest"] = json.loads(manifest_file.read_text())
+                else:
+                    return None
             except (ImportError, FileNotFoundError):
                 return None
         
@@ -666,12 +666,12 @@ class AgentMetadataLoader:
         """Load usage patterns with caching."""
         if "patterns" not in self._cache:
             try:
-                with importlib.resources.files(f"{self.package_name}.agent-metadata") as metadata_dir:
-                    patterns_file = metadata_dir / "usage-patterns.json"
-                    if patterns_file.exists():
-                        self._cache["patterns"] = json.loads(patterns_file.read_text())
-                    else:
-                        return None
+                metadata_dir = importlib.resources.files(self.package_name) / "agent-metadata"
+                patterns_file = metadata_dir / "usage-patterns.json"
+                if patterns_file.exists():
+                    self._cache["patterns"] = json.loads(patterns_file.read_text())
+                else:
+                    return None
             except (ImportError, FileNotFoundError):
                 return None
         
@@ -776,10 +776,10 @@ class LazyAgentMetadata:
     def _load_file(self, filename: str) -> Dict:
         """Load and cache metadata file."""
         try:
-            with importlib.resources.files(f"{self.package_name}.agent-metadata") as metadata_dir:
-                file_path = metadata_dir / filename
-                if file_path.exists():
-                    return json.loads(file_path.read_text())
+            metadata_dir = importlib.resources.files(self.package_name) / "agent-metadata"
+            file_path = metadata_dir / filename
+            if file_path.exists():
+                return json.loads(file_path.read_text())
         except Exception:
             pass
         return {}

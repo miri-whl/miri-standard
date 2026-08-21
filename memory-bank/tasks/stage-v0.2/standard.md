@@ -86,10 +86,10 @@ Python track:
       the `Miri-Compliance: full|partial|none` vocabulary. _(packaging, agent-tooling)_
 - [x] Rename all `AI_EXAMPLES.json` → `AGENT_EXAMPLES.json` and `get_ai_metadata` → `get_agent_metadata` across the
       specs. _(agent-tooling, security)_
-- [ ] Fix or regenerate `implementation-guide.md` — broken `importlib` loader, invalid JSON example, `build_hooks`
+- [x] Fix or regenerate `implementation-guide.md` — broken `importlib` loader, invalid JSON example, `build_hooks`
       import mismatch, naive timestamp; it is superseded by a working implementation it does not reference.
       _(packaging, agent-tooling)_
-- [ ] Amend MIRI-PY-001 remediation to sanction RECORD-coherent post-processing (the enhancer does this
+- [x] Amend MIRI-PY-001 remediation to sanction RECORD-coherent post-processing (the enhancer does this
       legitimately) and exclude `RECORD.jws`/`RECORD.p` from the unrecorded-member sweep. _(packaging)_
 - [ ] Purge PEP 491 citations (Deferred) → cite the living Binary Distribution Format spec; add PEP 639
       License-Expression coverage (nothing checks it today). _(packaging)_
@@ -121,7 +121,7 @@ Python track:
 - [ ] Fix the scoring model: Gold is arithmetically unreachable for first releases (previous-release forfeiture caps
       at 86); define skipped-MUST score semantics; make grades measure the wheel, not the linter's capabilities
       (report a capability profile). _(CLI author, packaging)_
-- [ ] Declare the POSIX platform scope explicitly in `standards/cli/README.md` (Windows appendix later). _(CLI
+- [x] Declare the POSIX platform scope explicitly in `standards/cli/README.md` (Windows appendix later). _(CLI
       author)_
 - [ ] Split the standard: promote the lifecycle/deprecation/identity layer as "Miri Core"; demote
       sdk-manifest/usage-patterns/api-graph to experimental / optional-derived. _(agent-tooling, AI researcher;
