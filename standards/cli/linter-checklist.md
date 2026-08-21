@@ -14,10 +14,23 @@ weights sum to exactly **100**, so a CLI's Miri score is the sum of the weights 
 
 Identical to the [Python checklist](../python/linter-checklist.md): **Score** = Σ weights of passing checks; **M**
 checks are required for conformance (any M failure caps the reported score at 74); *conditional* checks score
-automatically when inapplicable.
+automatically when inapplicable. The previous-release checks (MIRI-CLI-030, 033, 035, 036, 037) are *conditional*, so a
+first release — with no prior release to diff against — scores them at full weight and can reach Gold; they forfeit
+weight only when a prior release exists but the linter cannot fetch it.
 
 **Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
 · <50 non-conforming.
+
+## Conformance Profiles
+
+- **Miri Core** — the conventions, machine-readable output, self-identification, and safety layer: Baseline Conventions
+  (MIRI-CLI-001–007), Machine Output (008–014), Identity & Introspection (015–024), and Safety (039–043). A CLI is
+  **Core-conforming** when it passes every MUST check in this set. Core is the recommended adoption target and the
+  standard's most defensible layer.
+- **Miri Full** — all 43 checks, adding the Update & Changelog (025–030) and Deprecation Coherence (031–038) machinery
+  that tracks lifecycle history across releases. The Bronze/Silver/Gold score is computed over the Full set.
+
+The two profiles share one check corpus and one weighting; Core is a named subset, not a separate standard.
 
 ## The Checks
 

@@ -59,7 +59,7 @@ Python track:
       and specify SOURCE_DATE_EPOCH interplay. _(packaging, agent-tooling)_
 - [x] MIRI-PY-005: make conditional on `distribution: open-source` / derive the endpoint from `identity.registry`
       instead of hardcoding pypi.org in `fires_when`. _(packaging)_
-- [ ] Define stable counting rules for `violation_unit: "each schema violation"` (007–010) — validators disagree on
+- [x] Define stable counting rules for `violation_unit: "each schema violation"` (007–010) — validators disagree on
       granularity, so scores are not comparable. _(packaging)_
 
 ## P1 — schema-enforces-the-spec and missing schemas
@@ -67,7 +67,7 @@ Python track:
 - [x] Push the linter's URL enforcement into the published schema: require `^https://` for all signal URLs
       (registry, advisory, `update_check`, `vex`, `security_policy`); reject `http://`, `javascript:`, `file:`.
       _(security)_
-- [ ] `lifecycle-v1.json`: `osv` source ⇒ `ecosystem` required; define `osv-local` base-path resolution; define
+- [x] `lifecycle-v1.json`: `osv` source ⇒ `ecosystem` required; define `osv-local` base-path resolution; define
       `authoritative` default and list-order semantics. _(security)_
 - [x] Ship the CLI `--describe` introspection JSON Schema — 33 of 43 CLI checks depend on it. _(CLI author; the
       single biggest CLI-track blocker)_
@@ -116,14 +116,14 @@ Python track:
 
 ## P2 — scope and adoption
 
-- [ ] Define a "Core" conformance profile (~15 checks) an ordinary well-maintained project can pass in a day — an
+- [x] Define a "Core" conformance profile (~15 checks) an ordinary well-maintained project can pass in a day — an
       on-ramp, not just a wall of MUSTs. _(every panelist, both rounds; `requests` scores 40/100)_
-- [ ] Fix the scoring model: Gold is arithmetically unreachable for first releases (previous-release forfeiture caps
+- [x] Fix the scoring model: Gold is arithmetically unreachable for first releases (previous-release forfeiture caps
       at 86); define skipped-MUST score semantics; make grades measure the wheel, not the linter's capabilities
       (report a capability profile). _(CLI author, packaging)_
 - [x] Declare the POSIX platform scope explicitly in `standards/cli/README.md` (Windows appendix later). _(CLI
       author)_
-- [ ] Split the standard: promote the lifecycle/deprecation/identity layer as "Miri Core"; demote
+- [x] Split the standard: promote the lifecycle/deprecation/identity layer as "Miri Core"; demote
       sdk-manifest/usage-patterns/api-graph to experimental / optional-derived. _(agent-tooling, AI researcher;
       four-panelist convergence)_
 - [ ] Add MIRI-PY-041 (or fold into 036): manifest↔code verification — every `api_index` symbol must exist in the

@@ -18,12 +18,30 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
   74, to show distance from conformance.
 - Checks marked *conditional* (e.g. SBOM only when bundling non-Python components) score their full weight automatically
   when the condition does not apply.
+- **First releases can reach Gold.** The previous-release checks (MIRI-PY-030, 034) are *conditional*: a first release
+  has no prior release to diff against, so the condition does not apply and they score full weight. They forfeit weight
+  (reported) only when a prior release exists but the linter cannot fetch it — a capability gap, not a failure.
 - **Gold additionally requires provenance**: a public-index wheel reaches Gold only if MIRI-PY-005 (PEP 740
   attestations) passes — provenance is the anchor for every trust decision the metadata supports (Lifecycle §9.5). A
   wheel otherwise scoring ≥90 without attestations is capped at Silver.
 
 **Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
 · <50 non-conforming.
+
+## Conformance Profiles
+
+Two profiles let a package adopt Miri incrementally:
+
+- **Miri Core** — the identity, security, and lifecycle layer a well-maintained package can adopt in a day without
+  building an agent-metadata generation pipeline: the packaging baseline (MIRI-PY-001–005), JSON hygiene (MIRI-PY-013),
+  the hand-authorable `lifecycle.json` identity and advisory fields (MIRI-PY-018–023), support-status coherence
+  (MIRI-PY-033), and graceful degradation (MIRI-PY-040). A package is **Core-conforming** when it passes every MUST
+  check in this 15-check set. Core is the recommended on-ramp and the standard's most defensible layer.
+- **Miri Full** — all 40 checks, adding the generated agent-metadata surface (sdk-manifest, usage-patterns, api-graph),
+  embedded examples, deprecation-coherence machinery, and discovery APIs. The Bronze/Silver/Gold score is computed over
+  the Full set.
+
+The two profiles share one check corpus and one weighting; Core is a named subset, not a separate standard.
 
 ## The Checks
 

@@ -7,7 +7,7 @@ added_in: 0.1-draft
 level: MUST
 category: Deprecation Coherence
 weight: 3
-conditional: false
+conditional: true
 requirements:
 - previous-release
 severity:
