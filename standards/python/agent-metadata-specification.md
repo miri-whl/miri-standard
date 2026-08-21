@@ -21,6 +21,7 @@ SDKs and libraries — is a design goal of the standard, not yet a measured resu
 6. [Integration Patterns](#6-integration-patterns)
 7. [Performance Optimization](#7-performance-optimization)
 8. [Implementation Requirements](#8-implementation-requirements)
+9. [Security Considerations](#9-security-considerations)
 
 ## 1. Problem Statement
 
@@ -911,6 +912,24 @@ performance_optimization = true
 requires = ["setuptools>=61.0", "wheel", "miri-build-tools"]
 build-backend = "miri_build_tools.build_meta"
 ```
+
+## 9. Security Considerations
+
+The metadata defined here is generated and shipped by the package it describes, so a compromised release controls every
+field an agent consumes. The full threat model and the consumer-side rules that follow from it are specified in
+[Lifecycle and Security Metadata §9](lifecycle-security-metadata.md); this section highlights what is specific to the
+agent-metadata surface.
+
+- **Narrative files are an injection surface.** `prompt-templates.md`, `usage-patterns.json`, and any `AGENT_GUIDE.md`
+  are publisher-authored natural language that an agent may load into its context. They MUST be treated as untrusted
+  data, never as instructions: an agent MUST NOT execute a command or follow a step drawn from them without out-of-band
+  verification or human confirmation. `prompt-templates.md` is the highest-risk file — it exists to be read as
+  instructions — and a consumer SHOULD prefer to ignore it over trusting it.
+- **`api_index` and usage patterns can lie.** An agent generating code from `sdk-manifest.json` or `usage-patterns.json`
+  SHOULD verify calls against the installed package's actual surface (import and introspect) rather than trusting the
+  metadata's claims, which a compromised or careless build can fabricate.
+- **Provenance is the anchor.** Trust in any of this metadata is only as strong as the wheel's provenance; prefer
+  metadata from a release carrying a verified PEP 740 attestation (MIRI-PY-005).
 
 ---
 

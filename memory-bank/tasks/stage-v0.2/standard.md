@@ -98,20 +98,20 @@ Python track:
 
 ## P1 — threat model and trust (standard-side)
 
-- [ ] Write the Threat Model / Security Considerations section in both specs: metadata is attacker-controlled once a
+- [x] Write the Threat Model / Security Considerations section in both specs: metadata is attacker-controlled once a
       package is compromised; all natural-language metadata is untrusted **data**, never instructions; auto-actions
       (migrate to `replacement`, apply `vex`, follow a fix) require out-of-band verification or human confirmation.
       _(security, agent-tooling, AI researcher, packaging — four panelists)_
-- [ ] Invert the trust anchor: artifact-declared `advisory_sources`/`update_check` are hints; authoritative source
+- [x] Invert the trust anchor: artifact-declared `advisory_sources`/`update_check` are hints; authoritative source
       selection comes from consumer-side policy keyed by purl namespace. Add: HTTPS-only, no credential forwarding
       to package-declared URLs, SSRF guidance. _(security)_
-- [ ] Fix the redirect primitive: consumers MUST verify `support.replacement` provenance (same publisher via PEP 740
+- [x] Fix the redirect primitive: consumers MUST verify `support.replacement` provenance (same publisher via PEP 740
       identity) before acting; agents MUST NOT auto-install a replacement. _(security)_
-- [ ] Make MIRI-PY-039 enforce something real (length caps / no-imperative heuristics) plus normative "treat as
+- [x] Make MIRI-PY-039 enforce something real (length caps / no-imperative heuristics) plus normative "treat as
       data" text — a "has ≥ 1 heading" check is not content safety. _(agent-tooling, security)_
-- [ ] Promote PEP 740 attestations (MIRI-PY-005) from SHOULD/2pts toward MUST or Gold-gating for public wheels; stop
+- [x] Promote PEP 740 attestations (MIRI-PY-005) from SHOULD/2pts toward MUST or Gold-gating for public wheels; stop
       calling `generated_at` an "audit trail." _(security)_
-- [ ] Define the currency algorithm (exclude yanked/pre-releases, respect `Requires-Python`, consult PEP 792 before
+- [x] Define the currency algorithm (exclude yanked/pre-releases, respect `Requires-Python`, consult PEP 792 before
       trusting local `support.status`). _(security)_
 
 ## P2 — scope and adoption

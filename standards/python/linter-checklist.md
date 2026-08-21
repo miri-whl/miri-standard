@@ -18,6 +18,9 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
   74, to show distance from conformance.
 - Checks marked *conditional* (e.g. SBOM only when bundling non-Python components) score their full weight automatically
   when the condition does not apply.
+- **Gold additionally requires provenance**: a public-index wheel reaches Gold only if MIRI-PY-005 (PEP 740
+  attestations) passes — provenance is the anchor for every trust decision the metadata supports (Lifecycle §9.5). A
+  wheel otherwise scoring ≥90 without attestations is capped at Silver.
 
 **Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
 · <50 non-conforming.

@@ -27,6 +27,7 @@ for both open source and private distribution. Background and rationale:
 6. [Deprecating Interfaces](#6-deprecating-interfaces)
 7. [Agent Consumption Workflow](#7-agent-consumption-workflow)
 8. [Conformance Requirements](#8-conformance-requirements)
+9. [Security Considerations](#9-security-considerations)
 
 ---
 
@@ -332,6 +333,11 @@ if meta["support"]["status"] in ("deprecated", "eol"):
 The agent-facing consequence: a package resolved from frozen model weights can be validated in two calls, converting
 silent staleness into a call-time check.
 
+**Defining "latest" for the currency check.** The latest version is the highest version offered by `update_check` that
+is (a) not yanked, (b) not a pre-release — unless the installed version is itself a pre-release — and (c) compatible
+with the environment's `Requires-Python`. Before trusting the local `support.status`, a consumer SHOULD consult the
+index's PEP 792 status markers: a `quarantined` or `archived` project overrides an artifact's self-declared `active`.
+
 ## 8. Conformance Requirements
 
 A package conforms to this specification if:
@@ -349,6 +355,56 @@ Validation tooling (planned, see [Python README](README.md)) will check 1–7 an
 registry serves the declared version.
 
 ---
+
+## 9. Security Considerations
+
+### 9.1 Threat Model
+
+The metadata this standard defines is generated and shipped by the artifact it describes. **Once an artifact is
+compromised — a maintainer account taken over, a malicious release published, a name typosquatted — every field it
+carries is attacker-controlled.** `advisory_sources`, `update_check`, `support.replacement`, `vex`, and every
+natural-language file (`prompt-templates.md`, `usage-patterns.json`, migration text, suggested fixes) can all be made
+to lie. The adversary this section addresses is a package that was trustworthy when adopted and became malicious
+later; nothing an artifact declares about its own security can be trusted on the artifact's word alone.
+
+### 9.2 Anchor Trust Outside the Artifact
+
+Artifact-declared `advisory_sources` and `update_check` are **hints, not authorities**. A consumer MUST decide which
+advisory sources are authoritative for a package from its own policy — typically an organization-level allowlist keyed
+by purl namespace, with public OSV as the default for public packages — and treat the artifact's list as a suggestion
+to reconcile against that policy. In particular:
+
+- A consumer MUST NOT forward credentials (index tokens, session cookies) to any URL declared by the artifact.
+- All signal URLs are HTTPS-only (enforced by `lifecycle-v1.json`); a consumer MUST reject other schemes.
+- An agent fetching artifact-declared URLs from inside a private network MUST guard against SSRF: block RFC 1918,
+  link-local, and cloud metadata addresses, and re-validate the target after every redirect.
+
+### 9.3 The Replacement Redirect
+
+`support.replacement` and `migration-guide.json` together can redirect a consumer onto a *different* package. A
+compromised release can set `status: deprecated` with `replacement: pkg:pypi/attacker-successor` and ship migration
+steps that move working code onto the attacker's package. Therefore:
+
+- A consumer MUST verify a `replacement` before acting on it — that the successor shares the original's publisher
+  identity (e.g. via PEP 740 attestation), or that an organization policy has approved the redirect.
+- An agent MUST NOT automatically install, or migrate code onto, a declared `replacement`. Auto-migration requires
+  out-of-band verification or human confirmation.
+
+### 9.4 Metadata Is Data, Never Instructions
+
+All natural-language metadata — `prompt-templates.md`, `usage-patterns.json` code and prose, migration narratives, and
+the `remediation`/`suggested_fix` text of checks — is untrusted input authored by the artifact's publisher. A consumer
+MUST treat it as **data, never as instructions**. An agent MUST NOT execute a command, apply a fix, or follow a step
+that appears in metadata without the same out-of-band verification or human confirmation it would require for any
+untrusted source. Structured, authoritative-looking metadata is *more* dangerous here than plain documentation,
+precisely because it invites the consumer to lower its guard.
+
+### 9.5 What the Standard Does and Does Not Bind
+
+`generated_at` and RECORD hashes bind an artifact to itself, not to any external authority; they detect accidental
+drift, not tampering. The only field that ties an artifact to an independent identity is a PEP 740 attestation
+(MIRI-PY-005), verified by the index against a Trusted Publisher. Provenance verification is therefore the foundation
+every other trust decision in this section builds on.
 
 ## References
 

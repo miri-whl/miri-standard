@@ -14,8 +14,8 @@ severity:
 short_description: '`prompt-templates.md`, if present, follows the specified structure'
 long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
   This check verifies: `prompt-templates.md`, if present, follows the specified structure.'
-rationale: 'prompt-templates.md is the one metadata file agents ingest as operating instructions rather than as data: §4.4
-  defines its structure — Quick Start Prompts for code generation, debugging, and migration, each cross-referencing the
+rationale: 'prompt-templates.md provides prompt scaffolds an agent fills in and reads as data — never as operating instructions
+  (Lifecycle §9.4). §4.4 defines its structure — Quick Start Prompts for code generation, debugging, and migration, each cross-referencing the
   shipped metadata files by name (usage-patterns.json pattern IDs, sdk-manifest.json signatures, migration-guide.json).
   An integration that loads it substitutes the `{placeholders}` and follows those references mechanically, so a file missing
   the expected sections, or citing metadata the wheel does not ship, degrades precisely the integrations that opted into
@@ -25,10 +25,14 @@ fires_when:
   and migration templates)'
 - A template references a metadata file the wheel does not ship (e.g. cites api-graph.json when none is present)
 - Placeholder syntax is inconsistent within the file, defeating mechanical substitution
+- The file embeds executable commands or imperative instructions for the agent to run (e.g. `curl … | bash`, `rm -rf`,
+  a `pip install` of an arbitrary URL) rather than declarative prompt templates
 remediation:
 - Structure the file per Agent Metadata Specification §4.4, keeping the three Quick Start template categories
 - Derive the metadata-file references from the wheel's actual contents so a template never cites an absent file
 - Validate the heading structure and reference targets in CI alongside the JSON schema checks
+- Keep templates declarative — placeholder-filled prompt text only, never shell commands or instructions the agent is
+  expected to execute (Lifecycle §9.4)
 examples:
   violation: '# prompt-templates.md
 
@@ -50,6 +54,9 @@ suggested_fix: Follow the structure in the Agent Metadata Specification §4.4.
 references:
 - title: Agent Metadata §4.4
   url: agent-metadata-specification.md
+  type: spec
+- title: Lifecycle §9.4
+  url: lifecycle-security-metadata.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-039.yaml
