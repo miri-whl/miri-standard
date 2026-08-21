@@ -72,6 +72,41 @@ release manifest) — never in structure.
 All output defined here is JSON on **stdout** with exit code 0 on success. Deprecation and update *warnings* go to
 **stderr** only, so they never corrupt a payload.
 
+### 2.6 Structured Error Envelope
+
+When a command fails, its machine channel (stdout, per §2.5) MUST emit a single JSON object carrying a top-level
+`schema_version` and an `error` object:
+
+```json
+{
+  "schema_version": "1",
+  "ok": false,
+  "error": {
+    "code": "CONFIRMATION_REQUIRED",
+    "retryable": false,
+    "suggestions": ["re-run with --force"]
+  }
+}
+```
+
+`error.retryable` states whether re-running the **identical** invocation may later succeed. It is `true` only for
+transient failures (network error, timeout, rate limit) — never for failures that require the caller to change the
+command or the environment first. Agents branch on this field, so a wrong value causes either blind retry loops or
+premature give-up.
+
+Standard error codes:
+
+| `code` | `retryable` | Meaning |
+| --- | --- | --- |
+| `TRANSIENT` | `true` | Network error, timeout, or rate limit; the same call may succeed later |
+| `VALIDATION` | `false` | Malformed or invalid arguments; the caller must fix the input |
+| `AUTH` | `false` | Missing or rejected credentials; the caller must authenticate |
+| `CONFIRMATION_REQUIRED` | `false` | A destructive action needs `--force`/`--yes`; the caller must add it |
+| `FLAG_REMOVED` | `false` | The flag or subcommand was removed; the caller must use its replacement (§6) |
+
+Code-specific fields (e.g. `flag` and `removed_in` for `FLAG_REMOVED`) are added alongside these. This envelope is the
+canonical error format referenced by the error-handling checks.
+
 ## 3. Self-Identification
 
 The CLI's introspection output (`<cli> --describe`, or the Miri introspection command once specified) MUST include an
@@ -195,7 +230,28 @@ A conforming CLI MUST implement:
 returning, per release between `<version>` and the current version: added/removed/deprecated subcommands and flags,
 wire-schema changes (`schema_version` bumps), and exit-code meaning changes. This is the primitive that lets an agent
 that has been away for three releases ask *what moved* — the counterpart of `check-update`, which only says *that* it
-moved. Full shape to be defined alongside the introspection schema; the categories above are normative.
+moved. The output is a top-level object with a `schema_version` (§2.6) and an ordered `releases` array (oldest first), one
+entry per release in range. Each release entry carries `version`, string arrays `added` and `removed` (surface names),
+a `deprecated` array of `{surface, removed_in, replacement}` objects, a `schema_version_change` object (`{from, to}`
+or null), and an `exit_code_changes` array of `{code, was, now}` objects:
+
+```json
+{
+  "schema_version": "1",
+  "releases": [
+    {
+      "version": "3.2.0",
+      "added": ["--format"],
+      "removed": ["--export"],
+      "deprecated": [{"surface": "--legacy", "removed_in": "4.0.0", "replacement": "--modern"}],
+      "schema_version_change": {"from": "1", "to": "2"},
+      "exit_code_changes": [{"code": 3, "was": "not found", "now": "permission denied"}]
+    }
+  ]
+}
+```
+
+The five categories above are normative.
 
 ## 6. Deprecation Metadata
 

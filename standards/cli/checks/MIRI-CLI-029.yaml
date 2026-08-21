@@ -31,14 +31,16 @@ remediation:
 - Validate accepted `--since` values against the same release manifest `check-update` consults, so every published version
   is accepted
 examples:
-  violation: '$ acme-cli changelog --since 3.0.0 --json
-
+  violation: |-
+    $ acme-cli changelog --since 3.0.0 --json
     Error: unknown command "changelog" for "acme-cli"
-
-    # the only changelog is prose on the forge — nothing a returning agent can query'
-  compliant: "$ acme-cli changelog --since 3.0.0 --json\n{\"schema_version\": \"1\", \"releases\": [\n  {\"version\": \"\
-    3.1.0\", \"added\": [\"--output archive\"], \"deprecated\": [\"--export\"]},\n  {\"version\": \"3.2.0\", \"removed\"\
-    : [\"--export\"]}]}"
+    # the only changelog is prose on the forge — nothing a returning agent can query
+  compliant: |-
+    $ acme-cli changelog --since 3.0.0 --json
+    {"schema_version": "1", "releases": [
+      {"version": "3.1.0", "added": ["--output archive"],
+       "deprecated": [{"surface": "--export", "removed_in": "3.2.0", "replacement": "--output archive"}]},
+      {"version": "3.2.0", "removed": ["--export"]}]}
 suggested_fix: Implement changelog --since <version> --json per CLI Spec §5.2.
 references:
 - title: CLI Spec §5.2

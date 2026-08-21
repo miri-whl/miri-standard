@@ -35,15 +35,15 @@ remediation:
 - 'Add a release-CI fixture: cut a test release that removes a flag and bumps `schema_version`, and assert both appear in
   `changelog --since`'
 examples:
-  violation: '# 3.2.0 bumped schema_version 1 -> 2 and changed exit code 3''s meaning
-
+  violation: |-
+    # 3.2.0 bumped schema_version 1 -> 2 and changed exit code 3's meaning
     $ acme-cli changelog --since 3.1.0 --json
-
-    {"releases": [{"version": "3.2.0", "added": ["--format"]}]}
-
-    # consumer re-learns the flags, then breaks on the unreported payload shape'
-  compliant: "{\"releases\": [{\"version\": \"3.2.0\", \"added\": [\"--format\"],\n  \"schema_version\": {\"from\": \"1\"\
-    , \"to\": \"2\"},\n  \"exit_codes\": [{\"code\": 3, \"was\": \"not found\", \"now\": \"permission denied\"}]}]}"
+    {"schema_version": "1", "releases": [{"version": "3.2.0", "added": ["--format"]}]}
+    # consumer re-learns the flags, then breaks on the unreported payload shape
+  compliant: |-
+    {"schema_version": "1", "releases": [{"version": "3.2.0", "added": ["--format"],
+      "schema_version_change": {"from": "1", "to": "2"},
+      "exit_code_changes": [{"code": 3, "was": "not found", "now": "permission denied"}]}]}
 suggested_fix: Cover added/removed/deprecated surfaces, schema bumps, and exit-code changes.
 references:
 - title: CLI Spec §5.2

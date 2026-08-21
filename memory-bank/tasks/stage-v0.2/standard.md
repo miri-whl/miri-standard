@@ -30,13 +30,13 @@ move the checklist and prose in the same commit and re-run the `schema-governanc
 
 CLI track:
 
-- [ ] Pick one `retryable` value for `CONFIRMATION_REQUIRED` (MIRI-CLI-006 `true` vs MIRI-CLI-040 `false`) and add
+- [x] Pick one `retryable` value for `CONFIRMATION_REQUIRED` (MIRI-CLI-006 `true` vs MIRI-CLI-040 `false`) and add
       the missing error-code table to the CLI spec §6. _(CLI author)_
-- [ ] Pick one `changelog --since` shape (MIRI-CLI-029 array vs MIRI-CLI-036 object-keyed) and make both examples
+- [x] Pick one `changelog --since` shape (MIRI-CLI-029 array vs MIRI-CLI-036 object-keyed) and make both examples
       agree. _(CLI author)_
 - [ ] Make every spec example satisfy MIRI-CLI-010 (top-level `schema_version`): 8 error-envelope example files omit
       it and the `--describe` example nests it. _(CLI author)_
-- [ ] Rewrite MIRI-CLI-003 to require a parseable first line (`<name> <version>`) per GNU §4.7, or stop citing GNU —
+- [x] Rewrite MIRI-CLI-003 to require a parseable first line (`<name> <version>`) per GNU §4.7, or stop citing GNU —
       the current compliant example contradicts the cited authority. _(CLI author)_
 - [ ] Replace the dead `pkg:brew` / `Homebrew` OSV join in MIRI-CLI-015/016 examples and fix MIRI-CLI-016's false
       "joins directly against OSV records" claim. _(CLI author)_
