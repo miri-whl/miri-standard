@@ -151,7 +151,6 @@ package-1.0.0-py3-none-any.whl
 │   │   ├── migration-guide.json     # Version-specific changes
 │   │   ├── prompt-templates.md      # Agent interaction guides
 │   │   ├── api-graph.json          # API relationship graph
-│   │   ├── performance-hints.json  # Optimization suggestions
 │   │   └── lifecycle.json          # Identity, advisory sources, support status (required)
 │   ├── examples/                     # Miri: Embedded examples
 │   │   ├── __init__.py              # Example discovery
@@ -192,7 +191,6 @@ package-1.0.0-py3-none-any.whl
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/agent-examples-v1.json",
   "version": "1.0",
   "generated_at": "2025-08-30T12:00:00Z",
   "examples": {
@@ -290,7 +288,6 @@ therefore lives in dedicated files — the `agent-metadata/` directory and the `
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/api-reference-v1.json",
   "version": "1.0",
   "classes": {
     "ClassName": {
@@ -335,7 +332,6 @@ therefore lives in dedicated files — the `agent-metadata/` directory and the `
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/templates-v1.json",
   "version": "1.0",
   "templates": {
     "template_id": {
@@ -589,11 +585,11 @@ miri-validate --report package-name
 
 #### 9.2.2 JSON Schema Validation
 
-All JSON metadata files MUST validate against published schemas:
-
-- `https://miri-standard.org/schemas/agent-examples-v1.json`
-- `https://miri-standard.org/schemas/api-reference-v1.json`
-- `https://miri-standard.org/schemas/templates-v1.json`
+The `agent-metadata/` files MUST validate against their published JSON Schemas in
+[`schemas/`](../../schemas/) (`sdk-manifest-v1.json`, `usage-patterns-v1.json`, `migration-guide-v1.json`,
+`api-graph-v1.json`, `lifecycle-v1.json`). The `.dist-info/` index files (`AGENT_EXAMPLES.json`, `API_REFERENCE.json`,
+`TEMPLATES.json`) MUST follow the structures defined in §4.1, §4.3, and §4.4 respectively; dedicated JSON Schemas for
+them are not yet published.
 
 ### 9.3 Testing Requirements
 

@@ -30,7 +30,7 @@ remediation:
 - Generate TEMPLATES.json from the `templates/` directory at build time rather than maintaining the index by hand
 - Scan template bodies for placeholder tokens during the build and fail when any token is missing from the `placeholders`
   map
-- Validate the index against `templates-v1.json` in CI alongside the other schema checks
+- Validate the index against the §4.4 structure in CI (entries ↔ template files, placeholders documented)
 examples:
   violation: "TEMPLATES.json:\n  \"basic_client\": {\"file\": \"templates/basic_client.py\", \"placeholders\": {\"API_KEY\"\
     : {...}}}\ntemplates/basic_client.py:\n  client = WeatherClient(api_key=\"API_KEY\", region=\"REGION_CODE\")\n# REGION_CODE\

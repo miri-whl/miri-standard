@@ -78,7 +78,6 @@ package-1.0.0-py3-none-any.whl
 │   ├── migration-guide.json         # Version-specific changes
 │   ├── prompt-templates.md          # Agent interaction guides
 │   ├── api-graph.json              # API relationship graph
-│   ├── performance-hints.json      # Optimization suggestions
 │   └── lifecycle.json              # Identity, advisory sources (required)
 ├── package/examples/                # Miri: Example code
 └── package-1.0.0.dist-info/        # Standard + Miri metadata

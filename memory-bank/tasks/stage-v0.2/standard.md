@@ -71,10 +71,10 @@ Python track:
       `authoritative` default and list-order semantics. _(security)_
 - [x] Ship the CLI `--describe` introspection JSON Schema — 33 of 43 CLI checks depend on it. _(CLI author; the
       single biggest CLI-track blocker)_
-- [ ] Ship or de-reference the missing schemas: `agent-examples-v1.json` (aka `ai-examples`), `templates-v1.json`,
+- [x] Ship or de-reference the missing schemas: `agent-examples-v1.json` (aka `ai-examples`), `templates-v1.json`,
       `api-reference-v1.json`; specify or delete `performance-hints.json`; add `examples-index-v1.json`. _(agent-
       tooling, packaging, security)_
-- [ ] Add `scoring-v1.json` / `lint-report-v1.json` to `schemas/` (the report format the linter emits). _(CLI
+- [x] Add `scoring-v1.json` / `lint-report-v1.json` to `schemas/` (the report format the linter emits). _(CLI
       author)_
 
 ## P1 — producer-spec reconciliation

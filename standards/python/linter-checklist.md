@@ -160,6 +160,9 @@ This table is the human rendering of the same data; the YAML files are authorita
   029/031 are computable from the current wheel) need the prior release; linters SHOULD fetch it via the declared
   `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable. The `requirements`
   field in each check definition is the authoritative list of such constraints and their fixed skip reasons.
+- Linter output is schematized: the score computation follows [`scoring-v1.json`](../../schemas/scoring-v1.json) and
+  the emitted report follows [`lint-report-v1.json`](../../schemas/lint-report-v1.json) (both draft — reconcile with the
+  reference linter). The report's top-level version field is `schema_version`, never `report_version`.
 - Machine-readable form: the [`checks/`](checks/) directory is the per-check source of truth; an aggregated
   `checklist.json` remains a planned convenience deliverable, following the same
   schema-as-data rule as everything else in Miri — this document and the JSON must be generated from one source.

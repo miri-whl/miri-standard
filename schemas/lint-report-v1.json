@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/lint-report-v1.json",
+  "title": "Miri Lint Report",
+  "description": "The machine-readable report a Miri-conformance linter emits for one artifact. Draft: reconcile with the reference linter's output before pinning field constraints. The top-level version field is `schema_version` (per MIRI-CLI-010), never a per-format alias.",
+  "type": "object",
+  "required": ["schema_version", "target", "artifact", "checklist", "linter", "generated_at", "scores", "outcomes"],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "description": "Wire-schema version of this report document"
+    },
+    "target": {
+      "type": "string",
+      "enum": ["python-wheel", "cli"],
+      "description": "Artifact type that was scored"
+    },
+    "artifact": {
+      "type": "object",
+      "description": "Identity of the scored artifact (e.g. purl, version, filename)",
+      "additionalProperties": true
+    },
+    "checklist": {
+      "type": "object",
+      "required": ["checklist_version", "checks_commit_sha"],
+      "description": "Provenance of the check corpus scored against, so a report is never a naked score",
+      "properties": {
+        "checklist_version": {"type": "string"},
+        "checks_commit_sha": {"type": "string"},
+        "content_sha256": {"type": "string"},
+        "docs_base_url": {"type": "string", "format": "uri"}
+      },
+      "additionalProperties": true
+    },
+    "linter": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": {"type": "string"},
+        "version": {"type": "string"}
+      },
+      "additionalProperties": true
+    },
+    "generated_at": {"type": "string", "format": "date-time"},
+    "scores": {
+      "type": "object",
+      "description": "The two-score model: a Conformance score and a Health score (see scoring-v1.json)",
+      "properties": {
+        "conformance": {"type": "number"},
+        "health": {"type": "number"},
+        "grade": {"type": "string", "enum": ["gold", "silver", "bronze", "non-conforming"]},
+        "profile": {"type": "string", "enum": ["core", "full"]}
+      },
+      "additionalProperties": true
+    },
+    "outcomes": {
+      "type": "array",
+      "description": "One entry per check evaluated",
+      "items": {
+        "type": "object",
+        "required": ["id", "status"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^MIRI-(PY|CLI|PYX|CLIX)-\\d{3}$"},
+          "status": {"type": "string", "enum": ["pass", "fail", "skipped"]},
+          "skip_reason": {"type": "string", "enum": ["network_unavailable", "previous_release_unavailable", "execution_disabled", "condition_not_applicable"]},
+          "weight": {"type": "integer"},
+          "forfeited": {"type": "boolean"},
+          "violations": {"type": "integer", "minimum": 0}
+        },
+        "additionalProperties": true
+      }
+    },
+    "must_failures": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^MIRI-(PY|CLI)-\\d{3}$"},
+      "description": "IDs of failing MUST checks; non-empty means non-conforming"
+    }
+  },
+  "additionalProperties": true
+}
