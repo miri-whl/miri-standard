@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/lifecycle-v1.json",
+  "$id": "https://miri-whl.github.io/schemas/lifecycle-v1.json",
   "title": "Miri Standard Lifecycle and Security Metadata",
   "description": "Schema for lifecycle.json - package identity, advisory sources, update check, and support status",
   "type": "object",

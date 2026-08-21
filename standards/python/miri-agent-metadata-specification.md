@@ -105,7 +105,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/sdk-manifest-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/sdk-manifest-v1.json",
   "sdk_version": "1.2.0",
   "generated_at": "2025-08-30T12:00:00Z",
   "miri_version": "1.0",
@@ -198,7 +198,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/usage-patterns-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/usage-patterns-v1.json",
   "version": "1.0",
   "generated_at": "2025-08-30T12:00:00Z",
   "patterns": [
@@ -288,7 +288,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/migration-guide-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/migration-guide-v1.json",
   "from_version": "1.1.x",
   "to_version": "1.2.0",
   "migration_type": "minor",
@@ -420,7 +420,7 @@ Use migration-guide.json for breaking changes and new features.
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/api-graph-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/api-graph-v1.json",
   "version": "1.0",
   "nodes": {
     "DatabaseClient": {

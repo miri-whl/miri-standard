@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/sdk-manifest-v1.json",
+  "$id": "https://miri-whl.github.io/schemas/sdk-manifest-v1.json",
   "title": "Miri Standard SDK Manifest",
   "description": "Schema for sdk-manifest.json - Core API index with structured signatures and metadata",
   "type": "object",

@@ -121,6 +121,12 @@ def main():
     for img in site["assets"]:
         shutil.copy(REPO / "assets/img" / img, out / "assets" / img)
 
+    # Publish the JSON Schemas so their $id URLs (miri-whl.github.io/schemas/…) resolve.
+    schemas_out = out / "schemas"
+    schemas_out.mkdir()
+    for sch in sorted((REPO / "schemas").glob("*.json")):
+        shutil.copy(sch, schemas_out / sch.name)
+
     targets = {}
     for target, meta in site["targets"].items():
         checks = load_checks(meta)

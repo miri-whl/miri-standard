@@ -80,7 +80,7 @@ Miri-specific configuration, never hand-maintained per release.
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/lifecycle-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/lifecycle-v1.json",
   "miri_lifecycle_version": "0.1",
   "generated_at": "2026-08-18T12:00:00Z",
 

@@ -13,8 +13,6 @@ MIRI-PY-036; a buildable, Miri-conforming sample SDK; and de-referenced/added JS
 
 Only two backlog items remain, both genuine **decisions** left for review:
 
-- **`$schema` domain** — the schema `$id`s use `miri-standard.org`, not the canonical `miri-whl.github.io`. Needs a
-  domain-ownership call before changing (an `$id` need not resolve, so it was left as-is).
 - **The stash / `standards/python` renames** — the "fix cross-links broken by the renames" item only applies if the
   stashed `miri-*` rename work is adopted. Left untouched; check `git stash list`.
 

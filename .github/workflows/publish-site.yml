@@ -11,7 +11,7 @@ on:
     paths:
       - 'standards/python/checks/**'
       - 'standards/cli/checks/**'
-      - 'schemas/check-v1.json'
+      - 'schemas/**'
       - 'docs/origin-story.md'
       - 'website/**'
       - 'tools/generate_site.py'

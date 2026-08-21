@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/usage-patterns-v1.json",
+  "$id": "https://miri-whl.github.io/schemas/usage-patterns-v1.json",
   "title": "Miri Standard Usage Patterns",
   "description": "Schema for usage-patterns.json - Pre-extracted, categorized code patterns",
   "type": "object",

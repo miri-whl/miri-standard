@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/scoring-v1.json",
+  "$id": "https://miri-whl.github.io/schemas/scoring-v1.json",
   "title": "Miri Scoring Configuration",
   "description": "Declares how a linter computes the two scores in a lint report: the additive Conformance score (sum of passing check weights, MUST-gated) and the severity-graded Health score. Draft: reconcile with the reference linter before pinning constraints.",
   "type": "object",

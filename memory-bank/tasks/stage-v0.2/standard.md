@@ -93,7 +93,7 @@ Python track:
       legitimately) and exclude `RECORD.jws`/`RECORD.p` from the unrecorded-member sweep. _(packaging)_
 - [x] Purge PEP 491 citations (Deferred) → cite the living Binary Distribution Format spec; add PEP 639
       License-Expression coverage (nothing checks it today). _(packaging)_
-- [ ] Reconcile `$schema` URLs (`miri-standard.org`) against canonical `miri-whl.github.io`; align version labels
+- [x] Reconcile `$schema` URLs (`miri-standard.org`) against canonical `miri-whl.github.io`; align version labels
       (`1.0-draft` vs `0.1-draft`). _(security, agent-tooling)_
 
 ## P1 — threat model and trust (standard-side)

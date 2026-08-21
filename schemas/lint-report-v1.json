@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/lint-report-v1.json",
+  "$id": "https://miri-whl.github.io/schemas/lint-report-v1.json",
   "title": "Miri Lint Report",
   "description": "The machine-readable report a Miri-conformance linter emits for one artifact. Draft: reconcile with the reference linter's output before pinning field constraints. The top-level version field is `schema_version` (per MIRI-CLI-010), never a per-format alias.",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/cli-describe-v1.json",
+  "$id": "https://miri-whl.github.io/schemas/cli-describe-v1.json",
   "title": "Miri Standard CLI Introspection (--describe)",
   "description": "Schema for the JSON document a conforming CLI emits from `--describe` (or its documented introspection command). See CLI Lifecycle Specification §3-6.",
   "type": "object",
