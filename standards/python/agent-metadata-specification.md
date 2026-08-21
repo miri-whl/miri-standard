@@ -827,18 +827,10 @@ class AgentPerformanceTracker:
 
 ### 8.1 Required Files
 
-**Minimum Compliance**:
-
-- `agent-metadata/sdk-manifest.json` - Core API index
-- `agent-metadata/usage-patterns.json` - Basic usage patterns
-- `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
-
-**Full Compliance**:
-
-- All metadata files present and valid
-- Automated generation integrated into build process
-- Performance optimization implemented
-- Agent integration utilities provided
+Conformance is defined by the [Linter Checklist](linter-checklist.md), the single source of truth for what a wheel MUST
+and SHOULD provide: a wheel is conforming when it passes every MUST (M) check, and its tier is the checklist score. The
+`agent-metadata/` files this specification defines (`sdk-manifest.json`, `usage-patterns.json`, `lifecycle.json`, …)
+are required as specified by the corresponding checklist checks.
 
 ### 8.2 Validation Requirements
 

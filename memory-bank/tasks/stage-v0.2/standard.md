@@ -79,10 +79,10 @@ Python track:
 
 ## P1 — producer-spec reconciliation
 
-- [ ] Excise or respec "Enhanced METADATA" (`miri-wheel-extensions.md` §4.2) — unimplementable (no PEP 517 backend
+- [x] Excise or respec "Enhanced METADATA" (`miri-wheel-extensions.md` §4.2) — unimplementable (no PEP 517 backend
       injects custom core-metadata fields; the example puts fields in the Description body); §7.2.1 mandates it for
       Minimum Compliance. _(packaging, security)_
-- [ ] Collapse the three conflicting "Minimum Compliance" definitions into the checklist as sole authority; delete
+- [x] Collapse the three conflicting "Minimum Compliance" definitions into the checklist as sole authority; delete
       the `Miri-Compliance: full|partial|none` vocabulary. _(packaging, agent-tooling)_
 - [x] Rename all `AI_EXAMPLES.json` → `AGENT_EXAMPLES.json` and `get_ai_metadata` → `get_agent_metadata` across the
       specs. _(agent-tooling, security)_
@@ -91,7 +91,7 @@ Python track:
       _(packaging, agent-tooling)_
 - [x] Amend MIRI-PY-001 remediation to sanction RECORD-coherent post-processing (the enhancer does this
       legitimately) and exclude `RECORD.jws`/`RECORD.p` from the unrecorded-member sweep. _(packaging)_
-- [ ] Purge PEP 491 citations (Deferred) → cite the living Binary Distribution Format spec; add PEP 639
+- [x] Purge PEP 491 citations (Deferred) → cite the living Binary Distribution Format spec; add PEP 639
       License-Expression coverage (nothing checks it today). _(packaging)_
 - [ ] Reconcile `$schema` URLs (`miri-standard.org`) against canonical `miri-whl.github.io`; align version labels
       (`1.0-draft` vs `0.1-draft`). _(security, agent-tooling)_

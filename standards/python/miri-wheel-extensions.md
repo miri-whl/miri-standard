@@ -274,53 +274,13 @@ package-1.0.0-py3-none-any.whl
 }
 ```
 
-### 4.2 Enhanced METADATA File
+### 4.2 Metadata Location (no custom METADATA fields)
 
-**Purpose**: Extend standard PEP 566 metadata with Miri-specific fields.
-
-**Additional Fields**:
-
-```text
-# Miri Standard Extensions
-Agent-Examples-Dir: examples
-Agent-Docs-Dir: docs
-Agent-Templates-Dir: templates
-Agent-Quickstart-File: examples/quickstart.py
-Agent-Friendly: true
-Agent-Complexity-Level: beginner|intermediate|advanced
-Agent-Learning-Time: 15-minutes
-Miri-Version: 1.0
-Miri-Compliance: full|partial|none
-```
-
-**Example**:
-
-```text
-Metadata-Version: 2.1
-Name: example-sdk
-Version: 1.0.0
-Summary: AI-friendly SDK with embedded examples and documentation
-Author: Example Author
-Author-email: author@example.com
-License: MIT
-Requires-Dist: requests>=2.25.0
-Requires-Dist: pydantic>=1.8.0
-
-# Miri Standard Extensions
-Agent-Examples-Dir: examples
-Agent-Docs-Dir: docs
-Agent-Templates-Dir: templates
-Agent-Quickstart-File: examples/quickstart.py
-Agent-Friendly: true
-Agent-Complexity-Level: intermediate
-Agent-Learning-Time: 15-minutes
-Miri-Version: 1.0
-Miri-Compliance: full
-
-This SDK demonstrates the Miri Standard for agent-friendly Python packages.
-It includes embedded examples, structured documentation, and discovery APIs
-that enable autonomous agents to immediately understand and use the package.
-```
+Earlier drafts proposed extending the wheel's core `METADATA` with Miri-specific fields (`Agent-Examples-Dir`,
+`Miri-Version`, and similar). That approach is withdrawn: Python core metadata has no sanctioned extension mechanism,
+no PEP 517 build backend can inject arbitrary fields, and strict parsers reject unknown ones. All Miri metadata
+therefore lives in dedicated files — the `agent-metadata/` directory and the `.dist-info/AGENT_EXAMPLES.json` index
+(§3, §4.1) — never in `METADATA`. This keeps the standard additive and compatible with every existing packaging tool.
 
 ### 4.3 API_REFERENCE.json
 
@@ -560,23 +520,11 @@ Build systems SHOULD generate AGENT_EXAMPLES.json automatically by scanning exam
 
 ### 7.2 Validation Requirements
 
-#### 7.2.1 Required Files
+#### 7.2.1 Conformance
 
-**Minimum Compliance**:
-
-- `examples/quickstart.py` - Basic usage example
-- `AGENT_EXAMPLES.json` - Example metadata
-- Enhanced METADATA with Miri fields
-- `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
-
-**Full Compliance**:
-
-- Complete examples directory structure
-- All metadata files (AGENT_EXAMPLES.json, API_REFERENCE.json, TEMPLATES.json)
-- Documentation directory
-- Templates directory
-- All discovery APIs implemented
-- PEP 770 SBOM data in `.dist-info/sboms/` when the wheel bundles non-Python components
+Conformance is defined by the [Linter Checklist](linter-checklist.md) — the single source of truth for what a wheel
+MUST and SHOULD provide. A wheel is **conforming** when it passes every MUST (M) check; its Bronze/Silver/Gold tier is
+the checklist score. Any file list once given here is superseded by the checklist.
 
 #### 7.2.2 Content Requirements
 
@@ -620,20 +568,9 @@ Miri-enhanced packages MUST work normally when:
 
 ### 9.1 Conformance Levels
 
-#### 9.1.1 Basic Conformance
-
-- `examples/quickstart.py` exists and is runnable
-- `AGENT_EXAMPLES.json` includes quickstart metadata
-- Enhanced METADATA includes minimum Miri fields
-- Package `__init__.py` includes `show_quickstart()` function
-
-#### 9.1.2 Full Conformance
-
-- Complete examples directory structure
-- All metadata files present and valid
-- All discovery APIs implemented
-- Documentation and templates directories
-- JSON schema validation passes
+Conformance levels — Bronze, Silver, Gold — are defined by the [Linter Checklist](linter-checklist.md): passing every
+MUST (M) check is conformance, and the tier is the checklist score. The checklist is the authoritative definition; the
+levels once listed here are superseded by it.
 
 ### 9.2 Validation Tools
 
