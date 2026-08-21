@@ -5,8 +5,9 @@ This document describes the governance model for the miri-standard project.
 ## Overview
 
 The miri-standard project is committed to building an open, inclusive, productive and self-governing open source
-community focused on developing standards for [PROJECT DESCRIPTION TO BE ADDED]. The community is governed by this
-document which defines how all members should work together to achieve this goal.
+community focused on developing standards that make software artifacts — Python wheels, command-line tools, and
+other packages — legible to autonomous agents. The community is governed by this document, which defines how members
+work together toward that goal.
 
 ## Roles and Responsibilities
 
@@ -58,7 +59,8 @@ The Steering Committee provides high-level guidance and oversight for the projec
 
 #### Steering Committee Composition
 
-The Steering Committee consists of [NUMBER] members who:
+The Steering Committee is the project's governance body. While the project is in incubation it is small and
+maintainer-led; the committee is still forming. As it grows, Steering Committee members:
 
 - Are elected by the Maintainers
 - Serve [TERM LENGTH] terms
@@ -102,13 +104,13 @@ The project follows a formal standards development process:
 
 - **GitHub Issues**: Bug reports, feature requests, and technical discussions
 - **GitHub Discussions**: General community discussions and Q&A
-- **[Additional channels to be added as needed]**
+
+Additional channels may be added as the community grows.
 
 ### Meetings
 
-- **Regular Community Meetings**: [Schedule to be determined]
-- **Maintainer Meetings**: [Schedule to be determined]
-- **Steering Committee Meetings**: [Schedule to be determined]
+The project does not yet hold scheduled meetings; coordination currently happens asynchronously through GitHub issues
+and discussions. Regular meetings will be scheduled as the community grows.
 
 All meetings are open to the community, with agendas and notes published publicly.
 
@@ -176,7 +178,7 @@ The project is committed to transparency in all aspects of governance:
 For questions about governance:
 
 - Create an issue in the GitHub repository
-- Contact the Steering Committee at [EMAIL TO BE ADDED]
+- Tag a maintainer on a relevant issue or discussion
 - Participate in community discussions
 
 ---

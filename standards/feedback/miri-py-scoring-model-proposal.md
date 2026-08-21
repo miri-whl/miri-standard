@@ -9,8 +9,8 @@
 
 The new [Linter Checklist](https://github.com/miri-whl/miri-standard/blob/main/standards/python/linter-checklist.md)
 (v0.1-draft) gives the Python standard its first scoring model: 40 checks (`MIRI-PY-001`…`040`), fixed weights summing
-to 100, MUST/SHOULD levels, and Gold/Silver/Bronze grade bands. Independently, the miri-py reference linter has been
-running a different, more granular scoring engine in production: severity-graded violations, four pluggable scoring
+to 100, MUST/SHOULD levels, and Gold/Silver/Bronze grade bands. Independently, the miri-py reference linter
+implements a different, more granular scoring engine: severity-graded violations, four pluggable scoring
 methods, configurable strictness profiles, and quality dimensions (code quality, external tooling, security scanning)
 that the checklist does not cover. The two models were designed without sight of each other, and each solves a problem
 the other cannot.

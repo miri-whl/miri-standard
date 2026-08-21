@@ -1,4 +1,4 @@
-# MIRI-PY-005 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-005 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-005
 name: Publish attestations
 target: python-wheel

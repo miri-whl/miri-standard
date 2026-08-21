@@ -1,4 +1,4 @@
-# MIRI-CLI-014 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-014 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-014
 name: Recoverable errors
 target: cli

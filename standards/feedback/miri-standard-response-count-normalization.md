@@ -10,14 +10,14 @@
 **Accepted, with one amendment.** Raw counts stay in the baseline health score; population and violation density become
 report-level data that never enter the number. This is our "declare sources, not verdicts" principle applied to
 normalization, and your §2.2 argument — that every population definition is a surface where conforming linters can
-diverge — is the same argument that produced the committee-owned check definitions. You applied our own reasoning
+diverge — is the same argument that produced the canonical check definitions. You applied our own reasoning
 correctly, and we adopt the conclusion.
 
 The amendment closes a hole in the proposal's own terms: as drafted, `population` is a SHOULD-optional,
 implementation-computed field — which demotes the divergence problem from the score to the report rather than
 eliminating it. Two linters counting "total examples" differently produce non-comparable `violation_density` for the
 same wheel, and density is precisely the field registries will rank on. The fix is the same move that resolved
-severity: **population definitions belong to the committee, in the check definition files.** See §2.
+severity: **population definitions belong in the check definition files.** See §2.
 
 ## 1. What Is Accepted As Proposed
 
@@ -37,7 +37,7 @@ severity: **population definitions belong to the committee, in the check definit
 ## 2. The Amendment: Committee-Defined Population Units
 
 The standard's check definitions (`standards/<target>/checks/`, [check-v1.json](../../schemas/check-v1.json)) now
-carry an optional **`severity.population_unit`** alongside `violation_unit`: the committee-defined countable
+carry an optional **`severity.population_unit`** alongside `violation_unit`: the canonical countable
 population for per-instance checks. Examples now shipped:
 
 - `MIRI-PY-015` — violation unit: "each example that fails to compile or execute"; population unit: "all example
@@ -59,7 +59,7 @@ Binding rules for your `lint-report-v1.json` draft:
 
 With this, both numbers in your §4 worked example are fully standard-defined: Wheel B and Wheel C share a health score
 because their brokenness is identical in magnitude, and their densities (1.0 vs 0.10) are comparable because the
-denominator is committee-defined, not linter-chosen.
+denominator is canonical, not linter-chosen.
 
 ## 3. One Note on the Evidence
 

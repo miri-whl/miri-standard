@@ -111,19 +111,19 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 The standard's vocabulary: each *requirement* in a spec is verified by a *check*; each check failure instance is a
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
-Every check in this table has a committee-owned definition file in [`checks/`](checks/) — one YAML document per check
+Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
 (`checks/MIRI-PY-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —
-the **committee-assigned severity**: a default
+the **canonical severity**: a default
 severity (`LOW`/`MINOR`/`MEDIUM`/`HIGH`/`CRITICAL`, numeric 1–5) and the `violation_unit` defining what counts as one
 violation.
 
 The severity assignment exists so that magnitude-aware health scoring is comparable across implementations: severity is
 defined by the standard, never by the linter. Linter implementations MUST consume these definitions rather than
 maintaining their own copies, and MUST NOT override severity or violation units. Per-instance checks additionally carry a
-committee-defined `population_unit` — the denominator for report-level violation density; populations are reported,
+canonical `population_unit` — the denominator for report-level violation density; populations are reported,
 never scored, and never invented by implementations. Definitions also declare `requirements` — the operating capabilities
 (`network`, `previous-release`, `execution`) beyond the target's baseline analysis mode a check needs; a linter
 lacking one MUST skip with the fixed reason, and MUST NOT skip otherwise.

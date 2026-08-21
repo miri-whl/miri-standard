@@ -1,4 +1,4 @@
-# MIRI-PY-009 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-009 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-009
 name: migration-guide.json valid
 target: python-wheel

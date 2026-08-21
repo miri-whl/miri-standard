@@ -65,8 +65,9 @@ All meeting notes are stored in the `meetings/` directory *(to be created)* and 
 ## Contact
 
 - **Community Questions**: Use GitHub Discussions
-- **Private Matters**: Contact the steering committee at [email to be added]
-- **Code of Conduct Issues**: [Contact information to be added]
+- **Private Matters**: Contact a maintainer directly through GitHub; for security issues, use the repository's
+  private vulnerability reporting (Security tab → Report a vulnerability)
+- **Code of Conduct Issues**: See `CODE-OF-CONDUCT.md`; reports can be raised privately with a maintainer via GitHub
 
 ## Resources
 

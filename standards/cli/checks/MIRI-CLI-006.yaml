@@ -1,4 +1,4 @@
-# MIRI-CLI-006 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-006 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-006
 name: Non-interactive default
 target: cli

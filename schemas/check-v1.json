@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://miri-standard.org/schemas/check-v1.json",
   "title": "Miri Standard Check Definition",
-  "description": "Schema for the per-check definition files in standards/<target>/checks/ - the committee-owned, machine-readable source of truth for every check, consumed by linter implementations",
+  "description": "Schema for the per-check definition files in standards/<target>/checks/ - the canonical, machine-readable source of truth for every check, consumed by linter implementations",
   "type": "object",
   "required": [
     "id",
@@ -84,7 +84,7 @@
     },
     "severity": {
       "type": "object",
-      "description": "Committee-assigned severity for health scoring; implementations MUST use these values, not their own",
+      "description": "Canonical severity for health scoring; implementations MUST use these values, not their own",
       "required": [
         "default",
         "violation_unit"
@@ -107,7 +107,7 @@
         },
         "population_unit": {
           "type": "string",
-          "description": "Committee-defined countable population for per-instance checks (the denominator for report-level violation_density). Defined only where a natural population exists; reports MUST carry the population count when this field is present, and MUST omit it otherwise. Never an input to any score."
+          "description": "Canonical countable population for per-instance checks (the denominator for report-level violation_density). Defined only where a natural population exists; reports MUST carry the population count when this field is present, and MUST omit it otherwise. Never an input to any score."
         }
       },
       "additionalProperties": false
@@ -207,7 +207,7 @@
     },
     "urls": {
       "type": "object",
-      "description": "Canonical locations of this check: the committee-owned YAML definition on GitHub and the published HTML page. Embedded so linter reports can link both without deriving them.",
+      "description": "Canonical locations of this check: the canonical YAML definition on GitHub and the published HTML page. Embedded so linter reports can link both without deriving them.",
       "required": [
         "definition",
         "html"

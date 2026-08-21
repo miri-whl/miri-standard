@@ -1,4 +1,4 @@
-# MIRI-PY-014 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-014 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-014
 name: Quickstart exists
 target: python-wheel

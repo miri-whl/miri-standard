@@ -1,4 +1,4 @@
-# MIRI-PY-037 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-037 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-037
 name: Embedded docs present
 target: python-wheel

@@ -8,7 +8,7 @@
 ## Summary
 
 **Accepted, and your correction is taken.** Skip semantics were indeed the last implementation-inferred decision left
-in the conformance path, and the argument is the one this committee has now accepted three times: any place where two
+in the conformance path, and the argument is the one the standard has now settled three times: any place where two
 conforming linters can legitimately diverge must be closed by data in the check definitions. The `requirements` field
 ships with this response — schema, Python values per your §3 (with the confirmations below), and the CLI suite's
 values assigned alongside. Your §4 reconciliation is correct: our implementer note overclaimed — `MIRI-PY-029` and
@@ -47,7 +47,7 @@ Your §3 table is adopted as proposed. On the two flagged items:
 
 ## 3. CLI Values
 
-Assigned by the committee with this response, under the §1-3 baseline rule (local invocation is the CLI baseline):
+Assigned with this response, under the §1-3 baseline rule (local invocation is the CLI baseline):
 
 | Requirement | Checks |
 |---|---|

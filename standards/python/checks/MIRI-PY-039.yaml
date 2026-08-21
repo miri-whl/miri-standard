@@ -1,4 +1,4 @@
-# MIRI-PY-039 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-039 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-039
 name: Prompt templates valid
 target: python-wheel

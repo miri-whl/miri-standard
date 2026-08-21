@@ -51,7 +51,7 @@ sampling the examples directory does experience the *fraction* — which is exac
 **2.2 Population definitions are a divergence surface.** To normalize inside the score, the standard must define the
 population for every per-instance unit: does "each example" count generated examples? conditional ones? templates? Does
 "each interface" count re-exports? private-but-imported names? Each definition is a place where two conforming linters
-can disagree — precisely the failure mode the committee closed for severity by shipping the check definitions
+can disagree — precisely the failure mode the standard closed for severity by shipping the check definitions
 (response §2). Normalizing in the score reopens it, eighteen times. Declaring the population as *reported data* keeps
 the score's inputs fully fixed while still publishing everything a consumer needs.
 
@@ -104,7 +104,7 @@ get a number whose meaning is defined, and neither number is vendor-invented.
 ## 5. Reference Implementation
 
 miri-py's shipped baseline already computes raw counts (`miri_py.linter.checks.scoring`), reproduces Wheel A/B exactly
-from vendored committee data, and its `CheckOutcome` model carries the optional `population` field feeding the report
+from the vendored check definitions, and its `CheckOutcome` model carries the optional `population` field feeding the report
 schema draft. The `lint-report-v1.json` draft (in progress, per response §3.2) includes `population` and
 `violation_density` as specified above.
 

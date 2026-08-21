@@ -17,7 +17,7 @@ private/internal CLIs.
   private CLIs
 - **[Linter Checklist](linter-checklist.md)** *(Draft)* - The 43 numbered checks (MIRI-CLI-001…043) with standards
   references and scoring weights summing to 100
-- **[Check Definitions](checks/)** *(Draft)* - One YAML file per check: committee-assigned severity, violation unit,
+- **[Check Definitions](checks/)** *(Draft)* - One YAML file per check: canonical severity, violation unit,
   example, fix, and references — the machine-readable source of truth for linters
 - **[Artifact Lifecycle](artifact-lifecycle.md)** *(Draft)* - Every stage from release to withdrawal, the nested surface
   lifecycle, and the three-clocks model (diagrammed PDF available)

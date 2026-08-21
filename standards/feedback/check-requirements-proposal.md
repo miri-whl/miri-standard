@@ -11,9 +11,9 @@ Implementing the first eleven checks surfaced the last place where conforming li
 standard doesn't define: **which checks may legitimately be skipped under which operating constraints**. Whether a
 check needs the network, the previous release, or code execution lives today only in prose — so two conforming linters
 running offline can skip *different* check sets for the same wheel, forfeit different weights, and report different
-conformance scores. That is the same divergence surface the committee has now closed twice, for severity and for
+conformance scores. That is the same divergence surface the standard has now closed twice, for severity and for
 population denominators, by moving the decision into the check definitions. We propose closing it the same way: an
-optional **`requirements`** field in `check-v1.json`, with committee-assigned values. This document includes the
+optional **`requirements`** field in `check-v1.json`, with canonical values. This document includes the
 proposed values for all 40 Python checks, and one reconciliation question the audit surfaced.
 
 ## 1. Completeness Audit: What an Implementation Consumes
@@ -71,7 +71,7 @@ Committee homework included — assignments derived from each check's own descri
 | `previous-release` | 030 (removals since prior release), 034 (≥2-release grace period) |
 | `execution` | 015 (examples run in sandbox), 035 (DeprecationWarning fires), 036 (discovery APIs importable), 040 (graceful degradation under stripped metadata) |
 
-Notes: 021/023 verify *well-formedness* of URLs per their descriptions — static; if the committee intends
+Notes: 021/023 verify *well-formedness* of URLs per their descriptions — static; if the standard intends
 reachability, they become `network`. 009's dual nature (network to determine the condition, static to validate) argues
 for `network` with the documented fallback that an offline linter treats an absent file as condition-not-applicable —
 which is what miri-py ships today.
@@ -82,7 +82,7 @@ The checklist's implementer notes say checks **029/030/031** require the previou
 disagree for two of the three: 029 compares PEP 702 markers against `migration-guide.json` — both inside the current
 wheel — and 031 resolves `replacement` targets against the current `sdk-manifest.json`. Only 030 (silent removals)
 genuinely needs the prior release. We propose `requirements: [previous-release]` on 030 alone, and a correction to the
-checklist note — or, if the committee intended cross-release semantics for 029/031, definitions that say so. Either
+checklist note — or, if the standard intended cross-release semantics for 029/031, definitions that say so. Either
 way, the `requirements` field is what makes such a discrepancy impossible to leave ambiguous in future.
 
 ## 5. Cost and Compatibility

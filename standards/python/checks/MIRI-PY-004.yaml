@@ -1,4 +1,4 @@
-# MIRI-PY-004 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-004 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-004
 name: Declarative build config
 target: python-wheel

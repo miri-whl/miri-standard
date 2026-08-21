@@ -1,4 +1,4 @@
-# MIRI-PY-028 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-028 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-028
 name: PEP 702 markers
 target: python-wheel

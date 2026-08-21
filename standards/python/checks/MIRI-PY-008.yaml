@@ -1,4 +1,4 @@
-# MIRI-PY-008 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-008 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-008
 name: usage-patterns.json valid
 target: python-wheel

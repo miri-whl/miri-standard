@@ -1,4 +1,4 @@
-# MIRI-PY-022 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-022 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-022
 name: Private-source rule
 target: python-wheel

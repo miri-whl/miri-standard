@@ -16,7 +16,9 @@ The miri-standard project takes security seriously. We appreciate your efforts t
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report security vulnerabilities by emailing [SECURITY_EMAIL_TO_BE_ADDED].
+Instead, please report them privately using GitHub's private vulnerability reporting on this repository: open the
+**Security** tab and choose **Report a vulnerability**, which creates a private advisory visible only to the
+maintainers.
 
 ### What to Include
 
@@ -97,9 +99,9 @@ We follow responsible disclosure practices:
 
 For security-related questions or concerns:
 
-- **Security Issues**: [SECURITY_EMAIL_TO_BE_ADDED]
+- **Security Issues**: GitHub private vulnerability reporting (Security tab → Report a vulnerability)
 - **General Security Questions**: Use GitHub Discussions with the `security` label
-- **Project Security Lead**: [TO_BE_ASSIGNED]
+- **Handled by**: the project maintainers — there is no dedicated security lead yet while the project is in incubation
 
 ---
 

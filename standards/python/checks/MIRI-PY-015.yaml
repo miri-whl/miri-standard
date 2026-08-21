@@ -1,4 +1,4 @@
-# MIRI-PY-015 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-015 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-015
 name: Examples runnable
 target: python-wheel

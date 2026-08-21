@@ -6,10 +6,10 @@
 
 ## Abstract
 
-This specification defines pre-parsed, structured metadata formats that eliminate the need for autonomous agents to
-continuously re-parse documentation and examples. By providing agent-optimized data structures directly within Python
-wheel packages, we enable instant consumption and significantly improve agent performance when working with SDKs and
-libraries.
+This specification defines pre-parsed, structured metadata formats that travel inside Python wheel packages, so the
+information an agent needs about a package is available offline and version-locked to the exact code it describes,
+without re-deriving it from source on every use. The intended benefit — faster, more reliable agent integration with
+SDKs and libraries — is a design goal of the standard, not yet a measured result.
 
 ## Table of Contents
 
@@ -38,7 +38,7 @@ Autonomous agents face significant performance bottlenecks when working with Pyt
 
 These inefficiencies result in:
 
-- **Slow Integration**: 30-60 seconds to understand a new SDK
+- **Slow Integration**: understanding an unfamiliar SDK from unstructured sources is slow and repeated each session
 - **Repeated Work**: Same parsing operations across multiple projects
 - **Inconsistent Results**: Varying interpretation of unstructured documentation
 - **Resource Waste**: Unnecessary compute cycles on repetitive tasks
@@ -914,6 +914,7 @@ build-backend = "miri_build_tools.build_meta"
 
 ---
 
-This specification provides the foundation for eliminating agent re-parsing inefficiencies while maintaining full
-compatibility with the existing Miri Standard. The pre-parsed metadata approach significantly improves agent performance
-and enables more sophisticated code assistance capabilities.
+This specification provides a foundation for reducing agent re-parsing while maintaining full compatibility with the
+existing Miri Standard. Whether the pre-parsed metadata approach improves agent performance in practice is a
+hypothesis to be validated by measurement; its concrete, testable advantages are that the metadata is bundled
+(available offline) and version-locked to the code it describes.

@@ -75,7 +75,7 @@ Miri metadata supplements rather than replaces existing information:
 All agent-relevant information MUST be accessible without external lookups:
 
 - Complete examples bundled in the package
-- Structured metadata for instant parsing
+- Structured metadata agents can read without re-deriving it from prose
 - Self-contained documentation
 - Runtime discovery APIs
 
@@ -120,7 +120,7 @@ Structured directories within the main package:
 
 #### 3.1.3 Pre-Parsed Agent Metadata
 
-The `agent-metadata/` directory contains optimized data structures that eliminate agent re-parsing:
+The `agent-metadata/` directory contains structured data that agents can read without re-deriving it from source:
 
 - `sdk-manifest.json` - Core API index with structured signatures
 - `usage-patterns.json` - Pre-extracted, categorized code patterns

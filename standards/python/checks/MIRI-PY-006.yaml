@@ -1,4 +1,4 @@
-# MIRI-PY-006 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-006 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-006
 name: agent-metadata/ present
 target: python-wheel

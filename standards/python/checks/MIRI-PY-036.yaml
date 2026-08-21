@@ -1,4 +1,4 @@
-# MIRI-PY-036 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-036 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-036
 name: Discovery APIs work
 target: python-wheel

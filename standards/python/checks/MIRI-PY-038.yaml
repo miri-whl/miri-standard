@@ -1,4 +1,4 @@
-# MIRI-PY-038 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-038 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-038
 name: Templates coherent
 target: python-wheel

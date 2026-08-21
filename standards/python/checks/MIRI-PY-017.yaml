@@ -1,4 +1,4 @@
-# MIRI-PY-017 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-017 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-017
 name: Error handling shown
 target: python-wheel

@@ -1,4 +1,4 @@
-# MIRI-PY-011 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-011 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-011
 name: Build-time generation
 target: python-wheel

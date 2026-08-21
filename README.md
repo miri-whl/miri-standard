@@ -26,9 +26,9 @@ extensions, the Miri Standard's principles and specifications are designed to be
 "thought-string" approach that fills gaps in Python packaging will extend to npm packages, Ruby gems, Rust crates, Go
 modules, and beyond.
 
-The Miri Standard fills these gaps by defining rich, structured metadata that enables agents to instantly understand
-package capabilities, discover examples, and access learning paths without external lookups or sequential documentation
-reading.
+The Miri Standard fills these gaps by defining rich, structured metadata that lets agents read a package's
+capabilities, examples, and learning paths directly from the installed artifact — offline and version-locked to the
+code — instead of re-deriving them from source or external lookups on every use.
 
 ### The Vision: From Linear Documentation to Thought-String Communication
 
@@ -71,7 +71,15 @@ AI-assisted development.
 
 ## Quick Start
 
-[QUICK START GUIDE TO BE ADDED]
+The Miri Standard is a specification, not a tool you install. To get oriented:
+
+- **Read the standard** — start with the [Python standards overview](standards/python/README.md) and the
+  [lifecycle and security metadata spec](standards/python/lifecycle-security-metadata.md).
+- **Browse the checks** — the [Python linter checklist](standards/python/linter-checklist.md) lists all 40 numbered
+  checks with their weights and severities; each check's machine-readable definition lives under
+  `standards/python/checks/`, and every check has a page on the [published site](https://miri-whl.github.io/).
+- **Validate an artifact** — the reference linter, miri-py, is in development; a pointer will be added here once it is
+  published.
 
 ## Language Roadmap
 
@@ -86,7 +94,7 @@ The Miri Standard follows a strategic multi-language expansion plan:
 ### Phase 2: JavaScript Ecosystem 📦
 
 - **Target**: npm packages (package.json extensions)
-- **Planned**: Q2 2025
+- **Status**: Planned (not yet scheduled)
 - **Focus**: Node.js and browser-based package discovery
 
 ### Phase 3: Systems Languages 🦀

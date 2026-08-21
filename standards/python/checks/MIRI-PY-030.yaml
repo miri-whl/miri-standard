@@ -1,4 +1,4 @@
-# MIRI-PY-030 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-030 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-030
 name: No silent removals
 target: python-wheel

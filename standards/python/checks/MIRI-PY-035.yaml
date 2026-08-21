@@ -1,4 +1,4 @@
-# MIRI-PY-035 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-035 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-035
 name: Runtime warnings fire
 target: python-wheel
