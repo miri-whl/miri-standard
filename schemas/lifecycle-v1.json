@@ -38,7 +38,8 @@
         "registry": {
           "type": "string",
           "format": "uri",
-          "description": "The index this artifact is published to; mismatch with installed origin is a dependency-confusion signal"
+          "pattern": "^https://",
+          "description": "The index this artifact is published to (HTTPS required); mismatch with installed origin is a dependency-confusion signal"
         },
         "source_repository": {
           "type": "string",
@@ -74,7 +75,17 @@
             "description": "Whether this source is authoritative for advisories against the package itself (vs. its dependency tree only)"
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {"properties": {"type": {"const": "osv"}}},
+            "then": {"required": ["type", "url", "ecosystem"]}
+          },
+          {
+            "if": {"properties": {"type": {"enum": ["osv", "osv-internal"]}}},
+            "then": {"properties": {"url": {"pattern": "^https://"}}}
+          }
+        ]
       }
     },
     "update_check": {
@@ -89,7 +100,8 @@
         "url": {
           "type": "string",
           "format": "uri",
-          "description": "Where to learn the latest published version"
+          "pattern": "^https://",
+          "description": "Where to learn the latest published version (HTTPS required)"
         }
       },
       "additionalProperties": false
@@ -115,13 +127,14 @@
         },
         "replacement": {
           "type": ["string", "null"],
-          "description": "Purl of the successor package; required when status is deprecated or eol and a successor exists",
+          "description": "Purl of the successor package; required (a non-null purl) when status is deprecated or eol",
           "pattern": "^pkg:[a-z][a-z0-9.+-]*/.+"
         },
         "security_policy": {
           "type": ["string", "null"],
           "format": "uri",
-          "description": "URL of the project's security policy / vulnerability reporting process"
+          "pattern": "^https://",
+          "description": "URL of the project's security policy / vulnerability reporting process (HTTPS required)"
         }
       },
       "additionalProperties": false,
@@ -129,13 +142,17 @@
         "properties": {"status": {"enum": ["deprecated", "eol"]}}
       },
       "then": {
-        "required": ["status", "replacement"]
+        "required": ["status", "replacement"],
+        "properties": {
+          "replacement": {"type": "string"}
+        }
       }
     },
     "vex": {
       "type": ["string", "null"],
       "format": "uri",
-      "description": "URL of an OpenVEX / CycloneDX VEX document with vendor exploitability statements"
+      "pattern": "^https://",
+      "description": "URL of an OpenVEX / CycloneDX VEX document with vendor exploitability statements (HTTPS required)"
     }
   },
   "additionalProperties": false

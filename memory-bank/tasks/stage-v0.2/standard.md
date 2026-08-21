@@ -5,16 +5,16 @@ move the checklist and prose in the same commit and re-run the `schema-governanc
 
 ## P0 — honesty, governance, blockers
 
-- [ ] Replace "committee-owned" / "committee-assigned" framing everywhere (check-page status lines, both index
+- [x] Replace "committee-owned" / "committee-assigned" framing everywhere (check-page status lines, both index
       ledes, site footers, QUICKSTART) with honest small-team/BDFL governance language. _(all panelists; skeptic
       "false provenance claim")_
-- [ ] Fill or remove placeholders: `GOVERNANCE.md` ("[To be established]"), `SECURITY.md`
+- [x] Fill or remove placeholders: `GOVERNANCE.md` ("[To be established]"), `SECURITY.md`
       ("[SECURITY_EMAIL_TO_BE_ADDED]", "[TO_BE_ASSIGNED]"). _(security, skeptic)_
-- [ ] `README.md`: replace "[QUICK START GUIDE TO BE ADDED]", delete stale "Planned: Q2 2025" roadmap, add a real
+- [x] `README.md`: replace "[QUICK START GUIDE TO BE ADDED]", delete stale "Planned: Q2 2025" roadmap, add a real
       getting-started path and a pointer to the linter once it is public. _(skeptic, CLI, packaging)_
-- [ ] Reframe `standards/feedback/` self-authored proposal/response dialogue as design notes, or disclose single
+- [x] Reframe `standards/feedback/` self-authored proposal/response dialogue as design notes, or disclose single
       authorship. _(skeptic)_
-- [ ] Add an honest status section/page: what exists (specs, schemas, 83 checks, site), what is planned (linter
+- [x] Add an honest status section/page: what exists (specs, schemas, 83 checks, site), what is planned (linter
       public, CLI describe schema), what is missing. _(skeptic, AI researcher)_
 - [ ] Sample SDK: make `examples/sample-sdk` buildable and checklist-passing — restore `pyproject.toml`, add
       `examples/quickstart.py` and `AGENT_EXAMPLES.json`, add a migration guide, fix the 1.2.0/1.0.0 version
@@ -22,7 +22,7 @@ move the checklist and prose in the same commit and re-run the `schema-governanc
       door)_
 - [ ] Fix the cross-links broken by the `standards/python` file renames (the stashed rename work): every reference
       to the old filenames in `linter-checklist.md` and the check YAMLs. _(carried over from the rebase)_
-- [ ] Strip unvalidated performance claims from normative text ("30–60 seconds", "instant consumption", "eliminate
+- [x] Strip unvalidated performance claims from normative text ("30–60 seconds", "instant consumption", "eliminate
       re-parsing") — restate as labeled hypotheses; reframe the pitch around version-locking and offline
       availability. _(AI researcher, agent-tooling)_
 
@@ -45,12 +45,12 @@ CLI track:
 
 Python track:
 
-- [ ] **Release blocker:** `schemas/sdk-manifest-v1.json` version pattern `^\d+\.\d+\.\d+.*$` rejects valid PEP 440
+- [x] **Release blocker:** `schemas/sdk-manifest-v1.json` version pattern `^\d+\.\d+\.\d+.*$` rejects valid PEP 440
       (`2.1`, CalVer) — a `2.1` wheel cannot pass MIRI-PY-007 and MIRI-PY-012 simultaneously. Fix the pattern (or
       parse via `packaging.Version`). Coordinates with `miri-py.md`. _(packaging, proven by probe)_
-- [ ] Fix MIRI-PY-012's garbled `fires_when` bullet ("1.2.0 vs 1.2" describes canonical agreement as a violation)
+- [x] Fix MIRI-PY-012's garbled `fires_when` bullet ("1.2.0 vs 1.2" describes canonical agreement as a violation)
       and state whether 012/019 equality is textual or canonical. _(packaging)_
-- [ ] `schemas/lifecycle-v1.json`: `{status: eol, replacement: null}` validates despite MIRI-PY-033's
+- [x] `schemas/lifecycle-v1.json`: `{status: eol, replacement: null}` validates despite MIRI-PY-033's
       "schema-enforced" claim — narrow `replacement` to `type: string` under the `then`; fix the "and a successor
       exists" hedge that contradicts 033. _(security, packaging; proven by fuzzing)_
 - [ ] Define a normative mechanism for deprecating module-level attributes (PEP 702 `@deprecated` can't mark them) —
@@ -64,7 +64,7 @@ Python track:
 
 ## P1 — schema-enforces-the-spec and missing schemas
 
-- [ ] Push the linter's URL enforcement into the published schema: require `^https://` for all signal URLs
+- [x] Push the linter's URL enforcement into the published schema: require `^https://` for all signal URLs
       (registry, advisory, `update_check`, `vex`, `security_policy`); reject `http://`, `javascript:`, `file:`.
       _(security)_
 - [ ] `lifecycle-v1.json`: `osv` source ⇒ `ecosystem` required; define `osv-local` base-path resolution; define

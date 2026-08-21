@@ -69,6 +69,36 @@ Instant capability assessment. Agents can understand package functionality witho
 Serving both humans and agents. Better structured information benefits all developers while enabling new forms of
 AI-assisted development.
 
+## Project Status
+
+The Miri Standard is at **version 0.1-draft**, in its **Incubation** phase (see `MATURITY.md`). It is an early,
+unratified draft: the shape of the standard is still moving, and its benefits to agents are design goals rather than
+measured results.
+
+### What exists today
+
+- Normative specifications for Python wheels and command-line tools, under `standards/`.
+- JSON Schemas for every metadata file and for the check-definition format, under `schemas/`.
+- 83 machine-readable check definitions (40 Python, 43 CLI) with assigned severities and weights.
+- Weighted linter checklists ([Python](standards/python/linter-checklist.md),
+  [CLI](standards/cli/linter-checklist.md)), each summing to 100.
+- A [published site](https://miri-whl.github.io/) generated from the check definitions.
+
+### In progress and planned
+
+- A reference linter (miri-py) implementing the checks — in development; not yet published to PyPI. A pointer will be
+  added here once it is public.
+- A CLI `--describe` introspection schema that several CLI checks depend on — planned.
+- A "Core" conformance profile giving packages an achievable adoption on-ramp — planned.
+- A threat model / security-considerations section for the metadata agents consume — planned.
+- Go and Rust support — scope sketches only, not yet specified.
+
+### Known limitations
+
+- Some checks and their examples are still being reconciled with the reference implementation.
+- Conformance tiers and scoring semantics are still stabilizing.
+- No published measurement yet supports the standard's agent-performance goals.
+
 ## Quick Start
 
 The Miri Standard is a specification, not a tool you install. To get oriented:
