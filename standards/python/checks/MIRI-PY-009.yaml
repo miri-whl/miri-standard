@@ -12,7 +12,7 @@ requirements:
 - network
 severity:
   default: MEDIUM
-  violation_unit: each schema violation in migration-guide.json
+  violation_unit: migration-guide.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
 short_description: Present for any non-initial release; validates against schema
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present

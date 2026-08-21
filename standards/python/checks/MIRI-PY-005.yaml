@@ -7,7 +7,7 @@ added_in: 0.1-draft
 level: SHOULD
 category: Packaging Baseline
 weight: 2
-conditional: false
+conditional: true
 requirements:
 - network
 severity:
@@ -15,7 +15,9 @@ severity:
   violation_unit: the release
 short_description: Release carries index-hosted attestations (provenance)
 long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
-  baseline cannot carry trustworthy agent metadata. This check verifies: Release carries index-hosted attestations (provenance).'
+  baseline cannot carry trustworthy agent metadata. This check verifies: Release carries index-hosted attestations (provenance).
+  It applies only to open-source releases on a public index that supports PEP 740 provenance (e.g. PyPI); for private
+  or internal distribution the condition does not apply and the check scores full weight.'
 rationale: 'PEP 740 attestations bind each uploaded file to the exact source repository and CI workflow that built it; the
   index verifies them against a Trusted Publisher identity and republishes them under the `provenance` key of the PEP 691
   JSON API. PyPI has accepted attestations since 14 November 2024, and `pypa/gh-action-pypi-publish` generates them by default
@@ -24,8 +26,8 @@ rationale: 'PEP 740 attestations bind each uploaded file to the exact source rep
   workflow, and the release''s published provenance is what let responders reconstruct which workflow run produced the poisoned
   artifacts.'
 fires_when:
-- '`GET https://pypi.org/simple/<name>/` with `Accept: application/vnd.pypi.simple.v1+json` returns `"provenance": null`
-  for the release''s files'
+- 'The index named by `identity.registry`, queried via its PEP 691 JSON API (`Accept: application/vnd.pypi.simple.v1+json`),
+  returns `"provenance": null` for the release''s files'
 - The declared registry is a public index and no PEP 740 attestation objects exist for any distribution file of the release
 - Attestations cover some files of the release but not others (e.g. the wheel is attested, the sdist is not)
 remediation:

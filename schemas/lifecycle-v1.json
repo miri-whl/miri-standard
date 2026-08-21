@@ -72,7 +72,8 @@
           },
           "authoritative": {
             "type": "boolean",
-            "description": "Whether this source is authoritative for advisories against the package itself (vs. its dependency tree only)"
+            "default": true,
+            "description": "Whether this source is authoritative for advisories against the package itself (vs. its dependency tree only); defaults to true when omitted"
           }
         },
         "additionalProperties": false,

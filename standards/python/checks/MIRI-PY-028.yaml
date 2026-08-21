@@ -25,8 +25,9 @@ rationale: 'The PEP 702 `@deprecated` decorator (`warnings.deprecated` on Python
   the interface until it vanishes. Without the replacement and removal version in the message, the warning says stop but
   not what to do instead or by when.'
 fires_when:
-- An interface listed in `migration-guide.json` `deprecations` carries no `@deprecated` decorator (neither `warnings.deprecated`
-  nor `typing_extensions.deprecated`)
+- A function, class, method, or overload listed in `migration-guide.json` `deprecations` carries no `@deprecated`
+  decorator (neither `warnings.deprecated` nor `typing_extensions.deprecated`); module-level attributes and constants —
+  which cannot carry the decorator — are exempt and are deprecated via a module `__getattr__` (MIRI-PY-035, Lifecycle §6.1)
 - A decorator message names no replacement interface
 - A decorator message names no planned removal version
 remediation:

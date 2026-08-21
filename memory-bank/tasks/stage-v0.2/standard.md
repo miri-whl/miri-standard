@@ -53,11 +53,11 @@ Python track:
 - [x] `schemas/lifecycle-v1.json`: `{status: eol, replacement: null}` validates despite MIRI-PY-033's
       "schema-enforced" claim — narrow `replacement` to `type: string` under the `then`; fix the "and a successor
       exists" hedge that contradicts 033. _(security, packaging; proven by fuzzing)_
-- [ ] Define a normative mechanism for deprecating module-level attributes (PEP 702 `@deprecated` can't mark them) —
+- [x] Define a normative mechanism for deprecating module-level attributes (PEP 702 `@deprecated` can't mark them) —
       resolve the MIRI-PY-028 vs 035 gap. _(packaging)_
-- [ ] MIRI-PY-011: keep all four `fires_when` clauses; pin the build-window tolerance centrally (not "the linter's")
+- [x] MIRI-PY-011: keep all four `fires_when` clauses; pin the build-window tolerance centrally (not "the linter's")
       and specify SOURCE_DATE_EPOCH interplay. _(packaging, agent-tooling)_
-- [ ] MIRI-PY-005: make conditional on `distribution: open-source` / derive the endpoint from `identity.registry`
+- [x] MIRI-PY-005: make conditional on `distribution: open-source` / derive the endpoint from `identity.registry`
       instead of hardcoding pypi.org in `fires_when`. _(packaging)_
 - [ ] Define stable counting rules for `violation_unit: "each schema violation"` (007–010) — validators disagree on
       granularity, so scores are not comparable. _(packaging)_

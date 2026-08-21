@@ -130,6 +130,16 @@ Miri-specific configuration, never hand-maintained per release.
 | `support.replacement` | When deprecated/eol | Purl of the successor package. |
 | `vex` | No | URL of an OpenVEX / CycloneDX VEX document with vendor exploitability statements. |
 
+The advisory-source list has these semantics:
+
+- **Order is preference, not exclusivity.** Consumers SHOULD query every listed source and union the results — a hit
+  from any authoritative source is a hit; the first entry is preferred for display and metadata.
+- **`authoritative` defaults to `true`** when omitted. A source marked `authoritative: false` covers only the package's
+  dependency tree, not advisories against the package itself (used for public OSV under a `private` package, §5).
+- **`osv-local` paths** resolve relative to the directory containing `lifecycle.json` (the wheel's `agent-metadata/`)
+  when relative; absolute paths and `file:` URLs are used as given. An archive older than the consumer's freshness
+  policy MUST be treated as unknown, never as "no advisories".
+
 ### 3.2 Relationship to SBOMs (PEP 770)
 
 `lifecycle.json` identifies the package itself; it does not describe what the package *bundles*. That is the job of an
@@ -254,6 +264,11 @@ the PEP it derives from — and adds the machine-readable inventory and coherenc
   [PEP 702](https://peps.python.org/pep-0702/) — `warnings.deprecated` on Python ≥3.13, `typing_extensions.deprecated`
   earlier. This makes deprecations visible to static type checkers and IDEs at call sites without executing code, and
   emits a runtime `DeprecationWarning`.
+- Module-level attributes and constants cannot carry the `@deprecated` decorator (PEP 702 applies to functions,
+  classes, and overloads only). Deprecate them instead through a module-level `__getattr__` that emits a
+  `DeprecationWarning` on access (`warnings.warn(msg, DeprecationWarning, stacklevel=2)`), naming the replacement and
+  removal version in the message. Such attributes still appear in `migration-guide.json` `deprecations` but are exempt
+  from the decorator requirement above.
 - Runtime warning behavior follows the standard `warnings` categories with the default-visibility semantics of [PEP 565](https://peps.python.org/pep-0565/).
 - The decorator message SHOULD name the replacement interface and the planned removal version.
 - The deprecation window SHOULD follow the policy shape of [PEP 387](https://peps.python.org/pep-0387/): the marked
