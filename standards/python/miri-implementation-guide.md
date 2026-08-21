@@ -501,7 +501,7 @@ Raised when authentication fails.
 
 ## 4. Metadata Generation
 
-### 4.1 Create AI_EXAMPLES.json
+### 4.1 Create AGENT_EXAMPLES.json
 
 Create a build script `scripts/generate_metadata.py`:
 
@@ -731,45 +731,36 @@ Custom build hooks for Miri metadata generation.
 """
 
 import json
-import shutil
 from pathlib import Path
-from setuptools import build_meta
-from scripts.generate_metadata import generate_ai_examples_json
+from setuptools import build_meta as _default
+from scripts.generate_metadata import generate_agent_examples_json
 
-class MiriBuildBackend(build_meta.build_meta):
-    """Custom build backend that generates Miri metadata."""
-    
-    def build_wheel(self, wheel_directory, config_settings=None, metadata_directory=None):
-        """Build wheel with Miri metadata."""
-        
-        # Generate metadata
-        print("Generating Miri metadata...")
-        src_dir = Path("src")
-        package_dirs = [d for d in src_dir.iterdir() if d.is_dir()]
-        
-        if package_dirs:
-            package_dir = package_dirs[0]
-            agent_examples = generate_agent_examples_json(package_dir)
-            
-            # Create temporary metadata file
-            metadata_file = package_dir / "AGENT_EXAMPLES.json"
-            with open(metadata_file, "w") as f:
-                json.dump(agent_examples, f, indent=2)
-        
-        # Build wheel normally
-        wheel_path = super().build_wheel(wheel_directory, config_settings, metadata_directory)
-        
-        # Clean up temporary files
-        if package_dirs:
-            metadata_file = package_dirs[0] / "AGENT_EXAMPLES.json"
-            if metadata_file.exists():
-                metadata_file.unlink()
-        
-        return wheel_path
+# Pass through the setuptools hooks we do not customize.
+prepare_metadata_for_build_wheel = _default.prepare_metadata_for_build_wheel
+get_requires_for_build_wheel = _default.get_requires_for_build_wheel
+get_requires_for_build_sdist = _default.get_requires_for_build_sdist
+build_sdist = _default.build_sdist
 
-# Export the build functions
-build_wheel = MiriBuildBackend().build_wheel
-build_sdist = build_meta.build_sdist
+
+def _write_agent_examples():
+    """Generate AGENT_EXAMPLES.json into each package; return the files written."""
+    written = []
+    for package_dir in (d for d in Path("src").iterdir() if d.is_dir()):
+        agent_examples = generate_agent_examples_json(package_dir)
+        target = package_dir / "AGENT_EXAMPLES.json"
+        target.write_text(json.dumps(agent_examples, indent=2))
+        written.append(target)
+    return written
+
+
+def build_wheel(wheel_directory, config_settings=None, metadata_directory=None):
+    """Generate Miri metadata, build the wheel with setuptools, then clean up."""
+    written = _write_agent_examples()
+    try:
+        return _default.build_wheel(wheel_directory, config_settings, metadata_directory)
+    finally:
+        for target in written:
+            target.unlink(missing_ok=True)
 ```
 
 Update pyproject.toml to use custom backend:
@@ -778,6 +769,7 @@ Update pyproject.toml to use custom backend:
 [build-system]
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "build_hooks"
+backend-path = ["."]
 ```
 
 ## 6. Testing and Validation
@@ -802,7 +794,7 @@ def test_discovery_apis():
     assert hasattr(my_package, 'get_examples_dir')
     assert hasattr(my_package, 'list_examples')
     assert hasattr(my_package, 'show_quickstart')
-    assert hasattr(my_package, 'get_ai_metadata')
+    assert hasattr(my_package, 'get_agent_metadata')
     
     # Test functions return expected types
     examples_dir = my_package.get_examples_dir()
@@ -815,7 +807,7 @@ def test_discovery_apis():
     assert isinstance(quickstart, str)
     assert len(quickstart) > 0
     
-    metadata = my_package.get_ai_metadata()
+    metadata = my_package.get_agent_metadata()
     assert isinstance(metadata, dict)
     assert "version" in metadata
 
@@ -843,7 +835,7 @@ def test_examples_execution():
 
 def test_ai_metadata_structure():
     """Test AI metadata has required structure."""
-    metadata = my_package.get_ai_metadata()
+    metadata = my_package.get_agent_metadata()
     
     # Test required fields
     assert "version" in metadata
@@ -931,7 +923,7 @@ def validate_discovery_apis(package_dir: Path) -> List[str]:
         "get_examples_dir",
         "list_examples", 
         "show_quickstart",
-        "get_ai_metadata"
+        "get_agent_metadata"
     ]
     
     for func in required_functions:

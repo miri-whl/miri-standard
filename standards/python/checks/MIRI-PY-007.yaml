@@ -1,4 +1,4 @@
-# MIRI-PY-007 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-007 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-007
 name: sdk-manifest.json valid
 target: python-wheel
@@ -10,7 +10,7 @@ weight: 4
 conditional: false
 severity:
   default: HIGH
-  violation_unit: each schema violation in sdk-manifest.json
+  violation_unit: sdk-manifest.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
 short_description: Present and validates against schema
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
@@ -46,7 +46,7 @@ examples:
 suggested_fix: Regenerate sdk-manifest.json with the Miri build tooling; validate against sdk-manifest-v1.json.
 references:
 - title: Agent Metadata §4.1
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 - title: schema
   url: ../../schemas/sdk-manifest-v1.json

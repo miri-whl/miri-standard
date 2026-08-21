@@ -18,9 +18,30 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
   74, to show distance from conformance.
 - Checks marked *conditional* (e.g. SBOM only when bundling non-Python components) score their full weight automatically
   when the condition does not apply.
+- **First releases can reach Gold.** The previous-release checks (MIRI-PY-030, 034) are *conditional*: a first release
+  has no prior release to diff against, so the condition does not apply and they score full weight. They forfeit weight
+  (reported) only when a prior release exists but the linter cannot fetch it — a capability gap, not a failure.
+- **Gold additionally requires provenance**: a public-index wheel reaches Gold only if MIRI-PY-005 (PEP 740
+  attestations) passes — provenance is the anchor for every trust decision the metadata supports (Lifecycle §9.5). A
+  wheel otherwise scoring ≥90 without attestations is capped at Silver.
 
 **Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
 · <50 non-conforming.
+
+## Conformance Profiles
+
+Two profiles let a package adopt Miri incrementally:
+
+- **Miri Core** — the identity, security, and lifecycle layer a well-maintained package can adopt in a day without
+  building an agent-metadata generation pipeline: the packaging baseline (MIRI-PY-001–005), JSON hygiene (MIRI-PY-013),
+  the hand-authorable `lifecycle.json` identity and advisory fields (MIRI-PY-018–023), support-status coherence
+  (MIRI-PY-033), and graceful degradation (MIRI-PY-040). A package is **Core-conforming** when it passes every MUST
+  check in this 15-check set. Core is the recommended on-ramp and the standard's most defensible layer.
+- **Miri Full** — all 40 checks, adding the generated agent-metadata surface (sdk-manifest, usage-patterns, api-graph),
+  embedded examples, deprecation-coherence machinery, and discovery APIs. The Bronze/Silver/Gold score is computed over
+  the Full set.
+
+The two profiles share one check corpus and one weighting; Core is a named subset, not a separate standard.
 
 ## The Checks
 
@@ -28,7 +49,7 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [PEP 491](https://peps.python.org/pep-0491/) | 2 |
+| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/) | 2 |
 | MIRI-PY-002 | M | Core metadata valid | `METADATA` parses as Core Metadata 2.x; name normalized | [PEP 566](https://peps.python.org/pep-0566/) / [PEP 503](https://peps.python.org/pep-0503/) | 2 |
 | MIRI-PY-003 | M | Version scheme valid | Version parses under the canonical scheme | [PEP 440](https://peps.python.org/pep-0440/) | 2 |
 | MIRI-PY-004 | S | Declarative build config | `pyproject.toml` with `[project]` table drives the build | [PEP 621](https://peps.python.org/pep-0621/) / [PEP 517](https://peps.python.org/pep-0517/) | 2 |
@@ -38,23 +59,23 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 4 |
-| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 3 |
-| MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
-| MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
-| MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](agent-metadata-specification.md) | 2 |
-| MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](agent-metadata-specification.md) | 3 |
+| MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 4 |
+| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 3 |
+| MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
+| MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](miri-agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
+| MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](miri-agent-metadata-specification.md) | 2 |
+| MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
 | MIRI-PY-013 | M | JSON hygiene | All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments) | RFC 8259 | 2 |
 
 ### C. Examples (10 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-wheel-extensions.md) | 3 |
-| MIRI-PY-015 | M | Examples runnable | Every example compiles; executes in sandbox (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-wheel-extensions.md) | 3 |
-| MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-wheel-extensions.md) | 2 |
+| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 3 |
+| MIRI-PY-015 | M | Examples runnable | Every example compiles; executes in sandbox (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 3 |
+| MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 2 |
 
 ### D. Identity & Security (25 points)
 
@@ -88,11 +109,11 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-036 | M | Discovery APIs work | Package-level discovery functions importable and return coherent data | [Miri Wheel Ext. §6](miri-wheel-extensions.md) | 3 |
-| MIRI-PY-037 | S | Embedded docs present | `docs/` directory with API reference and troubleshooting | [Miri Wheel Ext. §5.3](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-039 | S | Prompt templates valid | `prompt-templates.md`, if present, follows the specified structure | [Agent Metadata §4.4](agent-metadata-specification.md) | 1 |
-| MIRI-PY-040 | M | Graceful degradation | Package imports and functions normally with all Miri metadata stripped | [Miri Wheel Ext. §8.3](miri-wheel-extensions.md) | 2 |
+| MIRI-PY-036 | M | Discovery and manifest verification | Discovery functions work; `sdk-manifest` api_index resolves against the installed API surface | [Miri Wheel Ext. §6](miri-python-wheel-extensions.md) / [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
+| MIRI-PY-037 | S | Embedded docs present | `docs/` directory with API reference and troubleshooting | [Miri Wheel Ext. §5.3](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-039 | S | Prompt templates valid | `prompt-templates.md`, if present, follows the specified structure | [Agent Metadata §4.4](miri-agent-metadata-specification.md) | 1 |
+| MIRI-PY-040 | M | Graceful degradation | Package imports and functions normally with all Miri metadata stripped | [Miri Wheel Ext. §8.3](miri-python-wheel-extensions.md) | 2 |
 
 ## Category Summary
 
@@ -111,19 +132,19 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 The standard's vocabulary: each *requirement* in a spec is verified by a *check*; each check failure instance is a
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
-Every check in this table has a committee-owned definition file in [`checks/`](checks/) — one YAML document per check
+Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
 (`checks/MIRI-PY-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —
-the **committee-assigned severity**: a default
+the **canonical severity**: a default
 severity (`LOW`/`MINOR`/`MEDIUM`/`HIGH`/`CRITICAL`, numeric 1–5) and the `violation_unit` defining what counts as one
 violation.
 
 The severity assignment exists so that magnitude-aware health scoring is comparable across implementations: severity is
 defined by the standard, never by the linter. Linter implementations MUST consume these definitions rather than
 maintaining their own copies, and MUST NOT override severity or violation units. Per-instance checks additionally carry a
-committee-defined `population_unit` — the denominator for report-level violation density; populations are reported,
+canonical `population_unit` — the denominator for report-level violation density; populations are reported,
 never scored, and never invented by implementations. Definitions also declare `requirements` — the operating capabilities
 (`network`, `previous-release`, `execution`) beyond the target's baseline analysis mode a check needs; a linter
 lacking one MUST skip with the fixed reason, and MUST NOT skip otherwise.
@@ -139,6 +160,9 @@ This table is the human rendering of the same data; the YAML files are authorita
   029/031 are computable from the current wheel) need the prior release; linters SHOULD fetch it via the declared
   `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable. The `requirements`
   field in each check definition is the authoritative list of such constraints and their fixed skip reasons.
+- Linter output is schematized: the score computation follows [`scoring-v1.json`](../../schemas/scoring-v1.json) and
+  the emitted report follows [`lint-report-v1.json`](../../schemas/lint-report-v1.json) (both draft — reconcile with the
+  reference linter). The report's top-level version field is `schema_version`, never `report_version`.
 - Machine-readable form: the [`checks/`](checks/) directory is the per-check source of truth; an aggregated
   `checklist.json` remains a planned convenience deliverable, following the same
   schema-as-data rule as everything else in Miri — this document and the JSON must be generated from one source.

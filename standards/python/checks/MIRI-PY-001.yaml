@@ -1,4 +1,4 @@
-# MIRI-PY-001 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-001 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-001
 name: Wheel structure valid
 target: python-wheel
@@ -28,8 +28,8 @@ fires_when:
 - A recomputed sha256 digest (urlsafe base64, unpadded) or byte size differs from the RECORD entry for that file
 - A RECORD entry uses a forbidden hash algorithm (md5, sha1)
 remediation:
-- Rebuild the wheel with a standard PEP 517 backend via `python -m build`; never modify the archive after the backend writes
-  RECORD
+- Rebuild the wheel with a standard PEP 517 backend via `python -m build`; do not hand-edit the archive, and any tool that
+  adds files after the backend writes RECORD MUST re-emit their RECORD rows (next step)
 - If a build plugin injects files, make it re-emit a RECORD row (path, `sha256=<urlsafe-b64>`, size) for everything it adds
 - Gate publishing on `check-wheel-contents dist/*.whl` plus a RECORD audit that recomputes each archived file's digest
 examples:
@@ -47,8 +47,8 @@ references:
 - title: PEP 427
   url: https://peps.python.org/pep-0427/
   type: external
-- title: PEP 491
-  url: https://peps.python.org/pep-0491/
+- title: Binary Distribution Format
+  url: https://packaging.python.org/en/latest/specifications/binary-distribution-format/
   type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-001.yaml

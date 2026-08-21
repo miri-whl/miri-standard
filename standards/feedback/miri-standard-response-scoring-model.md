@@ -13,7 +13,7 @@ in the checklist model: binary checks discard magnitude by design. We also accep
 model unchanged; its comparability across independent implementations is the property the standard exists to protect,
 and nothing in this response perturbs it.
 
-One part of your proposal is not just accepted but already implemented: the committee-assigned severity vocabulary now
+One part of your proposal is not just accepted but already implemented: the canonical severity vocabulary now
 ships in the standard. See §2.
 
 ## 1. Disposition of the Asks
@@ -36,7 +36,7 @@ inputs must be fixed too.
 The standard therefore now defines severity per check, centrally:
 
 - **`standards/python/checks/`** and **`standards/cli/checks/`** — one YAML file per check (`MIRI-PY-001.yaml` …),
-  validated against [`check-v1.json`](../../schemas/check-v1.json). Each file is the committee-owned definition:
+  validated against [`check-v1.json`](../../schemas/check-v1.json). Each file is the canonical definition:
   name, level, category, weight, short/long descriptions, violation and compliant examples, suggested fix, references,
   and versioning (`added_in` / `withdrawn_in`).
 - **`severity.default`** — one of `LOW` / `MINOR` / `MEDIUM` / `HIGH` / `CRITICAL` (numeric 1–5), exactly your

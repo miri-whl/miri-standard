@@ -3,7 +3,7 @@
 {% block title %}{{ check.id }} — {{ check.name }}{% endblock %}
 {% block content %}
 {{ m.spec_header(check.id ~ ' — ' ~ check.name,
-                 [('Schema', 'check-v1'), ('Status', 'committee-owned'), ('Added', check.added_in)],
+                 [('Schema', 'check-v1'), ('Status', 'canonical'), ('Added', check.added_in)],
                  check.short_description | codeish) }}
 
 <div class="badgerow">

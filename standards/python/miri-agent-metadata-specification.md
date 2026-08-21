@@ -1,15 +1,15 @@
 # Miri Standard: Pre-Parsed Agent Metadata Specification
 
-*Specification Version: 1.0-draft*  
+*Specification Version: 0.1-draft*  
 *Status: Draft*  
 *Created: 2025*
 
 ## Abstract
 
-This specification defines pre-parsed, structured metadata formats that eliminate the need for autonomous agents to
-continuously re-parse documentation and examples. By providing agent-optimized data structures directly within Python
-wheel packages, we enable instant consumption and significantly improve agent performance when working with SDKs and
-libraries.
+This specification defines pre-parsed, structured metadata formats that travel inside Python wheel packages, so the
+information an agent needs about a package is available offline and version-locked to the exact code it describes,
+without re-deriving it from source on every use. The intended benefit — faster, more reliable agent integration with
+SDKs and libraries — is a design goal of the standard, not yet a measured result.
 
 ## Table of Contents
 
@@ -21,6 +21,7 @@ libraries.
 6. [Integration Patterns](#6-integration-patterns)
 7. [Performance Optimization](#7-performance-optimization)
 8. [Implementation Requirements](#8-implementation-requirements)
+9. [Security Considerations](#9-security-considerations)
 
 ## 1. Problem Statement
 
@@ -29,7 +30,7 @@ libraries.
 Autonomous agents face significant performance bottlenecks when working with Python packages:
 
 - **Continuous Re-parsing**: Agents repeatedly parse the same documentation and examples
-- **Unstructured Data**: Free-form text requires complex NLP processing
+- **Unstructured Data**: Free-form text must be re-read and interpreted each session, at token cost
 - **Version Inconsistency**: Documentation often lags behind code changes
 - **Context Loss**: Agents lose learned patterns between sessions
 - **Slow Discovery**: Sequential reading of documentation prevents instant API comprehension
@@ -38,7 +39,7 @@ Autonomous agents face significant performance bottlenecks when working with Pyt
 
 These inefficiencies result in:
 
-- **Slow Integration**: 30-60 seconds to understand a new SDK
+- **Slow Integration**: understanding an unfamiliar SDK from unstructured sources is slow and repeated each session
 - **Repeated Work**: Same parsing operations across multiple projects
 - **Inconsistent Results**: Varying interpretation of unstructured documentation
 - **Resource Waste**: Unnecessary compute cycles on repetitive tasks
@@ -56,10 +57,10 @@ The Miri Standard addresses these issues by providing:
 
 ### 2.2 Key Benefits
 
-- **Instant Consumption**: Agents access structured data immediately
-- **Consistent Interpretation**: Standardized formats eliminate ambiguity
-- **Version Synchronization**: Automated generation ensures accuracy
-- **Performance Optimization**: Eliminate redundant parsing operations
+- **Direct Consumption**: Agents read structured data without re-deriving it from prose
+- **Consistent Structure**: Standardized formats reduce interpretation ambiguity
+- **Version Synchronization**: Build-time generation keeps metadata in step with the code
+- **Offline Availability**: Metadata ships with the artifact — no external fetch
 - **Context Preservation**: Structured patterns enable better code suggestions
 
 ## 3. Agent Metadata Directory Structure
@@ -77,7 +78,6 @@ package-1.0.0-py3-none-any.whl
 │   ├── migration-guide.json         # Version-specific changes
 │   ├── prompt-templates.md          # Agent interaction guides
 │   ├── api-graph.json              # API relationship graph
-│   ├── performance-hints.json      # Optimization suggestions
 │   └── lifecycle.json              # Identity, advisory sources (required)
 ├── package/examples/                # Miri: Example code
 └── package-1.0.0.dist-info/        # Standard + Miri metadata
@@ -105,7 +105,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/sdk-manifest-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/sdk-manifest-v1.json",
   "sdk_version": "1.2.0",
   "generated_at": "2025-08-30T12:00:00Z",
   "miri_version": "1.0",
@@ -198,7 +198,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/usage-patterns-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/usage-patterns-v1.json",
   "version": "1.0",
   "generated_at": "2025-08-30T12:00:00Z",
   "patterns": [
@@ -288,7 +288,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/migration-guide-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/migration-guide-v1.json",
   "from_version": "1.1.x",
   "to_version": "1.2.0",
   "migration_type": "minor",
@@ -314,7 +314,7 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
         "Update any error handling for new exception types"
       ],
       "automated_fix": {
-        "find_pattern": r"\.execute\(",
+        "find_pattern": "\\.execute\\(",
         "replace_pattern": ".query(",
         "confidence": "high"
       },
@@ -420,7 +420,7 @@ Use migration-guide.json for breaking changes and new features.
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/api-graph-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/api-graph-v1.json",
   "version": "1.0",
   "nodes": {
     "DatabaseClient": {
@@ -482,7 +482,7 @@ generated at build time.
 import inspect
 import json
 import ast
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 class AgentMetadataGenerator:
@@ -508,7 +508,7 @@ class AgentMetadataGenerator:
         """Generate sdk-manifest.json from source code inspection."""
         manifest = {
             "sdk_version": self.version,
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "miri_version": "1.0",
             "quick_reference": self._extract_quick_reference(),
             "api_index": self._extract_api_index(),
@@ -572,7 +572,7 @@ class AgentMetadataGenerator:
         
         usage_data = {
             "version": "1.0",
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "patterns": patterns,
             "categories": self._categorize_patterns(patterns),
             "learning_paths": self._generate_learning_paths(patterns)
@@ -651,12 +651,12 @@ class AgentMetadataLoader:
         if "manifest" not in self._cache:
             try:
                 # Try to load from installed package
-                with importlib.resources.files(f"{self.package_name}.agent-metadata") as metadata_dir:
-                    manifest_file = metadata_dir / "sdk-manifest.json"
-                    if manifest_file.exists():
-                        self._cache["manifest"] = json.loads(manifest_file.read_text())
-                    else:
-                        return None
+                metadata_dir = importlib.resources.files(self.package_name) / "agent-metadata"
+                manifest_file = metadata_dir / "sdk-manifest.json"
+                if manifest_file.exists():
+                    self._cache["manifest"] = json.loads(manifest_file.read_text())
+                else:
+                    return None
             except (ImportError, FileNotFoundError):
                 return None
         
@@ -666,12 +666,12 @@ class AgentMetadataLoader:
         """Load usage patterns with caching."""
         if "patterns" not in self._cache:
             try:
-                with importlib.resources.files(f"{self.package_name}.agent-metadata") as metadata_dir:
-                    patterns_file = metadata_dir / "usage-patterns.json"
-                    if patterns_file.exists():
-                        self._cache["patterns"] = json.loads(patterns_file.read_text())
-                    else:
-                        return None
+                metadata_dir = importlib.resources.files(self.package_name) / "agent-metadata"
+                patterns_file = metadata_dir / "usage-patterns.json"
+                if patterns_file.exists():
+                    self._cache["patterns"] = json.loads(patterns_file.read_text())
+                else:
+                    return None
             except (ImportError, FileNotFoundError):
                 return None
         
@@ -776,10 +776,10 @@ class LazyAgentMetadata:
     def _load_file(self, filename: str) -> Dict:
         """Load and cache metadata file."""
         try:
-            with importlib.resources.files(f"{self.package_name}.agent-metadata") as metadata_dir:
-                file_path = metadata_dir / filename
-                if file_path.exists():
-                    return json.loads(file_path.read_text())
+            metadata_dir = importlib.resources.files(self.package_name) / "agent-metadata"
+            file_path = metadata_dir / filename
+            if file_path.exists():
+                return json.loads(file_path.read_text())
         except Exception:
             pass
         return {}
@@ -826,18 +826,10 @@ class AgentPerformanceTracker:
 
 ### 8.1 Required Files
 
-**Minimum Compliance**:
-
-- `agent-metadata/sdk-manifest.json` - Core API index
-- `agent-metadata/usage-patterns.json` - Basic usage patterns
-- `agent-metadata/lifecycle.json` - Identity and advisory sources ([specification](lifecycle-security-metadata.md))
-
-**Full Compliance**:
-
-- All metadata files present and valid
-- Automated generation integrated into build process
-- Performance optimization implemented
-- Agent integration utilities provided
+Conformance is defined by the [Linter Checklist](linter-checklist.md), the single source of truth for what a wheel MUST
+and SHOULD provide: a wheel is conforming when it passes every MUST (M) check, and its tier is the checklist score. The
+`agent-metadata/` files this specification defines (`sdk-manifest.json`, `usage-patterns.json`, `lifecycle.json`, …)
+are required as specified by the corresponding checklist checks.
 
 ### 8.2 Validation Requirements
 
@@ -912,8 +904,27 @@ requires = ["setuptools>=61.0", "wheel", "miri-build-tools"]
 build-backend = "miri_build_tools.build_meta"
 ```
 
+## 9. Security Considerations
+
+The metadata defined here is generated and shipped by the package it describes, so a compromised release controls every
+field an agent consumes. The full threat model and the consumer-side rules that follow from it are specified in
+[Lifecycle and Security Metadata §9](lifecycle-security-metadata.md); this section highlights what is specific to the
+agent-metadata surface.
+
+- **Narrative files are an injection surface.** `prompt-templates.md`, `usage-patterns.json`, and any `AGENT_GUIDE.md`
+  are publisher-authored natural language that an agent may load into its context. They MUST be treated as untrusted
+  data, never as instructions: an agent MUST NOT execute a command or follow a step drawn from them without out-of-band
+  verification or human confirmation. `prompt-templates.md` is the highest-risk file — it exists to be read as
+  instructions — and a consumer SHOULD prefer to ignore it over trusting it.
+- **`api_index` and usage patterns can lie.** An agent generating code from `sdk-manifest.json` or `usage-patterns.json`
+  SHOULD verify calls against the installed package's actual surface (import and introspect) rather than trusting the
+  metadata's claims, which a compromised or careless build can fabricate.
+- **Provenance is the anchor.** Trust in any of this metadata is only as strong as the wheel's provenance; prefer
+  metadata from a release carrying a verified PEP 740 attestation (MIRI-PY-005).
+
 ---
 
-This specification provides the foundation for eliminating agent re-parsing inefficiencies while maintaining full
-compatibility with the existing Miri Standard. The pre-parsed metadata approach significantly improves agent performance
-and enables more sophisticated code assistance capabilities.
+This specification provides a foundation for reducing agent re-parsing while maintaining full compatibility with the
+existing Miri Standard. Whether the pre-parsed metadata approach improves agent performance in practice is a
+hypothesis to be validated by measurement; its concrete, testable advantages are that the metadata is bundled
+(available offline) and version-locked to the code it describes.

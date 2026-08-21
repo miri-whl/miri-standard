@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://miri-standard.org/schemas/sdk-manifest-v1.json",
+  "$id": "https://miri-whl.github.io/schemas/sdk-manifest-v1.json",
   "title": "Miri Standard SDK Manifest",
   "description": "Schema for sdk-manifest.json - Core API index with structured signatures and metadata",
   "type": "object",
@@ -8,8 +8,8 @@
   "properties": {
     "sdk_version": {
       "type": "string",
-      "description": "Version of the SDK package",
-      "pattern": "^\\d+\\.\\d+\\.\\d+.*$"
+      "description": "Version of the SDK package (PEP 440); accepts epoch, multi-segment release, pre/post/dev, and local versions so it never rejects a valid wheel version",
+      "pattern": "^v?([0-9]+!)?[0-9]+(\\.[0-9]+)*([._-]?(a|b|c|rc|alpha|beta|pre|preview)[._-]?[0-9]*)?([._-]?(post|rev|r)[._-]?[0-9]*)?([._-]?dev[._-]?[0-9]*)?(\\+[a-z0-9]+([._-][a-z0-9]+)*)?$"
     },
     "generated_at": {
       "type": "string",

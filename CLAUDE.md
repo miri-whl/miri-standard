@@ -66,7 +66,7 @@ provides" vs "what Miri adds".
 
 A suite has four layers that must stay coherent when any one changes:
 
-1. **Core specs** — Python: `miri-wheel-extensions.md` + `agent-metadata-specification.md` (the `agent-metadata/`
+1. **Core specs** — Python: `miri-python-wheel-extensions.md` + `miri-agent-metadata-specification.md` (the `agent-metadata/`
    directory in wheels); CLI: `cli-lifecycle-specification.md` (`--describe`, `check-update`, `changelog --since`,
    per-flag `lifecycle` blocks). Plus `lifecycle-security-metadata.md` (Python) defining `lifecycle.json`.
 2. **JSON Schemas** (`schemas/*.json`, Draft-07) — one per metadata file. `lifecycle-v1.json` is shared across
@@ -76,7 +76,7 @@ A suite has four layers that must stay coherent when any one changes:
    weights summing to exactly 100. **IDs are never renumbered**; retired checks are marked withdrawn and weight is
    redistributed. Every conformance rule added to a spec should get a check here. Each check's authoritative
    definition is a YAML file in `standards/<target>/checks/` (schema: `schemas/check-v1.json`) carrying the
-   committee-assigned severity and violation unit for health scoring — the markdown table is the derived rendering;
+   canonical severity and violation unit for health scoring — the markdown table is the derived rendering;
    keep IDs/levels/weights coherent between the two when editing either.
 4. **Artifact lifecycles** (`artifact-lifecycle.md` per suite) — stage tables + mermaid diagrams. The PDFs in
    `assets/` are generated renderings (HTML + inline SVG → headless Chrome); the markdown is the source of truth —

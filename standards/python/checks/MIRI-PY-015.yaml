@@ -1,4 +1,4 @@
-# MIRI-PY-015 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-015 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-015
 name: Examples runnable
 target: python-wheel
@@ -49,7 +49,7 @@ examples:
 suggested_fix: Fix or guard the example; examples must run with only documented prerequisites.
 references:
 - title: Miri Wheel Ext. §7.2.2
-  url: miri-wheel-extensions.md
+  url: miri-python-wheel-extensions.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-015.yaml

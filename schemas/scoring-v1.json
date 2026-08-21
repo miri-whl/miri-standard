@@ -1,0 +1,59 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-whl.github.io/schemas/scoring-v1.json",
+  "title": "Miri Scoring Configuration",
+  "description": "Declares how a linter computes the two scores in a lint report: the additive Conformance score (sum of passing check weights, MUST-gated) and the severity-graded Health score. Draft: reconcile with the reference linter before pinning constraints.",
+  "type": "object",
+  "required": ["schema_version", "conformance", "health"],
+  "properties": {
+    "schema_version": {"type": "string"},
+    "conformance": {
+      "type": "object",
+      "description": "The normative additive model: score = sum of passing check weights (0-100)",
+      "required": ["must_failure_cap", "grade_bands"],
+      "properties": {
+        "must_failure_cap": {
+          "type": "integer",
+          "description": "Score ceiling when any MUST check fails (non-conforming); the standard fixes this at 74"
+        },
+        "grade_bands": {
+          "type": "object",
+          "description": "Lower bound of each grade band",
+          "properties": {
+            "gold": {"type": "integer"},
+            "silver": {"type": "integer"},
+            "bronze": {"type": "integer"}
+          },
+          "additionalProperties": false
+        },
+        "gold_requires_provenance": {
+          "type": "boolean",
+          "description": "Whether Gold additionally requires PEP 740 attestations (MIRI-PY-005) for public-index wheels"
+        }
+      },
+      "additionalProperties": true
+    },
+    "health": {
+      "type": "object",
+      "description": "The normative-baseline severity-graded model over canonical per-check severities",
+      "required": ["method"],
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "Named scoring method (e.g. baseline additive-penalty, or a tiered-penalty variant)"
+        },
+        "profile": {
+          "type": "string",
+          "description": "Frozen, versioned severity profile identifier (e.g. balanced@1)"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Method parameters (severity weights, escalation factors, per-severity caps)",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

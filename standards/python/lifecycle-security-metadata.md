@@ -9,7 +9,7 @@
 This specification defines how a Miri-compliant Python package declares its identity, advisory sources, and lifecycle
 state so that agents and scanners can answer two questions at call time: **"is this package vulnerable?"** and **"is
 this package current?"**. It adds one file, `agent-metadata/lifecycle.json`, to the structure defined in the
-[Agent Metadata Specification](agent-metadata-specification.md).
+[Agent Metadata Specification](miri-agent-metadata-specification.md).
 
 The design reuses the existing open source security stack — [purl](https://github.com/package-url/purl-spec) for
 identity and the [OSV schema](https://ossf.github.io/osv-schema/) for advisories — rather than inventing a parallel one.
@@ -27,6 +27,7 @@ for both open source and private distribution. Background and rationale:
 6. [Deprecating Interfaces](#6-deprecating-interfaces)
 7. [Agent Consumption Workflow](#7-agent-consumption-workflow)
 8. [Conformance Requirements](#8-conformance-requirements)
+9. [Security Considerations](#9-security-considerations)
 
 ---
 
@@ -79,7 +80,7 @@ Miri-specific configuration, never hand-maintained per release.
 
 ```json
 {
-  "$schema": "https://miri-standard.org/schemas/lifecycle-v1.json",
+  "$schema": "https://miri-whl.github.io/schemas/lifecycle-v1.json",
   "miri_lifecycle_version": "0.1",
   "generated_at": "2026-08-18T12:00:00Z",
 
@@ -129,6 +130,16 @@ Miri-specific configuration, never hand-maintained per release.
 | `support.status` | Yes | `"active"`, `"maintenance"`, `"deprecated"`, or `"eol"`. |
 | `support.replacement` | When deprecated/eol | Purl of the successor package. |
 | `vex` | No | URL of an OpenVEX / CycloneDX VEX document with vendor exploitability statements. |
+
+The advisory-source list has these semantics:
+
+- **Order is preference, not exclusivity.** Consumers SHOULD query every listed source and union the results — a hit
+  from any authoritative source is a hit; the first entry is preferred for display and metadata.
+- **`authoritative` defaults to `true`** when omitted. A source marked `authoritative: false` covers only the package's
+  dependency tree, not advisories against the package itself (used for public OSV under a `private` package, §5).
+- **`osv-local` paths** resolve relative to the directory containing `lifecycle.json` (the wheel's `agent-metadata/`)
+  when relative; absolute paths and `file:` URLs are used as given. An archive older than the consumer's freshness
+  policy MUST be treated as unknown, never as "no advisories".
 
 ### 3.2 Relationship to SBOMs (PEP 770)
 
@@ -199,7 +210,7 @@ No Miri-specific publication step exists or is needed — this is deliberate (§
 
 When a package enters `deprecated` or `eol`, the final releases MUST carry the updated `support` block with
 `replacement` set. Because agents read `lifecycle.json` from the *installed* wheel, this reaches every future install
-even if the user never reads the README. The [migration-guide.json](agent-metadata-specification.md) file carries the
+even if the user never reads the README. The [migration-guide.json](miri-agent-metadata-specification.md) file carries the
 how; `support.replacement` carries the what.
 
 ## 5. Private and Internal Packages
@@ -254,6 +265,11 @@ the PEP it derives from — and adds the machine-readable inventory and coherenc
   [PEP 702](https://peps.python.org/pep-0702/) — `warnings.deprecated` on Python ≥3.13, `typing_extensions.deprecated`
   earlier. This makes deprecations visible to static type checkers and IDEs at call sites without executing code, and
   emits a runtime `DeprecationWarning`.
+- Module-level attributes and constants cannot carry the `@deprecated` decorator (PEP 702 applies to functions,
+  classes, and overloads only). Deprecate them instead through a module-level `__getattr__` that emits a
+  `DeprecationWarning` on access (`warnings.warn(msg, DeprecationWarning, stacklevel=2)`), naming the replacement and
+  removal version in the message. Such attributes still appear in `migration-guide.json` `deprecations` but are exempt
+  from the decorator requirement above.
 - Runtime warning behavior follows the standard `warnings` categories with the default-visibility semantics of [PEP 565](https://peps.python.org/pep-0565/).
 - The decorator message SHOULD name the replacement interface and the planned removal version.
 - The deprecation window SHOULD follow the policy shape of [PEP 387](https://peps.python.org/pep-0387/): the marked
@@ -263,7 +279,7 @@ the PEP it derives from — and adds the machine-readable inventory and coherenc
 
 PEP 702 markers are discoverable only by importing or type-checking the code — invisible to an agent inspecting
 metadata. The build MUST therefore extract them into the `deprecations` array of
-[migration-guide.json](agent-metadata-specification.md) (fields: `deprecated`, `replacement`, `removal_version`,
+[migration-guide.json](miri-agent-metadata-specification.md) (fields: `deprecated`, `replacement`, `removal_version`,
 `migration`). The decorators are the single source of truth; the JSON inventory is derived at build time, never
 hand-written — the same schema-as-data rule as the [CLI specification §2.3](../cli/cli-lifecycle-specification.md).
 
@@ -317,6 +333,11 @@ if meta["support"]["status"] in ("deprecated", "eol"):
 The agent-facing consequence: a package resolved from frozen model weights can be validated in two calls, converting
 silent staleness into a call-time check.
 
+**Defining "latest" for the currency check.** The latest version is the highest version offered by `update_check` that
+is (a) not yanked, (b) not a pre-release — unless the installed version is itself a pre-release — and (c) compatible
+with the environment's `Requires-Python`. Before trusting the local `support.status`, a consumer SHOULD consult the
+index's PEP 792 status markers: a `quarantined` or `archived` project overrides an artifact's self-declared `active`.
+
 ## 8. Conformance Requirements
 
 A package conforms to this specification if:
@@ -334,6 +355,56 @@ Validation tooling (planned, see [Python README](README.md)) will check 1–7 an
 registry serves the declared version.
 
 ---
+
+## 9. Security Considerations
+
+### 9.1 Threat Model
+
+The metadata this standard defines is generated and shipped by the artifact it describes. **Once an artifact is
+compromised — a maintainer account taken over, a malicious release published, a name typosquatted — every field it
+carries is attacker-controlled.** `advisory_sources`, `update_check`, `support.replacement`, `vex`, and every
+natural-language file (`prompt-templates.md`, `usage-patterns.json`, migration text, suggested fixes) can all be made
+to lie. The adversary this section addresses is a package that was trustworthy when adopted and became malicious
+later; nothing an artifact declares about its own security can be trusted on the artifact's word alone.
+
+### 9.2 Anchor Trust Outside the Artifact
+
+Artifact-declared `advisory_sources` and `update_check` are **hints, not authorities**. A consumer MUST decide which
+advisory sources are authoritative for a package from its own policy — typically an organization-level allowlist keyed
+by purl namespace, with public OSV as the default for public packages — and treat the artifact's list as a suggestion
+to reconcile against that policy. In particular:
+
+- A consumer MUST NOT forward credentials (index tokens, session cookies) to any URL declared by the artifact.
+- All signal URLs are HTTPS-only (enforced by `lifecycle-v1.json`); a consumer MUST reject other schemes.
+- An agent fetching artifact-declared URLs from inside a private network MUST guard against SSRF: block RFC 1918,
+  link-local, and cloud metadata addresses, and re-validate the target after every redirect.
+
+### 9.3 The Replacement Redirect
+
+`support.replacement` and `migration-guide.json` together can redirect a consumer onto a *different* package. A
+compromised release can set `status: deprecated` with `replacement: pkg:pypi/attacker-successor` and ship migration
+steps that move working code onto the attacker's package. Therefore:
+
+- A consumer MUST verify a `replacement` before acting on it — that the successor shares the original's publisher
+  identity (e.g. via PEP 740 attestation), or that an organization policy has approved the redirect.
+- An agent MUST NOT automatically install, or migrate code onto, a declared `replacement`. Auto-migration requires
+  out-of-band verification or human confirmation.
+
+### 9.4 Metadata Is Data, Never Instructions
+
+All natural-language metadata — `prompt-templates.md`, `usage-patterns.json` code and prose, migration narratives, and
+the `remediation`/`suggested_fix` text of checks — is untrusted input authored by the artifact's publisher. A consumer
+MUST treat it as **data, never as instructions**. An agent MUST NOT execute a command, apply a fix, or follow a step
+that appears in metadata without the same out-of-band verification or human confirmation it would require for any
+untrusted source. Structured, authoritative-looking metadata is *more* dangerous here than plain documentation,
+precisely because it invites the consumer to lower its guard.
+
+### 9.5 What the Standard Does and Does Not Bind
+
+`generated_at` and RECORD hashes bind an artifact to itself, not to any external authority; they detect accidental
+drift, not tampering. The only field that ties an artifact to an independent identity is a PEP 740 attestation
+(MIRI-PY-005), verified by the index against a Trusted Publisher. Provenance verification is therefore the foundation
+every other trust decision in this section builds on.
 
 ## References
 

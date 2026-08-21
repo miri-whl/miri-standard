@@ -49,6 +49,17 @@ def md_inline(s):
 
 def md_to_html(text):
     out = []
+    # Pull fenced code blocks out first so blank lines inside them don't split the block.
+    for chunk in re.split(r"(```.*?\n.*?\n```)", text, flags=re.S):
+        if chunk.startswith("```"):
+            body = chunk.split("\n", 1)[1].rsplit("```", 1)[0]
+            out.append(f'<div class="codeblock"><pre><code>{html.escape(body.rstrip())}</code></pre></div>')
+            continue
+        _md_blocks(chunk, out)
+    return "\n".join(out)
+
+
+def _md_blocks(text, out):
     for block in re.split(r"\n\s*\n", text):
         lines = [l for l in block.split("\n") if l.strip()]
         if not lines:
@@ -75,7 +86,6 @@ def md_to_html(text):
             out.append(f"<ol>{items}</ol>")
         else:
             out.append(f"<p>{md_inline(' '.join(l.strip() for l in lines))}</p>")
-    return "\n".join(out)
 
 
 def load_checks(meta):
@@ -120,6 +130,12 @@ def main():
 
     for img in site["assets"]:
         shutil.copy(REPO / "assets/img" / img, out / "assets" / img)
+
+    # Publish the JSON Schemas so their $id URLs (miri-whl.github.io/schemas/…) resolve.
+    schemas_out = out / "schemas"
+    schemas_out.mkdir()
+    for sch in sorted((REPO / "schemas").glob("*.json")):
+        shutil.copy(sch, schemas_out / sch.name)
 
     targets = {}
     for target, meta in site["targets"].items():

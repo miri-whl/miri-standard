@@ -1,4 +1,4 @@
-# MIRI-CLI-035 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-035 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-035
 name: Grace period
 target: cli
@@ -7,7 +7,7 @@ added_in: 0.1-draft
 level: MUST
 category: Deprecation Coherence
 weight: 3
-conditional: false
+conditional: true
 requirements:
 - previous-release
 severity:
@@ -39,7 +39,7 @@ remediation:
   if any surface it lists is absent from the current build without an intervening deprecated-and-functioning release'
 examples:
   violation: "release 2.3.0 --describe:\n  {\"name\": \"--legacy-auth\", \"lifecycle\": {\"status\": \"deprecated\", \"\
-    deprecated_since\": \"2.3.0\"}}\n$ tool login --legacy-auth   # same release 2.3.0\n{\"ok\": false, \"error\": {\"code\"\
+    deprecated_since\": \"2.3.0\"}}\n$ tool login --legacy-auth   # same release 2.3.0\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\"\
     : \"FLAG_REMOVED\"}} — announced and dead in the same release; no consumer could have observed the warning while the\
     \ flag still worked"
   compliant: '1.14.0: --export marked deprecated, functions, warns on stderr

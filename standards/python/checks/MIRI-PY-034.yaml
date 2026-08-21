@@ -1,4 +1,4 @@
-# MIRI-PY-034 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-034 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-034
 name: Grace period
 target: python-wheel
@@ -7,7 +7,7 @@ added_in: 0.1-draft
 level: SHOULD
 category: Deprecation & Lifecycle Coherence
 weight: 2
-conditional: false
+conditional: true
 requirements:
 - previous-release
 severity:

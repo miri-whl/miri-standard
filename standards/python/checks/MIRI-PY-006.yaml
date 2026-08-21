@@ -1,4 +1,4 @@
-# MIRI-PY-006 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-006 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-006
 name: agent-metadata/ present
 target: python-wheel
@@ -46,7 +46,7 @@ examples:
 suggested_fix: Add the agent-metadata/ directory and generate its files at build time.
 references:
 - title: Miri Wheel Ext. §3.2
-  url: miri-wheel-extensions.md
+  url: miri-python-wheel-extensions.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-006.yaml

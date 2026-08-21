@@ -1,4 +1,4 @@
-# MIRI-PY-024 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-024 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-024
 name: SBOM when bundling
 target: python-wheel

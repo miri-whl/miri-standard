@@ -1,4 +1,4 @@
-# MIRI-PY-020 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-020 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-020
 name: Distribution & registry declared
 target: python-wheel

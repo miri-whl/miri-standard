@@ -1,4 +1,4 @@
-# MIRI-PY-030 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-030 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-030
 name: No silent removals
 target: python-wheel
@@ -7,7 +7,7 @@ added_in: 0.1-draft
 level: MUST
 category: Deprecation & Lifecycle Coherence
 weight: 5
-conditional: false
+conditional: true
 requirements:
 - previous-release
 severity:

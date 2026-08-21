@@ -1,4 +1,4 @@
-# MIRI-CLI-036 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-036 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-036
 name: Changelog coherence
 target: cli
@@ -7,7 +7,7 @@ added_in: 0.1-draft
 level: MUST
 category: Deprecation Coherence
 weight: 3
-conditional: false
+conditional: true
 requirements:
 - previous-release
 severity:
@@ -40,16 +40,17 @@ remediation:
 - Backfill any missing entry in a patch release before the removal ships, so `changelog --since` becomes truthful for consumers
   catching up later
 examples:
-  violation: '$ tool --describe | jq ''.flags[] | select(.name=="--export") | .lifecycle''
-
+  violation: |-
+    $ tool --describe | jq '.flags[] | select(.name=="--export") | .lifecycle'
     {"status": "deprecated", "deprecated_since": "1.14.0", "replacement": "--output archive"}
-
-    $ tool changelog --since 1.13.0 --json | jq ''.releases["1.14.0"].deprecated''
-
-    [] — the agent that checked what moved learns nothing and keeps emitting --export'
-  compliant: "$ tool changelog --since 1.13.0 --json\n{\"releases\": {\"1.14.0\": {\"deprecated\": [\n  {\"surface\": \"\
-    --export\", \"removed_in\": \"1.18.0\", \"replacement\": \"--output archive\"}\n]}}} — changelog and --describe agree\
-    \ because both render one schema struct"
+    $ tool changelog --since 1.13.0 --json | jq '.releases[] | select(.version=="1.14.0") | .deprecated'
+    [] — the agent that checked what moved learns nothing and keeps emitting --export
+  compliant: |-
+    $ tool changelog --since 1.13.0 --json
+    {"schema_version": "1", "releases": [
+      {"version": "1.14.0", "deprecated": [
+        {"surface": "--export", "removed_in": "1.18.0", "replacement": "--output archive"}]}]}
+    changelog and --describe agree because both render one schema struct
 suggested_fix: Derive changelog and lifecycle blocks from the same schema struct.
 references:
 - title: CLI Spec §6.3-1

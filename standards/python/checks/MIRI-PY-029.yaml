@@ -1,4 +1,4 @@
-# MIRI-PY-029 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-029 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-029
 name: Inventory derived
 target: python-wheel

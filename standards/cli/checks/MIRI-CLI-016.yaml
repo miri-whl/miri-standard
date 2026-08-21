@@ -1,4 +1,4 @@
-# MIRI-CLI-016 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-016 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-016
 name: Identity purl
 target: cli
@@ -18,29 +18,29 @@ long_description: 'A CLI must be able to say who it is and what it offers, so sc
 rationale: 'Every scanner runs the same loop — build inventory, normalize to purl, compare against OSV affected ranges —
   so the purl is the single join key that makes vulnerability and currency verdicts computable; a CLI without one falls
   back to CPE matching, where vendor/product strings must be guessed from binary names and internal tools are simply invisible.
-  The type must match the distribution channel because advisory records attach to registry-native names: a Homebrew-distributed
-  tool declaring pkg:generic never joins against records filed under its brew coordinates. Spec §3.1 therefore requires
-  the channel''s own purl type (pkg:npm, pkg:pypi, pkg:cargo, pkg:brew, …), reserving pkg:generic with a repository_url
-  qualifier for direct binary distribution.'
+  The type must match the distribution channel because advisory records attach to registry-native names: an npm-distributed
+  tool declaring pkg:generic never joins against records filed under its npm name. Spec §3.1 therefore requires
+  an OSV-joinable purl type where the channel has one (pkg:npm, pkg:pypi, pkg:cargo, pkg:golang), reserving pkg:generic with a repository_url
+  qualifier for direct binary distribution or channels OSV does not index (such as Homebrew).'
 fires_when:
 - '`identity.purl` is absent from the --describe output'
 - The value fails purl grammar — no `pkg:` scheme, missing type or name, or no `@version` segment
-- The purl type contradicts the actual install channel (an npm-distributed tool declaring pkg:generic; a Homebrew formula
+- The purl type contradicts the actual install channel (an npm-distributed tool declaring pkg:generic; a crates.io-published tool
   declaring pkg:npm)
 - The type is pkg:generic without a `repository_url` qualifier locating the release source
 remediation:
-- 'Choose the purl type of the real distribution channel: pkg:npm/, pkg:pypi/, pkg:cargo/, pkg:golang/, pkg:brew/; use pkg:generic/<org>/<name>@<version>?repository_url=<releases
-  URL> only for direct binary distribution'
-- Embed the purl at build time from the release version (e.g. go build -ldflags "-X main.purl=pkg:brew/acme-cli@$VERSION")
+- 'Choose the purl type of the real distribution channel: pkg:npm/, pkg:pypi/, pkg:cargo/, pkg:golang/; use pkg:generic/<org>/<name>@<version>?repository_url=<releases
+  URL> for direct binary distribution or channels OSV does not index (e.g. Homebrew)'
+- Embed the purl at build time from the release version (e.g. inject pkg:npm/acme-cli@$VERSION as a build-time constant)
   so it cannot drift from the artifact
 - Validate the value in CI with a purl library (packageurl-python, packageurl-go) before publishing
 examples:
   violation: '"identity": {"version": "3.2.0", "distribution": "open-source"}
 
     # no purl: scanners are back to guessing a CPE from the binary''s file name'
-  compliant: '"identity": {"purl": "pkg:brew/acme-cli@3.2.0", "version": "3.2.0"}
+  compliant: '"identity": {"purl": "pkg:npm/acme-cli@3.2.0", "version": "3.2.0"}
 
-    # matches the Homebrew channel; joins directly against OSV records for that name'
+    # matches the npm channel; joins directly against OSV records for that name'
 suggested_fix: Declare identity.purl using the distribution channel's purl type.
 references:
 - title: CLI Spec §3.1

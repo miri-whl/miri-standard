@@ -9,7 +9,7 @@
 ## Abstract
 
 The new `standards/python/alerts/` and `standards/cli/alerts/` directories are exactly what we asked for and more: the
-committee-owned, machine-readable source of truth, with severity and violation units fixed by the standard. One gap
+canonical, machine-readable source of truth, with severity and violation units fixed by the standard. One gap
 remains, and it is distribution, not content: the normative rule says implementations **MUST consume these definitions**,
 but the only way to consume them today is a git checkout of `main` — an unpinned moving target. We ask the standard to
 publish the alert definitions as a **versioned, released artifact**, so that "one source of truth" is enforced by the

@@ -1,4 +1,4 @@
-# MIRI-CLI-017 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-017 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-017
 name: Version coherence
 target: cli
@@ -43,7 +43,7 @@ examples:
 
     3.4.0
 
-    pkg:brew/acme-cli@3.4.0'
+    pkg:npm/acme-cli@3.4.0'
 suggested_fix: Derive both from the single version source in the build.
 references:
 - title: CLI Spec §9-1

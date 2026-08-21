@@ -1,4 +1,4 @@
-# MIRI-CLI-040 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-040 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-040
 name: Danger marked
 target: cli
@@ -40,7 +40,7 @@ examples:
     Nothing distinguishes purge from an ordinary write; an agent''s guardrail layer has no field to branch on and invokes
     it like any other command.'
   compliant: "--describe:\n{\"name\": \"purge\", \"mutating\": true, \"destructive\": true, \"requires_force\": true}\n\
-    $ tool purge\n{\"ok\": false, \"error\": {\"code\": \"CONFIRMATION_REQUIRED\", \"retryable\": false,\n  \"suggestions\"\
+    $ tool purge\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\": \"CONFIRMATION_REQUIRED\", \"retryable\": false,\n  \"suggestions\"\
     : [\"re-run with --force, or preview with --dry-run\"]}}"
 suggested_fix: Mark destructive operations in the introspection output.
 references:

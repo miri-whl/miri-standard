@@ -1,4 +1,4 @@
-# MIRI-PY-016 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-016 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-016
 name: Example index coherent
 target: python-wheel
@@ -39,7 +39,7 @@ examples:
 suggested_fix: Regenerate the example index from the files on disk.
 references:
 - title: Miri Wheel Ext. §4.1
-  url: miri-wheel-extensions.md
+  url: miri-python-wheel-extensions.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-016.yaml

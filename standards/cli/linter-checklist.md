@@ -14,10 +14,23 @@ weights sum to exactly **100**, so a CLI's Miri score is the sum of the weights 
 
 Identical to the [Python checklist](../python/linter-checklist.md): **Score** = Σ weights of passing checks; **M**
 checks are required for conformance (any M failure caps the reported score at 74); *conditional* checks score
-automatically when inapplicable.
+automatically when inapplicable. The previous-release checks (MIRI-CLI-030, 033, 035, 036, 037) are *conditional*, so a
+first release — with no prior release to diff against — scores them at full weight and can reach Gold; they forfeit
+weight only when a prior release exists but the linter cannot fetch it.
 
 **Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
 · <50 non-conforming.
+
+## Conformance Profiles
+
+- **Miri Core** — the conventions, machine-readable output, self-identification, and safety layer: Baseline Conventions
+  (MIRI-CLI-001–007), Machine Output (008–014), Identity & Introspection (015–024), and Safety (039–043). A CLI is
+  **Core-conforming** when it passes every MUST check in this set. Core is the recommended adoption target and the
+  standard's most defensible layer.
+- **Miri Full** — all 43 checks, adding the Update & Changelog (025–030) and Deprecation Coherence (031–038) machinery
+  that tracks lifecycle history across releases. The Bronze/Silver/Gold score is computed over the Full set.
+
+The two profiles share one check corpus and one weighting; Core is a named subset, not a separate standard.
 
 ## The Checks
 
@@ -111,19 +124,19 @@ automatically when inapplicable.
 The standard's vocabulary: each *requirement* in a spec is verified by a *check*; each check failure instance is a
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
-Every check in this table has a committee-owned definition file in [`checks/`](checks/) — one YAML document per check
+Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
 (`checks/MIRI-CLI-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —
-the **committee-assigned severity**: a default
+the **canonical severity**: a default
 severity (`LOW`/`MINOR`/`MEDIUM`/`HIGH`/`CRITICAL`, numeric 1–5) and the `violation_unit` defining what counts as one
 violation.
 
 The severity assignment exists so that magnitude-aware health scoring is comparable across implementations: severity is
 defined by the standard, never by the linter. Linter implementations MUST consume these definitions rather than
 maintaining their own copies, and MUST NOT override severity or violation units. Per-instance checks additionally carry a
-committee-defined `population_unit` — the denominator for report-level violation density; populations are reported,
+canonical `population_unit` — the denominator for report-level violation density; populations are reported,
 never scored, and never invented by implementations. Definitions also declare `requirements` — the operating capabilities
 (`network`, `previous-release`, `execution`) beyond the target's baseline analysis mode a check needs; a linter
 lacking one MUST skip with the fixed reason, and MUST NOT skip otherwise.

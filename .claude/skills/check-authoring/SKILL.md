@@ -5,7 +5,7 @@ description: "Use when adding, editing, withdrawing, or reviewing a MIRI check d
 
 # Authoring MIRI check definitions
 
-Each file in `standards/python/checks/` and `standards/cli/checks/` is one committee-owned check: the
+Each file in `standards/python/checks/` and `standards/cli/checks/` is one canonical check: the
 machine-readable source of truth a linter implements by ID. The generated site and the linter both consume these
 files, so a mistake here propagates to every downstream tool. The governing schema is `schemas/check-v1.json`
 (JSON Schema draft-07) — read it before authoring, and validate against it after (see the `schema-governance` skill
@@ -26,7 +26,7 @@ for the weight/coverage invariants that span the whole set).
   that category.
 - `weight` — integer 0–10. All `active` weights **per target sum to exactly 100**. Extension checks are 0.
 - `conditional` — if true, the check scores full weight automatically when its condition does not apply.
-- `severity` — committee-assigned, for health scoring; implementations MUST use these, not their own:
+- `severity` — canonical, for health scoring; implementations MUST use these, not their own:
   - `default` — one of `LOW MINOR MEDIUM HIGH CRITICAL` (ordered 1–5; note the nonstandard `LOW < MINOR`).
   - `violation_unit` — the countable thing that is one violation. Make it unambiguous across linters
     ("each silently removed interface"), never "each schema violation" (validators disagree on granularity).

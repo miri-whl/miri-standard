@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "weather-sdk"
+version = "1.2.0"
+description = "Sample Weather SDK demonstrating the Miri Standard for agent-friendly packaging"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [{ name = "Miri Standard Example" }]
+keywords = ["miri", "agent-friendly", "example"]
+dependencies = ["requests>=2.25"]
+
+[project.urls]
+Homepage = "https://github.com/miri-whl/miri-standard"
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+# The agent-metadata files and embedded examples must enter the wheel (MIRI-PY-036).
+[tool.setuptools.package-data]
+weather_sdk = ["agent-metadata/*.json", "agent-metadata/*.md", "examples/*.py", "examples/**/*.py"]

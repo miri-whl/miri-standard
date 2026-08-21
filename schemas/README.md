@@ -28,7 +28,7 @@ consistency and enable automated validation of agent metadata.
   - Validates graph structure and workflow definitions
 
 - **[check-v1.json](check-v1.json)** - Schema for the per-check check definitions in `standards/<target>/checks/`
-  - Committee-owned check metadata: level, weight, severity, violation unit, example, fix, references
+  - Canonical check metadata: level, weight, severity, violation unit, example, fix, references
   - The severity vocabulary (LOW/MINOR/MEDIUM/HIGH/CRITICAL, 1-5) is normative for health scoring
 
 - **[lifecycle-v1.json](lifecycle-v1.json)** - Schema for `lifecycle.json`

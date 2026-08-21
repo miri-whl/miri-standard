@@ -1,4 +1,4 @@
-# MIRI-PY-037 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-037 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-037
 name: Embedded docs present
 target: python-wheel
@@ -43,7 +43,7 @@ examples:
 suggested_fix: Embed api_reference.md and troubleshooting.md in the package.
 references:
 - title: Miri Wheel Ext. §5.3
-  url: miri-wheel-extensions.md
+  url: miri-python-wheel-extensions.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-037.yaml

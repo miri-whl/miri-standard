@@ -1,4 +1,4 @@
-# MIRI-PY-011 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-011 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-011
 name: Build-time generation
 target: python-wheel
@@ -22,16 +22,16 @@ rationale: Agent Metadata §5.1 makes generation a build step precisely because 
   outside the build window breaks that promise silently, with no runtime error to surface it.
 fires_when:
 - generated_at in any agent-metadata file is absent or does not parse as an RFC 3339 / ISO 8601 timestamp
-- generated_at predates the wheel's build (dist-info METADATA creation or the release tag) by more than the linter's build-window
-  tolerance
-- generated_at values across agent-metadata files spread wider than one build run's tolerance (files stamped by different
-  generator runs)
+- generated_at predates the wheel's build (dist-info METADATA creation or the release tag) by more than 24 hours (the committee-defined build-window tolerance)
+- generated_at values across agent-metadata files spread wider than the 24-hour build-window tolerance (files stamped by different generator runs)
 - generated_at is later than the wheel's own build timestamp (file edited after packaging)
 remediation:
 - Run the metadata generator as a build-backend hook (Agent Metadata §5.1) — a hatchling/setuptools build step that writes
   agent-metadata/ into the sdist and wheel — never as a manual pre-release chore
 - Capture one datetime.now(timezone.utc) per build and stamp every generated file with the same value
 - In CI, compare each file's generated_at against the build's own timestamp and fail on any file outside the window
+- Under reproducible builds (`SOURCE_DATE_EPOCH` set), compare `generated_at` against the build's wall-clock time,
+  not the epoch-normalized archive member timestamps, which are intentionally frozen to `SOURCE_DATE_EPOCH`
 - 'Reject commits that modify agent-metadata/ without a generator run: regenerate in CI and fail on diff (or compare checksums)'
 examples:
   violation: "agent-metadata/ inside a wheel built 2026-08-15:\n  sdk-manifest.json    \"generated_at\": \"2026-08-15T14:02:07Z\"\
@@ -43,7 +43,7 @@ examples:
 suggested_fix: Generate agent metadata inside the build, never by hand afterward.
 references:
 - title: Agent Metadata §5
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-011.yaml

@@ -1,4 +1,4 @@
-# MIRI-PY-012 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-012 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-012
 name: Version coherence
 target: python-wheel
@@ -23,11 +23,11 @@ rationale: 'PEP 427 binds the version in a wheel''s filename to its dist-info ME
   method that no longer exists, and the resulting AttributeError points at the agent''s code, not at the stale metadata
   that caused it.'
 fires_when:
-- sdk_version in sdk-manifest.json differs from METADATA Version after PEP 440 canonicalization
+- sdk_version in sdk-manifest.json is not exactly (byte-for-byte) equal to the wheel's METADATA Version
 - any other agent-metadata file carrying the package version (the @version in lifecycle.json identity.purl, migration-guide.json
-  to_version) disagrees with METADATA Version
-- version fields agree only textually but not canonically (e.g. 1.2.0 vs 1.2), indicating they were written by different
-  tools
+  to_version) is not exactly equal to METADATA Version
+- version strings are canonically equal but not textually identical (e.g. a 1.2.0 manifest in a 1.2 wheel); this check
+  requires exact string equality — matching MIRI-PY-019 — so near-misses still fire
 remediation:
 - 'Keep one version source: [project] version in pyproject.toml, or dynamic versioning via the build backend''s VCS plugin'
 - Have the generator read that source (importlib.metadata.version() against the built package) instead of accepting a version
@@ -43,7 +43,7 @@ examples:
 suggested_fix: Derive sdk_version from the single package version source at build time.
 references:
 - title: Agent Metadata §4.1
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-012.yaml

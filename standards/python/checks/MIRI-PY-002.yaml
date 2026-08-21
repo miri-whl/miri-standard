@@ -1,4 +1,4 @@
-# MIRI-PY-002 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-002 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-002
 name: Core metadata valid
 target: python-wheel
@@ -30,6 +30,8 @@ remediation:
 - Use the PEP 503 normalized form (`example-sdk`, never `Example_SDK`) everywhere the name appears — pyproject.toml, the
   purl in lifecycle.json, index URLs
 - Gate releases on `twine check dist/*` and a parse with `packaging.metadata` in CI
+- For metadata 2.4+, declare the license with the PEP 639 `License-Expression` (SPDX) field rather than the legacy
+  free-text `License` field or `License ::` classifiers
 examples:
   violation: "METADATA:\n  Metadata-Version: 2.1\n  Name: Example_SDK\n  Version: 2.1.0\n# normalizes to 'example-sdk';\
     \ consumers keyed on the normalized name\n# join this wheel to a different (or no) project"
@@ -37,8 +39,11 @@ examples:
     \ Name equals its PEP 503 normalization"
 suggested_fix: Regenerate METADATA from pyproject.toml; normalize the name per PEP 503.
 references:
-- title: PEP 566
-  url: https://peps.python.org/pep-0566/
+- title: Core Metadata specification
+  url: https://packaging.python.org/en/latest/specifications/core-metadata/
+  type: external
+- title: PEP 639 (License-Expression)
+  url: https://peps.python.org/pep-0639/
   type: external
 - title: PEP 503
   url: https://peps.python.org/pep-0503/

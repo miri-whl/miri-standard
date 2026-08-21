@@ -72,17 +72,56 @@ release manifest) — never in structure.
 All output defined here is JSON on **stdout** with exit code 0 on success. Deprecation and update *warnings* go to
 **stderr** only, so they never corrupt a payload.
 
-## 3. Self-Identification
+### 2.6 Structured Error Envelope
 
-The CLI's introspection output (`<cli> --describe`, or the Miri introspection command once specified) MUST include an
-`identity` block:
+When a command fails, its machine channel (stdout, per §2.5) MUST emit a single JSON object carrying a top-level
+`schema_version` and an `error` object:
 
 ```json
 {
+  "schema_version": "1",
+  "ok": false,
+  "error": {
+    "code": "CONFIRMATION_REQUIRED",
+    "retryable": false,
+    "suggestions": ["re-run with --force"]
+  }
+}
+```
+
+`error.retryable` states whether re-running the **identical** invocation may later succeed. It is `true` only for
+transient failures (network error, timeout, rate limit) — never for failures that require the caller to change the
+command or the environment first. Agents branch on this field, so a wrong value causes either blind retry loops or
+premature give-up.
+
+Standard error codes:
+
+| `code` | `retryable` | Meaning |
+| --- | --- | --- |
+| `TRANSIENT` | `true` | Network error, timeout, or rate limit; the same call may succeed later |
+| `VALIDATION` | `false` | Malformed or invalid arguments; the caller must fix the input |
+| `AUTH` | `false` | Missing or rejected credentials; the caller must authenticate |
+| `CONFIRMATION_REQUIRED` | `false` | A destructive action needs `--force`/`--yes`; the caller must add it |
+| `FLAG_REMOVED` | `false` | The flag or subcommand was removed; the caller must use its replacement (§6) |
+
+Code-specific fields (e.g. `flag` and `removed_in` for `FLAG_REMOVED`) are added alongside these. This envelope is the
+canonical error format referenced by the error-handling checks. `schema_version` is the ecosystem convention for the
+wire-schema version of *any* machine-readable JSON document these tools emit — including linter reports and other
+tooling output — so no document substitutes a per-format alias such as `report_version`.
+
+## 3. Self-Identification
+
+The CLI's introspection output (`<cli> --describe`, or the Miri introspection command once specified) carries a
+top-level `schema_version` (§2.6, per MIRI-CLI-010) and an `identity` block. The complete document — identity,
+`support` (§3.2), `advisory_sources` (§4), and the `commands` surface (§6) — is defined by
+[`cli-describe-v1.json`](../../schemas/cli-describe-v1.json):
+
+```json
+{
+  "schema_version": "1",
   "identity": {
     "purl": "pkg:generic/acme/acme-cli@3.2.0?repository_url=https://releases.acme.example",
     "version": "3.2.0",
-    "schema_version": "1",
     "distribution": "private",
     "source_repository": "https://github.com/acme/acme-cli",
     "sbom": "https://releases.acme.example/acme-cli/3.2.0/sbom.cdx.json",
@@ -99,9 +138,9 @@ The CLI's introspection output (`<cli> --describe`, or the Miri introspection co
 
 | Field | Required | Meaning |
 |---|---|---|
-| `purl` | Yes | The join key for advisory lookups. Use the purl type of the actual distribution channel (`pkg:npm/`, `pkg:pypi/`, `pkg:cargo/`, `pkg:golang/`, `pkg:brew/`…); `pkg:generic/` with a `repository_url` qualifier for direct binary distribution. |
+| `purl` | Yes | The join key for advisory lookups. Use the purl type of the actual distribution channel (`pkg:npm/`, `pkg:pypi/`, `pkg:cargo/`, `pkg:golang/`…); `pkg:generic/` with a `repository_url` qualifier for direct binary distribution or channels OSV does not index (e.g. Homebrew). |
 | `version` | Yes | The CLI's release version (one of the three clocks — see landscape doc §5). |
-| `schema_version` | Yes | The wire-schema version of the JSON the CLI emits — versioned independently of `version`. |
+| `schema_version` (top-level) | Yes | The wire-schema version of the whole introspection document — a top-level field, not inside `identity` — versioned independently of `version`. |
 | `distribution` | Yes | `"open-source"` or `"private"`. |
 | `sbom` | MUST for direct binary distribution without embedded module info; SHOULD otherwise | URL or embedded path of a CycloneDX/SPDX SBOM for this release, making the dependency tree scannable for non-Go binaries (§7.1). Complementary to `purl`: the purl identifies the tool itself, the SBOM identifies what it bundles. |
 | `build_info.embedded_modules` | SHOULD | `true` when the binary carries toolchain-embedded dependency info (e.g. Go buildinfo) readable without the SBOM. |
@@ -195,7 +234,28 @@ A conforming CLI MUST implement:
 returning, per release between `<version>` and the current version: added/removed/deprecated subcommands and flags,
 wire-schema changes (`schema_version` bumps), and exit-code meaning changes. This is the primitive that lets an agent
 that has been away for three releases ask *what moved* — the counterpart of `check-update`, which only says *that* it
-moved. Full shape to be defined alongside the introspection schema; the categories above are normative.
+moved. The output is a top-level object with a `schema_version` (§2.6) and an ordered `releases` array (oldest first), one
+entry per release in range. Each release entry carries `version`, string arrays `added` and `removed` (surface names),
+a `deprecated` array of `{surface, removed_in, replacement}` objects, a `schema_version_change` object (`{from, to}`
+or null), and an `exit_code_changes` array of `{code, was, now}` objects:
+
+```json
+{
+  "schema_version": "1",
+  "releases": [
+    {
+      "version": "3.2.0",
+      "added": ["--format"],
+      "removed": ["--export"],
+      "deprecated": [{"surface": "--legacy", "removed_in": "4.0.0", "replacement": "--modern"}],
+      "schema_version_change": {"from": "1", "to": "2"},
+      "exit_code_changes": [{"code": 3, "was": "not found", "now": "permission denied"}]
+    }
+  ]
+}
+```
+
+The five categories above are normative.
 
 ## 6. Deprecation Metadata
 
@@ -279,9 +339,9 @@ For `distribution: "open-source"` CLIs:
 
 ### 7.1 Distribution and Identity
 
-- When distributed through a package registry (npm, PyPI, crates.io, Homebrew…), `purl` MUST use that registry's purl
-  type; the CLI then inherits the registry's update and advisory machinery, and `check-update` SHOULD consult the
-  registry rather than a bespoke endpoint.
+- When distributed through a package registry that OSV indexes (npm, PyPI, crates.io, Go…), `purl` MUST use that
+  registry's purl type; the CLI then inherits the registry's update and advisory machinery, and `check-update` SHOULD
+  consult the registry rather than a bespoke endpoint.
 - When distributed as direct binaries (GitHub Releases, download page), each release MUST publish an SBOM and reference
   it from `identity.sbom`; the latest-version manifest referenced by `check-update` SHOULD be the forge's releases API
   or a static manifest adjacent to the artifacts.

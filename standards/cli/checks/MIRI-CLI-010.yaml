@@ -1,4 +1,4 @@
-# MIRI-CLI-010 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-010 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-010
 name: schema_version stamped
 target: cli

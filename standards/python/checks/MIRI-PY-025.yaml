@@ -1,4 +1,4 @@
-# MIRI-PY-025 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-025 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-025
 name: SBOM purls resolvable
 target: python-wheel

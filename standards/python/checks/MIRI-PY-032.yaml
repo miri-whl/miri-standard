@@ -1,4 +1,4 @@
-# MIRI-PY-032 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-032 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-032
 name: Removal versions sane
 target: python-wheel

@@ -1,4 +1,4 @@
-# MIRI-PY-031 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-031 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-031
 name: Replacements resolve
 target: python-wheel

@@ -1,4 +1,4 @@
-# MIRI-CLI-003 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-003 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-003
 name: --version
 target: cli
@@ -21,10 +21,12 @@ rationale: 'GNU Coding Standards §4.7 gives `--version` the same contract as `-
   or agent has.'
 fires_when:
 - '`--version` writes its output to stderr, or exits non-zero'
-- stdout contains no parseable version token, or buries it in multi-line prose or update advertisements
+- the first line of stdout is not a parseable version token — a bare version or `<name> <version>` (later lines such as
+  copyright/license are allowed per GNU §4.7)
 - '`--version` performs a network call or blocks before printing'
 remediation:
-- Print a single line to stdout — the bare version or `<name> <version>` — and exit 0
+- Print a parseable version as the first line of stdout — a bare version or `<name> <version>`; later lines (copyright,
+  license) are allowed per GNU §4.7 — and exit 0
 - Derive the string from the same source of truth as `identity.version` in `--describe`, so the two cannot drift (CLI Spec
   §2.3)
 - Keep the version path offline and side-effect free; update information belongs to `check-update --json`, not `--version`

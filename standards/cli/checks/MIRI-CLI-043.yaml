@@ -1,4 +1,4 @@
-# MIRI-CLI-043 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-043 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-043
 name: Graceful cancellation
 target: cli
@@ -45,7 +45,7 @@ examples:
     4096 state.json — truncated at a buffer boundary; every cancellation is now a corruption incident'
   compliant: '$ tool apply &  # SIGINT arrives mid-run
 
-    {"ok": false, "error": {"code": "CANCELLED", "retryable": true}}   # on stderr channel, exit 130
+    {"schema_version": "1", "ok": false, "error": {"code": "CANCELLED", "retryable": true}}   # on stderr channel, exit 130
 
     $ ls state.json*   # state.json.tmp was removed by the signal handler
 

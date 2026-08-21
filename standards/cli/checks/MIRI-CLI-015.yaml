@@ -1,4 +1,4 @@
-# MIRI-CLI-015 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-015 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-015
 name: --describe implemented
 target: cli
@@ -41,10 +41,13 @@ examples:
     $ echo $?
 
     2'
-  compliant: "$ acme --describe\n{\"identity\": {\"purl\": \"pkg:brew/acme-cli@3.2.0\", \"version\": \"3.2.0\",\n  \"schema_version\"\
-    : \"1\", \"distribution\": \"open-source\"},\n \"support\": {\"status\": \"active\"},\n \"advisory_sources\": [{\"type\"\
-    : \"osv\", \"ecosystem\": \"Homebrew\", \"url\": \"https://api.osv.dev/v1/query\"}],\n \"commands\": [{\"name\": \"\
-    deploy\", \"flags\": [{\"name\": \"--output\"}]}]}"
+  compliant: |-
+    $ acme --describe
+    {"schema_version": "1",
+     "identity": {"purl": "pkg:npm/acme-cli@3.2.0", "version": "3.2.0", "distribution": "open-source"},
+     "support": {"status": "active"},
+     "advisory_sources": [{"type": "osv", "ecosystem": "npm", "url": "https://api.osv.dev/v1/query"}],
+     "commands": [{"name": "deploy", "flags": [{"name": "--output"}]}]}
 suggested_fix: Implement --describe emitting the identity, support, and surface data as JSON.
 references:
 - title: CLI Spec §3

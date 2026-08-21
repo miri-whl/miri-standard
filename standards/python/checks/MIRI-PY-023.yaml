@@ -1,4 +1,4 @@
-# MIRI-PY-023 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-023 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-023
 name: Update check declared
 target: python-wheel

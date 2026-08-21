@@ -1,4 +1,4 @@
-# MIRI-PY-021 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-021 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-021
 name: Advisory sources present
 target: python-wheel

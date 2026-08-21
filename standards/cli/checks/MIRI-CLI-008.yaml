@@ -1,4 +1,4 @@
-# MIRI-CLI-008 — generated with the checklist table; committee-owned source of truth.
+# MIRI-CLI-008 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-008
 name: JSON everywhere
 target: cli

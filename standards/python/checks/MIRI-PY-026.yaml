@@ -1,4 +1,4 @@
-# MIRI-PY-026 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-026 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-026
 name: VEX well-formed
 target: python-wheel

@@ -1,4 +1,4 @@
-# MIRI-PY-003 — generated with the checklist table; committee-owned source of truth.
+# MIRI-PY-003 — generated with the checklist table; canonical source of truth.
 id: MIRI-PY-003
 name: Version scheme valid
 target: python-wheel

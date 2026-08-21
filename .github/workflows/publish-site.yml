@@ -1,6 +1,6 @@
 name: Publish Site
 
-# Regenerates the site from the committee-owned check definitions and publishes
+# Regenerates the site from the canonical check definitions and publishes
 # it to the Pages repository whenever check definitions or the generator change
 # on main. The site is never committed here — the YAML files are the source of
 # truth and the site is a derived artifact (schema-as-data rule).
@@ -11,7 +11,7 @@ on:
     paths:
       - 'standards/python/checks/**'
       - 'standards/cli/checks/**'
-      - 'schemas/check-v1.json'
+      - 'schemas/**'
       - 'docs/origin-story.md'
       - 'website/**'
       - 'tools/generate_site.py'

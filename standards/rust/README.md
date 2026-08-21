@@ -31,7 +31,7 @@ Rust's baseline is strong on tooling and weak on binary legibility:
 ## Planned Specifications
 
 - **Agent Metadata for Crates** *(Planned)* — an `agent-metadata/` directory in the crate (packaged into the `.crate`
-  tarball), mirroring the [Python agent-metadata specification](../python/agent-metadata-specification.md):
+  tarball), mirroring the [Python agent-metadata specification](../python/miri-agent-metadata-specification.md):
   `sdk-manifest.json` (generatable from `cargo doc`'s rustdoc JSON output), `usage-patterns.json`,
   `migration-guide.json` derived from `#[deprecated]` attributes at build time. Configuration via the
   `[package.metadata.miri]` table in `Cargo.toml`, the sanctioned extension point for third-party tool metadata.
