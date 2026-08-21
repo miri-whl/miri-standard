@@ -1,13 +1,25 @@
 # Active Context
 
-_Last updated: 2026-08-20._
+_Last updated: 2026-08-21._
 
 ## Current focus
 
-Repository and contributor tooling. Recently: `main` was brought up to date with `origin/main`; the generated site
-was published and is live at `https://miri-whl.github.io/`; a `Makefile` was added to wrap the site/verify workflow.
-Now standing up this memory bank and a set of Claude Code skills tailored to a specs repo (`docs`, `check-authoring`,
-`schema-governance`).
+Working the v0.2 backlog (`tasks/stage-v0.2/`) on the `stage-0.2` branch. **42 of 44 standard-side items are done**
+and committed; the site regenerates, all schemas and 83 checks validate, and both weight tables sum to 100. Highlights
+from the v0.2 pass: the honesty/committee/governance cleanup; the whole CLI-contradiction cluster; the Python check
+refinements; the §9 Security Considerations threat model; conformance profiles (Miri Core vs Full) with first-release
+Gold reachability; the CLI `--describe` schema (`cli-describe-v1.json`); manifest↔code verification folded into
+MIRI-PY-036; a buildable, Miri-conforming sample SDK; and de-referenced/added JSON Schemas.
+
+Only two backlog items remain, both genuine **decisions** left for review:
+
+- **`$schema` domain** — the schema `$id`s use `miri-standard.org`, not the canonical `miri-whl.github.io`. Needs a
+  domain-ownership call before changing (an `$id` need not resolve, so it was left as-is).
+- **The stash / `standards/python` renames** — the "fix cross-links broken by the renames" item only applies if the
+  stashed `miri-*` rename work is adopted. Left untouched; check `git stash list`.
+
+Next: the `miri-py.md` items (linter conformance + fixes in the miri-py repo), then re-run the developer panel audit
+once miri-py is caught up.
 
 ## Recent decisions
 
