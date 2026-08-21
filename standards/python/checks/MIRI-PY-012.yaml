@@ -43,7 +43,7 @@ examples:
 suggested_fix: Derive sdk_version from the single package version source at build time.
 references:
 - title: Agent Metadata §4.1
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-012.yaml

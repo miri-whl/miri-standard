@@ -46,7 +46,7 @@ examples:
 suggested_fix: Regenerate sdk-manifest.json with the Miri build tooling; validate against sdk-manifest-v1.json.
 references:
 - title: Agent Metadata §4.1
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 - title: schema
   url: ../../schemas/sdk-manifest-v1.json

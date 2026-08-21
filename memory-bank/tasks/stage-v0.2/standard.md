@@ -20,7 +20,7 @@ move the checklist and prose in the same commit and re-run the `schema-governanc
       `examples/quickstart.py` and `AGENT_EXAMPLES.json`, add a migration guide, fix the 1.2.0/1.0.0 version
       incoherence — then gate it with `miri score` in CI. _(all; it currently fails MIRI-PY-014/016 at the front
       door)_
-- [ ] Fix the cross-links broken by the `standards/python` file renames (the stashed rename work): every reference
+- [x] Fix the cross-links broken by the `standards/python` file renames (the stashed rename work): every reference
       to the old filenames in `linter-checklist.md` and the check YAMLs. _(carried over from the rebase)_
 - [x] Strip unvalidated performance claims from normative text ("30–60 seconds", "instant consumption", "eliminate
       re-parsing") — restate as labeled hypotheses; reframe the pitch around version-locking and offline
@@ -79,14 +79,14 @@ Python track:
 
 ## P1 — producer-spec reconciliation
 
-- [x] Excise or respec "Enhanced METADATA" (`miri-wheel-extensions.md` §4.2) — unimplementable (no PEP 517 backend
+- [x] Excise or respec "Enhanced METADATA" (`miri-python-wheel-extensions.md` §4.2) — unimplementable (no PEP 517 backend
       injects custom core-metadata fields; the example puts fields in the Description body); §7.2.1 mandates it for
       Minimum Compliance. _(packaging, security)_
 - [x] Collapse the three conflicting "Minimum Compliance" definitions into the checklist as sole authority; delete
       the `Miri-Compliance: full|partial|none` vocabulary. _(packaging, agent-tooling)_
 - [x] Rename all `AI_EXAMPLES.json` → `AGENT_EXAMPLES.json` and `get_ai_metadata` → `get_agent_metadata` across the
       specs. _(agent-tooling, security)_
-- [x] Fix or regenerate `implementation-guide.md` — broken `importlib` loader, invalid JSON example, `build_hooks`
+- [x] Fix or regenerate `miri-implementation-guide.md` — broken `importlib` loader, invalid JSON example, `build_hooks`
       import mismatch, naive timestamp; it is superseded by a working implementation it does not reference.
       _(packaging, agent-tooling)_
 - [x] Amend MIRI-PY-001 remediation to sanction RECORD-coherent post-processing (the enhancer does this

@@ -9,7 +9,7 @@
 This specification defines how a Miri-compliant Python package declares its identity, advisory sources, and lifecycle
 state so that agents and scanners can answer two questions at call time: **"is this package vulnerable?"** and **"is
 this package current?"**. It adds one file, `agent-metadata/lifecycle.json`, to the structure defined in the
-[Agent Metadata Specification](agent-metadata-specification.md).
+[Agent Metadata Specification](miri-agent-metadata-specification.md).
 
 The design reuses the existing open source security stack — [purl](https://github.com/package-url/purl-spec) for
 identity and the [OSV schema](https://ossf.github.io/osv-schema/) for advisories — rather than inventing a parallel one.
@@ -210,7 +210,7 @@ No Miri-specific publication step exists or is needed — this is deliberate (§
 
 When a package enters `deprecated` or `eol`, the final releases MUST carry the updated `support` block with
 `replacement` set. Because agents read `lifecycle.json` from the *installed* wheel, this reaches every future install
-even if the user never reads the README. The [migration-guide.json](agent-metadata-specification.md) file carries the
+even if the user never reads the README. The [migration-guide.json](miri-agent-metadata-specification.md) file carries the
 how; `support.replacement` carries the what.
 
 ## 5. Private and Internal Packages
@@ -279,7 +279,7 @@ the PEP it derives from — and adds the machine-readable inventory and coherenc
 
 PEP 702 markers are discoverable only by importing or type-checking the code — invisible to an agent inspecting
 metadata. The build MUST therefore extract them into the `deprecations` array of
-[migration-guide.json](agent-metadata-specification.md) (fields: `deprecated`, `replacement`, `removal_version`,
+[migration-guide.json](miri-agent-metadata-specification.md) (fields: `deprecated`, `replacement`, `removal_version`,
 `migration`). The decorators are the single source of truth; the JSON inventory is derived at build time, never
 hand-written — the same schema-as-data rule as the [CLI specification §2.3](../cli/cli-lifecycle-specification.md).
 

@@ -66,7 +66,7 @@ provides" vs "what Miri adds".
 
 A suite has four layers that must stay coherent when any one changes:
 
-1. **Core specs** — Python: `miri-wheel-extensions.md` + `agent-metadata-specification.md` (the `agent-metadata/`
+1. **Core specs** — Python: `miri-python-wheel-extensions.md` + `miri-agent-metadata-specification.md` (the `agent-metadata/`
    directory in wheels); CLI: `cli-lifecycle-specification.md` (`--describe`, `check-update`, `changelog --since`,
    per-flag `lifecycle` blocks). Plus `lifecycle-security-metadata.md` (Python) defining `lifecycle.json`.
 2. **JSON Schemas** (`schemas/*.json`, Draft-07) — one per metadata file. `lifecycle-v1.json` is shared across

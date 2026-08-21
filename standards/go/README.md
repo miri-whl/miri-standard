@@ -25,7 +25,7 @@ agent-consumable form**.
 ## Planned Specifications
 
 - **Agent Metadata for Go Modules** *(Planned)* — an `agent-metadata/` directory in the module root, mirroring the
-  [Python agent-metadata specification](../python/agent-metadata-specification.md): `sdk-manifest.json` (API index —
+  [Python agent-metadata specification](../python/miri-agent-metadata-specification.md): `sdk-manifest.json` (API index —
   generatable from `go/ast` / `go doc -json`), `usage-patterns.json`, and `migration-guide.json`. Generation source for
   deprecations: the `// Deprecated:` comment convention, extracted at build time (the PEP 702 analog — see
   [Python spec §6](../python/lifecycle-security-metadata.md)).

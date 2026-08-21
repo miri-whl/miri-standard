@@ -47,7 +47,7 @@ examples:
 suggested_fix: Generate migration-guide.json for every non-initial release.
 references:
 - title: Agent Metadata §4.3
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 - title: schema
   url: ../../schemas/migration-guide-v1.json

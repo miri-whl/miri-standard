@@ -35,7 +35,7 @@ npx -y cspell@8 "**/*.md" --no-progress
 ## Writing standards for specs
 
 The check pages and the lifecycle/security spec are the quality bar for this repo — match them, not the older
-`agent-metadata-specification.md`-era prose.
+`miri-agent-metadata-specification.md`-era prose.
 
 - **Lead with the claim, then the mechanism, then the evidence.** A good check `rationale` names the harm, gives
   a concrete real-world incident, and says why no existing tool catches it (see `MIRI-PY-030`: kubectl `--export`).

@@ -41,7 +41,7 @@ examples:
 suggested_fix: Regenerate usage-patterns.json; every pattern needs id and code.
 references:
 - title: Agent Metadata §4.2
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 - title: schema
   url: ../../schemas/usage-patterns-v1.json

@@ -62,7 +62,7 @@ examples:
 suggested_fix: Implement the package-level discovery functions over the generated metadata.
 references:
 - title: Miri Wheel Ext. §6
-  url: miri-wheel-extensions.md
+  url: miri-python-wheel-extensions.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-036.yaml

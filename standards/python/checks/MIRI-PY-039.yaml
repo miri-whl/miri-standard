@@ -53,7 +53,7 @@ examples:
 suggested_fix: Follow the structure in the Agent Metadata Specification §4.4.
 references:
 - title: Agent Metadata §4.4
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 - title: Lifecycle §9.4
   url: lifecycle-security-metadata.md

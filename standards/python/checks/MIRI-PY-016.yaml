@@ -39,7 +39,7 @@ examples:
 suggested_fix: Regenerate the example index from the files on disk.
 references:
 - title: Miri Wheel Ext. §4.1
-  url: miri-wheel-extensions.md
+  url: miri-python-wheel-extensions.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-016.yaml

@@ -43,7 +43,7 @@ examples:
 suggested_fix: Generate agent metadata inside the build, never by hand afterward.
 references:
 - title: Agent Metadata §5
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-011.yaml

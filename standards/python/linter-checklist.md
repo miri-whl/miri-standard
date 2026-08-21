@@ -59,23 +59,23 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 4 |
-| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 3 |
-| MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
-| MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
-| MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](agent-metadata-specification.md) | 2 |
-| MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](agent-metadata-specification.md) | 3 |
+| MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 4 |
+| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 3 |
+| MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
+| MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](miri-agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
+| MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](miri-agent-metadata-specification.md) | 2 |
+| MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
 | MIRI-PY-013 | M | JSON hygiene | All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments) | RFC 8259 | 2 |
 
 ### C. Examples (10 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-wheel-extensions.md) | 3 |
-| MIRI-PY-015 | M | Examples runnable | Every example compiles; executes in sandbox (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-wheel-extensions.md) | 3 |
-| MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-wheel-extensions.md) | 2 |
+| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 3 |
+| MIRI-PY-015 | M | Examples runnable | Every example compiles; executes in sandbox (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 3 |
+| MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 2 |
 
 ### D. Identity & Security (25 points)
 
@@ -109,11 +109,11 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-036 | M | Discovery and manifest verification | Discovery functions work; `sdk-manifest` api_index resolves against the installed API surface | [Miri Wheel Ext. §6](miri-wheel-extensions.md) / [Agent Metadata §4.1](agent-metadata-specification.md) | 3 |
-| MIRI-PY-037 | S | Embedded docs present | `docs/` directory with API reference and troubleshooting | [Miri Wheel Ext. §5.3](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-wheel-extensions.md) | 2 |
-| MIRI-PY-039 | S | Prompt templates valid | `prompt-templates.md`, if present, follows the specified structure | [Agent Metadata §4.4](agent-metadata-specification.md) | 1 |
-| MIRI-PY-040 | M | Graceful degradation | Package imports and functions normally with all Miri metadata stripped | [Miri Wheel Ext. §8.3](miri-wheel-extensions.md) | 2 |
+| MIRI-PY-036 | M | Discovery and manifest verification | Discovery functions work; `sdk-manifest` api_index resolves against the installed API surface | [Miri Wheel Ext. §6](miri-python-wheel-extensions.md) / [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
+| MIRI-PY-037 | S | Embedded docs present | `docs/` directory with API reference and troubleshooting | [Miri Wheel Ext. §5.3](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-039 | S | Prompt templates valid | `prompt-templates.md`, if present, follows the specified structure | [Agent Metadata §4.4](miri-agent-metadata-specification.md) | 1 |
+| MIRI-PY-040 | M | Graceful degradation | Package imports and functions normally with all Miri metadata stripped | [Miri Wheel Ext. §8.3](miri-python-wheel-extensions.md) | 2 |
 
 ## Category Summary
 

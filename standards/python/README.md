@@ -19,10 +19,10 @@ packaging ecosystem and how the Miri Standard extends it to enable enhanced agen
 
 ### Current Specifications
 
-- **[Miri Wheel Extensions](miri-wheel-extensions.md)** - Complete specification for agent-friendly wheel format extensions
-- **[Agent Metadata Specification](agent-metadata-specification.md)** - Pre-parsed metadata formats for eliminating
+- **[Miri Wheel Extensions](miri-python-wheel-extensions.md)** - Complete specification for agent-friendly wheel format extensions
+- **[Agent Metadata Specification](miri-agent-metadata-specification.md)** - Pre-parsed metadata formats for eliminating
   agent re-parsing
-- **[Implementation Guide](implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
+- **[Implementation Guide](miri-implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
 - **[Lifecycle and Security Metadata](lifecycle-security-metadata.md)** - Package identity (purl), advisory sources,
   update checks, and deprecation state for open source and private packages
 - **[Linter Checklist](linter-checklist.md)** - The 40 numbered checks (MIRI-PY-001…040) with standards references and

@@ -38,7 +38,7 @@ examples:
 suggested_fix: Regenerate api-graph.json or fix the dangling edge.
 references:
 - title: Agent Metadata §4.5
-  url: agent-metadata-specification.md
+  url: miri-agent-metadata-specification.md
   type: spec
 - title: schema
   url: ../../schemas/api-graph-v1.json

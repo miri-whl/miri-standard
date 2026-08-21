@@ -79,10 +79,10 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 
 - **[Python Wheel Format Documentation](python/wheel-format.md)** - Complete reference for current wheel format
 - **[Python Packaging Standards](python/packaging-standards.md)** - Overview of existing Python packaging ecosystem
-- **[Miri Wheel Extensions](python/miri-wheel-extensions.md)** - Agent-friendly Python wheel format extensions specification
-- **[Agent Metadata Specification](python/agent-metadata-specification.md)** - Pre-parsed metadata formats for
+- **[Miri Wheel Extensions](python/miri-python-wheel-extensions.md)** - Agent-friendly Python wheel format extensions specification
+- **[Agent Metadata Specification](python/miri-agent-metadata-specification.md)** - Pre-parsed metadata formats for
   performance optimization
-- **[Python Implementation Guide](python/implementation-guide.md)** - Practical guide to implementing Miri Standard in
+- **[Python Implementation Guide](python/miri-implementation-guide.md)** - Practical guide to implementing Miri Standard in
   Python packages
 - **[Python Lifecycle and Security Metadata](python/lifecycle-security-metadata.md)** - Package identity, advisory
   sources, and lifecycle state for open source and private packages
