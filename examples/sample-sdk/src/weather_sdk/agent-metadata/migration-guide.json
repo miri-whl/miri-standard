@@ -1,0 +1,22 @@
+{
+  "$schema": "https://miri-standard.org/schemas/migration-guide-v1.json",
+  "from_version": "1.1.0",
+  "to_version": "1.2.0",
+  "migration_type": "minor",
+  "generated_at": "2026-08-18T12:00:00Z",
+  "summary": {
+    "breaking_changes": 0,
+    "new_features": 1,
+    "deprecations": 0,
+    "estimated_migration_time": "none"
+  },
+  "breaking_changes": [],
+  "new_features": [
+    {
+      "id": "get_forecast",
+      "name": "get_forecast",
+      "description": "Retrieve a multi-day weather forecast."
+    }
+  ],
+  "deprecations": []
+}

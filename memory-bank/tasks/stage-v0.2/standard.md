@@ -16,7 +16,7 @@ move the checklist and prose in the same commit and re-run the `schema-governanc
       authorship. _(skeptic)_
 - [x] Add an honest status section/page: what exists (specs, schemas, 83 checks, site), what is planned (linter
       public, CLI describe schema), what is missing. _(skeptic, AI researcher)_
-- [ ] Sample SDK: make `examples/sample-sdk` buildable and checklist-passing — restore `pyproject.toml`, add
+- [x] Sample SDK: make `examples/sample-sdk` buildable and checklist-passing — restore `pyproject.toml`, add
       `examples/quickstart.py` and `AGENT_EXAMPLES.json`, add a migration guide, fix the 1.2.0/1.0.0 version
       incoherence — then gate it with `miri score` in CI. _(all; it currently fails MIRI-PY-014/016 at the front
       door)_

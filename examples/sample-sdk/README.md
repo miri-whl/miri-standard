@@ -1,89 +1,72 @@
-# Sample Weather SDK - Miri Standard Example
+# Sample Weather SDK — Miri Standard Example
 
-This is a complete example of a Python SDK that implements the Miri Standard for agent-friendly packaging. It
-demonstrates all the key features:
-
-- **Agent Metadata**: Pre-parsed JSON files for instant agent consumption
-- **Structured Examples**: Categorized code samples with complexity levels
-- **Discovery APIs**: Runtime functions for accessing metadata
-- **Rich Documentation**: Embedded docs and templates
+A small but **buildable, Miri-conforming** Python SDK. It ships pre-parsed agent metadata inside the wheel, declares
+its identity and advisory sources, and exposes runtime discovery APIs — a worked example of the standard, not a
+production package.
 
 ## Project Structure
 
 ```text
-weather-sdk/
-├── src/weather_sdk/
-│   ├── __init__.py              # Main module with discovery APIs
-│   ├── client.py                # WeatherClient class
-│   ├── exceptions.py            # Custom exceptions
-│   ├── models.py                # Data models
-│   ├── agent-metadata/          # Pre-parsed agent data
-│   │   ├── sdk-manifest.json    # Core API index
-│   │   ├── usage-patterns.json  # Code patterns
-│   │   ├── migration-guide.json # Version changes
-│   │   └── api-graph.json      # API relationships
-│   ├── examples/                # Code examples
-│   │   ├── quickstart.py        # Basic usage
-│   │   ├── authentication.py    # Auth patterns
-│   │   └── use_cases/          # Real-world scenarios
-│   ├── docs/                   # Embedded documentation
-│   └── templates/              # Code templates
-├── pyproject.toml              # Build configuration
-├── tests/                      # Test suite
-└── scripts/                    # Build and validation scripts
+sample-sdk/
+├── pyproject.toml               # Build configuration (setuptools, src layout)
+├── README.md
+└── src/weather_sdk/
+    ├── __init__.py              # Main module with discovery APIs
+    ├── client.py                # WeatherClient class
+    ├── exceptions.py            # Custom exceptions
+    ├── models.py                # Data models
+    ├── agent-metadata/          # Pre-parsed agent data (packaged into the wheel)
+    │   ├── sdk-manifest.json    # Core API index
+    │   ├── usage-patterns.json  # Code patterns
+    │   ├── migration-guide.json # Version changes (1.1.0 → 1.2.0)
+    │   └── lifecycle.json       # Identity, advisory sources, support status
+    └── examples/                # Embedded, runnable examples
+        ├── __init__.py
+        └── quickstart.py        # Basic usage
 ```
 
-## Installation
+## Building and Conformance
 
 ```bash
-pip install weather-sdk
+python -m build --wheel        # produces weather_sdk-1.2.0-py3-none-any.whl
 ```
+
+The build packages `agent-metadata/` and `examples/` into the wheel (declared under
+`[tool.setuptools.package-data]`), so an agent finds them after `pip install`. All four `agent-metadata/` files validate
+against the schemas in [`schemas/`](../../schemas/), and the version is coherent across the wheel, `sdk-manifest.json`,
+`lifecycle.json`, and `migration-guide.json` (all `1.2.0`).
+
+This example targets **Miri Core** conformance — the identity, lifecycle, and packaging layer defined in the
+[Linter Checklist](../../standards/python/linter-checklist.md). Score it with the reference linter (`miri-py`, once
+published); `make validate-sample` from the repo root checks its metadata against the schemas in the meantime.
 
 ## Quick Start
 
 ```python
 from weather_sdk import WeatherClient
 
-# Initialize client
-client = WeatherClient(api_key="your-api-key")
-
-# Get current weather
-weather = client.get_current_weather("New York, NY")
-print(f"Temperature: {weather.temperature}°F")
-
-# Get forecast
-forecast = client.get_forecast("New York, NY", days=5)
-for day in forecast.days:
-    print(f"{day.date}: {day.high_temp}°F / {day.low_temp}°F")
+with WeatherClient(api_key="your-api-key") as client:
+    weather = client.get_current_weather("New York, NY")
+    print(f"Temperature: {weather.temperature}")
 ```
 
 ## For Autonomous Agents
 
-This SDK is optimized for autonomous agents:
+The metadata travels with the installed wheel and is reachable through discovery functions:
 
 ```python
 import weather_sdk
 
-# Get immediate API overview
-metadata = weather_sdk.get_agent_metadata()
-print("Available classes:", metadata["quick_reference"]["primary_classes"])
-
-# Access usage patterns
-patterns = weather_sdk.get_usage_patterns()
-basic_pattern = patterns["patterns"][0]
-print("Basic usage code:", basic_pattern["code"])
-
-# List all examples
-examples = weather_sdk.list_examples()
-print("Available examples:", examples)
+weather_sdk.get_agent_metadata()   # structured API metadata from sdk-manifest.json
+weather_sdk.get_usage_patterns()   # categorized code patterns
+weather_sdk.list_examples()        # ["quickstart"]
 ```
 
-## Features Demonstrated
+## What It Demonstrates
 
-- ✅ **Pre-parsed Metadata**: JSON files eliminate agent re-parsing
-- ✅ **Structured Examples**: Organized by complexity and use case
-- ✅ **Discovery APIs**: Runtime access to all metadata
-- ✅ **Rich Documentation**: Embedded guides and references
-- ✅ **Code Templates**: Boilerplate for common patterns
-- ✅ **Migration Guides**: Structured version change documentation
-- ✅ **JSON Schema Validation**: All metadata files validated against schemas
+- ✅ **Buildable**: a real `pyproject.toml`; the wheel packages the metadata and examples
+- ✅ **Pre-parsed metadata**: `agent-metadata/` JSON files an agent reads without re-deriving from source
+- ✅ **Identity & lifecycle**: `lifecycle.json` with purl, advisory sources, and support status
+- ✅ **Version coherence**: one version (`1.2.0`) across the wheel and every metadata file
+- ✅ **Discovery APIs**: runtime access to the packaged metadata
+- ✅ **Schema-valid**: every metadata file validates against its published JSON Schema

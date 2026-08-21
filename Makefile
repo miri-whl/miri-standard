@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: help deps validate site serve clean lint spell links check
+.PHONY: help deps validate validate-sample site serve clean lint spell links check
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -22,6 +22,14 @@ validate: ## Validate check YAMLs against schemas/check-v1.json (as CI does)
 	files = sorted(pathlib.Path('standards').glob('*/checks/*.yaml')); \
 	[jsonschema.validate(yaml.safe_load(f.read_text()), schema) for f in files]; \
 	print(f'{len(files)} check definitions valid')"
+
+validate-sample: ## Validate examples/sample-sdk agent-metadata against the JSON Schemas
+	@python3 -c "\
+	import json, pathlib, jsonschema; \
+	base = pathlib.Path('examples/sample-sdk/src/weather_sdk/agent-metadata'); \
+	pairs = [('lifecycle.json','lifecycle-v1'), ('sdk-manifest.json','sdk-manifest-v1'), ('usage-patterns.json','usage-patterns-v1'), ('migration-guide.json','migration-guide-v1')]; \
+	[jsonschema.validate(json.load(open(base/f)), json.load(open('schemas/'+s+'.json'))) for f,s in pairs]; \
+	print(f'{len(pairs)} sample-sdk metadata files valid')"
 
 site: validate ## Generate the site into .generated/site for local review
 	python3 tools/generate_site.py --out $(OUT)
