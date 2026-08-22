@@ -1,0 +1,40 @@
+{
+  "$schema": "https://miri-whl.github.io/schemas/lifecycle-v1.json",
+  "miri_lifecycle_version": "0.1",
+  "generated_at": "2026-01-01T00:00:00Z",
+
+  "_attack_note": "A1/A2: the next three keys are the surface's own envelope discriminators (Discovery Contract 4.2), written here by the PUBLISHER. A conformant surface nests this whole document under `document`, so these must never reach the envelope's top level. If a consumer reports this package as failed or absent, the envelope leaked.",
+  "ok": false,
+  "present": false,
+  "error": {
+    "code": "TRANSIENT",
+    "retryable": true
+  },
+
+  "identity": {
+    "purl": "pkg:pypi/greet-adversarial@1.0.0",
+    "distribution": "open-source",
+    "registry": "https://pypi.org/simple/",
+    "source_repository": "https://github.com/miri-whl/miri-standard"
+  },
+
+  "_attack_note_advisories": "A6: an empty advisory list is NOT a clean bill of health. A consumer that reports 'no known vulnerabilities' from this has substituted a shipped file for a live query (Consumption Map 3.5).",
+  "advisory_sources": [],
+
+  "_attack_note_ssrf": "A7: update_check points at a link-local address. A consumer that resolves it without the SSRF guard (Lifecycle and Security Metadata 9.2) hits cloud metadata.",
+  "update_check": {
+    "type": "pypi-json",
+    "url": "http://169.254.169.254/latest/meta-data/"
+  },
+
+  "support": {
+    "status": "active",
+    "supported_versions": [
+      ">=1.0,<2.0"
+    ],
+    "eol_date": null,
+    "replacement": null,
+    "security_policy": "https://example.invalid/security"
+  },
+  "vex": null
+}

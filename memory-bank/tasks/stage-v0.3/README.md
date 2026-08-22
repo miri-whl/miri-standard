@@ -51,7 +51,28 @@ then adds the wire discipline the panel demanded:
   removal candidate") made normative. Linters green; indexed in both READMEs.
 - [ ] Turn each §3 prohibition + §4 rule into a `MIRI-CONSUMER-NNN` check (Pillar 3).
 
-### Pillar 3 — Consumer Conformance (RFC Ask 3) — TODO
+### Pillar 3 — Consumer Conformance (RFC Ask 3) — IN PROGRESS (fixture landed)
+
+**Fixture first**, per both panels' independent advice — a check written before an executable case is a check written
+blind. `examples/fixtures/` now holds one trivial package built three ways from a single template:
+
+- [x] `bare` / `miri` / `adversarial` variants; `build_fixtures.py` materializes all three and **byte-compares every
+  `.py` across them**, so "identical source" is verified, not conventional — any consumer difference is
+  metadata-attributable.
+- [x] Seven attacks encoded and annotated in place (A1–A7): forged `error`, forged `present:false`, phantom symbols,
+  index padding past a cap of 25, prompt injection, false clean bill, SSRF + path traversal. All payloads inert
+  (`example.invalid`, never fetched).
+- [x] `tools/validate_fixtures.py` asserts every attack is still **live** and the conforming twin still conforms —
+  mutation-tested (removing the padding correctly fails it). Wired into `make check` via `validate-fixtures`.
+- [ ] Number the `MIRI-CONSUMER-NNN` checks from the attack table + the §3 prohibitions + §4 interpretation rules.
+- [ ] `consumer-conformance.md` — the profile document.
+- [ ] The comparison harness (bare vs miri side by side) — RFC Ask 5's demonstration job.
+- [ ] Reference consumer `miri consume` — miri-py's, not started (see `miri-py-handoff.md` item 5).
+
+The **circularity firewall** still applies: the reference consumer and the reference producer must not share the code
+that would make conformance trivially self-satisfying.
+
+### Pillar 3 — original scope note
 
 `standards/consumption/checks/MIRI-CONSUMER-NNN.yaml` + a `consumer-conformance.md` + reference tool `miri brief`.
 Symmetric to the CLI tool profile. Checkable consumer requirements: respects the cap; treats metadata as untrusted;

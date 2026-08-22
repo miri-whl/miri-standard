@@ -1,0 +1,19 @@
+{
+  "schema_version": "1",
+  "package": "greet_miri",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "patterns": [
+    {
+      "name": "one-off greeting",
+      "complexity": "beginner",
+      "purpose": "Greet a single name without keeping state",
+      "code": "from greet_miri import greet\n\nprint(greet(\"Ada\"))"
+    },
+    {
+      "name": "reused greeter",
+      "complexity": "beginner",
+      "purpose": "Configure the language once and greet many names",
+      "code": "from greet_miri import Greeter\n\ng = Greeter(language=\"es\")\nfor name in (\"Ada\", \"Alan\"):\n    print(g.greet(name))"
+    }
+  ]
+}

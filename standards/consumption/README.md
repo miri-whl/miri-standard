@@ -17,7 +17,16 @@ it, and the standard cannot say what makes the producer metadata worth shipping 
 - [Consumption Map](consumption-map.md) — the task-to-document reading contract: per agent task, what to read and in
   what order, what not to do, and an audit of what every metadata element is for.
 - Consumer Conformance *(Planned)* — `MIRI-CONSUMER-NNN` checks, numbered against a reference consumer tool driven on
-  a paired bare/miri fixture (and an adversarial-metadata twin).
+  the fixture set below.
+
+## Fixtures
+
+[`examples/fixtures/`](../../examples/fixtures/) holds one trivial package built three ways — **identical source,
+different shipped metadata**: a `bare` variant (the honest-degradation baseline), a conforming `miri` twin, and an
+`adversarial` twin whose metadata forges envelope signals, claims symbols that do not exist, pads its index to defeat
+a cap, and carries injection text. Source identity is enforced mechanically by the build script, and
+`tools/validate_fixtures.py` asserts each attack is still live, so the checks written against them cannot quietly
+become vacuous.
 
 ## Origin
 
