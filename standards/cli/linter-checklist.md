@@ -65,7 +65,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-CLI-015 | M | --describe implemented | Machine-readable introspection output exists and is valid JSON | [CLI Spec §3](cli-lifecycle-specification.md) | 3 |
 | MIRI-CLI-016 | M | Identity purl | `identity.purl` present, well-formed, matches distribution channel | [CLI Spec §3.1](cli-lifecycle-specification.md) / [purl spec](https://github.com/package-url/purl-spec) | 3 |
 | MIRI-CLI-017 | M | Version coherence | `identity.version` equals the binary's actual `--version` | [CLI Spec §9-1](cli-lifecycle-specification.md) | 2 |
-| MIRI-CLI-018 | M | Wire schema versioned | `identity.schema_version` present, independent of release version | [CLI Spec §3.1](cli-lifecycle-specification.md) | 1 |
+| MIRI-CLI-018 | M | Wire schema versioned | Top-level `schema_version` is independent of the release version | [CLI Spec §3.1](cli-lifecycle-specification.md) | 1 |
 | MIRI-CLI-019 | M | Distribution declared | `identity.distribution` is `open-source` or `private` | [CLI Spec §3.1](cli-lifecycle-specification.md) | 1 |
 | MIRI-CLI-020 | M | Support block | `support` present with valid `status` | [CLI Spec §3.2](cli-lifecycle-specification.md) | 2 |
 | MIRI-CLI-021 | M | EOL coherence | `support.status` `deprecated`/`eol` ⇒ `replacement` present | [CLI Spec §3.2](cli-lifecycle-specification.md) | 2 |

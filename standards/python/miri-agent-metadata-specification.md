@@ -414,7 +414,14 @@ Use migration-guide.json for breaking changes and new features.
 
 ### 4.5 api-graph.json (Optional)
 
-**Purpose**: Relationship graph between API components for advanced agent reasoning.
+**Purpose**: Relationship graph between API components, derived from source — inheritance, return types, and call
+sites — for advanced agent reasoning.
+
+Only structure that can be **evidenced from the source** is represented: each node carries its kind, each edge carries
+a declared relationship. Scored or inferred values (a node's importance/centrality, a relationship's usage frequency)
+and synthesized usage `workflows` are **not** part of this contract — a generator cannot derive them from the AST and
+MUST NOT invent them. This keeps api-graph.json a factual projection of the code, consistent with the standard's
+"declare sources, not verdicts" principle.
 
 **Schema**:
 
@@ -422,39 +429,23 @@ Use migration-guide.json for breaking changes and new features.
 {
   "$schema": "https://miri-whl.github.io/schemas/api-graph-v1.json",
   "version": "1.0",
+  "generated_at": "2026-08-15T14:02:07Z",
   "nodes": {
-    "DatabaseClient": {
-      "type": "class",
-      "centrality": 0.95,
-      "dependencies": ["Connection", "QueryResult"],
-      "dependents": ["QueryBuilder", "Transaction"]
-    },
-    "QueryBuilder": {
-      "type": "class", 
-      "centrality": 0.7,
-      "dependencies": ["DatabaseClient"],
-      "common_with": ["Transaction"]
-    }
+    "DatabaseClient": { "type": "class" },
+    "QueryBuilder": { "type": "class" },
+    "QueryResult": { "type": "class" }
   },
   "edges": [
     {
       "from": "DatabaseClient",
-      "to": "QueryResult", 
+      "to": "QueryResult",
       "relationship": "returns",
       "methods": ["query", "execute"]
     },
     {
       "from": "QueryBuilder",
       "to": "DatabaseClient",
-      "relationship": "uses",
-      "pattern": "builder_with_client"
-    }
-  ],
-  "workflows": [
-    {
-      "id": "standard_query_workflow",
-      "steps": ["DatabaseClient", "connect", "query", "QueryResult"],
-      "frequency": 0.85
+      "relationship": "uses"
     }
   ]
 }

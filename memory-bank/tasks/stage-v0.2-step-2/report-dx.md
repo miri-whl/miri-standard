@@ -48,6 +48,13 @@ a scary number into an obvious next action.
 
 ## P1 — [ours] check-YAML copy that feeds the report
 
+- [ ] **Branch the identity-check examples on `distribution`/`status`.** *(New — from the report-DX review, both
+      reviewers.)* MIRI-PY-020 and 022 show *private / internal-OSV* target states, and 033 shows a *deprecation
+      successor purl* — but on an open-source, active wheel those checks only fail because `lifecycle.json` is absent;
+      the cards make the dev think they must stand up an internal OSV endpoint or name a successor they don't have
+      (a fake task). Give 020/022/033 an open-source/active default example (and reserve the private/deprecated form
+      for when `distribution: private` / `status` is deprecated/eol). Pairs with the miri-py conditional-rendering
+      item.
 - [ ] **Make `remediation` / target-state examples template-ready.** So miri-py can substitute the real identity
       (above), the check YAML examples must use unambiguous placeholders (a single convention, e.g. `<PACKAGE_PURL>`,
       `<NAME>`, `<VERSION>`) instead of ad-hoc stand-ins (`example-sdk`, `acme-billing`, `weather-sdk-ng`). Audit the
