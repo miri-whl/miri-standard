@@ -33,6 +33,9 @@ fires_when:
   contents of `examples/`, or `get_agent_metadata()` disagrees with `agent-metadata/`
 - An `sdk-manifest.json` api_index entry does not resolve against the installed package — the named class or function is
   absent, or a listed `key_methods` / `init_params` entry disagrees with the object's actual `inspect.signature`
+- An api_index entry names a console-script entry point declared in the wheel's `entry_points` (`console_scripts`) — the
+  CLI surface belongs in the CLI standard's `--describe`, not api_index, and MUST be excluded from it (Generation
+  Invariant §5.4)
 remediation:
 - Implement each function as a thin reader over the installed files via `importlib.resources.files(...)`, never over remembered
   build-tree paths
@@ -42,6 +45,8 @@ remediation:
   assert on the results'
 - Generate api_index from the package's actual importable surface (AST or introspection) at build time, and assert in CI
   that every entry resolves after install — the manifest agents generate code from must not be able to lie
+- Exclude console-script entry points and the CLI command surface from api_index at generation time; the CLI is
+  described by the CLI standard's `--describe`, not this file (Generation Invariant §5.4)
 examples:
   violation: '$ pip install weather_sdk-1.2.0-py3-none-any.whl
 
@@ -63,6 +68,9 @@ suggested_fix: Implement the package-level discovery functions over the generate
 references:
 - title: Miri Wheel Ext. §6
   url: miri-python-wheel-extensions.md
+  type: spec
+- title: Agent Metadata Spec §5.4 (Generation Invariants)
+  url: miri-agent-metadata-specification.md
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-036.yaml

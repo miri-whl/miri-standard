@@ -56,15 +56,14 @@ the `schema-governance` / `check-authoring` invariants (weights sum to 100; ever
 
 ## P3 — bigger / weigh step-3 vs 0.3
 
-- [ ] **Back the §5.4 Generation Invariants with linter checks.** Invariants #1 (evidence-only omission of
-      `configuration`/`error_handling`) and #2 (CLI excluded from `api_index`) are prose-only — no check enforces them,
-      so a linter cannot catch a violation (miri-py's own builder currently violates #2, emitting `main` + 47 `cli/`
-      symbols into `api_index`). Add a new `MIRI-PY-0NN`, or extend `MIRI-PY-036`, so conformance is machine-verified —
-      the difference between "the spec says it" and "the linter proves it." _(Agent-Tooling — larger; could be step-3
-      or fold into 0.3)_
-- [ ] **Add a normative line that the linter does not sandbox example execution** — so the spec text can never be read
-      as promising isolation; verifying executable checks requires running trusted code under external confinement.
-      _(Security)_
+- [x] **Back the §5.4 Generation Invariants with linter checks.** _(Partial: extended `MIRI-PY-036` to fire when an
+      api_index entry names a console-script entry point — invariant #2 (CLI-exclusion), the one Agent-Tooling found
+      miri-py's builder violating, is now machine-checked, no weight change. Invariant #1 (evidence-only omission of
+      `configuration`/`error_handling`) remains prose-only — verifying "omitted because unevidenced" needs source
+      analysis of the wheel; deferred as a harder future check.)_ _(Agent-Tooling)_
+- [x] **Add a normative line that the linter does not sandbox example execution** — added to §9 of the agent-metadata
+      spec: executing checks runs the package's own code, the standard defines no sandbox, and a conformant linter MUST
+      run it only under external confinement when the artifact is not trusted. _(Security)_
 
 ## Deferred to 0.3 (not step-3)
 

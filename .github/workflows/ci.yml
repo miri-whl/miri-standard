@@ -99,7 +99,11 @@ jobs:
     - name: Install miri-py (best-effort)
       id: miripy
       continue-on-error: true
-      run: pip install "git+https://github.com/miri-whl/miri-py.git"
+      env:
+        # Fine-grained PAT with Contents:read on the (private) miri-whl/miri-py repo.
+        # When absent the install fails and the scoring step is skipped (not failed) — see below.
+        MIRI_PY_TOKEN: ${{ secrets.MIRI_PY_TOKEN }}
+      run: pip install "git+https://${MIRI_PY_TOKEN}@github.com/miri-whl/miri-py.git"
     - name: Build and score the sample SDK (gate on conformance)
       if: steps.miripy.outcome == 'success'
       run: make score-sample

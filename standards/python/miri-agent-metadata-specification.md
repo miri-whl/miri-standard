@@ -936,6 +936,12 @@ agent-metadata surface.
 - **`api_index` and usage patterns can lie.** An agent generating code from `sdk-manifest.json` or `usage-patterns.json`
   SHOULD verify calls against the installed package's actual surface (import and introspect) rather than trusting the
   metadata's claims, which a compromised or careless build can fabricate.
+- **Executing the artifact is not sandboxed by this standard.** Verifying execution-dependent checks — running the
+  embedded examples (MIRI-PY-015) or probing the discovery APIs (MIRI-PY-036/040) — runs the package's own code. This
+  standard defines no sandbox for that: a conformant linter or consumer MUST run it only under external confinement (a
+  disposable container or VM, no ambient credentials, restricted egress) when the artifact is not already trusted, and
+  MUST otherwise default to static analysis. A passing execution check attests that the code ran and produced the
+  expected signal — never that it was safe to run.
 - **Provenance is the anchor.** Trust in any of this metadata is only as strong as the wheel's provenance; prefer
   metadata from a release carrying a verified PEP 740 attestation (MIRI-PY-005).
 
