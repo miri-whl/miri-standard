@@ -5,7 +5,13 @@
   "description": "Schema for api-graph.json - AST-derived API relationship graph. Only structure that can be evidenced from source is represented: nodes carry their kind, edges carry a declared relationship. Scored or inferred values (centrality, usage frequency) and synthesized usage workflows are deliberately NOT part of this contract - a generator must not invent them.",
   "type": "object",
   "required": ["version", "nodes", "edges"],
+  "additionalProperties": false,
   "properties": {
+    "$schema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Reference to this schema"
+    },
     "version": {
       "type": "string",
       "description": "Schema version",

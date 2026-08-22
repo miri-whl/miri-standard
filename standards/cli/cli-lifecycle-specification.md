@@ -333,6 +333,50 @@ In a conforming implementation, checks 1–3 hold *by construction*, because hel
 derive from one schema struct (§2.3); the verifier exists to catch drift in implementations that hand-maintain any of
 the three.
 
+### 6.4 Marking Danger and Mutation (Normative)
+
+An agent driving a CLI must be able to tell, *before* invoking a surface, whether it is safe to run — the
+frozen-weights failure mode is worst when the mistaken command deletes data or runs untrusted code. Each `command`
+and `flag` entry in `--describe` therefore carries two boolean markers, both defaulting to `false` (absent means
+false):
+
+- **`destructive`** — `true` when invoking the command, or passing the flag, is destructive, irreversible, or runs
+  untrusted code (for example a `purge` command, or an `--execute` flag that runs a downloaded artifact's code). A
+  conformant consumer MUST obtain confirmation, or match a pre-approved policy, before acting on a `destructive: true`
+  surface — it MUST NOT auto-invoke it on the metadata's say-so. This mirrors the `CONFIRMATION_REQUIRED` error posture
+  (§2.6). Verified by **MIRI-CLI-040**.
+- **`mutating`** — `true` when the command writes or changes state rather than reading only. It lets a consumer
+  separate safe read-only introspection from state-changing operations without parsing help prose. Verified by
+  **MIRI-CLI-041**.
+
+Both markers derive from the same schema struct as help and `changelog` (§2.3), so they cannot drift from behavior in
+a conforming implementation. They are structured fields, not free text: a marker that lives only inside a flag's
+`description` string does not satisfy the checks. Below is the relevant `commands` excerpt of a `--describe` document
+(the surrounding top-level fields are per §3):
+
+```json
+{
+  "commands": [
+    {
+      "name": "score",
+      "description": "Score a wheel against the standard (read-only)",
+      "mutating": false,
+      "flags": [
+        { "name": "--execute", "description": "Run the wheel's code to evaluate execution checks", "destructive": true }
+      ]
+    },
+    {
+      "name": "init",
+      "description": "Scaffold Miri configuration into the current project",
+      "mutating": true
+    }
+  ]
+}
+```
+
+The vocabulary follows the Agent-First CLI convention of machine-legible side-effect declaration (landscape §2.1, P16);
+Miri makes it normative and mechanically checkable.
+
 ## 7. Open Source CLIs
 
 For `distribution: "open-source"` CLIs:

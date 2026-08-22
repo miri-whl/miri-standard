@@ -6,13 +6,13 @@ the `schema-governance` / `check-authoring` invariants (weights sum to 100; ever
 
 ## P1 — spec/schema self-contradictions (same class as the CLI-018 bug already fixed)
 
-- [ ] **Close the api-graph schema root.** `schemas/api-graph-v1.json` has `additionalProperties:false` on the
+- [x] **Close the api-graph schema root.** `schemas/api-graph-v1.json` has `additionalProperties:false` on the
       node/edge objects but **not the top-level object**, so a document with a top-level `workflows` array still
       validates (0 errors, verified). Add `additionalProperties:false` at the root and whitelist
       `$schema`/`version`/`generated_at`/`nodes`/`edges` in `properties`. Re-validate the real 348-node artifact
       (`miri-py/src/miri_py/agent-metadata/api-graph.json`) after — it has no `$schema` key, so it stays valid.
       _(Agent-Tooling — his remaining gate to 9)_
-- [ ] **Open `cli-describe-v1.json` for the danger markers, and give CLI-040 a spec home.** CLI-040 (MUST) requires a
+- [x] **Open `cli-describe-v1.json` for the danger markers, and give CLI-040 a spec home.** CLI-040 (MUST) requires a
       machine-readable `danger`/`mutates`/`destructive` marker in a command's `--describe` entry, but the schema sets
       `additionalProperties:false` on `definitions.flag` and `definitions.command` with no such field — **the schema
       forbids the field the MUST requires** (a conformant CLI cannot satisfy 040 and schema-validate). Fix: add

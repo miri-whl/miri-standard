@@ -121,7 +121,9 @@
       "properties": {
         "name": {"type": "string"},
         "description": {"type": "string"},
-        "lifecycle": {"$ref": "#/definitions/lifecycle"}
+        "lifecycle": {"$ref": "#/definitions/lifecycle"},
+        "destructive": {"type": "boolean", "default": false, "description": "True when the flag makes the command destructive, irreversible, or run untrusted code (e.g. an --execute flag); a consumer should confirm before using it. Absent or false means not destructive (MIRI-CLI-040)."},
+        "mutating": {"type": "boolean", "default": false, "description": "True when the flag causes the command to write or change state rather than read only. Absent or false means read-only (MIRI-CLI-041)."}
       },
       "additionalProperties": false
     },
@@ -133,7 +135,9 @@
         "description": {"type": "string"},
         "lifecycle": {"$ref": "#/definitions/lifecycle"},
         "flags": {"type": "array", "items": {"$ref": "#/definitions/flag"}},
-        "subcommands": {"type": "array", "items": {"$ref": "#/definitions/command"}}
+        "subcommands": {"type": "array", "items": {"$ref": "#/definitions/command"}},
+        "destructive": {"type": "boolean", "default": false, "description": "True when the command is destructive or irreversible (deletes or overwrites data, or runs untrusted code); a consumer should confirm before invoking it. Absent or false means not destructive (MIRI-CLI-040)."},
+        "mutating": {"type": "boolean", "default": false, "description": "True when the command writes or changes state rather than reading only. Absent or false means read-only (MIRI-CLI-041)."}
       },
       "additionalProperties": false
     }

@@ -41,14 +41,17 @@ examples:
 
     $ tool --describe | jq ''.commands[] | select(.name=="sync")''
 
-    {"name": "sync", "summary": "Synchronize the workspace."}
+    {"name": "sync", "description": "Synchronize the workspace."}
 
     Whether sync uploads, downloads, or both is undeterminable; the agent must assume it writes.'
   compliant: "$ tool --describe | jq '.commands[] | select(.name==\"sync\")'\n{\"name\": \"sync\", \"mutating\": true,\n\
-    \ \"summary\": \"Upload local changes to the remote workspace.\"}\nReads elsewhere in the same describe carry \"mutating\"\
+    \ \"description\": \"Upload local changes to the remote workspace.\"}\nReads elsewhere in the same describe carry \"mutating\"\
     : false and can be parallelized freely."
 suggested_fix: Make the read-vs-write nature explicit per command.
 references:
+- title: CLI Spec §6.4
+  url: cli-lifecycle-specification.md
+  type: spec
 - title: Landscape §2.2 (anc.dev)
   url: landscape-and-prior-art.md
   type: spec

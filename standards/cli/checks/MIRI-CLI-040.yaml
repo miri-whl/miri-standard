@@ -35,15 +35,18 @@ remediation:
 examples:
   violation: '--describe:
 
-    {"name": "purge", "summary": "Remove all cached artifacts", "mutating": true}
+    {"name": "purge", "description": "Remove all cached artifacts", "mutating": true}
 
     Nothing distinguishes purge from an ordinary write; an agent''s guardrail layer has no field to branch on and invokes
     it like any other command.'
-  compliant: "--describe:\n{\"name\": \"purge\", \"mutating\": true, \"destructive\": true, \"requires_force\": true}\n\
+  compliant: "--describe:\n{\"name\": \"purge\", \"description\": \"Remove all cached artifacts\", \"mutating\": true, \"destructive\": true}\n\
     $ tool purge\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\": \"CONFIRMATION_REQUIRED\", \"retryable\": false,\n  \"suggestions\"\
     : [\"re-run with --force, or preview with --dry-run\"]}}"
 suggested_fix: Mark destructive operations in the introspection output.
 references:
+- title: CLI Spec §6.4
+  url: cli-lifecycle-specification.md
+  type: spec
 - title: Landscape §2.1 P16
   url: landscape-and-prior-art.md
   type: spec
