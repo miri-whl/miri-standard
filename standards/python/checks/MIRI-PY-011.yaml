@@ -22,7 +22,7 @@ rationale: Agent Metadata §5.1 makes generation a build step precisely because 
   outside the build window breaks that promise silently, with no runtime error to surface it.
 fires_when:
 - generated_at in any agent-metadata file is absent or does not parse as an RFC 3339 / ISO 8601 timestamp
-- generated_at predates the wheel's build (dist-info METADATA creation or the release tag) by more than 24 hours (the committee-defined build-window tolerance)
+- generated_at predates the wheel's build (dist-info METADATA creation or the release tag) by more than 24 hours (the standard's build-window tolerance)
 - generated_at values across agent-metadata files spread wider than the 24-hour build-window tolerance (files stamped by different generator runs)
 - generated_at is later than the wheel's own build timestamp (file edited after packaging)
 remediation:

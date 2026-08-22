@@ -16,8 +16,8 @@ SIG-Spec focuses on:
 
 ## Leadership
 
-- **Lead**: [To be assigned]
-- **Co-Lead**: [To be assigned]
+Maintainer-led during Incubation (Emiliano Berenbaum, @y3bishop3y). A dedicated Lead and Co-Lead will be designated
+as the SIG grows.
 
 ## Meetings
 

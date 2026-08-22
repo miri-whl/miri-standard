@@ -36,7 +36,7 @@ examples:
   violation: "lifecycle.json:\n  \"support\": {\"status\": \"eol\", \"eol_date\": \"2026-06-30\", \"replacement\": null}\n\
     # agents learn the package is dead but not what supersedes it — migration stalls on the dying package"
   compliant: "lifecycle.json:\n  \"support\": {\"status\": \"deprecated\", \"eol_date\": \"2027-01-01\",\n             \
-    \  \"replacement\": \"pkg:pypi/weather-sdk-ng\"}"
+    \  \"replacement\": \"pkg:pypi/example-sdk-ng\"}"
 suggested_fix: Name the successor purl whenever status is deprecated or eol.
 references:
 - title: Lifecycle §3.1

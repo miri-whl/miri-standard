@@ -29,16 +29,16 @@ fires_when:
 remediation:
 - Declare both fields in the Miri build configuration, e.g. [tool.miri.lifecycle] distribution = "open-source", registry
   = "https://pypi.org/simple/"
-- For private packages set distribution = "private" and point registry at the internal index (e.g. https://pypi.internal.acme.example/simple/)
+- For private packages set distribution = "private" and point registry at the internal index (e.g. https://pypi.internal.example/simple/)
   — the same URL carried in the purl's repository_url qualifier (§5.1)
 - Use the installable simple-index URL, not the project page, so consumers can compare it directly against pip's actual
   install origin
 examples:
-  violation: "lifecycle.json:\n  \"identity\": {\"purl\": \"pkg:pypi/acme-billing@3.2.0\"}\n  <- distribution and registry\
-    \ absent: a consumer defaults to public OSV for acme-billing,\n     an internal-only name, and the empty response reads\
+  violation: "lifecycle.json:\n  \"identity\": {\"purl\": \"pkg:pypi/example-internal@3.2.0\"}\n  <- distribution and registry\
+    \ absent: a consumer defaults to public OSV for example-internal,\n     an internal-only name, and the empty response reads\
     \ as \"not vulnerable\""
-  compliant: "lifecycle.json:\n  \"identity\": {\n    \"purl\": \"pkg:pypi/acme-billing@3.2.0?repository_url=https://pypi.internal.acme.example/simple/\"\
-    ,\n    \"distribution\": \"private\",\n    \"registry\": \"https://pypi.internal.acme.example/simple/\"\n  }\n  (consumers\
+  compliant: "lifecycle.json:\n  \"identity\": {\n    \"purl\": \"pkg:pypi/example-internal@3.2.0?repository_url=https://pypi.internal.example/simple/\"\
+    ,\n    \"distribution\": \"private\",\n    \"registry\": \"https://pypi.internal.example/simple/\"\n  }\n  (consumers\
     \ skip public OSV as authoritative and can flag any install not originating from the declared registry)"
 suggested_fix: Declare distribution (open-source or private) and the publishing registry URL.
 references:

@@ -7,9 +7,9 @@ survives.
 
 ## How to read these documents
 
-The Miri Standard and its reference linter (`miri-py`) are built by the same small maintainer group. The
-"implementation team" and "maintainers' response" labels in these files denote **two perspectives held deliberately
-apart**, not two independent organizations:
+The Miri Standard and its reference linter (`miri-py`) are built by the same single maintainer (Emiliano Berenbaum,
+@y3bishop3y). The "implementation team" and "maintainers' response" labels in these files denote **two perspectives
+held deliberately apart**, not two independent organizations or a plural body:
 
 - the *implementer* perspective surfaces a problem found while building the linter — a place where the standard is
   underspecified and conforming tools would have to invent semantics;
@@ -21,9 +21,10 @@ side that has to keep it coherent. That is the value of the format, and the hone
 **decision records authored from two viewpoints**, not as correspondence between separate parties or as a record of
 outside review.
 
-The project is early (0.1-draft, Incubation) and small: where these documents describe what the standard decides,
-that means its maintainers acting in the standard-governance role, not a large chartered body. Outside proposals and
-review are welcome; when they arrive, they will be recorded here the same way, and attributed to their authors.
+The project is early (0.1-draft, Incubation) and has a single maintainer: where these documents describe what the
+standard decides, that means the maintainer acting in the standard-governance role, not a chartered body. Outside
+proposals and review are welcome; when they arrive, they will be recorded here the same way, and attributed to their
+authors.
 
 ## Contents
 

@@ -103,7 +103,7 @@ Advancement between phases requires:
 
 1. **Self-Assessment**: Project maintainers evaluate against phase criteria
 2. **Community Review**: Open review period for community feedback
-3. **Steering Committee Approval**: Final approval by project steering committee
+3. **Maintainer Approval**: Final approval by the project maintainer (by the Steering Committee once one is formed)
 4. **Documentation Update**: Update all relevant documentation to reflect new phase
 
 ### Review Schedule

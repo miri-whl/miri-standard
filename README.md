@@ -204,9 +204,9 @@ This project follows an open governance model:
 
 ### Leadership
 
-- **Steering Committee**: [To be established]
-- **Maintainers**: [To be assigned]
-- **SIG Leads**: [To be assigned]
+The project is in **Incubation** with a **single maintainer** — Emiliano Berenbaum (@y3bishop3y) — who authors the
+specifications and makes technical and governance decisions, with all drafts public and open for review. A Steering
+Committee and SIG leads will be established as a contributor community forms (see [GOVERNANCE.md](GOVERNANCE.md)).
 
 ## Contributing
 

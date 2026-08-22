@@ -32,11 +32,11 @@ remediation:
   `type: osv-local` (§5.2 option 2)'
 - 'Keep public OSV listed with `authoritative: false` so the open-source dependency tree remains covered'
 examples:
-  violation: "lifecycle.json:\n  \"identity\": {\"purl\": \"pkg:pypi/acme-billing@3.2.0?repository_url=https://pypi.internal.acme.example/simple/\"\
+  violation: "lifecycle.json:\n  \"identity\": {\"purl\": \"pkg:pypi/example-internal@3.2.0?repository_url=https://pypi.internal.example/simple/\"\
     ,\n               \"distribution\": \"private\", ...},\n  \"advisory_sources\": [\n    {\"type\": \"osv\", \"ecosystem\"\
     : \"PyPI\", \"url\": \"https://api.osv.dev/v1/query\", \"authoritative\": true}\n  ]\n# api.osv.dev has never heard\
-    \ of acme-billing; every query returns {} — read as 'not vulnerable'"
-  compliant: "\"advisory_sources\": [\n  {\"type\": \"osv-internal\", \"url\": \"https://osv.internal.acme.example/v1/query\"\
+    \ of example-internal; every query returns {} — read as 'not vulnerable'"
+  compliant: "\"advisory_sources\": [\n  {\"type\": \"osv-internal\", \"url\": \"https://osv.internal.example/v1/query\"\
     , \"authoritative\": true},\n  {\"type\": \"osv\", \"ecosystem\": \"PyPI\", \"url\": \"https://api.osv.dev/v1/query\"\
     , \"authoritative\": false}\n]"
 suggested_fix: Add the internal OSV endpoint as the authoritative source for private packages.
