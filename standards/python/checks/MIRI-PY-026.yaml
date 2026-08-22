@@ -37,7 +37,7 @@ examples:
     $ curl -s -o /dev/null -w ''%{http_code}'' https://acme.example/security/vex/latest.json
 
     404'
-  compliant: '"vex": "https://acme.example/security/vex/acme-billing-3.2.0.openvex.json"
+  compliant: '"vex": "https://acme.example/security/vex/example-internal-3.2.0.openvex.json"
 
     # serves: {"@context": "https://openvex.dev/ns/v0.2.0",
 

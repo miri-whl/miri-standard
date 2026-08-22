@@ -56,3 +56,20 @@ Round 3 is lost. Cited to the panelist(s) who raised each.
       that don't exist; functionality is in `runner_support.py`). _(AI Researcher)_
 - [ ] Reconcile task-tracker checkboxes with reality (quarantine work already done via `.gitignore` still shows open).
       _(AI Researcher)_
+
+## P1 — generator bugs found while making the sample conform (2026-08-21)
+
+- [ ] **`miri generate --output-dir <path>` crashes** — `unsupported operand type(s) for /: 'str' and 'str'`
+      (a `str / str` path join; needs `Path`). Blocks generating metadata into a chosen location.
+- [ ] **`miri generate` writes to `src/agent-metadata/`** for a src-layout package, not `src/<pkg>/agent-metadata/`
+      (the packaged location). The output never enters the wheel; it also recreates the stale-duplicate dir the
+      standard repo just removed.
+- [ ] **`miri build --generate-metadata` is a no-op** on the sample — the build report shows "Generate Metadata: No"
+      and the built wheel keeps the committed `generated_at` stamps (so MIRI-PY-011 still fires). The flag does not
+      regenerate.
+- [ ] **`miri generate` produces only 4/5 files and omits `migration-guide.json`** (not derivable from a single
+      version's source) — a regenerate-from-scratch flow would drop the hand-authored migration guide.
+
+_Consequence for the standard:_ until these are fixed, the sample-conformance CI gate re-stamps `generated_at` to
+build time (see `tools/score_sample.py`) rather than regenerating from source. Once `miri generate` can target the
+packaged path, switch the gate to a true generate-from-source step.

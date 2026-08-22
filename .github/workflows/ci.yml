@@ -59,9 +59,50 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Spell Check
       uses: streetsidesoftware/cspell-action@v6
       with:
         files: '**/*.md'
         config: '.cspell.json'
+
+  schema-validation:
+    name: Validate Schemas & Sample Metadata
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install validation deps
+      run: pip install pyyaml jsonschema
+    - name: Validate check YAMLs against check-v1.json
+      run: make validate
+    - name: Validate sample-sdk metadata against schemas
+      run: make validate-sample
+
+  sample-conformance:
+    name: Sample SDK Conformance (miri score)
+    runs-on: ubuntu-latest
+    # Requires the miri-py reference linter, which is not yet on PyPI and whose source repo may be
+    # private. CI installs it best-effort: when it is unreachable the scoring step is SKIPPED (not
+    # failed), so a red X on this job means the sample regressed — never that a dependency 404'd.
+    # To turn the gate on, publish miri-py to PyPI, make the repo public, or provide a token secret
+    # (MIRI_PY_TOKEN) and install via git+https://${MIRI_PY_TOKEN}@github.com/miri-whl/miri-py.git.
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - name: Install build tooling
+      run: pip install build
+    - name: Install miri-py (best-effort)
+      id: miripy
+      continue-on-error: true
+      run: pip install "git+https://github.com/miri-whl/miri-py.git"
+    - name: Build and score the sample SDK (gate on conformance)
+      if: steps.miripy.outcome == 'success'
+      run: make score-sample
+    - name: Note skipped gate
+      if: steps.miripy.outcome != 'success'
+      run: echo "::notice::miri-py unavailable (not on PyPI / repo not reachable) — sample-conformance gate skipped. Publish miri-py, make it public, or set MIRI_PY_TOKEN to enable it."

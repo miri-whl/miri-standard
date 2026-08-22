@@ -10,21 +10,21 @@ checklist prose in the same commit and re-run the `schema-governance` / `check-a
 > **not** — four panelists rebuilt it and got 71–74/non-conforming. This is the single most damaging thing a skeptic
 > can run (`python -m build && miri score`). Carry it forward and actually close it.
 
-- [ ] **Make the sample SDK pass its own linter.** The packaged metadata
+- [x] **Make the sample SDK pass its own linter.** The packaged metadata
       `examples/sample-sdk/src/weather_sdk/agent-metadata/{sdk-manifest,usage-patterns,lifecycle,migration-guide}.json`
       carries stale hardcoded `generated_at` (`2025-08-30`, `2026-08-18`) → trips **MIRI-PY-011** (build-window
       freshness; three stamps spread ~353 days). Fix: generate the metadata at build time with one coherent build
       clock (wire `miri generate` into the sample's build), or commit values that a fresh build keeps in-window.
       _(OSS, CLI, Security, Packaging, Agent-Tooling)_
-- [ ] **Resolve the MIRI-PY-016 gap for the sample.** `AGENT_EXAMPLES.json` in dist-info is injected by miri-py's
+- [x] **Resolve the MIRI-PY-016 gap for the sample.** `AGENT_EXAMPLES.json` in dist-info is injected by miri-py's
       wheel enhancer, not by `python -m build`. Decide the sample's canonical "conforming" build path uses
       `miri build` (enhancer on), and document it — otherwise a bare `python -m build` will always fail 016.
       _(CLI, Packaging)_
-- [ ] **Gate the sample in the standard's CI.** Add a job to `.github/workflows/` that builds the sample and runs
+- [x] **Gate the sample in the standard's CI.** Add a job to `.github/workflows/` that builds the sample and runs
       `miri score` (fail on non-conformance, or at minimum on `core_conforming: false`). Today CI is doc-lint / spell
       / structure only. Depends on miri-py being invokable in CI (see `miri-py.md` → PyPI/rc). _(Packaging: "a
       showcase that fails the standard's own linter is the most damaging thing a skeptic can run")_
-- [ ] **Delete the tracked sample-SDK cruft.** `examples/sample-sdk/src/agent-metadata/` is a **stale duplicate**
+- [x] **Delete the tracked sample-SDK cruft.** `examples/sample-sdk/src/agent-metadata/` is a **stale duplicate**
       (not packaged; `pyproject.toml` package-data points only at `weather_sdk/agent-metadata/*`). It still points
       `$schema` at `miri-standard.org` and holds the orphan `examples-index.json`. `git rm` the whole `src/agent-metadata/`
       dir, plus the stray `src/_miri.py`; reconcile `src/__init__.py`. **This one cleanup resolves both the
@@ -32,7 +32,7 @@ checklist prose in the same commit and re-run the `schema-governance` / `check-a
 
 ## P1 — spec ↔ implementation contradictions (fix before implementers encode them)
 
-- [ ] **api-graph contract lies — make the spec + schema tell the truth.** The reference builder refuses to emit
+- [x] **api-graph contract lies — make the spec + schema tell the truth.** The reference builder refuses to emit
       scored/derived fields, but both `schemas/api-graph-v1.json` and the spec example still advertise them. Remove,
       or normatively mark "reserved — not emitted": on `graph_node` → `centrality`, `dependencies`, `dependents`,
       `common_with`, `complexity`; on `graph_edge` → `pattern`, `frequency`; and the top-level `workflows` block.
@@ -40,7 +40,7 @@ checklist prose in the same commit and re-run the `schema-governance` / `check-a
       `standards/python/miri-agent-metadata-specification.md:§4.5` (lines ~428–457), then re-run schema-governance so
       the trimmed example still validates. _(Agent-Tooling — his single gate to 8/10: "the contract advertises
       fabrication the code correctly refuses")_
-- [ ] **Resolve the CLI-018 self-contradiction.** `standards/cli/checks/MIRI-CLI-018.yaml` (lines 14, 24) and the CLI
+- [x] **Resolve the CLI-018 self-contradiction.** `standards/cli/checks/MIRI-CLI-018.yaml` (lines 14, 24) and the CLI
       checklist demand `identity.schema_version`, but `standards/cli/cli-lifecycle-specification.md:143` says
       `schema_version` is a **top-level field, not inside `identity`**. A spec-conforming CLI therefore fails 018.
       Decide canonical: fold 018's "independent-of-release-version" intent onto the top-level `schema_version` (and
@@ -49,16 +49,16 @@ checklist prose in the same commit and re-run the `schema-governance` / `check-a
 
 ## P2 — coherence / wording
 
-- [ ] **Fix the Core profile off-by-one.** `standards/python/linter-checklist.md:39` calls Core a "15-check set" but
+- [x] **Fix the Core profile off-by-one.** `standards/python/linter-checklist.md:39` calls Core a "15-check set" but
       the enumeration (001–005, 013, 018–023, 033, 040) is **14**, matching miri-py's `CORE_PROFILE_CHECK_IDS` (14).
       Change the prose to "14-check", or deliberately add a 15th check and update miri-py in lockstep. (CLI checklist
       Core section has no count claim — no change there.) _(OSS, Packaging)_
-- [ ] **Purge misleading "sandbox" wording.** The example runner is not a security boundary (Security engineer's
+- [x] **Purge misleading "sandbox" wording.** The example runner is not a security boundary (Security engineer's
       two-round finding, now honest in miri-py's code). Reword `standards/python/checks/MIRI-PY-015.yaml` (5 refs:
       lines 17, 19, 32, 37, 41) and `standards/python/linter-checklist.md:76`. **Leave** `MIRI-PY-037.yaml:18` — its
       "agent sandbox or air-gapped network" describes the deployment environment, a different and legitimate use.
       _(Security)_
-- [ ] **Lift code-only semantic rules into spec text.** Rules that make the generators trustworthy live only in
+- [x] **Lift code-only semantic rules into spec text.** Rules that make the generators trustworthy live only in
       miri-py docstrings/comments: "emit `configuration`/`error_handling` only from source evidence, omit when
       absent"; "CLI entry points are excluded from `api_index`"; api-graph edge-derivation. Add them to
       `standards/python/miri-agent-metadata-specification.md` so tool authors build to the same contract the linter

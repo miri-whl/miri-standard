@@ -24,11 +24,11 @@ rationale: 'CLI Spec §3.1 versions the wire schema independently of the release
 fires_when:
 - Any JSON document emitted on stdout lacks a top-level `schema_version` key
 - '`schema_version` is present but nested inside another object rather than top-level, or is empty/non-string'
-- '`identity.schema_version` in `--describe` disagrees with the value stamped on command payloads'
+- 'The top-level `schema_version` in `--describe` disagrees with the value stamped on command payloads'
 remediation:
 - Emit every payload through a shared response envelope that stamps `schema_version` — one code path, so no command can
   forget it
-- Source the value from the same constant as `identity.schema_version` in `--describe` (CLI Spec §3.1)
+- Source the value from the same constant as the top-level `schema_version` in `--describe` (CLI Spec §3.1)
 - Bump it only on breaking payload changes, never in lockstep with the release version, and record bumps in `changelog --since`
   output (CLI Spec §5.2)
 - 'Assert in CI: `<cmd> --json | jq -e ''.schema_version''` succeeds for every command'

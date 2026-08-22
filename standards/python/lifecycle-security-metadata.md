@@ -222,7 +222,7 @@ private indexes):
 
 - Internal packages MUST still carry a purl. The RECOMMENDED convention is the standard `pkg:pypi/` type with the
   organization's private index in a purl qualifier:
-  `pkg:pypi/acme-billing@3.2.0?repository_url=https://pypi.internal.acme.example/simple/`.
+  `pkg:pypi/example-internal@3.2.0?repository_url=https://pypi.internal.example/simple/`.
 - `identity.registry` MUST name the internal index. Public OSV lookups against private names return empty — which is
   indistinguishable from "not vulnerable" — so consumers MUST NOT query public OSV as authoritative for
   `distribution: "private"` packages unless it is explicitly listed in `advisory_sources`.

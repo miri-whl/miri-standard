@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: help deps validate validate-sample site serve clean lint spell links check
+.PHONY: help deps validate validate-sample score-sample site serve clean lint spell links check
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -31,6 +31,9 @@ validate-sample: ## Validate examples/sample-sdk agent-metadata against the JSON
 	[jsonschema.validate(json.load(open(base/f)), json.load(open('schemas/'+s+'.json'))) for f,s in pairs]; \
 	print(f'{len(pairs)} sample-sdk metadata files valid')"
 
+score-sample: ## Build examples/sample-sdk and score it with miri (conformance gate; needs miri-py)
+	@python3 tools/score_sample.py
+
 site: validate ## Generate the site into .generated/site for local review
 	python3 tools/generate_site.py --out $(OUT)
 
@@ -51,4 +54,4 @@ links: ## Check Markdown links (CI: markdown-link-check)
 	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
 		-exec npx markdown-link-check -q -c .markdown-link-check.json {} \;
 
-check: validate lint spell ## Run everything CI runs locally (except link check)
+check: validate validate-sample lint spell ## Run everything CI runs locally (except link check and the miri score gate)

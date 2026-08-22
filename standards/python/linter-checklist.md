@@ -36,7 +36,7 @@ Two profiles let a package adopt Miri incrementally:
   building an agent-metadata generation pipeline: the packaging baseline (MIRI-PY-001–005), JSON hygiene (MIRI-PY-013),
   the hand-authorable `lifecycle.json` identity and advisory fields (MIRI-PY-018–023), support-status coherence
   (MIRI-PY-033), and graceful degradation (MIRI-PY-040). A package is **Core-conforming** when it passes every MUST
-  check in this 15-check set. Core is the recommended on-ramp and the standard's most defensible layer.
+  check in this 14-check set. Core is the recommended on-ramp and the standard's most defensible layer.
 - **Miri Full** — all 40 checks, adding the generated agent-metadata surface (sdk-manifest, usage-patterns, api-graph),
   embedded examples, deprecation-coherence machinery, and discovery APIs. The Bronze/Silver/Gold score is computed over
   the Full set.
@@ -73,7 +73,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
 | MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 3 |
-| MIRI-PY-015 | M | Examples runnable | Every example compiles; executes in sandbox (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 3 |
+| MIRI-PY-015 | M | Examples runnable | Every example compiles; runs in a clean virtual environment (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 3 |
 | MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-python-wheel-extensions.md) | 2 |
 | MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 2 |
 

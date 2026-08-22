@@ -9,6 +9,15 @@ community focused on developing standards that make software artifacts — Pytho
 other packages — legible to autonomous agents. The community is governed by this document, which defines how members
 work together toward that goal.
 
+## Current Status
+
+The project is in its **Incubation** phase (see [MATURITY.md](MATURITY.md)). Today it has a **single maintainer** —
+Emiliano Berenbaum (@y3bishop3y) — who authors the specifications and makes all technical and governance decisions,
+with drafts kept public and open for review and comment. The roles, Steering Committee, voting, and SIG structures
+described below are the governance model the project intends to adopt **as a contributor community forms** — a target
+state, not bodies that exist today. Where this document refers to "Maintainers" or the "Steering Committee" in the
+plural, read it as the shape governance will take, not a claim about the present.
+
 ## Roles and Responsibilities
 
 ### Users
@@ -63,7 +72,7 @@ The Steering Committee is the project's governance body. While the project is in
 maintainer-led; the committee is still forming. As it grows, Steering Committee members:
 
 - Are elected by the Maintainers
-- Serve [TERM LENGTH] terms
+- Serve fixed terms (term length to be set when the committee is first seated)
 - Can be re-elected for additional terms
 - Represent different aspects of the community (technical, user, organizational)
 
@@ -93,7 +102,7 @@ The project follows a formal standards development process:
 
 1. **Proposal**: New standards are proposed via GitHub issues or discussions
 2. **Draft**: Proposals are developed into draft specifications
-3. **Review**: Community review period (minimum [TIME PERIOD])
+3. **Review**: Community review period (minimum 2 weeks)
 4. **Revision**: Drafts are revised based on feedback
 5. **Approval**: Final approval by Maintainers
 6. **Publication**: Standards are published with version numbers

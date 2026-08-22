@@ -414,7 +414,14 @@ Use migration-guide.json for breaking changes and new features.
 
 ### 4.5 api-graph.json (Optional)
 
-**Purpose**: Relationship graph between API components for advanced agent reasoning.
+**Purpose**: Relationship graph between API components, derived from source — inheritance, return types, and call
+sites — for advanced agent reasoning.
+
+Only structure that can be **evidenced from the source** is represented: each node carries its kind, each edge carries
+a declared relationship. Scored or inferred values (a node's importance/centrality, a relationship's usage frequency)
+and synthesized usage `workflows` are **not** part of this contract — a generator cannot derive them from the AST and
+MUST NOT invent them. This keeps api-graph.json a factual projection of the code, consistent with the standard's
+"declare sources, not verdicts" principle.
 
 **Schema**:
 
@@ -422,39 +429,23 @@ Use migration-guide.json for breaking changes and new features.
 {
   "$schema": "https://miri-whl.github.io/schemas/api-graph-v1.json",
   "version": "1.0",
+  "generated_at": "2026-08-15T14:02:07Z",
   "nodes": {
-    "DatabaseClient": {
-      "type": "class",
-      "centrality": 0.95,
-      "dependencies": ["Connection", "QueryResult"],
-      "dependents": ["QueryBuilder", "Transaction"]
-    },
-    "QueryBuilder": {
-      "type": "class", 
-      "centrality": 0.7,
-      "dependencies": ["DatabaseClient"],
-      "common_with": ["Transaction"]
-    }
+    "DatabaseClient": { "type": "class" },
+    "QueryBuilder": { "type": "class" },
+    "QueryResult": { "type": "class" }
   },
   "edges": [
     {
       "from": "DatabaseClient",
-      "to": "QueryResult", 
+      "to": "QueryResult",
       "relationship": "returns",
       "methods": ["query", "execute"]
     },
     {
       "from": "QueryBuilder",
       "to": "DatabaseClient",
-      "relationship": "uses",
-      "pattern": "builder_with_client"
-    }
-  ],
-  "workflows": [
-    {
-      "id": "standard_query_workflow",
-      "steps": ["DatabaseClient", "connect", "query", "QueryResult"],
-      "frequency": 0.85
+      "relationship": "uses"
     }
   ]
 }
@@ -627,6 +618,32 @@ jobs:
       run: |
         python scripts/verify_wheel_metadata.py dist/*.whl
 ```
+
+### 5.4 Generation Invariants (Normative)
+
+Generated metadata is a factual projection of the source, consistent with the standard's "declare sources, not
+verdicts" principle. A generator MUST observe the following invariants, and a consumer MAY rely on them; they are the
+guarantees that make generated metadata trustworthy without re-reading the source.
+
+- **Evidence-only sections.** `configuration` and `error_handling` in `sdk-manifest.json` MUST be populated only from
+  what is evidenced in the source — environment reads (`os.getenv`/`os.environ[...]`) and `raise` sites respectively.
+  When there is no such evidence, the section MUST be **omitted entirely**, never emitted empty or invented. A consumer
+  therefore reads a present section as source-backed and an absent one as "the package declares none," with no third
+  "fabricated" state.
+- **`api_index` is the importable Python surface only.** Command-line entry points (console scripts) MUST be excluded
+  from `api_index`; the CLI surface is described by the CLI standard's `--describe`, not by this file. This keeps
+  `api_index` a name→file→signature map that a consumer can resolve against the installed package by import
+  (the MIRI-PY-036 discipline).
+- **`api-graph.json` carries only source-evidenced structure.** Nodes carry their kind and edges carry a declared
+  relationship derived from the source (inheritance, return type, call site). Scored or inferred values (importance /
+  centrality, usage frequency) and synthesized usage `workflows` MUST NOT be emitted — a generator cannot derive them
+  from the AST (see §4.5).
+- **Build-time freshness.** Every file's `generated_at` MUST be stamped at build time from a single build clock, so the
+  values fall inside the build window (MIRI-PY-011). Metadata hand-edited after generation, or copied stale into a
+  later build, breaks the guarantee that the metadata describes the exact code it ships with.
+
+These invariants are what a linter verifies and what a consumer trusts; an implementation that cannot honor one MUST
+omit the affected surface rather than approximate it.
 
 ## 6. Integration Patterns
 
