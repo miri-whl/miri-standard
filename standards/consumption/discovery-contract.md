@@ -131,15 +131,60 @@ surface MUST return an `AMBIGUOUS_PACKAGE` error (§4.3) rather than silently pi
 }
 ```
 
-`name` MUST be one of the documents the package advertised in `list.documents`, and MUST be on the served-document
-whitelist:
+#### 3.2.1 The Servable Set
+
+`name` MUST be a member of the servable set below **and** one of the documents the package advertised in
+`list.documents`.
 
 | Servable | Not servable |
 |---|---|
-| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `api-graph.json`, `agent-metadata/README.md`, `AGENT_EXAMPLES.json` | `prompt-templates.md` (§9), any path outside `agent-metadata/`, any path containing `..` or an absolute prefix |
+| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `api-graph.json` | everything else, including `prompt-templates.md` and `README.md` |
 
-A name outside the whitelist MUST return `DOCUMENT_NOT_SERVABLE` (§4.3) — never a filesystem error, and never the file.
-A name on the whitelist that the package does not ship returns an **absent** response (§4.2).
+The servable set is **closed and exhaustive**: it is not a sample, and a surface MUST NOT extend it. Membership is
+governed by one criterion, so that future document types are adjudicated by principle rather than by whether anyone
+remembered to list them:
+
+> **Only schema-governed documents are servable.** A document is servable only if this standard defines a JSON Schema
+> for it and a linter check gates it. **No free-form natural-language document is ever servable** — not
+> `prompt-templates.md`, not `README.md`, not embedded prose docs.
+
+The reason is injection, not tidiness. Free prose is the highest-risk payload a publisher controls, and a document
+with no schema and no check has no property a consumer can verify before putting it in a model's context. A
+schema-governed document can at least be validated, field-typed, and reasoned about.
+
+Two consequences worth stating, because both were previously specified wrong:
+
+- **`README.md` is not servable, and the inventory is surface-composed.** An agent that knows nothing else does not
+  need a publisher-authored index: `list` (§3.1) already reports each package's `documents`, and that answer is
+  composed by the surface from the directory listing. A publisher-authored inventory would be a schema-less prose
+  file served as step one of the highest-traffic task — a near-exact substitute for the `prompt-templates.md` this
+  contract refuses.
+- **`AGENT_EXAMPLES.json` is not servable by this operation.** It is a `.dist-info/` file
+  (Wheel Extensions §3.1.1, §3.2), so it lies outside the `agent-metadata/` directory this operation is confined to
+  (§3.2.2) and can never appear in `list.documents`. It remains reachable through the filesystem vehicle; the served
+  path to working code is `usage-patterns.json`. The [Consumption Map](consumption-map.md) labels it accordingly.
+
+#### 3.2.2 Name Grammar and Path Confinement
+
+The `name` argument is a **single path segment**, matching `^[A-Za-z0-9_.-]+$` and containing no `/`, no `\`, and no
+`..`. It is a document name, never a path: a surface MUST reject any `name` carrying a directory prefix, an absolute
+prefix, or a traversal sequence, and MUST NOT attempt to normalize one into an acceptable form.
+
+Confinement MUST be enforced on the **resolved path**, not on the name string. A surface MUST:
+
+1. resolve `name` against the package's `agent-metadata/` directory;
+2. fully resolve the result (following no symbolic links, or resolving and then re-checking — `realpath`);
+3. require the resolved path to be a **regular file physically inside** that directory;
+4. reject symbolic links outright.
+
+Name-string filtering alone is not sufficient and MUST NOT be relied on: a whitelisted `usage-patterns.json` shipped
+as a **symlink to a file outside the package** contains no `..`, carries no absolute prefix, is advertised by `list`,
+and would otherwise be served verbatim. Editable and source-tree installs preserve symlinks, so this is a live shape,
+not a theoretical one.
+
+Any `name` failing the grammar, the servable set, or the confinement check MUST return `DOCUMENT_NOT_SERVABLE`
+(§4.3) — never a filesystem error, never a path in the message, and never the file. A name that passes every check
+but that the package does not ship returns an **absent** response (§4.2).
 
 `document` is what makes the [Consumption Map](consumption-map.md)'s reading orders executable over a context server:
 every document the Map routes to is either servable here or explicitly labelled as another vehicle's.

@@ -64,6 +64,9 @@ blind. `examples/fixtures/` now holds one trivial package built three ways from 
   (`example.invalid`, never fetched).
 - [x] `tools/validate_fixtures.py` asserts every attack is still **live** and the conforming twin still conforms —
   mutation-tested (removing the padding correctly fails it). Wired into `make check` via `validate-fixtures`.
+  *Correction (2026-08-22): as originally written this claim was **false** — the validator checked only
+  `lifecycle.json`, and two of the twin's three documents did not conform. The journey panel caught it. It now
+  loop-validates every document in `metadata/miri/`, and fails on any document lacking a schema mapping.*
 - [ ] Number the `MIRI-CONSUMER-NNN` checks from the attack table + the §3 prohibitions + §4 interpretation rules.
 - [ ] `consumer-conformance.md` — the profile document.
 - [ ] The comparison harness (bare vs miri side by side) — RFC Ask 5's demonstration job.

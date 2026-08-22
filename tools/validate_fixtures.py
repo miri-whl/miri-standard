@@ -36,14 +36,33 @@ def main() -> int:
 
     print("consumption fixture invariants:")
 
-    # 1. The conforming twin must actually conform — it is the comparison arm.
+    # 1. The conforming twin must actually conform — it is the comparison arm, and a
+    #    non-conforming one silently turns the experiment into bare-vs-nonconforming.
+    #    Validate EVERY document present, not just the one that happens to be checked:
+    #    an arm is only conforming if all of it is.
+    schema_for = {
+        "lifecycle.json": "lifecycle-v1",
+        "sdk-manifest.json": "sdk-manifest-v1",
+        "usage-patterns.json": "usage-patterns-v1",
+        "migration-guide.json": "migration-guide-v1",
+        "api-graph.json": "api-graph-v1",
+    }
+    miri_docs = sorted(p for p in (FIX / "metadata/miri").glob("*.json"))
+    check("conforming twin ships at least one document", bool(miri_docs), f"{len(miri_docs)} found")
+    for doc in miri_docs:
+        name = schema_for.get(doc.name)
+        if name is None:
+            check(f"conforming twin: {doc.name} has a known schema", False,
+                  "no schema mapping — add one or the document is unvalidated")
+            continue
+        try:
+            jsonschema.validate(json.load(open(doc)), json.load(open(REPO / f"schemas/{name}.json")))
+            check(f"conforming twin: {doc.name} validates against {name}", True)
+        except jsonschema.ValidationError as e:
+            check(f"conforming twin: {doc.name} validates against {name}", False,
+                  str(e).split("\n")[0][:120])
+
     lifecycle_schema = json.load(open(REPO / "schemas/lifecycle-v1.json"))
-    miri_lifecycle = json.load(open(FIX / "metadata/miri/lifecycle.json"))
-    try:
-        jsonschema.validate(miri_lifecycle, lifecycle_schema)
-        check("conforming twin validates against lifecycle-v1", True)
-    except jsonschema.ValidationError as e:
-        check("conforming twin validates against lifecycle-v1", False, str(e).split("\n")[0][:120])
 
     # 2. The adversarial twin must NOT validate — a hostile publisher is not obliged to
     #    conform, and a surface that is only safe on schema-valid input is not safe.

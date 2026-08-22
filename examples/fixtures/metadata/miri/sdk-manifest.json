@@ -1,26 +1,52 @@
 {
-  "schema_version": "1",
-  "package": "greet_miri",
-  "version": "1.0.0",
+  "sdk_version": "1.0.0",
   "generated_at": "2026-01-01T00:00:00Z",
-  "summary": "Builds greetings in a configured language.",
+  "miri_version": "1.0",
+  "quick_reference": {
+    "primary_classes": ["Greeter"],
+    "key_methods": ["greet"],
+    "common_imports": [
+      "from greet_miri import greet",
+      "from greet_miri import Greeter"
+    ],
+    "typical_workflow": [
+      "greeting = greet('Ada')",
+      "g = Greeter(language='es'); greeting = g.greet('Ada')"
+    ]
+  },
   "api_index": {
     "Greeter": {
       "type": "class",
       "purpose": "Builds greetings in a configured language",
-      "signature": "Greeter(language: str = 'en')",
-      "file": "core.py"
-    },
-    "Greeter.greet": {
-      "type": "method",
-      "purpose": "Return a greeting for a name in the configured language",
-      "signature": "greet(name: str) -> str",
-      "file": "core.py"
+      "complexity": "beginner",
+      "file": "core.py",
+      "init_params": {
+        "language": {
+          "type": "str",
+          "required": false,
+          "description": "Two-letter language code selecting the greeting prefix",
+          "example": "es"
+        }
+      },
+      "key_methods": {
+        "greet": {
+          "purpose": "Return a greeting for a name in the configured language",
+          "params": {
+            "name": {
+              "type": "str",
+              "required": true,
+              "description": "The name to greet"
+            }
+          },
+          "returns": "str — the greeting, prefixed per the configured language",
+          "complexity": "beginner"
+        }
+      }
     },
     "greet": {
       "type": "function",
-      "purpose": "Return a greeting without constructing a Greeter",
-      "signature": "greet(name: str, language: str = 'en') -> str",
+      "purpose": "Return a greeting for a name without constructing a Greeter",
+      "complexity": "beginner",
       "file": "core.py"
     }
   }

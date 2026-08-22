@@ -1,19 +1,57 @@
 {
-  "schema_version": "1",
-  "package": "greet_miri",
+  "version": "1.0",
   "generated_at": "2026-01-01T00:00:00Z",
+  "categories": {
+    "basic_usage": {
+      "name": "Basic Usage",
+      "description": "Essential patterns for getting started with the greeting API",
+      "patterns": [
+        "one_off_greeting",
+        "reused_greeter"
+      ]
+    }
+  },
   "patterns": [
     {
-      "name": "one-off greeting",
+      "id": "one_off_greeting",
+      "name": "One-off greeting",
+      "description": "Greet a single name without keeping any state",
       "complexity": "beginner",
-      "purpose": "Greet a single name without keeping state",
-      "code": "from greet_miri import greet\n\nprint(greet(\"Ada\"))"
+      "category": "basic_usage",
+      "code": "from greet_miri import greet\n\nprint(greet(\"Ada\"))",
+      "explanation": {
+        "key_points": [
+          "greet() constructs a Greeter internally, so there is no setup cost to manage",
+          "The default language is 'en'; an unknown code falls back to English rather than raising"
+        ]
+      },
+      "tags": [
+        "quickstart"
+      ]
     },
     {
-      "name": "reused greeter",
+      "id": "reused_greeter",
+      "name": "Reused greeter",
+      "description": "Configure the language once and greet many names",
       "complexity": "beginner",
-      "purpose": "Configure the language once and greet many names",
-      "code": "from greet_miri import Greeter\n\ng = Greeter(language=\"es\")\nfor name in (\"Ada\", \"Alan\"):\n    print(g.greet(name))"
+      "category": "basic_usage",
+      "code": "from greet_miri import Greeter\n\ng = Greeter(language=\"es\")\nfor name in (\"Ada\", \"Alan\"):\n    print(g.greet(name))",
+      "explanation": {
+        "key_points": [
+          "Prefer this over calling greet() in a loop when the language is fixed",
+          "Greeter holds only its language, so instances are cheap and safe to reuse"
+        ],
+        "performance_note": "Greeter performs no I/O and allocates nothing per call; reuse is a readability choice, not a throughput one."
+      },
+      "prerequisites": [
+        "one_off_greeting"
+      ],
+      "related_patterns": [
+        "one_off_greeting"
+      ],
+      "tags": [
+        "configuration"
+      ]
     }
   ]
 }

@@ -79,12 +79,16 @@ honest.
 
 **Read, in order:**
 
-1. **(S)** `agent-metadata/README.md` — the generated inventory: what documents this package ships. Equivalently,
-   `list` reports the same document set as `documents`.
-2. **(S)** The quickstart example (`AGENT_EXAMPLES.json`; `examples/` **(F)**) — the verified-runnable first-contact
-   path.
-3. **(S)** `usage-patterns.json` — the idiomatic sequence matching the task, rather than one derived from signatures.
-4. **(S)** `api-index` — **routing only** (name → purpose → file) to locate the surfaces the pattern names.
+1. **(S)** `list` — the inventory: which documents this package ships, composed by the surface from the directory
+   listing rather than read from a publisher-authored index
+   ([Discovery Contract §3.2.1](discovery-contract.md)).
+2. **(S)** `usage-patterns.json` — the idiomatic sequence matching the task, rather than one derived from signatures.
+   This is the served path to working code.
+3. **(F)** The quickstart (`AGENT_EXAMPLES.json`, `examples/`) — the verified-runnable first-contact path
+   (MIRI-PY-015). `AGENT_EXAMPLES.json` is a `.dist-info/` file and `examples/` is package source, so **neither is
+   servable**; a consumer without filesystem access skips this step and relies on step 2.
+4. **(S)** `api-index` — **routing only** (name → purpose, plus `file`/`signature` where the producer supplies them)
+   to locate the surfaces the pattern names.
 
 **Must not:**
 
@@ -228,12 +232,12 @@ outcome, and no clause of this standard depends on them.
 | `api-graph.json` | "What relates to what?" | The map to `api_index`'s phone book: extends/returns/uses edges for reasoning about blast radius and planning multi-file changes without loading all source | Structure discovered file by file — context burned on archaeology, relationships guessed |
 | `lifecycle.json` | "Is this alive, and whom do I ask?" | Decision-time trust: support status, advisory *pointers*, update check — before building on the package | Health assumed; integration against an abandoned or advisory-laden dependency |
 | `migration-guide.json` + deprecation inventory | "What changed, and what replaces what?" | Structured `{surface, removed_in, replacement}` for mechanical cross-reference against the consumer's call sites | Upgrades by prose changelog or trial-and-error; deprecated surfaces linger until removal breaks them |
-| `AGENT_EXAMPLES.json` + `examples/` (quickstart) | "Show me working code" | A runnable learning path (MIRI-PY-015 gates it); the quickstart is the first-contact entry point | Agent learns from snippets that may never have run |
+| `AGENT_EXAMPLES.json` + `examples/` (quickstart) | "Show me working code" | A runnable learning path (MIRI-PY-015 gates it). **(F) only** — `AGENT_EXAMPLES.json` lives in `.dist-info/` and `examples/` is package source, so neither is servable; `usage-patterns.json` is the served path to working code | Agent learns from snippets that may never have run |
 | Embedded docs (`api_reference`, `docs/troubleshooting.md`) | "Depth, offline" | The runtime-failure path — symptom → cause without leaving the environment | Debugging falls back to web search or source spelunking |
 | `prompt-templates.md` | "How does the author want agents framed?" | Author-curated task scaffolds. **Reserved:** deliberately never served (Discovery Contract §9.1) and routed to by no read-step, because it is the highest-risk injection surface | — |
 | `templates/` | "Scaffold me a correct integration" | Code templates coherent with package idiom (MIRI-PY-038 gates coherence) | Boilerplate invented per-agent, drifting from idiom |
 | `_miri` discovery APIs (`get_agent_metadata`) | "Programmatic access, in-process" | Runtime self-description with graceful degradation (MIRI-PY-040) — the **(F)** in-process vehicle for code that introspects instead of path-guessing | Hard-coded paths that break when metadata is stripped |
-| `agent-metadata/README.md` | "What is in this directory?" | The generated inventory — the entry point an agent that knows nothing else reads first (§3.1 step 1) | Directory contents inferred by listing and opening each file |
+| `agent-metadata/README.md` | "What is in this directory?" | **Reserved:** superseded as a consumption path by `list`, which composes the same inventory surface-side. Never served (Discovery Contract §3.2.1) — a prose file with no schema is the wrong shape for a first read. It remains a human-facing convenience in the wheel. | — |
 
 ## 6. Conformance
 
