@@ -29,7 +29,7 @@ the `schema-governance` / `check-authoring` invariants (weights sum to 100; ever
       HEAD (a miri-py regression could turn the standard red for unrelated reasons; a loosening could pass silently).
       Pin `git+https://github.com/miri-whl/miri-py.git@<tag-or-sha>` (or switch to a pinned PyPI version once
       published). _(Packaging + OSS)_
-- [ ] **Ship an `api-graph.json` in the sample SDK** so the standard dogfoods its own trimmed §4.5 contract — today the
+- [x] **Ship an `api-graph.json` in the sample SDK** so the standard dogfoods its own trimmed §4.5 contract — today the
       only live proof of the api-graph schema is miri-py's self-scan, not the standard's own sample (the sample ships
       only lifecycle / migration-guide / sdk-manifest / usage-patterns). _(Packaging + Agent-Tooling)_
 - [ ] **Add an `--execute --yes` pass over the standard's own trusted sample in CI.** The default gate forfeits 9
@@ -46,12 +46,12 @@ the `schema-governance` / `check-authoring` invariants (weights sum to 100; ever
 
 ## P2 — cleanup
 
-- [ ] **Scrub the two residual "Committee" headings in `standards/feedback/`** — the governance pass missed them:
+- [x] **Scrub the two residual "Committee" headings in `standards/feedback/`** — the governance pass missed them:
       `miri-standard-response-count-normalization.md:37` ("Committee-Defined Population Units") and
       `check-requirements-proposal.md:65` ("Committee homework included"). The README device disclaims the pair in
       aggregate, but a reader opening those files directly hits the language the rest of the repo just retired.
       _(OSS — R4 new finding)_
-- [ ] **Fix the `alerts` → `checks` doc drift.** `standards/feedback/upstream-artifact-publishing-feedback.md`
+- [x] **Fix the `alerts` → `checks` doc drift.** `standards/feedback/upstream-artifact-publishing-feedback.md`
       references `standards/python/alerts/`; the actual directory is `standards/python/checks/`. _(Packaging — R4)_
 
 ## P3 — bigger / weigh step-3 vs 0.3

@@ -8,7 +8,7 @@
 
 ## Abstract
 
-The new `standards/python/alerts/` and `standards/cli/alerts/` directories are exactly what we asked for and more: the
+The new `standards/python/checks/` and `standards/cli/checks/` directories are exactly what we asked for and more: the
 canonical, machine-readable source of truth, with severity and violation units fixed by the standard. One gap
 remains, and it is distribution, not content: the normative rule says implementations **MUST consume these definitions**,
 but the only way to consume them today is a git checkout of `main` — an unpinned moving target. We ask the standard to
@@ -74,7 +74,7 @@ Ordered by cost; each tier is useful without the next:
 ## 5. What miri-py Does Meanwhile
 
 Until tier 1–2 exist, miri-py will run the ruff/typeshed pattern as a bridge: a vendored mirror of
-`standards/python/alerts/` inside the package, written only by a sync command pinned to an upstream commit SHA, with
+`standards/python/checks/` inside the package, written only by a sync command pinned to an upstream commit SHA, with
 schema validation, the 100-point-sum invariant check, and a provenance record (upstream SHA, checklist version, date,
 content hash) committed alongside. When releases exist, the sync's source changes from a raw commit to the release
 artifact and nothing else moves. We are happy to contribute the CI workflow for tier 2 (generate, validate, attach) to

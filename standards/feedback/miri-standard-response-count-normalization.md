@@ -34,7 +34,7 @@ severity: **population definitions belong in the check definition files.** See Â
   leaving the baseline untouched. This is the correct additive use of the no-naked-scores rule, and we endorse it
   explicitly.
 
-## 2. The Amendment: Committee-Defined Population Units
+## 2. The Amendment: Standard-Defined Population Units
 
 The standard's check definitions (`standards/<target>/checks/`, [check-v1.json](../../schemas/check-v1.json)) now
 carry an optional **`severity.population_unit`** alongside `violation_unit`: the canonical countable

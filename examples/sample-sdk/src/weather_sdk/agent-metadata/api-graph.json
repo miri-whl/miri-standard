@@ -1,0 +1,34 @@
+{
+  "$schema": "https://miri-whl.github.io/schemas/api-graph-v1.json",
+  "version": "1.0",
+  "generated_at": "2026-08-21T12:00:00Z",
+  "nodes": {
+    "WeatherClient": {"type": "class"},
+    "WeatherError": {"type": "class"},
+    "AuthenticationError": {"type": "class"},
+    "APIError": {"type": "class"},
+    "LocationNotFoundError": {"type": "class"},
+    "RateLimitError": {"type": "class"},
+    "Location": {"type": "class"},
+    "WeatherData": {"type": "class"},
+    "DailyForecast": {"type": "class"},
+    "ForecastData": {"type": "class"},
+    "get_agent_metadata": {"type": "function"},
+    "get_usage_patterns": {"type": "function"},
+    "list_examples": {"type": "function"},
+    "show_quickstart": {"type": "function"},
+    "get_migration_guide": {"type": "function"},
+    "validate_agent_metadata": {"type": "function"}
+  },
+  "edges": [
+    {"from": "WeatherError", "to": "Exception", "relationship": "extends"},
+    {"from": "AuthenticationError", "to": "WeatherError", "relationship": "extends"},
+    {"from": "APIError", "to": "WeatherError", "relationship": "extends"},
+    {"from": "LocationNotFoundError", "to": "WeatherError", "relationship": "extends"},
+    {"from": "RateLimitError", "to": "APIError", "relationship": "extends"},
+    {"from": "WeatherClient", "to": "WeatherData", "relationship": "returns", "methods": ["get_current_weather"]},
+    {"from": "WeatherClient", "to": "ForecastData", "relationship": "returns", "methods": ["get_forecast"]},
+    {"from": "WeatherClient", "to": "Location", "relationship": "returns", "methods": ["search_locations"]},
+    {"from": "ForecastData", "to": "DailyForecast", "relationship": "uses"}
+  ]
+}

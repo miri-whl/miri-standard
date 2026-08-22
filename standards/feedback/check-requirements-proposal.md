@@ -62,7 +62,7 @@ runs.
 
 ## 3. Proposed Values for the 40 Python Checks
 
-Committee homework included — assignments derived from each check's own description:
+Maintainer follow-ups included — assignments derived from each check's own description:
 
 | Requirement | Checks |
 |---|---|
