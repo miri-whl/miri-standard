@@ -57,3 +57,11 @@ Fixing these lets the standard switch its sample gate from re-stamp to true gene
       `miri-whl.github.io`. _(Agent-Tooling)_
 - [ ] Correct/retire `memory-bank/phase-status-summary.md` (struck "+3.1" headline but still asserts "Proven quality
       gains" elsewhere) and fix the kill-or-validate harness README module map. _(AI Researcher)_
+
+## P2 — version sync (added this session)
+
+- [ ] **Re-sync `checklist_version` to `0.2-draft`.** The standard bumped its current version from `0.1-draft` to
+      `0.2-draft` (spec headers, README, `site.yaml`); miri-py's reports still pin `checklist_version: 0.1-draft`.
+      Re-vendor the checks and bump the reported checklist version so a report's version matches the standard it
+      scored against. Note: check `added_in` fields stay `0.1-draft` (historical) — only the current/checklist
+      version moves. _(version bump)_

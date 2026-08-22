@@ -90,7 +90,7 @@ following — it occupies the gap between them:
 
 ## Project Status
 
-The Miri Standard is at **version 0.1-draft**, in its **Incubation** phase (see `MATURITY.md`). It is an early,
+The Miri Standard is at **version 0.2-draft**, in its **Incubation** phase (see `MATURITY.md`). It is an early,
 unratified draft: the shape of the standard is still moving, and its benefits to agents are design goals rather than
 measured results.
 
@@ -140,8 +140,8 @@ The roadmap is deliberately narrow — new targets are added only when the exist
 
 | Target | What it covers | Status |
 | --- | --- | --- |
-| **Python wheels** | `agent-metadata/` in the wheel, `lifecycle.json`, 40 checks | Developed (0.1-draft) |
-| **Command-line tools** | `--describe`, `check-update`, `changelog --since`, per-flag lifecycle, 43 checks | Developed (0.1-draft) |
+| **Python wheels** | `agent-metadata/` in the wheel, `lifecycle.json`, 40 checks | Developed (0.2-draft) |
+| **Command-line tools** | `--describe`, `check-update`, `changelog --since`, per-flag lifecycle, 43 checks | Developed (0.2-draft) |
 | **Go modules** | What `go.mod` / the module proxy already provide vs. what Miri adds | Scope sketch |
 | **Rust crates** | What `Cargo.toml` / crates.io already provide vs. what Miri adds | Scope sketch |
 | Other ecosystems (npm, Java, …) | — | Exploratory, not scheduled |

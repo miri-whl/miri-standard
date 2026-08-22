@@ -1,6 +1,6 @@
 # Miri Linter Checklist: Command-Line Tools
 
-*Specification Version: 0.1-draft*
+*Specification Version: 0.2-draft*
 *Status: Draft*
 *Created: 2026*
 

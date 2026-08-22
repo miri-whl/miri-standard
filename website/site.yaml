@@ -3,7 +3,7 @@
 # static/css/, markup comes from templates/).
 github: https://github.com/miri-whl/miri-standard
 site_url: https://miri-whl.github.io
-version: 0.1-draft
+version: 0.2-draft
 status_badge: Incubation
 
 targets:
