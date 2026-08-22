@@ -48,7 +48,9 @@ Accepted proposals move to implementation:
 
 ### Active Proposals
 
-*(No active proposals at this time).*
+- [Consumption Specification (RFC)](20260821-consumption-specification.md) — **Draft**, deferred to post-v0.2. A
+  consumer-side spec closing the producer→consumer loop (task-to-document map, discovery contract, consumer conformance
+  profile, verification recipe, paired fixture). Panel pre-reviewed 2026-08-21: endorse-with-changes.
 
 ### Accepted Proposals
 
