@@ -1,10 +1,16 @@
 {
   "sdk_version": "1.2.0",
-  "generated_at": "2025-08-30T12:00:00Z",
+  "generated_at": "2026-08-21T12:00:00Z",
   "miri_version": "1.0",
   "quick_reference": {
-    "primary_classes": ["WeatherClient"],
-    "key_methods": ["get_current_weather", "get_forecast", "search_locations"],
+    "primary_classes": [
+      "WeatherClient"
+    ],
+    "key_methods": [
+      "get_current_weather",
+      "get_forecast",
+      "search_locations"
+    ],
     "common_imports": [
       "from weather_sdk import WeatherClient",
       "from weather_sdk import WeatherError, AuthenticationError"
@@ -55,7 +61,11 @@
             }
           },
           "returns": "WeatherData: Current weather information",
-          "raises": ["WeatherError", "AuthenticationError", "APIError"],
+          "raises": [
+            "WeatherError",
+            "AuthenticationError",
+            "APIError"
+          ],
           "example": "weather = client.get_current_weather('Boston, MA')",
           "complexity": "beginner"
         },
@@ -77,7 +87,12 @@
             }
           },
           "returns": "ForecastData: Weather forecast information",
-          "raises": ["WeatherError", "AuthenticationError", "APIError", "ValueError"],
+          "raises": [
+            "WeatherError",
+            "AuthenticationError",
+            "APIError",
+            "ValueError"
+          ],
           "example": "forecast = client.get_forecast('Miami, FL', days=7)",
           "complexity": "beginner"
         },
@@ -99,14 +114,30 @@
             }
           },
           "returns": "List[Location]: Matching locations",
-          "raises": ["WeatherError", "AuthenticationError", "ValueError"],
+          "raises": [
+            "WeatherError",
+            "AuthenticationError",
+            "ValueError"
+          ],
           "example": "locations = client.search_locations('London', limit=3)",
           "complexity": "intermediate"
         }
       },
-      "usage_patterns": ["basic_weather", "forecast_retrieval", "location_search"],
-      "related_classes": ["WeatherData", "ForecastData", "Location"],
-      "common_errors": ["WeatherError", "AuthenticationError", "APIError"],
+      "usage_patterns": [
+        "basic_weather",
+        "forecast_retrieval",
+        "location_search"
+      ],
+      "related_classes": [
+        "WeatherData",
+        "ForecastData",
+        "Location"
+      ],
+      "common_errors": [
+        "WeatherError",
+        "AuthenticationError",
+        "APIError"
+      ],
       "example": "client = WeatherClient(api_key='key')\nweather = client.get_current_weather('NYC')"
     },
     "WeatherData": {
@@ -127,34 +158,67 @@
           "complexity": "advanced"
         }
       },
-      "usage_patterns": ["weather_data_access"],
-      "related_classes": ["Location"],
-      "example": "print(f'Temperature: {weather.temperature}°F')"
+      "usage_patterns": [
+        "weather_data_access"
+      ],
+      "related_classes": [
+        "Location"
+      ],
+      "example": "print(f'Temperature: {weather.temperature}\u00b0F')"
     },
     "ForecastData": {
-      "type": "class", 
+      "type": "class",
       "purpose": "Multi-day weather forecast data model",
       "complexity": "beginner",
-      "usage_patterns": ["forecast_processing"],
-      "related_classes": ["DailyForecast", "Location"],
-      "example": "for day in forecast.days:\n    print(f'{day.date}: {day.high_temp}°F')"
+      "usage_patterns": [
+        "forecast_processing"
+      ],
+      "related_classes": [
+        "DailyForecast",
+        "Location"
+      ],
+      "example": "for day in forecast.days:\n    print(f'{day.date}: {day.high_temp}\u00b0F')"
     }
   },
   "error_handling": {
     "WeatherError": {
       "when": "Base weather SDK error occurs",
-      "common_causes": ["Invalid location", "API service unavailable", "Network issues"],
-      "solutions": ["Check location spelling", "Verify API service status", "Check network connectivity"]
+      "common_causes": [
+        "Invalid location",
+        "API service unavailable",
+        "Network issues"
+      ],
+      "solutions": [
+        "Check location spelling",
+        "Verify API service status",
+        "Check network connectivity"
+      ]
     },
     "AuthenticationError": {
       "when": "API authentication fails",
-      "common_causes": ["Invalid API key", "Expired API key", "Missing API key"],
-      "solutions": ["Verify API key is correct", "Check API key expiration", "Ensure API key is provided"]
+      "common_causes": [
+        "Invalid API key",
+        "Expired API key",
+        "Missing API key"
+      ],
+      "solutions": [
+        "Verify API key is correct",
+        "Check API key expiration",
+        "Ensure API key is provided"
+      ]
     },
     "APIError": {
       "when": "Weather API returns an error",
-      "common_causes": ["Server error", "Rate limiting", "Malformed request"],
-      "solutions": ["Retry request", "Check rate limits", "Validate request parameters"]
+      "common_causes": [
+        "Server error",
+        "Rate limiting",
+        "Malformed request"
+      ],
+      "solutions": [
+        "Retry request",
+        "Check rate limits",
+        "Validate request parameters"
+      ]
     }
   },
   "configuration": {

@@ -619,6 +619,32 @@ jobs:
         python scripts/verify_wheel_metadata.py dist/*.whl
 ```
 
+### 5.4 Generation Invariants (Normative)
+
+Generated metadata is a factual projection of the source, consistent with the standard's "declare sources, not
+verdicts" principle. A generator MUST observe the following invariants, and a consumer MAY rely on them; they are the
+guarantees that make generated metadata trustworthy without re-reading the source.
+
+- **Evidence-only sections.** `configuration` and `error_handling` in `sdk-manifest.json` MUST be populated only from
+  what is evidenced in the source — environment reads (`os.getenv`/`os.environ[...]`) and `raise` sites respectively.
+  When there is no such evidence, the section MUST be **omitted entirely**, never emitted empty or invented. A consumer
+  therefore reads a present section as source-backed and an absent one as "the package declares none," with no third
+  "fabricated" state.
+- **`api_index` is the importable Python surface only.** Command-line entry points (console scripts) MUST be excluded
+  from `api_index`; the CLI surface is described by the CLI standard's `--describe`, not by this file. This keeps
+  `api_index` a name→file→signature map that a consumer can resolve against the installed package by import
+  (the MIRI-PY-036 discipline).
+- **`api-graph.json` carries only source-evidenced structure.** Nodes carry their kind and edges carry a declared
+  relationship derived from the source (inheritance, return type, call site). Scored or inferred values (importance /
+  centrality, usage frequency) and synthesized usage `workflows` MUST NOT be emitted — a generator cannot derive them
+  from the AST (see §4.5).
+- **Build-time freshness.** Every file's `generated_at` MUST be stamped at build time from a single build clock, so the
+  values fall inside the build window (MIRI-PY-011). Metadata hand-edited after generation, or copied stale into a
+  later build, breaks the guarantee that the metadata describes the exact code it ships with.
+
+These invariants are what a linter verifies and what a consumer trusts; an implementation that cannot honor one MUST
+omit the affected surface rather than approximate it.
+
 ## 6. Integration Patterns
 
 ### 6.1 Agent Detection and Loading
