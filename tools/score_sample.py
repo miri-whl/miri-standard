@@ -56,14 +56,33 @@ def main():
             print("no wheel produced by `miri build`")
             return 1
 
-        out = subprocess.run([miri, "score", wheels[0], "--json"], check=True, capture_output=True, text=True)
-        report = json.loads(out.stdout)
-        s = report["scores"]
-        conforming = s.get("is_conforming", False)
-        print(f"sample-sdk: conformance={s['conformance']} health={s.get('health')} "
-              f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
-              f"MUST_failures={report.get('must_failures')}")
-        return 0 if conforming else 1
+        def score(extra_args, label):
+            # `miri score` exits 1 on non-conformance (valid data), not an error — do not use check=True.
+            p = subprocess.run([miri, "score", wheels[0], "--json", *extra_args], capture_output=True, text=True)
+            try:
+                r = json.loads(p.stdout)
+            except json.JSONDecodeError:
+                print(f"sample-sdk [{label}]: `miri score` errored (exit {p.returncode})\n{p.stderr[-800:]}")
+                return None
+            s = r["scores"]
+            conforming = s.get("is_conforming", False)
+            print(f"sample-sdk [{label}]: conformance={s['conformance']} health={s.get('health')} "
+                  f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
+                  f"MUST_failures={r.get('must_failures')}")
+            return conforming
+
+        # Static pass is the hard gate. The execution pass then runs our OWN trusted sample so the
+        # execution-requiring MUSTs (015 examples-runnable, 036 discovery) are exercised; it is reported and
+        # warns on failure but does not gate, since executing the artifact is environment-sensitive.
+        # --execute runs only the standard's own sample here, never untrusted third-party code.
+        if not score([], "static"):
+            return 1
+        execute_ok = score(["--execute", "--yes"], "execute")
+        if execute_ok is None:
+            print("::warning::--execute pass could not run; executable MUSTs unverified this run.")
+        elif not execute_ok:
+            print("::warning::sample is non-conforming under --execute; executable MUSTs (015/036) not verified — investigate.")
+        return 0
 
 
 if __name__ == "__main__":

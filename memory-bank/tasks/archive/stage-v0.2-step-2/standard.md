@@ -66,7 +66,9 @@ checklist prose in the same commit and re-run the `schema-governance` / `check-a
 
 ## P3 — governance (USER DECISION — verify remnants, do not pre-decide)
 
-- [ ] **Governance honesty.** stage-v0.2 marked "de-committee the framing" and "reframe standards/feedback" as done,
+- [x] **Governance honesty.** _(Done in step-2's follow-up: single-maintainer Incubation across GOVERNANCE.md,
+      README, MATURITY.md, both SIG READMEs, standards/feedback/README.md, and MIRI-PY-011.yaml; merged in PR #3.)_
+      stage-v0.2 marked "de-committee the framing" and "reframe standards/feedback" as done,
       but the Round-3 panel verified remnants on `stage-0.2`: `GOVERNANCE.md:50-88` still describes a Steering
       Committee + elections with unfilled `[TERM LENGTH]`/`[TIME PERIOD]` placeholders; `README.md:207` "Steering
       Committee: [To be established]"; "committee-defined" survives in `MIRI-PY-011.yaml`; `standards/feedback/` still

@@ -1,6 +1,6 @@
 # Miri Artifact Lifecycle: Python Wheels
 
-*Specification Version: 0.1-draft*
+*Specification Version: 0.2-draft*
 *Status: Draft*
 *Created: 2026*
 
