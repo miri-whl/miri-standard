@@ -65,6 +65,17 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
 - **[Rust Overview](rust/)** - Scope sketch: agent metadata for crates, lifecycle metadata, structured examples, and the
   Rust CLI conformance profile — building on `#[deprecated]`, RustSec, cargo-semver-checks, and cargo auditable
 
+### Consumption Standards (v0.3)
+
+Cross-cutting, consumer-side standards: not what an artifact ships, but how an agent *consumes* what was shipped.
+
+- **[Consumption Overview](consumption/)** - How agents obtain and read shipped metadata at decision time: the
+  discovery contract, the consumption map, and consumer conformance
+- **[Discovery Contract](consumption/discovery-contract.md)** - Transport-agnostic metadata-query contract (`list`,
+  `lifecycle`, `migration-guide`, `api-index`) with an MCP context server as its first binding
+- **[Consumption Map](consumption/consumption-map.md)** - The task-to-document reading contract (first-use, upgrade,
+  runtime-failure, security, and the generative scaffold task), plus the element-value audit
+
 ### Future Language Standards
 
 - **JavaScript/npm** *(Planned)*
@@ -92,6 +103,10 @@ Miri Standard specifications define complete, multi-dimensional metadata that fi
   interface lifecycle
 - **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - CLI self-identification,
   advisory sources, update checks, and deprecation metadata
+- **[Discovery Contract (Consumption)](consumption/discovery-contract.md)** - How an agent obtains a package's Miri
+  metadata at decision time — a transport-agnostic metadata-query contract with MCP as the first binding
+- **[Consumption Map (Consumption)](consumption/consumption-map.md)** - What an agent reads per task and in what order,
+  the read-order/prohibition split, and the audit of what every metadata element is for
 
 ### Proposed Standards
 

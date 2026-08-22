@@ -21,7 +21,7 @@ side that has to keep it coherent. That is the value of the format, and the hone
 **decision records authored from two viewpoints**, not as correspondence between separate parties or as a record of
 outside review.
 
-The project is early (0.1-draft, Incubation) and has a single maintainer: where these documents describe what the
+The project is early (0.2-draft, Incubation) and has a single maintainer: where these documents describe what the
 standard decides, that means the maintainer acting in the standard-governance role, not a chartered body. Outside
 proposals and review are welcome; when they arrive, they will be recorded here the same way, and attributed to their
 authors.

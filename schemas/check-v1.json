@@ -29,7 +29,7 @@
     "id": {
       "type": "string",
       "description": "Stable check ID; never renumbered. Extension (health-only) checks use the MIRI-PYX-/MIRI-CLIX- namespaces.",
-      "pattern": "^MIRI-(PY|CLI|PYX|CLIX)-\\d{3}$"
+      "pattern": "^MIRI-(PY|CLI|PYX|CLIX|CONSUMER|CONSUMERX)-\\d{3}$"
     },
     "name": {
       "type": "string",
@@ -40,7 +40,8 @@
       "type": "string",
       "enum": [
         "python-wheel",
-        "cli"
+        "cli",
+        "consumer"
       ],
       "description": "Artifact type this alert applies to"
     },
