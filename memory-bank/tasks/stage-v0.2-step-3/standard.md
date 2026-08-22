@@ -32,7 +32,7 @@ the `schema-governance` / `check-authoring` invariants (weights sum to 100; ever
 - [x] **Ship an `api-graph.json` in the sample SDK** so the standard dogfoods its own trimmed §4.5 contract — today the
       only live proof of the api-graph schema is miri-py's self-scan, not the standard's own sample (the sample ships
       only lifecycle / migration-guide / sdk-manifest / usage-patterns). _(Packaging + Agent-Tooling)_
-- [ ] **Add an `--execute --yes` pass over the standard's own trusted sample in CI.** The default gate forfeits 9
+- [x] **Add an `--execute --yes` pass over the standard's own trusted sample in CI.** The default gate forfeits 9
       checks — including MUSTs **015** (examples runnable) and **036** (discovery / manifest↔surface) — so "CI green"
       does not mean the executable MUSTs were verified. Add a second score pass with `--execute --yes` over the
       standard's **own** sample only (as miri-py dogfoods its own wheel), which runs trusted code, not untrusted

@@ -56,14 +56,23 @@ def main():
             print("no wheel produced by `miri build`")
             return 1
 
-        out = subprocess.run([miri, "score", wheels[0], "--json"], check=True, capture_output=True, text=True)
-        report = json.loads(out.stdout)
-        s = report["scores"]
-        conforming = s.get("is_conforming", False)
-        print(f"sample-sdk: conformance={s['conformance']} health={s.get('health')} "
-              f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
-              f"MUST_failures={report.get('must_failures')}")
-        return 0 if conforming else 1
+        def score(extra_args, label):
+            out = subprocess.run([miri, "score", wheels[0], "--json", *extra_args],
+                                 check=True, capture_output=True, text=True)
+            r = json.loads(out.stdout)
+            s = r["scores"]
+            conforming = s.get("is_conforming", False)
+            print(f"sample-sdk [{label}]: conformance={s['conformance']} health={s.get('health')} "
+                  f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
+                  f"MUST_failures={r.get('must_failures')}")
+            return conforming
+
+        # Static pass (default posture), then an execution pass over our OWN trusted sample so the
+        # execution-requiring MUSTs (015 examples-runnable, 036 discovery) are verified, not forfeited.
+        # --execute runs only the standard's own sample here, never untrusted third-party code.
+        static_ok = score([], "static")
+        execute_ok = score(["--execute", "--yes"], "execute")
+        return 0 if (static_ok and execute_ok) else 1
 
 
 if __name__ == "__main__":
