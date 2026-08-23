@@ -1,0 +1,42 @@
+# MIRI-CONSUMER-011 — generated with the Consumer Conformance profile; canonical source of truth.
+id: MIRI-CONSUMER-011
+name: Never reports `not-in-source` as proof a symbol does not exist
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Surface Verification
+weight: 7
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each not-in-source result reported as non-existence
+short_description: Never reports `not-in-source` as proof a symbol does not exist
+long_description: A negative `resolve` result is weak evidence. This check verifies the consumer reports such a
+  symbol as unverified rather than concluding it is absent.
+rationale: Static parsing cannot see a surface built at runtime — `__getattr__`, `setattr`, metaclasses, re-exports
+  resolved on import. A consumer that treats `not-in-source` as proof of absence is wrong about every dynamically-generated
+  API, and would refuse correct calls against widely-used libraries. The evidence is deliberately asymmetric and
+  the consumer must not collapse it.
+fires_when:
+- The consumer states that a symbol does not exist on the basis of a `not-in-source` result
+- The consumer refuses to emit a call solely because `resolve` returned `not-in-source`
+- The consumer treats `module-unreadable` as either existence or absence
+remediation:
+- Map `not-in-source` and `module-unreadable` to an 'unverified' outcome, distinct from 'does not exist'
+- Where emitting an unverified call, say so in the output rather than presenting it as checked
+suggested_fix: Map `not-in-source` and `module-unreadable` to an 'unverified' outcome, distinct from 'does not exist'
+references:
+- title: Discovery Contract §3.6.1
+  url: discovery-contract.md
+  type: spec
+examples:
+  violation: '`Client.request` does not exist in this package.
+
+    # resolve returned not-in-source; the package builds that surface at runtime'
+  compliant: '`Client.request` is not statically defined in the source, so I could not verify it.
+
+    It may still exist at runtime (dynamic attribute); treat this call as unverified.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-011.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-011/

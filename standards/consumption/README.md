@@ -16,8 +16,10 @@ it, and the standard cannot say what makes the producer metadata worth shipping 
   transport-agnostic metadata-query contract, with an MCP context server as its first binding.
 - [Consumption Map](consumption-map.md) — the task-to-document reading contract: per agent task, what to read and in
   what order, what not to do, and an audit of what every metadata element is for.
-- Consumer Conformance *(Planned)* — `MIRI-CONSUMER-NNN` checks, numbered against a reference consumer tool driven on
-  the fixture set below.
+- [Consumer Conformance](consumer-conformance.md) — what a conformant consumer is: 15 numbered `MIRI-CONSUMER`
+  checks weighted to 100, verified by **driving** a consumer against the fixtures rather than by inspecting an
+  artifact. States explicitly which obligations bind the surface instead, and records that a Surface Conformance
+  profile does not yet exist.
 
 ## Fixtures
 

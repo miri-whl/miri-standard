@@ -1,0 +1,43 @@
+# MIRI-CONSUMER-021 — generated with the Consumer Conformance profile; canonical source of truth.
+id: MIRI-CONSUMER-021
+name: Confines a publisher-authored path before dereferencing it
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Untrusted Data
+weight: 7
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each publisher-authored path dereferenced outside the package root
+short_description: Confines a publisher-authored path before dereferencing it
+long_description: Several elements carry file pointers. This check verifies the consumer resolves and confines such
+  a path before opening it, and reports one that escapes the package root as malformed.
+rationale: 'A pointer is not a permission: `api_index.file`, graph node `file`, and `source_file` are all publisher-authored
+  strings, and the adversarial fixture points one at a path outside the package. A consumer that opens it reads
+  a file the package has no business exposing, using the consumer''s own filesystem privileges. The surface has
+  this obligation for the documents it serves; the same string reaches the consumer, so the same discipline applies.'
+fires_when:
+- The consumer opens a path that resolves outside the package root
+- The consumer follows a symbolic link out of the package, or accepts an absolute path or traversal sequence
+remediation:
+- Resolve every pointer against the package root, take the realpath, and require a regular file inside it
+- Report an escaping pointer as malformed metadata rather than opening it
+suggested_fix: Resolve every pointer against the package root, take the realpath, and require a regular file inside
+  it
+references:
+- title: Consumption Map §4
+  url: consumption-map.md
+  type: spec
+- title: Discovery Contract §3.2.2
+  url: discovery-contract.md
+  type: spec
+examples:
+  violation: Reading greet_adversarial/../../../../etc/passwd for the `greet` implementation…
+  compliant: 'The api_index entry for `greet` points outside the package root (../../../../etc/passwd).
+
+    Reporting the pointer as malformed; not opening it.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-021.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-021/

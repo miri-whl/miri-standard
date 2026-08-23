@@ -1,0 +1,48 @@
+# MIRI-CONSUMER-032 — generated with the Consumer Conformance profile; canonical source of truth.
+id: MIRI-CONSUMER-032
+name: Never auto-migrates onto a publisher-declared `replacement`
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Trust and Verdicts
+weight: 8
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each automatic migration onto a declared replacement
+short_description: Never auto-migrates onto a publisher-declared `replacement`
+long_description: This check verifies the consumer surfaces a declared replacement for a human decision rather than
+  installing it or rewriting call sites onto it, and flags a replacement in a different purl namespace.
+rationale: A `replacement` purl is publisher-authored and may name a package the publisher does not control. A compromised
+  release can set a deprecation whose replacement points at an attacker-held successor, and a consumer that migrates
+  automatically has performed the supply-chain attack on the maintainer's behalf. The namespace change is the detectable
+  signal, which is why flagging it is part of the check.
+fires_when:
+- The consumer installs, or rewrites call sites onto, a declared `replacement` without human confirmation
+- The consumer does not flag a `replacement` whose purl namespace differs from the deprecated package's
+remediation:
+- Surface the replacement as a claim requiring confirmation, never as an action to take
+- Compare purl namespaces and flag any divergence prominently
+suggested_fix: Surface the replacement as a claim requiring confirmation, never as an action to take
+references:
+- title: Consumption Map §3.3
+  url: consumption-map.md
+  type: spec
+- title: Lifecycle and Security Metadata §9.3
+  url: ../python/lifecycle-security-metadata.md
+  type: spec
+examples:
+  violation: 'Deprecated. Migrating to the declared replacement…
+
+    $ pip install attacker-successor
+
+    # replacement purl was in an unrelated namespace'
+  compliant: 'This package declares itself deprecated with replacement pkg:pypi/attacker-successor.
+
+    ⚠ That purl is in a DIFFERENT namespace from the deprecated package. Surfacing for your decision;
+
+    I have not installed it or rewritten any call sites.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-032.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-032/

@@ -20,11 +20,13 @@ that is the experiment's job. Every normative clause is mechanically checkable t
 
 ### Pillar 1 — Discovery Contract (RFC Ask 2) — DRAFTED
 
-`standards/consumption/discovery-contract.md`. The transport-agnostic metadata-query contract (`list`, `lifecycle`,
-`migration-guide`, `api-index`) with an MCP context server as the first binding. Specifies what exists in `miri mcp`,
+`standards/consumption/discovery-contract.md`. The transport-agnostic metadata-query contract — **eight**
+operations across retrieval, derived views and determination — with an MCP context server as the first
+binding. Specifies what exists in `miri mcp`,
 then adds the wire discipline the panel demanded:
 
-- [x] Four operations defined by input / response shape / semantics.
+- [x] Operations defined by input / payload / semantics. Grew 4 → 5 (`document`) → 6 (`resolve`) → 8 (`patterns`,
+  `graph`) as panel rounds found read-steps and rules that no operation could serve.
 - [x] `api-index` cap + `truncated` flag made normative (pointers-not-dumps).
 - [x] Top-level `schema_version` on every response (MIRI-CLI-010 convention).
 - [x] One absence-vs-error envelope: absent (`present:false` + reason) distinguished from error (`ok:false` + code).
@@ -34,7 +36,7 @@ then adds the wire discipline the panel demanded:
 - [x] `[tool.miri.consume]` project declaration with the trust-boundary constraints.
 - [x] §9 consumer-side security (untrusted framing, per-response provenance, no prompt-templates, SSRF guard).
 - [x] Linters green (markdownlint / cspell / links) + wired into `standards/README.md`.
-- [ ] Feed each new normative clause into `MIRI-CONSUMER-NNN` checks (Pillar 3).
+- [x] Feed each new normative clause into `MIRI-CONSUMER-NNN` checks — done with the numbering above.
 - [ ] miri-py conforms `miri mcp` to §4 (schema_version + absence envelope + surface version) — their side.
 
 ### Pillar 2 — Consumption Map (RFC Ask 1 + 1b) — DRAFTED
@@ -43,15 +45,15 @@ then adds the wire discipline the panel demanded:
 
 - [x] Normative vs informative split made explicit (§2): read-order = SHOULD (general) / MUST (reference consumer);
   prohibitions = MUST for all conformant consumers; heuristics = informative, never verdicts.
-- [x] Five tasks (§3): first-use, generative scaffold, upgrade, runtime-failure, security — each with Read-in-order +
-  Must-not + heuristic. The generative task (scaffold a new integration) is included.
+- [x] Six tasks (§3): first-use, generative scaffold, upgrade, runtime-failure, security, and writing tests — each
+  with Read-in-order + Must-not + heuristic.
 - [x] The two code-only rules folded in as normative interpretation rules (§4): absence is evidence-scoped not
   existential; CLI surfaces excluded from `api_index` → consult `--describe`.
-- [x] Element audit (§5): all 11 elements state their consumption value; audit rule ("can't state a value → reserved /
-  removal candidate") made normative. Linters green; indexed in both READMEs.
-- [ ] Turn each §3 prohibition + §4 rule into a `MIRI-CONSUMER-NNN` check (Pillar 3).
+- [x] Element audit (§5): every element states its consumption value; the audit rule is now **bidirectional**, since
+  the original element→task direction is what let the testing gap hide. Linters green; indexed in both READMEs.
+- [x] Turn each §3 prohibition + §4 rule into a `MIRI-CONSUMER-NNN` check — done with the numbering above.
 
-### Pillar 3 — Consumer Conformance (RFC Ask 3) — IN PROGRESS (fixture landed)
+### Pillar 3 — Consumer Conformance (RFC Ask 3) — PROFILE AND CHECKS LANDED
 
 **Fixture first**, per both panels' independent advice — a check written before an executable case is a check written
 blind. `examples/fixtures/` now holds one trivial package built three ways from a single template:
@@ -67,8 +69,13 @@ blind. `examples/fixtures/` now holds one trivial package built three ways from 
   *Correction (2026-08-22): as originally written this claim was **false** — the validator checked only
   `lifecycle.json`, and two of the twin's three documents did not conform. The journey panel caught it. It now
   loop-validates every document in `metadata/miri/`, and fails on any document lacking a schema mapping.*
-- [ ] Number the `MIRI-CONSUMER-NNN` checks from the attack table + the §3 prohibitions + §4 interpretation rules.
-- [ ] `consumer-conformance.md` — the profile document.
+- [x] Number the `MIRI-CONSUMER-NNN` checks — **DONE 2026-08-23.** 15 checks, `001`–`042`, weights summing to 100
+  across five categories. All validate against `check-v1.json`; profile table and YAML verified drift-free. Two
+  (`011`, `032`) are defined but not yet scorable — fixtures pending — so the suite reports max 85, stated openly.
+- [x] `consumer-conformance.md` — **DONE 2026-08-23.** The behavioral profile: a consumer is driven against
+  fixtures, not inspected, so every check is written against observable output. States which obligations bind the
+  **surface** instead and are deliberately unscored here, and declares the missing Surface Conformance profile
+  rather than leaving it implicit. Carries the circularity firewall.
 - [ ] The comparison harness (bare vs miri side by side) — RFC Ask 5's demonstration job.
 - [ ] Reference consumer `miri consume` — miri-py's, not started (see `miri-py-handoff.md` item 5).
 
@@ -77,7 +84,7 @@ that would make conformance trivially self-satisfying.
 
 ### Pillar 3 — original scope note
 
-`standards/consumption/checks/MIRI-CONSUMER-NNN.yaml` + a `consumer-conformance.md` + reference tool `miri brief`.
+`standards/consumption/checks/MIRI-CONSUMER-NNN.yaml` + a `consumer-conformance.md` + reference tool `miri consume`.
 Symmetric to the CLI tool profile. Checkable consumer requirements: respects the cap; treats metadata as untrusted;
 verifies claimed surfaces before relying on them; degrades honestly (absent reported absent, never synthesized);
 cross-references migration data against the consumer's real call sites. Verified against the reference consumer driven

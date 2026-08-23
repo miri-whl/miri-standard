@@ -1,0 +1,36 @@
+# MIRI-CONSUMER-041 — generated with the Consumer Conformance profile; canonical source of truth.
+id: MIRI-CONSUMER-041
+name: Never presents a synthesized mock as the package's supported test double
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Usage Fidelity and Budget
+weight: 1
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each synthesized double presented as supported
+short_description: Never presents a synthesized mock as the package's supported test double
+long_description: This check verifies the consumer distinguishes doubles the package ships from ones the consumer
+  invented.
+rationale: A test built on a fake the package does not support drifts silently from the real behavior, and the drift
+  surfaces as a passing test over broken code. Only `supported_test_doubles` entries carry the author's fidelity
+  commitment.
+fires_when:
+- The consumer presents a mock absent from `supported_test_doubles` as the package's official test double
+remediation:
+- Use only declared doubles when claiming support; label anything else as the consumer's own construction
+suggested_fix: Use only declared doubles when claiming support; label anything else as the consumer's own construction
+references:
+- title: Consumption Map §3.6
+  url: consumption-map.md
+  type: spec
+examples:
+  violation: "Use the package's official test double:\n    from unittest.mock import MagicMock\n    client = MagicMock()"
+  compliant: 'This package declares no supported test doubles. Below is a mock I constructed — it is mine,
+
+    not the package''s, and nothing guarantees it matches real behavior.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-041.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-041/

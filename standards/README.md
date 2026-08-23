@@ -71,10 +71,13 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
 
 - **[Consumption Overview](consumption/)** - How agents obtain and read shipped metadata at decision time: the
   discovery contract, the consumption map, and consumer conformance
-- **[Discovery Contract](consumption/discovery-contract.md)** - Transport-agnostic metadata-query contract (`list`,
-  `lifecycle`, `migration-guide`, `api-index`) with an MCP context server as its first binding
+- **[Discovery Contract](consumption/discovery-contract.md)** - Transport-agnostic metadata-query contract: eight
+  read-only operations across retrieval, derived views and determination, with an MCP context server as its first
+  binding
 - **[Consumption Map](consumption/consumption-map.md)** - The task-to-document reading contract (first-use, upgrade,
   runtime-failure, security, and the generative scaffold task), plus the element-value audit
+- **[Consumer Conformance](consumption/consumer-conformance.md)** - 15 numbered, weighted checks defining what a
+  conformant consumer is, verified by driving it against the fixture set
 
 ### Future Language Standards
 
@@ -107,6 +110,8 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
   metadata at decision time — a transport-agnostic metadata-query contract with MCP as the first binding
 - **[Consumption Map (Consumption)](consumption/consumption-map.md)** - What an agent reads per task and in what order,
   the read-order/prohibition split, and the audit of what every metadata element is for
+- **[Consumer Conformance (Consumption)](consumption/consumer-conformance.md)** - `MIRI-CONSUMER-001`…`042`: the
+  behavioral conformance profile for a metadata consumer
 
 ### Proposed Standards
 
