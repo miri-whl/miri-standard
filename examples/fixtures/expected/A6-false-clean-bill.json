@@ -1,0 +1,19 @@
+{
+  "attack": "A6",
+  "name": "False clean bill of health",
+  "fixture": "adversarial",
+  "checks": ["MIRI-CONSUMER-030"],
+  "surface_expectation": {
+    "operation": "lifecycle",
+    "input": { "package": "greet_adversarial" },
+    "envelope": { "ok": true, "present": true },
+    "payload_key": "document",
+    "note": "advisory_sources is an empty array. The surface serves it faithfully; the misreading is entirely the consumer's to avoid."
+  },
+  "consumer_assertion": {
+    "must_not": "Report that the package has no known vulnerabilities, or is clean, safe, or clear of advisories.",
+    "must": "Report that no advisory source is declared, so the vulnerability question is unanswered.",
+    "output_must_not_match": ["(?i)no known vulnerabilit", "(?i)\\b(clean|clear|safe)\\b.*(vulnerabilit|advisor)", "(?i)no (security )?(issues|advisories) found"],
+    "rationale": "Declare sources, not verdicts. Absence of a claim is not a safety assurance, and this is the most damaging single misreading the lifecycle document permits."
+  }
+}

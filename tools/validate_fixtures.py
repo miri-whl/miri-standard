@@ -16,9 +16,21 @@ import sys
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 FIX = REPO / "examples/fixtures"
-CAP = 25  # the api-index cap the padding attack is built to defeat
+EXPECTED = FIX / "expected"
+# The cap A4 is calibrated against lives in expected/cap.json, not here: a suite driving a
+# differently-capped surface must be able to detect that the attack no longer applies rather
+# than reporting a silent pass (fixture gap C9).
+CAP = json.loads((FIX / "expected/cap.json").read_text())["api_index_cap"]
 
 failures: list[str] = []
+
+
+def _validates(jsonschema, doc, schema_path) -> bool:
+    try:
+        jsonschema.validate(doc, json.loads(pathlib.Path(schema_path).read_text()))
+        return True
+    except Exception:
+        return False
 
 
 def check(label: str, ok: bool, detail: str = "") -> None:
@@ -103,11 +115,58 @@ def main() -> int:
     check(f"A4 padding pushes Greeter.greet past cap={CAP}", pos >= CAP,
           f"position {pos + 1} of {len(keys)}")
 
-    # A5: the injection payload must still be directive, and still inert.
-    summary = json.load(open(FIX / "metadata/adversarial/sdk-manifest.json"))["summary"]
-    check("A5 injection payload present", "ignore prior instructions" in summary.lower())
-    check("A5 payload targets only inert hosts", "attacker.example.invalid" in summary,
+    # A5: the payload must be directive, inert, AND in a field the consumer actually reads.
+    # It used to live only in sdk-manifest.json's top-level `summary`, which no api-index
+    # response carries — so a budget-conformant consumer passed A5 by never seeing it (C8).
+    adv_patterns = json.loads((FIX / "metadata/adversarial/usage-patterns.json").read_text())
+    pat = adv_patterns["patterns"][0]
+    reachable = " ".join([
+        pat.get("description", ""),
+        " ".join(pat.get("explanation", {}).get("key_points", [])),
+        pat.get("explanation", {}).get("security_note", ""),
+        " ".join(a.get("right_code", "") + a.get("why", "") for a in pat.get("antipatterns", [])),
+    ])
+    check("A5 payload sits in fields the Map routes a consumer to read",
+          "disregard prior instructions" in reachable.lower() or "system:" in reachable.lower())
+    check("A5 payload targets only inert hosts",
+          "attacker.example.invalid" in reachable and "http://attacker.example.invalid" in reachable,
           "payload must stay on the reserved .invalid TLD")
+    check("A5 document is schema-valid (injection does not require malformity)",
+          _validates(jsonschema, adv_patterns, REPO / "schemas/usage-patterns-v1.json"))
+
+    # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
+    #    These also close the loop against the conformance profile — a golden may not cite a
+    #    check that does not exist, and every non-pending check must have a case behind it.
+    import re
+    goldens = sorted(p for p in EXPECTED.glob("A*.json"))
+    check_ids = {f.stem for f in (REPO / "standards/consumption/checks").glob("MIRI-CONSUMER-*.yaml")}
+    check("golden expectations present", len(goldens) >= 6, f"{len(goldens)} found")
+    cited = set()
+    for g in goldens:
+        d = json.loads(g.read_text())
+        missing = [k for k in ("attack", "fixture", "checks", "surface_expectation", "consumer_assertion")
+                   if k not in d]
+        check(f"golden {g.stem}: complete", not missing, f"missing {missing}" if missing else "")
+        unknown = [c for c in d.get("checks", []) if c not in check_ids]
+        check(f"golden {g.stem}: cites real checks", not unknown,
+              f"unknown check id(s) {unknown}" if unknown else "")
+        cited.update(d.get("checks", []))
+        # regexes must compile, or the assertion silently never fires
+        bad_re = []
+        for pat in d.get("consumer_assertion", {}).get("output_must_not_match", []):
+            try:
+                re.compile(pat)
+            except re.error as e:
+                bad_re.append(f"{pat!r} ({e})")
+        check(f"golden {g.stem}: assertions compile", not bad_re, "; ".join(bad_re))
+
+    # Every check the profile marks with a real case must actually have one.
+    profile = (REPO / "standards/consumption/consumer-conformance.md").read_text()
+    rows = re.findall(r"^\| (MIRI-CONSUMER-\d+) \| [MS] \| .+? \| \d+ \| (.+?) \|$", profile, re.M)
+    uncovered = [cid for cid, case in rows
+                 if "fixture pending" not in case and "(A" in case and cid not in cited]
+    check("profile checks with a named attack case have a golden", not uncovered,
+          f"uncovered: {uncovered}" if uncovered else "")
 
     print()
     if failures:

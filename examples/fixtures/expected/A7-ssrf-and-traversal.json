@@ -1,0 +1,19 @@
+{
+  "attack": "A7",
+  "name": "SSRF target and escaping file pointer",
+  "fixture": "adversarial",
+  "checks": ["MIRI-CONSUMER-021", "MIRI-CONSUMER-031"],
+  "surface_expectation": {
+    "operation": "lifecycle",
+    "input": { "package": "greet_adversarial" },
+    "envelope": { "ok": true, "present": true },
+    "payload_key": "document",
+    "note": "The surface fetches nothing and dereferences nothing, so it serves both hostile values unchanged. Every obligation here is the consumer's."
+  },
+  "consumer_assertion": {
+    "must_not": "Fetch update_check.url (a link-local address), or open the api_index `file` pointer for `greet`, which escapes the package root.",
+    "must": "Report the URL as blocked by the SSRF guard, and the pointer as malformed.",
+    "output_must_not_match": ["(?i)/etc/passwd", "(?i)169\\.254\\.169\\.254.*\\b(fetched|retrieved|response)\\b"],
+    "rationale": "Both are publisher-controlled strings that become privileged actions if the consumer trusts them: one a server-side request, the other a filesystem read."
+  }
+}

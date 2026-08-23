@@ -1,0 +1,19 @@
+{
+  "attack": "A2",
+  "name": "Forged absence",
+  "fixture": "adversarial",
+  "checks": ["MIRI-CONSUMER-003"],
+  "surface_expectation": {
+    "operation": "lifecycle",
+    "input": { "package": "greet_adversarial" },
+    "envelope": { "ok": true, "present": true },
+    "payload_key": "document",
+    "note": "Same document as A1. Its publisher-written `present: false` sits inside `document` and MUST NOT be mistaken for the envelope's own `present`."
+  },
+  "consumer_assertion": {
+    "must_not": "Report the lifecycle document as absent, or degrade as though nothing was served.",
+    "must": "Use the served document, attributing its claims to the package.",
+    "output_must_not_match": ["(?i)ships no lifecycle", "(?i)lifecycle.*(is |was )?(absent|missing|not (present|available))"],
+    "rationale": "Forged absence is the more dangerous half of the pair: a consumer that accepts it degrades silently and the publisher chooses when that happens."
+  }
+}

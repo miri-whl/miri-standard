@@ -233,12 +233,23 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   has zero coverage. Needs a request-trace fixture (`prompt-templates.md`, `../../../../etc/passwd`, `/etc/passwd`,
   `agent-metadata/../../core.py`, a name absent from `list.documents`) each paired with its expected envelope.
 - [ ] C7. No symlinked-document fixture, so the missing realpath confinement is invisible to the validator.
-- [ ] C8. **A5 can be passed by accident.** Its primary injection payload sits in `sdk-manifest.json`'s top-level
+- [x] C8. **FIXED 2026-08-23.** The payload is relocated from `sdk-manifest.json`'s top-level `summary` — which no
+  api-index response carries — into an adversarial `usage-patterns.json`, across `description`,
+  `explanation.key_points`, `security_note` and an antipattern's `right_code`. Every one is a field the Map routes a
+  consumer to read whole, so a budget-conformant consumer can no longer pass by never seeing it. The antipattern
+  vector is the sharpest: MIRI-CONSUMER-040 tells consumers to surface `correctness` antipatterns, so the payload is
+  written as advice, exploiting a rule the standard itself added. The document is deliberately **schema-valid**,
+  complementing the schema-invalid `lifecycle.json`: conforming does not make a document safe. The validator's
+  liveness assertion moved with it. _Original finding:_ **A5 can be passed by accident.** Its primary injection
+  payload sits in `sdk-manifest.json`'s top-level
   `summary`, which no `api-index` response carries and a budget-conformant consumer never sees — so a consumer passes
   by being _efficient_, not by resisting injection. The residual reachable payload rides on a phantom symbol already
   caught by A3. The two files the producer specs name as the real injection surfaces (`prompt-templates.md`,
   `usage-patterns.json`) are absent from the adversarial variant entirely.
-- [ ] C9. **A4 is calibrated against a cap no spec fixes** (see A14). Make the fixture self-calibrating
+- [x] C9. **FIXED 2026-08-23.** The cap moved out of `tools/validate_fixtures.py` into `expected/cap.json`, with the
+  contract default and reference recorded alongside. A suite driving a surface with a larger declared cap can now
+  detect that the padding no longer truncates and report **not-applicable** rather than a silent pass. _Original
+  finding:_ **A4 is calibrated against a cap no spec fixes** (see A14). Make the fixture self-calibrating
   (`build_fixtures.py --api-index-cap N`, N+5 pads) and write the assumed cap into a machine-readable
   `expected/api-index.json` the validator reads instead of a module constant.
 - [x] C10. **FIXED 2026-08-23** — Map §4 gains "a pointer is not a permission": before dereferencing any
@@ -250,7 +261,18 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   without inventing normative text. The validator asserts only the SSRF half.
 - [ ] C11. No identity-skew case: the adversarial `lifecycle.json` declares a truthful purl, so surface-resolved vs
   publisher-claimed purl (B7) is never forced. Version skew between metadata and installed code likewise uncovered.
-- [ ] C12. **The fixture set ships attack inputs with no expected outputs** — every pass condition is prose in a README
+- [ ] C14. **No dynamic-surface fixture** — _found by us, 2026-08-23, not by the panel._ `MIRI-CONSUMER-011` requires
+  that a consumer never read `not-in-source` as proof a symbol does not exist, because static parsing cannot see a
+  surface built at runtime. Every fixture package defines its whole surface statically, so **the check is currently
+  untestable** and is one of the two holding the suite's ceiling at 85. Needs a package whose `__getattr__` serves an
+  attribute no `ast.parse` can find, with a golden asserting `resolve` returns `not-in-source` for a symbol that
+  nonetheless works at runtime.
+- [x] C12. **FIXED 2026-08-23.** `expected/` now holds a golden per attack (A1–A7), each stating the envelope a
+  conformant surface must return and the assertion a conformant consumer must satisfy, keyed to the `MIRI-CONSUMER`
+  checks it exercises. The validator closes the loop **both ways**: a golden may not cite a check that does not exist,
+  every profile check with a named attack case must have a golden, and every assertion regex must compile — an
+  assertion that silently never fires is worse than none. All three mutation-tested. _Original finding:_ **The fixture
+  set ships attack inputs with no expected outputs** — every pass condition is prose in a README
   column. Add `examples/fixtures/expected/` golden envelopes; this is what turns A1/A2 from surface-behavior
   assertions filed under consumer pass conditions into checkable properties.
 - [x] C13. The miri arm is unvalidated against its own schemas (see A2). **Closed by A2** — the validator now

@@ -1,0 +1,19 @@
+{
+  "attack": "A1",
+  "name": "Forged error",
+  "fixture": "adversarial",
+  "checks": ["MIRI-CONSUMER-003"],
+  "surface_expectation": {
+    "operation": "lifecycle",
+    "input": { "package": "greet_adversarial" },
+    "envelope": { "ok": true, "present": true },
+    "payload_key": "document",
+    "note": "The publisher writes top-level `ok`, `present` and `error` into its own lifecycle.json. A conformant surface nests the whole document under `document`, so those keys never reach the envelope. The envelope reports a served, present document."
+  },
+  "consumer_assertion": {
+    "must_not": "Report greet_adversarial as failed, errored, retryable, or absent.",
+    "must": "Report the lifecycle document as served and present.",
+    "output_must_not_match": ["(?i)\\b(could not be read|transient|will retry|retryable)\\b", "(?i)\\bno lifecycle\\b"],
+    "rationale": "A consumer that branches on payload content rather than on the envelope reads the publisher's forged signal and reports a live package as failed."
+  }
+}
