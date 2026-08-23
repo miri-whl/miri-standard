@@ -8,7 +8,8 @@
 
 The producer standards define the `agent-metadata/` directory an artifact ships. This specification defines how an
 agent **obtains** that metadata at the moment it is deciding what to call: a **transport-agnostic metadata-query
-contract** of five read-only operations — `list`, `document`, `lifecycle`, `migration-guide`, `api-index` — of which an
+contract** of six read-only operations — `list`, `document`, `lifecycle`, `migration-guide`, `api-index`,
+`resolve` — of which an
 **MCP context server** is the first binding. The contract adds the wire discipline the producer surfaces already carry:
 a **surface-owned response envelope** that versions and frames every answer without reshaping the publisher's bytes, a
 structured **absence-versus-error** discriminator that a hostile package cannot forge, and **import-free discovery** so
@@ -74,7 +75,7 @@ read-steps with the vehicle that supplies it, so that no reading order depends o
 
 ## 3. The Metadata-Query Contract
 
-A conformant metadata-query surface exposes these five read-only operations, and no others (§9). Each is defined by its
+A conformant metadata-query surface exposes these six read-only operations, and no others (§9). Each is defined by its
 input, its payload, and its semantics; every response is wrapped in the §4 envelope.
 
 | Operation | Input | Payload key | Serves |
@@ -84,6 +85,7 @@ input, its payload, and its semantics; every response is wrapped in the §4 enve
 | `lifecycle` | `package` | `document` | Shorthand for `document` with `name: "lifecycle.json"` |
 | `migration-guide` | `package` | `document` | Shorthand for `document` with `name: "migration-guide.json"` |
 | `api-index` | `package`, optional `query` | `entries` | A capped, filtered routing view derived from `sdk-manifest.json` |
+| `resolve` | `package`, `symbol` | `resolution` | Whether a symbol exists in the installed package's **source**, and where |
 
 `lifecycle` and `migration-guide` are **named shorthands**, not distinct capabilities: each MUST return exactly what
 `document` would return for the same package and document name. They exist because they are the two highest-traffic
@@ -285,6 +287,64 @@ a conformance check written against one is vacuous on the other. The following a
 A consumer MUST NOT infer the size of a package's surface from `cap`, from the number of entries returned, or from
 `truncated` being `false` after a `query` — a filtered response is complete only *with respect to that filter*.
 
+### 3.6 `resolve`
+
+**Input:** `{ "package": "<import-name>", "symbol": "<dotted-name>" }` — `symbol` is a dotted qualified name in the
+same key space `api_index` and `api-graph.json` nodes use (e.g. `Greeter`, `Greeter.greet`).
+
+**Payload:** `resolution` — whether the symbol exists in the installed package, **determined from its source**:
+
+```json
+{
+  "schema_version": "1", "ok": true, "present": true,
+  "package": "greet_miri", "purl": "pkg:pypi/greet-miri@1.0.0",
+  "symbol": "Greeter.greet",
+  "resolution": {
+    "found": true, "evidence": "static-source", "kind": "method",
+    "file": "core.py", "line": 10,
+    "signature": "greet(name: str) -> str"
+  }
+}
+```
+
+`resolve` exists because every other operation reports what the **publisher declared**, and none of them can settle
+what the package **actually contains**. Without it the anti-hallucination rule in
+[Consumption Map §3.2](consumption-map.md) cannot be discharged at all: a consumer is told not to call a symbol
+that does not exist, while the only surface available to it — `api-index` — is a capped, publisher-authored view that
+§3.5 forbids
+reading as proof of anything.
+
+#### 3.6.1 Static Evidence, and Its Limits
+
+`resolve` MUST determine existence by **parsing the installed package's source** — reading and analyzing the module
+that would define the symbol — and MUST NOT import or execute it (§5). Static parsing is what makes this operation
+compatible with import-free discovery: an unvetted package is read, never run.
+
+The evidence is therefore **asymmetric, and the response MUST NOT obscure this**:
+
+- **`found: true` is strong.** The symbol is defined in the installed source at the reported location. A consumer may
+  rely on it.
+- **`found: false` is weak.** It means *"not defined statically in the source"* — **not** *"does not exist."* A
+  surface constructed at runtime (`__getattr__`, `setattr`, a metaclass, a re-export resolved on import) is invisible
+  to static analysis by construction.
+
+A surface MUST report the distinction rather than collapsing it, using `evidence`:
+
+| `found` | `evidence` | Means |
+|---|---|---|
+| `true` | `static-source` | Defined in source at `file`/`line` |
+| `false` | `not-in-source` | No static definition found; the symbol may still exist dynamically |
+| `false` | `module-unreadable` | The module could not be read or parsed — nothing is known either way |
+
+A consumer MUST NOT report a `not-in-source` result as proof the symbol does not exist, and MUST NOT report a
+`module-unreadable` result as either existence or absence. The honest consumer-side outcome for both is
+**unverified**, and [Consumption Map §3.2](consumption-map.md) states what may be done with it.
+
+This asymmetry is the same shape as `api-index`'s (§3.5) but the opposite way round, and the difference matters:
+`api-index` can confirm a **claim** and never refute it; `resolve` can confirm **existence** and never refute it.
+Between them, a positive from `resolve` is the strongest existence evidence the contract offers, because it comes
+from the source rather than from the publisher's description of the source.
+
 ## 4. The Response Envelope
 
 Every response from every operation in §3 is a JSON object — never a bare array — whose top level is **owned entirely
@@ -309,7 +369,8 @@ signal it cannot write, but only if "which keys are the surface's" is fully stat
 | `truncated`, `cap` | `list`, `api-index`, `document` | Whether the payload was cut, and the bound in force (§3.2.3, §3.5.1) |
 | `next_cursor` | `list`, `api-index`, when truncated | Continuation token for the same ordering (§3.5.1) |
 | `error` | Failures only | The structured error object (§4.3) |
-| `packages` / `document` / `entries` | Per operation | The payload |
+| `symbol` | `resolve` | The symbol the answer is about |
+| `packages` / `document` / `entries` / `resolution` | Per operation | The payload |
 
 #### 4.1.1 `purl` Is Surface-Derived, Never Publisher-Read
 
@@ -435,6 +496,7 @@ MCP binding exposes the operations as MCP tools over JSON-RPC 2.0 (stdio):
 | `lifecycle` | `miri_lifecycle` |
 | `migration-guide` | `miri_migration_guide` |
 | `api-index` | `miri_api_index` |
+| `resolve` | `miri_resolve` |
 
 ### 6.1 Mapping
 
@@ -565,11 +627,12 @@ check; this contract's obligation is simply that the surface never performs the 
 ## 10. Conformance
 
 The checkable requirements for a *consumer* of this contract — branches on `ok`/`present` rather than message text,
-never treats a truncated `api-index` as a complete surface, verifies claimed surfaces against the installed package
-before relying on them, never synthesizes an absent document, never executes on a payload's say-so, applies the §9.2
-guard to any URL it resolves — will be numbered `MIRI-CONSUMER-NNN` in the forthcoming Consumer Conformance document
-and verified against the reference consumer (`miri consume`) driven on a paired bare/miri fixture and an
-adversarial-metadata twin. Capping and envelope integrity are the **surface's** obligations, checked against a
-reference surface; a consumer emits no responses and cannot be checked for them.
+never treats a truncated `api-index` as a complete surface, settles symbol existence with `resolve` rather than with
+the index and never reports a `not-in-source` result as proof of absence, never synthesizes an absent document, never
+executes on a payload's say-so, applies the §9.2 guard to any URL it resolves — will be numbered
+`MIRI-CONSUMER-NNN` in the forthcoming Consumer Conformance document and verified against the reference consumer
+(`miri consume`) driven on a paired bare/miri fixture and an adversarial-metadata twin. Capping and envelope
+integrity are the **surface's** obligations, checked against a reference surface; a consumer emits no responses and
+cannot be checked for them.
 
 This document specifies the surface those checks are written against.

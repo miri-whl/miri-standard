@@ -32,7 +32,16 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   objects not strings, `version` must match `^\d+\.\d+$`, `categories` is an object not an array, and pattern IDs
   must be snake_case. All 3 documents now validate; 12/12 invariants hold. The false claim in
   `stage-v0.3/README.md` has been corrected in place rather than deleted.
-- [ ] **A3. The anti-hallucination MUST cannot be discharged by any operation.** _(CRITICAL)_ The operation set is
+- [x] **A3. The anti-hallucination MUST cannot be discharged by any operation.** **FIXED 2026-08-23.** Added a sixth
+  operation, `resolve {package, symbol}` (§3.6), which settles existence from the installed package's **source** —
+  `ast.parse`, never an import, so §5's import-free property is preserved (verified against the fixture: resolves
+  `Greeter`, `Greeter.greet`, `greet`; correctly rejects both phantoms). §3.6.1 makes the evidence asymmetry
+  normative: `found: true` is strong, `found: false`/`not-in-source` means _not defined statically_ and NOT _does not
+  exist_ (dynamic surfaces are invisible to static parsing), and `module-unreadable` means nothing is known. The Map's
+  must-nots are rekeyed accordingly — a consumer may not present an unconfirmed call as verified, and may not refuse
+  one solely because `resolve` returned `not-in-source`. The undefined `(F/X)` label is gone: the vehicle set is now
+  closed at four, with **(C)** added for the consumer's own workspace, which is what `(F/X)` was conflating. **A
+  server-only consumer can now complete every task in §3.** _Original finding:_ _(CRITICAL)_ The operation set is
   explicitly closed ("and no others"), every existence path ends in `(F/X)` introspection, and **`(F/X)` is not one of
   the three labels §1.1 defines** — so "a consumer MUST skip a step whose vehicle is unavailable" is unresolvable for
   exactly the steps that settle existence. Add `resolve` (see B2) or state plainly that (S)-only consumers cannot
@@ -145,7 +154,8 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   the package's supported test double; MUST report absence rather than inventing a fixture).
   **Also: make the §5 audit rule bidirectional** — it currently checks elements→tasks only, so a capability that was
   never defined passes silently. That rule flaw is why this went unnoticed.
-- [ ] **B2. A symbol-existence operation** — `resolve {package, symbol}`. The ground truth only the surface can
+- [x] **B2. A symbol-existence operation** **DONE 2026-08-23 — same item as A3.** Shipped as `resolve`. _Original
+  ask:_ — `resolve {package, symbol}`. The ground truth only the surface can
   provide, and the discharge path for A3.
 - [x] **B3. A pre-install / target-version scope.** **DECIDED 2026-08-22 — declared OUT OF SCOPE for 0.3.**
   Taking it on would mean reading artifacts from a registry, turning publisher-controlled input into server-side

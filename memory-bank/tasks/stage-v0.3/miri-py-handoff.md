@@ -45,7 +45,8 @@ HEAD — a regression on your side turns the standard red for unrelated reasons,
 
 ## 3. Conform `miri mcp` to the Discovery Contract (the main work)
 
-v0.3 specifies the metadata-query contract your MCP server is the first binding of. The contract was written from your
+v0.3 specifies the metadata-query contract your MCP server is the first binding of. The contract now has **six**
+operations; you ship four. It was written from your
 implementation, so most of it already matches — the gaps are the wire discipline. Current state referenced against
 `src/miri_py/mcp/server.py` and `provider.py`.
 
@@ -67,7 +68,7 @@ payload fields into the envelope. Wrapping matters because the producer schemas 
 injecting a field would make a conforming document invalid.
 
 Payload keys by operation: `packages` (list), `document` (document / lifecycle / migration-guide), `entries`
-(api-index).
+(api-index), `resolution` (resolve).
 
 ### 3b. Split absence from error (§4.2, §4.3)
 
@@ -103,13 +104,36 @@ Map routes agents to `usage-patterns.json`, `api-graph.json`, `AGENT_EXAMPLES.js
 too, and none were reachable.
 
 - **Input:** `{ package, name }`. `name` must be one the package advertised in `list.documents`.
-- **Servable whitelist:** `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`,
-  `api-graph.json`, `agent-metadata/README.md`, `AGENT_EXAMPLES.json`.
-- **Never servable:** `prompt-templates.md` (highest-risk injection surface), anything outside `agent-metadata/`,
-  anything containing `..` or an absolute prefix. Return `DOCUMENT_NOT_SERVABLE` — never a filesystem error, never the
-  file.
+- **Servable set (closed):** `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`,
+  `api-graph.json`, `test-patterns.json`. **Nothing else** — the set is exhaustive and a surface MUST NOT extend it.
+- **Never servable:** `prompt-templates.md`, `agent-metadata/README.md`, or any other free-prose file. The governing
+  criterion is now normative: **only schema-governed documents are servable; no free-form natural-language document
+  ever is.** (`README.md` was briefly listed as servable in an earlier draft of this handoff — that was reversed,
+  because unconstrained author Markdown is the same injection channel `prompt-templates.md` is refused for. The
+  inventory an agent needs comes from `list`, composed by the surface from the directory listing.)
+- **Name grammar and confinement (§3.2.2):** `name` is a **single path segment** — no `/`, no `\`, no `..`, never
+  normalized. Resolve it against the package's `agent-metadata/`, take the **realpath**, and require a regular file
+  physically inside that directory; **reject symlinks**. Name-string filtering alone MUST NOT be relied on: a
+  whitelisted `usage-patterns.json` shipped as a symlink to `~/.ssh/id_rsa` contains no `..` and no absolute prefix.
+  Return `DOCUMENT_NOT_SERVABLE` — never a filesystem error, never the file.
 - `miri_lifecycle` and `miri_migration_guide` stay as **named shorthands** and MUST return exactly what
   `miri_document` returns for the same package and name.
+
+### 3c-bis. Add a sixth tool: `miri_resolve` (§3.6)
+
+The operation that settles whether a symbol actually exists. Without it the Consumption Map's anti-hallucination rule
+cannot be discharged by any tool call, which is the defect it was added to fix.
+
+- **Input:** `{ package, symbol }`, where `symbol` is a dotted qualified name (`Greeter`, `Greeter.greet`).
+- **Implementation:** **parse the source, never import it.** `ast.parse` over the module that would define the symbol
+  keeps this compatible with the import-free rule you already implement in `provider.py` — an unvetted package is
+  read, never run.
+- **Response:** `resolution: {found, evidence, kind, file, line, signature?}`.
+- **The asymmetry is normative and must not be collapsed:** `found: true` + `evidence: "static-source"` is strong
+  evidence; `found: false` + `evidence: "not-in-source"` means *not defined statically*, **not** *does not exist*
+  (`__getattr__`, `setattr`, metaclasses, runtime re-exports are invisible to static parsing). A third value,
+  `module-unreadable`, means nothing is known either way. Emitting `found: false` without distinguishing these two
+  causes would make every consumer wrong about dynamically-generated APIs.
 
 ### 3d. `list` — wrap, cap, identify (§3.1)
 

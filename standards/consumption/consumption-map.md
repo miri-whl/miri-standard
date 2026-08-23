@@ -48,11 +48,16 @@ Each read-step below is labelled with the delivery vehicle that supplies it
 | **(S)** | **Served** — obtainable from a context server via a Discovery Contract operation | Any consumer, including one with no filesystem access |
 | **(F)** | **Filesystem** — read directly from the installed tree or the wheel | Only a consumer with read access to site-packages |
 | **(X)** | **External** — obtained by executing or querying something outside the metadata | Requires the stated capability, with its own caveats |
+| **(C)** | **Consumer's own workspace** — the calling project's source, not the dependency's | Always available to the consumer; nothing to do with the surface |
+
+These four labels are the complete set. A step carries exactly one; there is no compound label.
 
 A consumer MUST skip a step whose vehicle is unavailable to it and continue with the next; a skipped step is reported,
-never silently synthesized (§4). Every **(S)** step is servable by `document`, `lifecycle`, `migration-guide`,
-`api-index`, or `list` — the Discovery Contract is deliberately sized so that no normative read-order depends on a
-document no operation can serve.
+never silently synthesized (§4). Every **(S)** step is servable by `list`, `document`, `lifecycle`,
+`migration-guide`, `api-index`, or `resolve` — the Discovery Contract is deliberately sized so that no normative
+read-order depends on an answer no operation can give. In particular a **server-only consumer can complete every
+task in §3**, including the generative ones: `resolve` is what makes the anti-hallucination rule dischargeable
+without filesystem access.
 
 ## 2. Force of Each Clause
 
@@ -109,19 +114,24 @@ agent builds on the path the author verified rather than reconstructing one.
 
 1. **(S)** The quickstart + `usage-patterns.json` — the idiom to build on.
 2. **(F)** `templates/` — author-provided scaffolds coherent with the package idiom (MIRI-PY-038).
-3. **(S)** `api-index`, then **(F/X)** introspection of the installed package — confirm every symbol the scaffold will
-   call actually exists in the installed version.
+3. **(S)** `resolve` — confirm every symbol the scaffold will call actually exists in the installed package's
+   source ([Discovery Contract §3.6](discovery-contract.md)). `api-index` routes; `resolve` settles.
 4. **(S)** `api-graph.json` — for a multi-file change, the blast radius: what the touched surfaces extend, return,
    and use.
 
 **Must not:**
 
-- Emit a call to a symbol that does not exist in the **installed surface**, verified by introspection (the MIRI-PY-036
-  discipline applied consumer-side) — the anti-hallucination check.
+- **Present a call as verified when `resolve` did not confirm the symbol.** A `found: true` result is the only
+  positive evidence this contract offers; anything else — `not-in-source`, `module-unreadable`, or no `resolve` call
+  at all — leaves the symbol **unverified**, and a consumer that emits it anyway MUST say so rather than presenting
+  it as checked. (Observable: a symbol asserted as existing that `resolve` reports `found: false` for.)
+- **Refuse a call solely because `resolve` returned `not-in-source`.** That result is weak evidence
+  ([§3.6.1](discovery-contract.md)) — dynamically constructed surfaces are invisible to static parsing — so treating
+  it as proof of non-existence makes the consumer wrong about every runtime-generated API. Report unverified;
+  do not conclude absence.
 - Treat absence from an `api-index` response as evidence a symbol does not exist. That response is capped, filtered,
   and may be `truncated` ([Discovery Contract §3.5](discovery-contract.md)): **it can confirm presence, never prove
-  absence.** A consumer that cannot introspect the installed package MUST report the symbol as unverified rather than
-  either emitting or refusing the call on index membership alone.
+  absence.** Existence questions go to `resolve`, never to the index.
 - Copy a `templates/` scaffold without reconciling it against the installed version's surfaces.
 
 *Heuristic:* templates encode idiom, the installed surface encodes truth — scaffold from the template, then let
@@ -136,9 +146,9 @@ does not need it.
    for the transition **into the installed version**. The surface answers only for what is installed
    ([Discovery Contract §6.2.1](discovery-contract.md)); a prospective "what breaks if I move to 1.5.0?" has no
    operation in 0.3 and MUST NOT be answered from the shipped file.
-2. **(F/X)** Cross-reference each record against the consumer codebase's **own call sites**.
-3. **(S)** `api-index`, then **(F/X)** introspection — confirm each `replacement` surface exists in the **installed**
-   surface before emitting a call to it (§3.2). Where the replacement is not yet installed, the record is reported as
+2. **(C)** Cross-reference each record against the consumer codebase's **own call sites**.
+3. **(S)** `resolve` — confirm each `replacement` surface exists in the **installed** package before emitting a call
+   to it (§3.2). Where the replacement is not yet installed, the record is reported as
    pending verification, not as a confirmed target.
 
 **Must not:**
@@ -163,8 +173,8 @@ what *could* change; only the consumer's own usage says what *will*.
 2. **(F)** `docs/troubleshooting.md` — symptom → cause, without leaving the environment.
 3. **(S)** `api-index` for the failing surface — confirm its identity and, where the entry carries a `signature`, its
    parameters. A conformant `api-index` entry carries `signature` and `file` only where the producer supplies them
-   ([Discovery Contract §3.5](discovery-contract.md)), so a consumer MUST fall back to introspecting the installed
-   surface when they are absent.
+   ([Discovery Contract §3.5](discovery-contract.md)), so a consumer MUST fall back to **(S)** `resolve`, which
+   reports `kind`, `file`, `line` and `signature` from the source, when they are absent.
 
 **Must not:**
 
