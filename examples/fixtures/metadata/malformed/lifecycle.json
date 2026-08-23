@@ -1,0 +1,7 @@
+{
+  "$schema": "https://miri-whl.github.io/schemas/lifecycle-v1.json",
+  "miri_lifecycle_version": "0.1",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "identity": {
+    "purl": "pkg:pypi/greet-malformed@1.0.0",
+    "distribution": "open-source"

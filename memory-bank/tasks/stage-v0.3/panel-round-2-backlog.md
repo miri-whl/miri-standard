@@ -66,7 +66,11 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   an entire normative task, its two MUST-NOTs, the `migration-guide` operation, and the producer standard's
   highest-severity attack (§9.3 replacement redirect) are unexercisable. **A reference consumer that silently
   auto-migrates onto an attacker-declared `replacement` purl passes the current fixture set clean.**
-- [ ] **A6. `[tool.miri.consume]` has no fixture at all.** _(CRITICAL)_ The only arbitrary-execution trust boundary in
+- [x] **A6. **FIXED 2026-08-23.** `examples/fixtures/consuming-project/` ships five paired `pyproject.toml` files —
+  one conforming, four hostile (`command`/`args`, `env`, an unknown key, an out-of-enumeration `server`). The README
+  states the distinction the check turns on: **rejecting is not ignoring** — a generator that strips the hostile key
+  and proceeds has normalised an attack into an acceptable form. _Original finding:_ `[tool.miri.consume]` has no
+  fixture at all.** _(CRITICAL)_ The only arbitrary-execution trust boundary in
   the contract. `build_fixtures.py`'s pyproject template emits no `[tool.miri]` table, so the closed grammar, the
   MUST-reject-unknown-key rule, no-auto-launch, and dependency-cannot-influence-harness are all untested.
 - [x] **A7. `document` is uncapped and unfilterable** **FIXED 2026-08-23.** New §3.2.3 Size Bound: a surface MUST
@@ -107,11 +111,19 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   string shapes. A whitelisted `agent-metadata/usage-patterns.json` shipped as a **symlink to `~/.ssh/id_rsa`**
   contains no `..`, has no absolute prefix, is advertised by `list`, and is served verbatim. Editable/source-tree
   installs preserve symlinks — the exact shape the fixtures use.
-- [ ] **A11. The fixture trio varies metadata content but never well-formedness.** _(HIGH)_ Every document parses, so
+- [x] **A11. **FIXED 2026-08-23.** `metadata/malformed/` ships three documents failing three different ways:
+  `lifecycle.json` truncated mid-object (does not parse), `sdk-manifest.json` with a string where `api_index` must be
+  an object (parses, schema-invalid), `usage-patterns.json` missing required pattern fields. The split matters —
+  §3.2.1 now requires schema validation before serving, so `METADATA_UNREADABLE` covers both. _Original finding:_ The
+  fixture trio varies metadata content but never well-formedness.** _(HIGH)_ Every document parses, so
   of the three-way served/absent/failed discrimination, only two thirds are testable. §4.2 calls the absent-vs-failed
   split "the single most consequential clause" and notes the reference implementation currently gets it wrong — so the
   fixture set **cannot detect the very regression the spec names as the first implementation task**.
-- [ ] **A12. Import-free discovery is declared load-bearing and is structurally untestable.** _(HIGH)_ The
+- [x] **A12. **FIXED 2026-08-23.** `src/_hostile_import/` writes a sentinel at import time then raises. Demonstrated
+  end to end: sentinel absent before, `ImportError` raised, sentinel present after. A surface that resolves by
+  importing rather than reading leaves it behind. Lives outside the byte-identical trio — a side effect on import is
+  not expressible in shared source. _Original finding:_ Import-free discovery is declared load-bearing and is
+  structurally untestable.** _(HIGH)_ The
   byte-comparison that makes the trio honest also prevents the adversarial variant carrying an import side effect, so
   a surface regressed to `importlib.import_module` passes every current fixture. Needs a canary package _outside_ the
   trio.
@@ -225,21 +237,33 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   `status: deprecated` + foreign-namespace `replacement` purl; adversarial `migration-guide.json` renaming
   `Greeter.greet` into that successor plus one record for a surface the consumer never calls; a same-publisher
   conforming twin so the arms differ only in the redirect. Assert the namespace divergence in the validator.
-- [ ] C2. No `[tool.miri.consume]` fixture (see A6). Add `examples/fixtures/consuming-project/` with paired files:
+- [x] C2. **FIXED 2026-08-23** — same work as A6. _Original finding:_ No `[tool.miri.consume]` fixture (see A6). Add
+  `examples/fixtures/consuming-project/` with paired files:
   conforming, hostile-command, hostile-unknown-key, hostile-server-value. Pass condition: the generator refuses and
   emits no harness config. Add a dependency-side probe for the no-influence rule.
-- [ ] C3. No malformed variant (see A11): `lifecycle.json` truncated mid-object, `sdk-manifest.json` with a type-wrong
+- [x] C3. **FIXED 2026-08-23** — same work as A11. _Original finding:_ No malformed variant (see A11):
+  `lifecycle.json` truncated mid-object, `sdk-manifest.json` with a type-wrong
   `api_index`, `usage-patterns.json` with a future `schema_version`. Assert `json.JSONDecodeError` in the validator so
   a well-meaning reformat cannot silently repair it.
-- [ ] C4. No import canary (see A12): a package _outside_ the byte-identical trio whose `__init__.py` writes a
+- [x] C4. **FIXED 2026-08-23** — same work as A12. _Original finding:_ No import canary (see A12): a package _outside_
+  the byte-identical trio whose `__init__.py` writes a
   sentinel and raises. Pass condition: a full `list` plus queries leave no sentinel.
 - [ ] C5. No multi-distribution cases: `AMBIGUOUS_PACKAGE` and the one-row-per-import-package rule are inexpressible
   in a single-package trio.
-- [ ] C6. **No request-side attacks at all.** No hostile `name` argument is ever exercised, so
+- [x] C6. **FIXED 2026-08-23.** `expected/requests.json` ships 10 request-side cases, each a request plus the envelope
+  a conformant surface MUST return: refused `prompt-templates.md` and `README.md`, traversal, absolute path, nested
+  escape, symlink escape, a servable name the package does not ship (absent, **not** an error — the §3.2.1
+  correction), a dotted `package` rejected before resolution, and both `METADATA_UNREADABLE` shapes. Every other
+  fixture varies what a package _ships_; these vary what a caller _asks_. _Original finding:_ **No request-side
+  attacks at all.** No hostile `name` argument is ever exercised, so
   `DOCUMENT_NOT_SERVABLE` is never produced and the §3.2 whitelist — the newest and most security-sensitive surface —
   has zero coverage. Needs a request-trace fixture (`prompt-templates.md`, `../../../../etc/passwd`, `/etc/passwd`,
   `agent-metadata/../../core.py`, a name absent from `list.documents`) each paired with its expected envelope.
-- [ ] C7. No symlinked-document fixture, so the missing realpath confinement is invisible to the validator.
+- [x] C7. **FIXED 2026-08-23.** `metadata/symlinked/usage-patterns.json` is a symlink to a file outside the servable
+  set. The name is whitelisted and passes the grammar — only realpath resolution catches it, which is exactly why
+  §3.2.2 binds confinement to the resolved path. Survives the build (`copytree(symlinks=True)`), asserted by the
+  validator. _Original finding:_ No symlinked-document fixture, so the missing realpath confinement is invisible to
+  the validator.
 - [x] C8. **FIXED 2026-08-23.** The payload is relocated from `sdk-manifest.json`'s top-level `summary` — which no
   api-index response carries — into an adversarial `usage-patterns.json`, across `description`,
   `explanation.key_points`, `security_note` and an antipattern's `right_code`. Every one is a field the Map routes a
@@ -266,7 +290,11 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   traversal half tests a rule that exists in neither consumption spec** — no clause forbids
   dereferencing an `api_index` `file` pointer that escapes the package root, so no check can be written against it
   without inventing normative text. The validator asserts only the SSRF half.
-- [ ] C11. No identity-skew case: the adversarial `lifecycle.json` declares a truthful purl, so surface-resolved vs
+- [x] C11. **FIXED 2026-08-23.** `metadata/spoofed/lifecycle.json` claims `identity.purl = pkg:pypi/requests@2.31.0`.
+  It is deliberately **schema-valid** — the annotation lives in a sibling `ATTACK.md` because an `_attack_note` key
+  would make it fail validation, and the point is that a conforming document can still lie about which package it is.
+  _Original finding:_ No identity-skew case: the adversarial `lifecycle.json` declares a truthful purl, so
+  surface-resolved vs
   publisher-claimed purl (B7) is never forced. Version skew between metadata and installed code likewise uncovered.
 - [x] C14. **FIXED 2026-08-23.** A9 shipped: `src/_dynamic/` serves `Client.get_*` via `__getattr__`, so
   `Client.get_weather()` genuinely returns a value while `ast.parse` cannot see it — verified both ways. Lives

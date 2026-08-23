@@ -158,6 +158,77 @@ def main() -> int:
     else:
         check("A9 dynamic-surface fixture present", False, "src/_dynamic/core.py missing")
 
+    # 4c. The variants added for surface conformance must keep the properties they exist for.
+    #     Each is a case some MIRI-SURFACE check has no other way to exercise.
+    mal = FIX / "metadata/malformed"
+    if mal.is_dir():
+        try:
+            json.loads((mal / "lifecycle.json").read_text())
+            check("malformed lifecycle.json does not parse", False, "it parsed — the truncation was repaired")
+        except json.JSONDecodeError:
+            check("malformed lifecycle.json does not parse", True)
+        # the other two must PARSE but fail their schemas: schema-invalid is a different failure
+        for doc, sch in (("sdk-manifest.json", "sdk-manifest-v1"), ("usage-patterns.json", "usage-patterns-v1")):
+            d = json.loads((mal / doc).read_text())  # must parse
+            check(f"malformed {doc} parses but is schema-invalid",
+                  not _validates(jsonschema, d, REPO / f"schemas/{sch}.json"))
+    else:
+        check("malformed variant present", False)
+
+    spoof = FIX / "metadata/spoofed/lifecycle.json"
+    if spoof.exists():
+        d = json.loads(spoof.read_text())
+        check("A10 spoofed purl claims a foreign package",
+              d["identity"]["purl"].startswith("pkg:pypi/requests"), d["identity"]["purl"])
+        check("A10 spoofed document is schema-VALID (the lie needs no malformity)",
+              _validates(jsonschema, d, REPO / "schemas/lifecycle-v1.json"))
+    else:
+        check("spoofed variant present", False)
+
+    link = FIX / "metadata/symlinked/usage-patterns.json"
+    check("A11 symlinked document is still a symlink", link.is_symlink(),
+          "a plain file here makes the confinement case untestable")
+    if link.is_symlink():
+        check("A11 symlink target is outside the servable set",
+              not link.resolve().name.endswith(".json"), link.resolve().name)
+
+    canary = FIX / "src/_hostile_import/__init__.py"
+    if canary.exists():
+        src = canary.read_text()
+        check("A12 import canary writes a sentinel at import time",
+              "SENTINEL.write_text" in src and "raise ImportError" in src)
+    else:
+        check("import canary present", False)
+
+    proj = FIX / "consuming-project"
+    tomls = sorted(proj.glob("*.toml")) if proj.is_dir() else []
+    check("consuming-project fixtures present", len(tomls) >= 5, f"{len(tomls)} found")
+    if tomls:
+        import tomllib
+        banned = {"command", "args", "env", "url", "path"}
+        hostile = 0
+        for f in tomls:
+            keys = set(tomllib.loads(f.read_text()).get("tool", {}).get("miri", {}).get("consume", {}))
+            if f.stem.startswith("hostile"):
+                bad = keys & banned
+                unknown = keys - {"server", "transport"}
+                if bad or unknown or f.stem == "hostile-server-value":
+                    hostile += 1
+            else:
+                check(f"consuming-project {f.name} uses only the closed grammar",
+                      not (keys - {"server", "transport"}), f"extra keys {sorted(keys - {'server','transport'})}")
+        check("consuming-project hostile cases each violate the grammar", hostile == len(tomls) - 1,
+              f"{hostile} hostile of {len(tomls) - 1}")
+
+    reqs = EXPECTED / "requests.json"
+    if reqs.exists():
+        cases = json.loads(reqs.read_text())["cases"]
+        check("request-side attack cases present", len(cases) >= 8, f"{len(cases)} cases")
+        missing = [c["id"] for c in cases if not c.get("checks") or "expect" not in c]
+        check("every request case names checks and an expected envelope", not missing, str(missing))
+    else:
+        check("request-side attack cases present", False)
+
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a
     #    check that does not exist, and every non-pending check must have a case behind it.

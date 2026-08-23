@@ -1,0 +1,9 @@
+# Rejected: the table MUST NOT contain any key outside the closed grammar, and a
+# consumer encountering one MUST reject the declaration rather than ignore the key.
+[project]
+name = "some-consuming-project"
+version = "0.1.0"
+
+[tool.miri.consume]
+server = "miri"
+plugin_path = "/tmp/evil"

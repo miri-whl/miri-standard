@@ -1,0 +1,79 @@
+{
+  "note": "C6 — request-side attacks. Every other fixture varies what a package SHIPS; these vary what a caller ASKS. The §3.2.1 servable set and §3.2.2 confinement are the newest and most security-sensitive surface in the contract and had no coverage at all: nothing here requires a hostile package, only a hostile request. Each case is a request plus the envelope a conformant surface MUST return.",
+  "cases": [
+    {
+      "id": "refused_prompt_templates",
+      "checks": ["MIRI-SURFACE-020"],
+      "request": { "operation": "document", "package": "greet_miri", "name": "prompt-templates.md" },
+      "expect": { "ok": false, "error": { "code": "DOCUMENT_NOT_SERVABLE", "retryable": false } },
+      "why": "The highest-risk injection surface, refused by name. A surface that serves it has reopened the channel the closed servable set exists to shut."
+    },
+    {
+      "id": "refused_readme",
+      "checks": ["MIRI-SURFACE-020"],
+      "request": { "operation": "document", "package": "greet_miri", "name": "README.md" },
+      "expect": { "ok": false, "error": { "code": "DOCUMENT_NOT_SERVABLE", "retryable": false } },
+      "why": "Free prose is never servable regardless of where it sits. The inventory comes from `list`, composed by the surface."
+    },
+    {
+      "id": "refused_traversal",
+      "checks": ["MIRI-SURFACE-020", "MIRI-SURFACE-021"],
+      "request": { "operation": "document", "package": "greet_miri", "name": "../../../../etc/passwd" },
+      "expect": { "ok": false, "error": { "code": "DOCUMENT_NOT_SERVABLE", "retryable": false } },
+      "why": "Fails the single-segment grammar before any path work happens. MUST NOT be normalized into an acceptable form."
+    },
+    {
+      "id": "refused_absolute",
+      "checks": ["MIRI-SURFACE-021"],
+      "request": { "operation": "document", "package": "greet_miri", "name": "/etc/passwd" },
+      "expect": { "ok": false, "error": { "code": "DOCUMENT_NOT_SERVABLE", "retryable": false } },
+      "why": "An absolute path is not a document name."
+    },
+    {
+      "id": "refused_nested_escape",
+      "checks": ["MIRI-SURFACE-021"],
+      "request": { "operation": "document", "package": "greet_miri", "name": "agent-metadata/../../core.py" },
+      "expect": { "ok": false, "error": { "code": "DOCUMENT_NOT_SERVABLE", "retryable": false } },
+      "why": "Contains a separator, so it fails the grammar — and would escape the root even if it did not. The grammar check is what makes the path check unnecessary here."
+    },
+    {
+      "id": "refused_symlink_escape",
+      "checks": ["MIRI-SURFACE-021"],
+      "fixture": "symlinked",
+      "request": { "operation": "document", "package": "greet_symlinked", "name": "usage-patterns.json" },
+      "expect": { "ok": false, "error": { "code": "DOCUMENT_NOT_SERVABLE", "retryable": false } },
+      "why": "The name is whitelisted and passes the grammar; only realpath resolution catches it. This is the case name-string filtering cannot detect, and the reason §3.2.2 binds confinement to the RESOLVED path."
+    },
+    {
+      "id": "absent_not_error",
+      "checks": ["MIRI-SURFACE-010"],
+      "fixture": "bare",
+      "request": { "operation": "document", "package": "greet_bare", "name": "lifecycle.json" },
+      "expect": { "ok": true, "present": false },
+      "why": "A servable name the package does not ship is ABSENT, not DOCUMENT_NOT_SERVABLE. This is the §3.2.1 correction: list.documents is the input domain, never a precondition."
+    },
+    {
+      "id": "dotted_package_rejected_before_resolution",
+      "checks": ["MIRI-SURFACE-022"],
+      "request": { "operation": "lifecycle", "package": "greet_miri.submodule" },
+      "expect": { "ok": false, "error": { "code": "INVALID_INPUT", "retryable": false } },
+      "why": "Resolving a dotted name imports the parent and runs its __init__. The rejection MUST happen before resolution is attempted, which is why §3.0 makes `package` a single segment."
+    },
+    {
+      "id": "unreadable_not_absent",
+      "checks": ["MIRI-SURFACE-012"],
+      "fixture": "malformed",
+      "request": { "operation": "lifecycle", "package": "greet_malformed" },
+      "expect": { "ok": false, "error": { "code": "METADATA_UNREADABLE", "retryable": false } },
+      "why": "The file exists and does not parse. Reporting it absent would tell a consumer the package ships nothing, which is false and hides a real problem."
+    },
+    {
+      "id": "schema_invalid_is_unreadable",
+      "checks": ["MIRI-SURFACE-012"],
+      "fixture": "malformed",
+      "request": { "operation": "document", "package": "greet_malformed", "name": "sdk-manifest.json" },
+      "expect": { "ok": false, "error": { "code": "METADATA_UNREADABLE", "retryable": false } },
+      "why": "Parses as JSON, fails its schema (api_index is a string). §3.2.1 now requires validation before serving, so METADATA_UNREADABLE covers schema-invalidity and not only malformed JSON."
+    }
+  ]
+}

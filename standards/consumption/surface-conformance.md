@@ -96,7 +96,7 @@ The discrimination the contract calls its single most consequential clause.
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
 | MIRI-SURFACE-010 | M | Reports absence as `ok: true, present: false` — never as an error | 8 | `bare` |
-| MIRI-SURFACE-011 | M | Reports failure as `ok: false` with a coded `error` object | 7 | request trace |
+| MIRI-SURFACE-011 | M | Reports failure as `ok: false` with a coded `error` object | 7 | request traces |
 | MIRI-SURFACE-012 | M | Reports an document it could not parse as `METADATA_UNREADABLE`, never absent or repaired | 7 | `malformed` |
 
 ### C. Boundaries (24 points)
@@ -143,10 +143,15 @@ What the surface will and will not do. Every check here is a refusal.
 | F. Binding | 2 | 7 |
 | **Total** | **16** | **100** |
 
-Several cases above name fixtures that do not exist yet — the `malformed` variant, the `symlinked` document, the
-import canary, the identity-skew document, the multi-distribution pair, and the request-trace set. Those checks are
-**defined but not yet scorable**, and a report MUST forfeit them rather than crediting them. Building them is the
-remaining fixture work, and this profile is what gives that work something to be evidence *for*.
+**Every check above now has an executable case.** The fixtures those cases name — the `malformed` variant, the
+`symlinked` document, the import canary, the `spoofed` identity document, the `consuming-project` declarations and
+the request-trace set — were built after this profile, precisely because the profile is what made clear which cases
+were missing. `tools/validate_fixtures.py` asserts each stays live.
+
+One case has not been built: **multi-distribution** (`MIRI-SURFACE-041`, one row per import package and
+`AMBIGUOUS_PACKAGE`) needs two distributions providing the same import name, which cannot be expressed by a fixture
+set built from one template. It is defined but **not yet scorable**, and a report MUST forfeit it rather than credit
+it — which under the corrected scoring model (§3) means it leaves both the numerator and the denominator.
 
 ## 5. Why These Are Not Consumer Checks
 

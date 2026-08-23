@@ -201,6 +201,25 @@ of 75 were not comparable — which is the one thing a score exists to allow.
 but the reported figure will change and the 75/Silver we have cited is on the old model. `lint-report-v1.json` needs
 the `not_applicable` count and effective denominator as fields.
 
+### 3h-bis. Validation data for the new model — the sample SDK as it stands today
+
+Scored with `miri` 0.2.0 against the current sample (old model), for you to check the new implementation against:
+
+- **Reported: 75 conformance, Silver, conforming, 0 MUST failures.**
+- Outcomes: **26 pass, 12 skipped, 2 fail**. Passing weights sum to **68**, so **7 points come from credited
+  skipped checks** — which is the behavior the new model changes.
+- The 12 skipped are a mix and must be treated differently under the new model: capability forfeits
+  (`execution` — 015, 035, 036, 040; `network` — 005, 026, 027; `previous-release` — 030, 034) versus genuine
+  condition-not-applicable (024, 025 SBOM: no binary components; 038).
+- **Four checks pass that cannot fire**: MIRI-PY-028, 029, 031, 032 = **13 points**. The sample declares zero
+  deprecations and zero breaking changes, so every trigger quantifies over an empty set. These are now `conditional`
+  and become not-applicable.
+
+Under the new model those 13 points leave both numerator and denominator. We deliberately are **not** publishing a
+predicted new score — the exact figure depends on how forfeits and not-applicables are separated in your
+implementation, which is the thing being built. What we can say is that 13 points of the current 75 are awarded for
+having nothing to deprecate.
+
 ## 4. Fix the `generate` bugs (blocks the standard's sample gate)
 
 Still open from step-3, and it blocks the standard's CI from moving to the honest

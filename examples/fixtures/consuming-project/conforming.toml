@@ -1,0 +1,7 @@
+[project]
+name = "some-consuming-project"
+version = "0.1.0"
+
+[tool.miri.consume]
+server = "miri"
+transport = "stdio"

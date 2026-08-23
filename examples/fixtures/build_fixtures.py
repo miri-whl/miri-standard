@@ -42,10 +42,24 @@ VARIANTS = {
 # byte-identity check. Each exists because some property cannot be expressed inside a trio whose
 # whole point is that the source never varies.
 OUTLIERS = {
-    # variant: (distribution, import package, source dir, why it must differ)
-    "dynamic": ("greet-dynamic", "greet_dynamic", HERE / "src/_dynamic",
+    # variant: (distribution, import package, source dir, metadata dir or None, why it must differ)
+    "dynamic": ("greet-dynamic", "greet_dynamic", HERE / "src/_dynamic", None,
                 "serves part of its surface via __getattr__, so `resolve` reports not-in-source "
                 "for a symbol that works (MIRI-CONSUMER-011)"),
+    "hostile-import": ("greet-hostile-import", "greet_hostile_import", HERE / "src/_hostile_import", None,
+                       "writes a sentinel and raises on import, so a surface that resolves by importing "
+                       "rather than reading is detected (MIRI-SURFACE-022)"),
+}
+
+# Variants that share the template source but carry metadata the trio cannot: documents that do
+# not parse, documents that lie about identity, a whitelisted name that resolves outside the root.
+METADATA_VARIANTS = {
+    "malformed": ("greet-malformed", "greet_malformed", METADATA / "malformed",
+                  "unparsable and schema-invalid documents, so METADATA_UNREADABLE is falsifiable"),
+    "spoofed": ("greet-spoofed", "greet_spoofed", METADATA / "spoofed",
+                "a schema-valid lifecycle.json claiming to be pkg:pypi/requests (MIRI-SURFACE-040)"),
+    "symlinked": ("greet-symlinked", "greet_symlinked", METADATA / "symlinked",
+                  "a whitelisted document name that is a symlink out of the package (MIRI-SURFACE-021)"),
 }
 
 PYPROJECT = """\
@@ -95,14 +109,30 @@ def build(out: pathlib.Path) -> int:
         n = len(list((pkg_dir / "agent-metadata").glob("*.json"))) if meta_dir else 0
         print(f"  {variant:12s} -> {root}  ({n} metadata document(s))")
 
-    for variant, (dist, pkg, src, why) in OUTLIERS.items():
+    for variant, (dist, pkg, src, meta_dir, why) in OUTLIERS.items():
         root = out / variant
         if root.exists():
             shutil.rmtree(root)
         shutil.copytree(src, root / "src" / pkg)
+        if meta_dir is not None:
+            shutil.copytree(meta_dir, root / "src" / pkg / "agent-metadata")
         (root / "pyproject.toml").write_text(
             PYPROJECT.format(dist=dist, pkg=pkg, variant=variant, meta="no"))
-        print(f"  {variant:12s} -> {root}  (outlier, exempt from byte-identity: {why})")
+        print(f"  {variant:15s} -> outlier, exempt from byte-identity: {why}")
+
+    # Metadata variants DO share the template source, so they stay inside the byte-identity check:
+    # the whole point is that only the metadata differs.
+    for variant, (dist, pkg, meta_dir, why) in METADATA_VARIANTS.items():
+        root = out / variant
+        if root.exists():
+            shutil.rmtree(root)
+        pkg_dir = root / "src" / pkg
+        shutil.copytree(TEMPLATE, pkg_dir)
+        shutil.copytree(meta_dir, pkg_dir / "agent-metadata", symlinks=True)
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(dist=dist, pkg=pkg, variant=variant, meta=variant))
+        built[variant] = pkg_dir
+        print(f"  {variant:15s} -> {why}")
 
     # The honesty check: identical source across every variant, verified byte-for-byte.
     # OUTLIERS are excluded by construction — they exist to differ.
@@ -116,7 +146,8 @@ def build(out: pathlib.Path) -> int:
             print(f"FAIL: {variant} source differs from bare in {diff}", file=sys.stderr)
             return 1
     print(f"verified: {len(names)} source file(s) byte-identical across all "
-          f"{len(VARIANTS)} variants — any consumer difference is metadata-attributable")
+          f"{len(built)} source-sharing variants ({', '.join(sorted(built))}) — "
+          f"any difference in consumer behavior is metadata-attributable")
     return 0
 
 

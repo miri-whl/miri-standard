@@ -1,0 +1,7 @@
+{
+  "sdk_version": "1.0.0",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "miri_version": "1.0",
+  "quick_reference": {"primary_classes": ["Greeter"], "key_methods": ["greet"], "common_imports": []},
+  "api_index": "this should be an object, not a string"
+}
