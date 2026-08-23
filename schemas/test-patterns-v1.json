@@ -1,0 +1,120 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-whl.github.io/schemas/test-patterns-v1.json",
+  "title": "Miri Standard Test Patterns",
+  "description": "Schema for test-patterns.json - how to test an integration against this package, extracted from the package's own test suite",
+  "type": "object",
+  "required": ["version", "generated_at", "patterns"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "pattern": "^\\d+\\.\\d+$"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Build-time generation timestamp (RFC 3339, UTC)"
+    },
+    "test_framework": {
+      "type": "string",
+      "description": "The framework the package's own suite uses, as evidenced by its test files (e.g. pytest, unittest). Declared so a consumer can match idiom, not as a requirement on the consumer."
+    },
+    "supported_test_doubles": {
+      "type": "array",
+      "description": "Fakes, stubs, or fixtures the package SHIPS for consumers to test against. A consumer may rely on these; anything absent here is not a supported double, and a consumer must not present a synthesized one as though it were.",
+      "items": { "$ref": "#/definitions/test_double" }
+    },
+    "patterns": {
+      "type": "array",
+      "description": "Test patterns, each demonstrating how to test one surface",
+      "items": { "$ref": "#/definitions/test_pattern" }
+    }
+  },
+  "definitions": {
+    "test_double": {
+      "type": "object",
+      "required": ["name", "import_path", "purpose"],
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The double's public name"
+        },
+        "import_path": {
+          "type": "string",
+          "description": "Importable path, e.g. weather_sdk.testing.FakeWeatherClient",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+        },
+        "purpose": {
+          "type": "string",
+          "description": "What this double stands in for, and its fidelity limits"
+        },
+        "replaces": {
+          "type": "string",
+          "description": "The real surface this double substitutes for"
+        }
+      }
+    },
+    "test_pattern": {
+      "type": "object",
+      "required": ["id", "name", "kind", "surface", "code"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Stable identifier",
+          "pattern": "^[a-z_][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "description": "Short human name"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["unit", "integration"],
+          "description": "unit = the package's surface is exercised in isolation, with doubles for anything external. integration = a real dependency or network endpoint participates."
+        },
+        "surface": {
+          "type": "string",
+          "description": "The package surface this pattern tests, named as it appears in sdk-manifest.json api_index"
+        },
+        "description": {
+          "type": "string",
+          "description": "What this pattern establishes"
+        },
+        "setup": {
+          "type": "string",
+          "description": "Code establishing preconditions (fixtures, doubles, configuration)"
+        },
+        "code": {
+          "type": "string",
+          "description": "The test body itself, runnable as written given setup"
+        },
+        "assertion": {
+          "type": "string",
+          "description": "What the test asserts, if not evident from code"
+        },
+        "teardown": {
+          "type": "string",
+          "description": "Cleanup required after the test, if any"
+        },
+        "requires_network": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether running this pattern reaches the network. A consumer MUST treat true as requiring explicit opt-in, since a test suite that silently makes live calls is a supply-chain and cost surprise."
+        },
+        "requires_credentials": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether the pattern needs real credentials. A consumer MUST NOT fabricate or substitute credentials to make such a pattern run."
+        },
+        "source_file": {
+          "type": "string",
+          "description": "The test file in the package's own suite this pattern was extracted from — evidence, per the Generation Invariants"
+        }
+      }
+    }
+  }
+}

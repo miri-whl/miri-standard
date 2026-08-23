@@ -4,7 +4,11 @@
   "title": "Miri Standard API Graph",
   "description": "Schema for api-graph.json - AST-derived API relationship graph. Only structure that can be evidenced from source is represented: nodes carry their kind, edges carry a declared relationship. Scored or inferred values (centrality, usage frequency) and synthesized usage workflows are deliberately NOT part of this contract - a generator must not invent them.",
   "type": "object",
-  "required": ["version", "nodes", "edges"],
+  "required": [
+    "version",
+    "nodes",
+    "edges"
+  ],
   "additionalProperties": false,
   "properties": {
     "$schema": {
@@ -25,35 +29,57 @@
     "nodes": {
       "type": "object",
       "patternProperties": {
-        "^[A-Za-z_][A-Za-z0-9_]*$": {
+        "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$": {
           "$ref": "#/definitions/graph_node"
         }
       },
       "additionalProperties": false,
-      "description": "API components as graph nodes, keyed by component name"
+      "description": "API components as graph nodes, keyed by component name. Keys are dotted qualified names (e.g. Greeter.greet) so a node can be joined to the same key space sdk-manifest.json api_index uses; a bare name is the module-level form of the same grammar."
     },
     "edges": {
       "type": "array",
-      "items": {"$ref": "#/definitions/graph_edge"},
+      "items": {
+        "$ref": "#/definitions/graph_edge"
+      },
       "description": "Declared relationships between API components"
     }
   },
   "definitions": {
     "graph_node": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "additionalProperties": false,
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["class", "function", "method", "module", "constant"],
+          "enum": [
+            "class",
+            "function",
+            "method",
+            "module",
+            "constant"
+          ],
           "description": "Type of API component"
+        },
+        "file": {
+          "type": "string",
+          "description": "Source file this component is defined in, relative to the package root. An AST fact, so it carries no inference beyond what the source states (Generation Invariants \u00a75.4)."
+        },
+        "module": {
+          "type": "string",
+          "description": "Dotted module path this component is defined in. An AST fact."
         }
       }
     },
     "graph_edge": {
       "type": "object",
-      "required": ["from", "to", "relationship"],
+      "required": [
+        "from",
+        "to",
+        "relationship"
+      ],
       "additionalProperties": false,
       "properties": {
         "from": {
@@ -66,12 +92,21 @@
         },
         "relationship": {
           "type": "string",
-          "enum": ["uses", "returns", "creates", "extends", "implements", "calls"],
+          "enum": [
+            "uses",
+            "returns",
+            "creates",
+            "extends",
+            "implements",
+            "calls"
+          ],
           "description": "Type of relationship, derived from the source (inheritance, return type, call site)"
         },
         "methods": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Methods involved in the relationship, when evidenced from source"
         }
       }

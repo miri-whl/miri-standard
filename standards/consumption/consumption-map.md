@@ -132,16 +132,25 @@ does not need it.
 
 **Read, in order:**
 
-1. **(S)** `migration-guide` — the structured `{surface, removed_in, replacement}` records and deprecation inventory.
+1. **(S)** `migration-guide` — the structured `{surface, removed_in, replacement}` records and deprecation inventory
+   for the transition **into the installed version**. The surface answers only for what is installed
+   ([Discovery Contract §6.2.1](discovery-contract.md)); a prospective "what breaks if I move to 1.5.0?" has no
+   operation in 0.3 and MUST NOT be answered from the shipped file.
 2. **(F/X)** Cross-reference each record against the consumer codebase's **own call sites**.
-3. **(S)** `api-index` — confirm each `replacement` surface appears in the target version, then verify it against the
-   installed surface before emitting a call (§3.2).
+3. **(S)** `api-index`, then **(F/X)** introspection — confirm each `replacement` surface exists in the **installed**
+   surface before emitting a call to it (§3.2). Where the replacement is not yet installed, the record is reported as
+   pending verification, not as a confirmed target.
 
 **Must not:**
 
 - Propose an edit for a migration record the consumer codebase never touches — no changelog cargo-culting. (Observable:
   every proposed edit corresponds to a real call site.)
 - Present a migration guide's claims as verified facts about the installed package without checking them against it.
+- **Automatically install, or migrate code onto, a declared `replacement`**
+  ([Lifecycle and Security Metadata §9.3](../python/lifecycle-security-metadata.md)). A `replacement` purl is
+  publisher-authored and may point into a namespace the publisher does not control; a compromised release can redirect
+  dependents onto an attacker-held successor. The consumer surfaces the claim for a human decision and MUST flag a
+  replacement whose purl namespace differs from the deprecated package's.
 
 *Heuristic:* an upgrade plan reads as "affected at N sites," not as a changelog paraphrase. The migration guide names
 what *could* change; only the consumer's own usage says what *will*.
@@ -190,6 +199,29 @@ matched, and author-written than anything a general search returns.
 *Heuristic:* trust is decided at call time against live sources, never read off the shipped file. The metadata tells
 the agent *whom to ask*; it never answers *on their behalf*.
 
+### 3.6 Writing tests against a dependency
+
+**Read, in order:**
+
+1. **(S)** `test-patterns.json` — how the package's own suite exercises the surface being integrated, and which test
+   doubles the package **ships** for consumers.
+2. **(S)** `api-index` — confirm the surface under test, and its `signature` where the producer supplies one.
+3. **(S)** `usage-patterns.json` — the idiomatic call sequence the test should exercise, so the test covers real usage
+   rather than an invented one.
+
+**Must not:**
+
+- Present a **synthesized mock as the package's supported test double.** Only entries in
+  `supported_test_doubles` are supported; anything the consumer invents is its own, and MUST be described as such.
+  (Observable: a claimed "official" fake that appears in no `supported_test_doubles` entry.)
+- Run a pattern whose `requires_network` or `requires_credentials` is `true` without explicit opt-in, and never
+  fabricate or substitute credentials to make one run.
+- Report that a package "has no tests" from the absence of `test-patterns.json`. Absence is evidence-scoped (§4): it
+  means no test patterns were generated, not that the package is untested.
+
+*Heuristic:* a package's own suite is the most reliable statement of how its surface is meant to be exercised —
+including which failures it treats as expected. Prefer extending its idiom over inventing a parallel one.
+
 ## 4. Interpretation Rules
 
 Three rules govern how a consumer reads what it receives. The first two mirror producer-side Generation Invariants
@@ -216,11 +248,22 @@ generator's code — the "an author who builds strictly to the documents writes 
 The map above says *when* to read; this table records *what each element is for*. Every element the standard defines
 gets a row.
 
-**Normative audit rule:** an element defined by the standard MUST be reachable by at least one read-step in §3 or be
-marked **reserved**. This is a mechanical criterion — a reviewer checks it by cross-referencing §3 — and it is what
-keeps the standard from accreting elements nothing ever reads. It was applied to `api-graph.json` during review, which
-survived it by being given a defined consumption role (§3.2 step 4); an element that cannot be given one is a removal
-candidate.
+**Normative audit rule — both directions.** The audit is bidirectional, and each direction catches a different
+failure:
+
+1. **Element → task.** Every element the standard defines MUST be reachable by at least one read-step in §3, or be
+   marked **reserved**. This keeps the standard from accreting elements nothing ever reads. It was applied to
+   `api-graph.json` during review, which survived by being given a defined consumption role (§3.2 step 4); an element
+   that cannot be given one is a removal candidate.
+2. **Task → element.** Every task in §3 MUST have at least one element that answers it, and — conversely — **a
+   question a developer demonstrably asks, with no element to answer it, is a gap the audit MUST record** as a row
+   with no element rather than leaving it invisible.
+
+Direction 2 was added after direction 1 alone failed to catch a real hole. Testing — "how do I test my integration?" —
+had no element, so it had no row, so the completeness check passed silently: *a capability that was never defined
+cannot fail an elements-only audit.* An audit that only walks the elements it already has can never discover the one
+it is missing. `test-patterns.json` (§3.6) closes that specific gap; the rule change is what stops the next one
+hiding the same way.
 
 The two right-hand columns are **informative**: they record the design intent for each element, not a measured
 outcome, and no clause of this standard depends on them.
@@ -234,6 +277,7 @@ outcome, and no clause of this standard depends on them.
 | `migration-guide.json` + deprecation inventory | "What changed, and what replaces what?" | Structured `{surface, removed_in, replacement}` for mechanical cross-reference against the consumer's call sites | Upgrades by prose changelog or trial-and-error; deprecated surfaces linger until removal breaks them |
 | `AGENT_EXAMPLES.json` + `examples/` (quickstart) | "Show me working code" | A runnable learning path (MIRI-PY-015 gates it). **(F) only** — `AGENT_EXAMPLES.json` lives in `.dist-info/` and `examples/` is package source, so neither is servable; `usage-patterns.json` is the served path to working code | Agent learns from snippets that may never have run |
 | Embedded docs (`api_reference`, `docs/troubleshooting.md`) | "Depth, offline" | The runtime-failure path — symptom → cause without leaving the environment | Debugging falls back to web search or source spelunking |
+| `test-patterns.json` | "How do I test my integration against this?" | Per-surface unit and integration patterns extracted from the package's own suite, plus the test doubles the package actually ships — so a test exercises the package's real idiom and known-expected failures | Tests written from priors against a guessed surface; consumers inventing mocks that drift from the package's own fidelity assumptions |
 | `prompt-templates.md` | "How does the author want agents framed?" | Author-curated task scaffolds. **Reserved:** deliberately never served (Discovery Contract §9.1) and routed to by no read-step, because it is the highest-risk injection surface | — |
 | `templates/` | "Scaffold me a correct integration" | Code templates coherent with package idiom (MIRI-PY-038 gates coherence) | Boilerplate invented per-agent, drifting from idiom |
 | `_miri` discovery APIs (`get_agent_metadata`) | "Programmatic access, in-process" | Runtime self-description with graceful degradation (MIRI-PY-040) — the **(F)** in-process vehicle for code that introspects instead of path-guessing | Hard-coded paths that break when metadata is stripped |

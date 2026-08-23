@@ -46,6 +46,7 @@ def main() -> int:
         "usage-patterns.json": "usage-patterns-v1",
         "migration-guide.json": "migration-guide-v1",
         "api-graph.json": "api-graph-v1",
+        "test-patterns.json": "test-patterns-v1",
     }
     miri_docs = sorted(p for p in (FIX / "metadata/miri").glob("*.json"))
     check("conforming twin ships at least one document", bool(miri_docs), f"{len(miri_docs)} found")

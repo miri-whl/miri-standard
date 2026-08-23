@@ -64,7 +64,10 @@ read-steps with the vehicle that supplies it, so that no reading order depends o
   with the publisher's bytes nested inside it (§4). The two never share a namespace, so no publisher can forge a
   surface signal.
 - **Pointers, not dumps.** Routing answers are context-budgeted: capped, filterable, and pointing into the source
-  rather than reproducing it.
+  rather than reproducing it. The saving this yields is a **function of the ratio between a package's source size and
+  its metadata size**, and is therefore largest on big packages and small — occasionally negative — on tiny ones. No
+  clause of this standard asserts a particular saving; where one is claimed it must be measured on the package in
+  question.
 - **Import-free discovery.** Locating a package's metadata MUST NOT import or execute the package (§5).
 - **One shape across bindings.** The operations and their envelopes are defined independently of transport; MCP is one
   binding, and any future binding carries the same operations and the same envelopes (§6).
@@ -138,7 +141,7 @@ surface MUST return an `AMBIGUOUS_PACKAGE` error (§4.3) rather than silently pi
 
 | Servable | Not servable |
 |---|---|
-| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `api-graph.json` | everything else, including `prompt-templates.md` and `README.md` |
+| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `api-graph.json`, `test-patterns.json` | everything else, including `prompt-templates.md` and `README.md` |
 
 The servable set is **closed and exhaustive**: it is not a sample, and a surface MUST NOT extend it. Membership is
 governed by one criterion, so that future document types are adjudicated by principle rather than by whether anyone
@@ -188,6 +191,23 @@ but that the package does not ship returns an **absent** response (§4.2).
 
 `document` is what makes the [Consumption Map](consumption-map.md)'s reading orders executable over a context server:
 every document the Map routes to is either servable here or explicitly labelled as another vehicle's.
+
+#### 3.2.3 Size Bound
+
+`document` returns a whole document, so it is the operation most able to blow a context budget — `sdk-manifest.json`,
+`usage-patterns.json` and `api-graph.json` are all on the servable set, and on a large package each can run to
+hundreds of kilobytes. A capped router (§3.5) beside an uncapped bulk fetch is not "pointers, not dumps"; it is a
+pointer with an unbounded escape hatch beside it.
+
+A conformant surface therefore MUST declare a `max_bytes` for `document`, MUST report it on every response, and where
+the serialized document exceeds it MUST set `truncated: true` rather than returning the excess. **A truncated document
+MUST NOT be presented, by surface or consumer, as the complete document**, and a consumer MUST NOT parse a truncated
+payload as though it were well-formed JSON — truncation is reported, not repaired.
+
+Truncation is a backstop, not the intended path. Where a consumer needs part of a large document, the filtered
+operations are the right tool: `api-index` (§3.5) for routing rather than `document("sdk-manifest.json")`. Filtered
+access to the remaining large documents is not yet specified; until it is, a surface SHOULD set `max_bytes` high
+enough that ordinary packages are served whole, and the honest scaling statement in §2 applies.
 
 ### 3.3 `lifecycle`
 
@@ -244,6 +264,27 @@ a response merely because it was capped out or filtered out by `query`. It follo
 The entries are pointers into the installed source; a consumer MUST verify a claimed surface against the installed
 package before relying on it, never treating the index as ground truth.
 
+#### 3.5.1 Cap, Ordering, and Continuation
+
+A cap whose value, ordering and continuation are unspecified is not a contract: two conformant surfaces disagree, and
+a conformance check written against one is vacuous on the other. The following are therefore normative.
+
+- **Value.** The default `cap` is **25**. A surface MAY accept a caller-supplied `limit` up to a declared maximum, and
+  MUST NOT return more than the effective cap. The value in force MUST be reported as `cap` on every response.
+- **Ordering.** Entries are ordered **lexicographically by entry name**, and the ordering MUST be stable across
+  identical requests. Without this, "the first 25" is a different 25 per surface and per call, and truncation is
+  unreproducible.
+- **Matching.** `query` matches, case-insensitively, against the **entry name only** — not `purpose`, not `file`. A
+  surface MUST NOT widen the match, because a consumer cannot distinguish "absent" from "matched on a field I did not
+  intend" (and §3.5's presence-only rule already forbids reading absence as non-existence).
+- **Continuation.** Where a surface drops entries it MUST return a `next_cursor` string alongside `truncated: true`,
+  and MUST accept that value as an optional `cursor` input to continue the same ordering. A surface that cannot
+  continue MUST still set `truncated: true` — silently returning a partial answer as though complete is the failure
+  this whole section exists to prevent.
+
+A consumer MUST NOT infer the size of a package's surface from `cap`, from the number of entries returned, or from
+`truncated` being `false` after a `query` — a filtered response is complete only *with respect to that filter*.
+
 ## 4. The Response Envelope
 
 Every response from every operation in §3 is a JSON object — never a bare array — whose top level is **owned entirely
@@ -252,15 +293,36 @@ absence/error signal trustworthy: a publisher cannot write to the top level, so 
 
 ### 4.1 Reserved Envelope Fields
 
+This table is **exhaustive**: these are the only keys that may appear at a response's top level. The
+un-forgeability argument in §4.2 depends on the surface owning a *known, closed* key set — a publisher cannot forge a
+signal it cannot write, but only if "which keys are the surface's" is fully stated rather than sampled.
+
 | Field | Presence | Meaning |
 |---|---|---|
 | `schema_version` | Always | The wire-schema version of the **envelope**, owned and stamped by the surface |
 | `ok` | Always | `true` for a served answer, `false` for a failure (§4.3) |
-| `present` | Document-returning operations | Whether the requested document exists (§4.2) |
-| `package`, `purl` | Single-package responses | The resolved identity the answer is about (§9) |
-| `truncated`, `cap` | `list`, `api-index` | Whether entries were dropped, and the surface's declared cap |
+| `present` | Document-returning operations, and `api-index` | Whether the requested document exists (§4.2) |
+| `package` | Where a package was named or resolved | The import name the answer is about |
+| `purl` | Where identity resolved (§4.1.1) | Surface-derived provenance (§9.1) |
+| `name` | `document` and its shorthands | The document name the answer is about |
+| `reason` | Absent responses (§4.2) | Free-text explanation for humans — **never a machine field** |
+| `truncated`, `cap` | `list`, `api-index`, `document` | Whether the payload was cut, and the bound in force (§3.2.3, §3.5.1) |
+| `next_cursor` | `list`, `api-index`, when truncated | Continuation token for the same ordering (§3.5.1) |
 | `error` | Failures only | The structured error object (§4.3) |
 | `packages` / `document` / `entries` | Per operation | The payload |
+
+#### 4.1.1 `purl` Is Surface-Derived, Never Publisher-Read
+
+`purl` is the input to a per-namespace trust policy (§9.1), which makes it a **security decision** and therefore the
+one field in this table that must not come from the publisher. A surface MUST derive it from the **installed
+distribution's own recorded name and version**, never by reading `identity.purl` out of `lifecycle.json` or any other
+served document. Otherwise a package declaring `pkg:pypi/requests@2.31.0` inherits requests' trust tier by simply
+saying so — a forgery inside the very namespace §4 claims is un-forgeable.
+
+Where a served `identity.purl` disagrees with the derived value, the surface MUST serve the derived value, and SHOULD
+signal the mismatch (it is a strong tampering indicator). `purl` MUST be present on every response whose subject
+package resolved — including `DOCUMENT_NOT_SERVABLE` and `METADATA_UNREADABLE` — and MUST be omitted where identity
+did not resolve: `PACKAGE_NOT_INSTALLED`, `AMBIGUOUS_PACKAGE`, `NOT_DISCOVERABLE`.
 
 `schema_version` is the envelope's own version, stamped by the surface and versioned independently of the transport's
 protocol version and of any version field inside the payload — per the ecosystem convention in
@@ -301,6 +363,19 @@ absent from failed, and only trustworthy if a hostile package cannot forge eithe
 implementation returns absence as a `tools/call` success whose text is an ad-hoc `{"error": …}` object with no code and
 no `present` flag — indistinguishable from a real error; conforming it to this clause is the first implementation
 task.)*
+
+#### 4.2.1 Absence for `api-index`
+
+`api-index` is derived from `sdk-manifest.json`, so it has an absent case like any document-returning operation: a
+package that ships no `sdk-manifest.json` gets `ok: true`, `present: false`, **no `entries` key**, and a `reason`.
+
+A surface MUST NOT signal that absence with `present: true` and an empty `entries` object. The two mean different
+things and a consumer cannot recover the difference: `entries: {}` says *"this package's surface, as filtered, is
+empty"* — a statement about the package — whereas `present: false` says *"there is no manifest to derive an index
+from."* Reading the former as the latter is exactly the absence-implies-non-existence inference §3.5 forbids.
+
+Equally, a `query` that matches nothing is **not** absence: the manifest exists, so the response is `present: true`
+with `entries: {}` and `truncated: false`. That is the one case where an empty `entries` is correct.
 
 ### 4.3 The Error Envelope
 
@@ -376,6 +451,23 @@ MCP binding exposes the operations as MCP tools over JSON-RPC 2.0 (stdio):
 
 The MCP binding is read-only and MUST execute nothing on the artifact's behalf (§5, §9). It binds a local transport
 (stdio, or a loopback socket) and serves only the metadata of packages installed in its own environment.
+
+#### 6.2.1 Installed Scope Only — What This Contract Does Not Answer
+
+Every operation in §3 resolves a package through the local import system (§5), so **this contract answers only for the
+version currently installed**. Two questions a developer genuinely asks are therefore **out of scope in 0.3-draft**,
+and are stated here rather than left to be discovered at an unanswerable read-step:
+
+| Question | Status |
+|---|---|
+| "Is this candidate package on the index MIRI-compatible, before I install it?" | Out of scope. No operation accepts a purl, a registry, or an uninstalled package. |
+| "I am on 1.2.0 — what breaks if I move to 1.5.0?" | Out of scope. `migration-guide` reports the transition *into* the installed version, not a prospective one. |
+
+This is a deliberate consequence of the surface fetching nothing (§9.2) and executing nothing (§5): answering either
+question means reading an artifact from a registry, which would turn publisher-controlled input into server-side
+network requests and require its own threat model. A future version may add a separately-scoped operation for this;
+until it does, **no normative read-order in the [Consumption Map](consumption-map.md) may depend on a pre-install or
+target-version answer**, and a consumer MUST NOT synthesize one.
 
 ### 6.3 Surface Version in `initialize`
 

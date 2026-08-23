@@ -49,24 +49,40 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   **compose** the inventory itself from the directory listing so the bytes are surface-owned. Add the general
   criterion the whitelist lacks: **no free-form natural-language document is servable**, so future document types are
   adjudicated by principle rather than by whether someone remembered to list them.
-- [ ] **A5. Map §3.3 (upgrading) has zero fixture coverage.** _(CRITICAL)_ No `migration-guide.json` in any variant, so
+- [~] **A5. Map §3.3 (upgrading) has zero fixture coverage.** _Spec half done 2026-08-22:_ the §9.3
+  replacement-redirect attack now has normative consumer-side text — Map §3.3 gains a MUST NOT against automatically
+  installing or migrating onto a declared `replacement`, plus a MUST to flag a replacement whose purl namespace
+  differs from the deprecated package's. That was the missing normative hook C10 flagged. _Fixture half still open._
+  _Original finding (CRITICAL):_ No `migration-guide.json` in any variant, so
   an entire normative task, its two MUST-NOTs, the `migration-guide` operation, and the producer standard's
   highest-severity attack (§9.3 replacement redirect) are unexercisable. **A reference consumer that silently
   auto-migrates onto an attacker-declared `replacement` purl passes the current fixture set clean.**
 - [ ] **A6. `[tool.miri.consume]` has no fixture at all.** _(CRITICAL)_ The only arbitrary-execution trust boundary in
   the contract. `build_fixtures.py`'s pyproject template emits no `[tool.miri]` table, so the closed grammar, the
   MUST-reject-unknown-key rule, no-auto-launch, and dependency-cannot-influence-harness are all untested.
-- [ ] **A7. `document` is uncapped and unfilterable** inside a contract whose stated principle is "pointers, not
+- [x] **A7. `document` is uncapped and unfilterable** **FIXED 2026-08-23.** New §3.2.3 Size Bound: a surface MUST
+  declare `max_bytes` for `document`, report it, and set `truncated: true` rather than returning the excess; a
+  truncated document MUST NOT be presented as complete and MUST NOT be parsed as well-formed JSON. §2's "pointers, not
+  dumps" principle now states the scaling regime honestly — the saving is a function of the source-to-metadata size
+  ratio, largest on big packages and occasionally negative on tiny ones — and forbids asserting a saving that has not
+  been measured. _Original finding:_ inside a contract whose stated principle is "pointers, not
   dumps". _(HIGH, 4 of 6)_ §4.1 scopes `truncated`/`cap` to `list` and `api-index` only; the only counterweight is a
   Map SHOULD-not graded "wasteful, not wrong". One `document("sdk-manifest.json")` on a pandas-scale library returns
   hundreds of KB in a single conformant result — a larger dump than selectively reading the wheel.
-- [ ] **A8. The producer chain never defines `signature` and does not emit `file`.** _(HIGH)_ `api_component`
+- [x] **A8. The producer chain never defines `signature` **FIXED 2026-08-23.** `sdk-manifest-v1.json`'s
+  `api_component` now defines `signature` (an AST fact, optional, with the consumer-side rule that its presence MUST
+  NOT be assumed). Backward compatible — sample and fixture still validate. _Remaining:_ generator emission of
+  `signature`/`file` is miri-py's side. _Original finding:_ and does not emit `file`.** _(HIGH)_ `api_component`
   properties are `[common_errors, complexity, example, file, init_params, key_methods, purpose, related_classes,
   type, usage_patterns]` — **`signature` is absent from the schema entirely** — and the sample SDK's entries carry
   neither. Every entry degrades to `{type, purpose}` on the flagship artifact, so the routing view's reason for
   existing over `document` evaporates. Generation Invariant §5.4 already calls `api_index` "a name→file→signature
   map", so the invariant and the schema disagree.
-- [ ] **A9. `api-graph.json` cannot express a method as a node.** _(HIGH)_ Node keys are
+- [x] **A9. `api-graph.json` cannot express a method as a node.** **FIXED 2026-08-23.** Node keys now accept dotted
+  qualified names, so the graph joins the same key space `api_index` uses; `graph_node` gains source-evidenced `file`
+  and `module` so the graph can state which files a change spans. Decisive evidence: `graph_node.type` already
+  enumerated `"method"` while the key pattern could not name one. Verified backward compatible AND load-bearing — the
+  old schema rejected `Greeter.greet`, the new one accepts it. _Original finding:_ _(HIGH)_ Node keys are
   `^[A-Za-z_][A-Za-z0-9_]*$` + `additionalProperties: false`, so `Greeter.greet` is structurally rejected — while
   `api_index` keys on exactly that (permitted because `api_index` constrains nothing). **The two key spaces cannot be
   joined.** `graph_node` is `required: ["type"]` with no `file`/`module`, so the graph cannot say which files a change
@@ -90,20 +106,38 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   byte-comparison that makes the trio honest also prevents the adversarial variant carrying an import side effect, so
   a surface regressed to `importlib.import_module` passes every current fixture. Needs a canary package _outside_ the
   trio.
-- [ ] **A13. The envelope's reserved-field table is not exhaustive, and one field in it is publisher-forgeable.**
+- [x] **A13. The envelope's reserved-field table is not exhaustive **FIXED 2026-08-23.** The table is now declared
+  **exhaustive** (the un-forgeability argument depends on a closed key set) and gains `name`, `reason`, `next_cursor`,
+  with `package`/`purl` split into separate rows. New §4.2.1 defines `api-index` absence and forbids signalling it
+  with an empty `entries` object, while noting the one case where empty `entries` is correct (a `query` matching
+  nothing). B7 fixed alongside — see below. _Original finding:_, and one field in it is publisher-forgeable.**
   _(HIGH)_ (a) §4.1 omits `name` and `reason`, both of which appear in normative examples and carry normative force
   ("MUST branch on `ok` and `present`, never on `reason`") — an anti-forgery argument resting on the surface owning a
   known key set needs that set stated exhaustively. (b) `purl` is the residual publisher path into that namespace
   (see B7). Also: `api-index` has **no defined absent case**, and signalling absence with an empty `entries` object
   would be read as "no symbols exist" — the inference §3.5 forbids.
-- [ ] **A14. `api-index`'s cap is unspecified in value, ordering and pagination.** _(HIGH)_ §3.1's example shows 100,
+- [x] **A14. `api-index`'s cap is unspecified in value, ordering and pagination.** **FIXED 2026-08-23.** New §3.5.1
+  pins all four: default `cap` 25 with an optional caller `limit`; stable lexicographic ordering; `query` matches the
+  entry name **only**; `next_cursor`/`cursor` continuation, with `truncated: true` mandatory even where a surface
+  cannot continue. Also forbids inferring surface size from `cap`, entry count, or `truncated: false` after a filter.
+  _Original finding:_ _(HIGH)_ §3.1's example shows 100,
   §3.5's shows 25 — both conformant. `query`'s matched fields are never stated; ordering and truncation determinism
   are unspecified; "SHOULD narrow rather than paginate" leaves no cursor. **A conformant surface at cap 50 makes the
   A4 padding attack vacuous and its future check permanently green while testing nothing.**
 
 ## B. Missing capabilities (the standard lacks these entirely)
 
-- [ ] **B1. A testing element.** _(HEADLINE — 4 of 6 reviewers independently)_ Maintainer want #5 is served by zero
+- [x] **B1. A testing element.** **DONE 2026-08-22** — decided: a first-class `test-patterns.json` element.
+  Shipped: `schemas/test-patterns-v1.json` (patterns keyed `{id, name, kind: unit|integration, surface, setup, code,
+  assertion, teardown, requires_network, requires_credentials, source_file}` plus `supported_test_doubles` and
+  `test_framework`); Consumption Map **§3.6 "Writing tests against a dependency"** with three read-steps and three
+  prohibitions (MUST NOT present a synthesized mock as a supported double; MUST NOT run a network/credential pattern
+  without opt-in or fabricate credentials; MUST NOT read absence as "the package is untested"); added to the §3.2.1
+  servable set; element-audit row added; a validating `test-patterns.json` shipped in the miri fixture and wired into
+  the validator. **The audit rule is now bidirectional** — the original element→task direction is what let this gap
+  hide, since a capability that was never defined cannot fail an elements-only audit.
+  _Remaining downstream:_ a MIRI-PY check gating it, and miri-py generation (handoff item).
+  _Superseded:_ _(HEADLINE — 4 of 6 reviewers independently)_ Maintainer want #5 is served by zero
   documents, operations, read-steps and schemas. Proposal: `test-patterns.json` with per-surface
   `{surface, kind: unit|integration, setup, fake_or_mock, assertion, teardown, requires_network}`, generated from the
   package's own test suite the way `usage-patterns` is generated from examples; add to the §3.2 whitelist; add Map
@@ -113,7 +147,14 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   never defined passes silently. That rule flaw is why this went unnoticed.
 - [ ] **B2. A symbol-existence operation** — `resolve {package, symbol}`. The ground truth only the surface can
   provide, and the discharge path for A3.
-- [ ] **B3. A pre-install / target-version scope.** Wants #1 and #4. Either a `describe {purl}` variant that reads
+- [x] **B3. A pre-install / target-version scope.** **DECIDED 2026-08-22 — declared OUT OF SCOPE for 0.3.**
+  Taking it on would mean reading artifacts from a registry, turning publisher-controlled input into server-side
+  network requests — which contradicts the surface fetching nothing (§9.2) and executing nothing (§5), and needs its
+  own threat model. Instead: new **§6.2.1 "Installed Scope Only"** states both unanswerable questions explicitly in a
+  table, and forbids any normative read-order depending on a pre-install or target-version answer. Map §3.3 step 1 is
+  reworded to say `migration-guide` reports the transition _into_ the installed version, and step 3 now verifies the
+  replacement against the **installed** surface, reporting it pending rather than confirmed when it is not installed.
+  Deferred to 0.4. _Original ask:_ Wants #1 and #4. Either a `describe {purl}` variant that reads
   from the declared registry without installing (with its own SSRF and no-execution rules), **or** an explicit
   out-of-scope statement in §1/§6.2 plus a fix to Map §3.3 step 3 so no read-step depends on an unanswerable
   operation.
@@ -126,7 +167,12 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
 - [ ] **B6. Routed, gated best-practice fields.** `explanation.key_points`/`security_note`/`performance_note` exist but
   no read-step names them, no audit row mentions them, no check gates them — a fully conforming package can ship zero
   best-practice content.
-- [ ] **B7. A surface-derived `purl`.** §4 argues the envelope is unforgeable because "a publisher cannot write to the
+- [x] **B7. A surface-derived `purl`.** **FIXED 2026-08-23.** New §4.1.1: `purl` MUST be derived from the installed
+  distribution's recorded name and version, never read from `identity.purl` or any served document; where they
+  disagree the surface serves the derived value and SHOULD signal the mismatch as a tampering indicator. Presence is
+  split by error code — required wherever identity resolved (including `DOCUMENT_NOT_SERVABLE`/`METADATA_UNREADABLE`),
+  omitted where it did not. _Original finding:_ §4 argues the envelope is unforgeable because "a publisher cannot
+  write to the
   top level", yet §4.1 puts `purl` there, §9.1 makes it the input to a per-namespace trust policy, and "resolved" is
   nowhere defined — the only purl the standard specifies is publisher-authored. **A package declaring
   `pkg:pypi/requests@2.31.0` inherits requests' trust tier.** Fix: MUST be derived by the surface from the installed
@@ -174,7 +220,8 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
 - [ ] C12. **The fixture set ships attack inputs with no expected outputs** — every pass condition is prose in a README
   column. Add `examples/fixtures/expected/` golden envelopes; this is what turns A1/A2 from surface-behavior
   assertions filed under consumer pass conditions into checkable properties.
-- [ ] C13. The miri arm is unvalidated against its own schemas (see A2).
+- [x] C13. The miri arm is unvalidated against its own schemas (see A2). **Closed by A2** — the validator now
+  loop-validates every document in `metadata/miri/` and fails on any with no schema mapping.
 
 ## D. Regression status from round 1 (10 prior findings)
 
