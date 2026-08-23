@@ -38,6 +38,16 @@ VARIANTS = {
     "adversarial": ("greet-adversarial", "greet_adversarial", METADATA / "adversarial"),
 }
 
+# Packages that deliberately do NOT share the trio's source, and are therefore exempt from the
+# byte-identity check. Each exists because some property cannot be expressed inside a trio whose
+# whole point is that the source never varies.
+OUTLIERS = {
+    # variant: (distribution, import package, source dir, why it must differ)
+    "dynamic": ("greet-dynamic", "greet_dynamic", HERE / "src/_dynamic",
+                "serves part of its surface via __getattr__, so `resolve` reports not-in-source "
+                "for a symbol that works (MIRI-CONSUMER-011)"),
+}
+
 PYPROJECT = """\
 [build-system]
 requires = ["setuptools>=68"]
@@ -85,7 +95,17 @@ def build(out: pathlib.Path) -> int:
         n = len(list((pkg_dir / "agent-metadata").glob("*.json"))) if meta_dir else 0
         print(f"  {variant:12s} -> {root}  ({n} metadata document(s))")
 
+    for variant, (dist, pkg, src, why) in OUTLIERS.items():
+        root = out / variant
+        if root.exists():
+            shutil.rmtree(root)
+        shutil.copytree(src, root / "src" / pkg)
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(dist=dist, pkg=pkg, variant=variant, meta="no"))
+        print(f"  {variant:12s} -> {root}  (outlier, exempt from byte-identity: {why})")
+
     # The honesty check: identical source across every variant, verified byte-for-byte.
+    # OUTLIERS are excluded by construction — they exist to differ.
     names = sorted(p.name for p in TEMPLATE.glob("*.py"))
     reference = built["bare"]
     for variant, pkg_dir in built.items():

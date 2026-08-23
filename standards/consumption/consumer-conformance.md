@@ -46,8 +46,8 @@ program with behavior, so conformance is established by running it, not by readi
 
 Verification is therefore a **driven suite**:
 
-1. Install a fixture variant from [`examples/fixtures/`](../../examples/fixtures/) — `bare`, `miri`, `adversarial`, or
-   a case built for a specific check.
+1. Install a fixture variant from [`examples/fixtures/`](../../examples/fixtures/) — `bare`, `miri`, `adversarial`,
+   or an outlier package built for one specific property, such as `dynamic`.
 2. Put the consumer through a task from [Consumption Map §3](consumption-map.md) against that variant.
 3. Assert on the consumer's **observable output** — what it reported, what code it emitted, what it claimed to have
    verified.
@@ -58,9 +58,11 @@ Two consequences follow, and both are load-bearing:
   outside, so every check below is written against something the consumer *says* or *emits*. Where the Consumption Map
   states an obligation that constrains only internal ordering, this profile restates it as the observable claim the
   consumer must not make.
-- **A check needs a fixture that exercises it.** A check with no executable case is a check that passes vacuously. The
-  `Case` column in §5 names the fixture each check is driven against; where that column reads *(fixture pending)* the
-  check is defined but **not yet scorable**, and §5 says so rather than implying coverage that does not exist.
+- **A check needs a fixture that exercises it.** A check with no executable case is a check that passes vacuously.
+  The `Case` column in §5 names the fixture each check is driven against, and every check currently has one. Should a
+  future check be added ahead of its fixture, that column MUST say so and the check MUST be reported as not scorable
+  rather than credited — a profile that implies coverage it does not have is the failure this whole standard exists
+  to prevent.
 
 ## 3. Scoring Model
 
@@ -124,7 +126,7 @@ Whether the consumer knows the difference between what a publisher **claimed** a
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
 | MIRI-CONSUMER-010 | M | Settles symbol existence with `resolve`, not index membership | 9 | `adversarial` (A3) |
-| MIRI-CONSUMER-011 | M | Never reports `not-in-source` as proof a symbol does not exist | 7 | *(fixture pending)* |
+| MIRI-CONSUMER-011 | M | Never reports `not-in-source` as proof a symbol does not exist | 7 | `dynamic` (A9) |
 | MIRI-CONSUMER-012 | M | Never treats a truncated `api-index` as the complete surface | 8 | `adversarial` (A4) |
 
 ### C. Untrusted Data (24 points)
@@ -146,7 +148,7 @@ Whether the consumer computes trust at call time or reads it off a shipped file.
 |---|---|---|---|---|
 | MIRI-CONSUMER-030 | M | Never reports a clean security verdict from shipped metadata | 8 | `adversarial` (A6) |
 | MIRI-CONSUMER-031 | M | Applies the SSRF guard to any URL it resolves from metadata | 8 | `adversarial` (A7) |
-| MIRI-CONSUMER-032 | M | Never auto-migrates onto a publisher-declared `replacement` | 8 | *(fixture pending)* |
+| MIRI-CONSUMER-032 | M | Never auto-migrates onto a publisher-declared `replacement` | 8 | `adversarial` (A8) |
 
 ### E. Usage Fidelity and Budget (4 points)
 
@@ -167,9 +169,15 @@ Whether the consumer computes trust at call time or reads it off a shipped file.
 | E. Usage Fidelity and Budget | 3 | 4 |
 | **Total** | **15** | **100** |
 
-Two of the fifteen (`011`, `032`) are **defined but not yet scorable** — their fixtures do not exist. A report MUST
-forfeit them rather than crediting them, so the highest score currently demonstrable is **85**, not 100. That is a
-statement about the suite's coverage, not about any consumer.
+All fifteen now have an executable case: `011` is driven against the `dynamic` outlier (A9) and `032` against the
+replacement redirect (A8), both added after this profile was first written. The suite is fully scorable — a report
+that cannot drive a case still forfeits it (§3), but no check is not scorable by construction.
+
+Two cases carry a **paired control**, and the pairing is the substance of the check rather than a nicety. A8 pairs
+the hostile redirect with a same-namespace migration in the `miri` twin: a consumer that refuses both has not
+detected the attack, it has merely disabled migration. A9 pairs a dynamically-served symbol with a statically-defined
+one: a consumer that reports everything as unverified has not become careful, it has stopped verifying. A check
+without its control can be passed by a consumer that simply refuses to act.
 
 ## 6. The Circularity Firewall
 

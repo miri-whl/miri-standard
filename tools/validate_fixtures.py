@@ -134,6 +134,30 @@ def main() -> int:
     check("A5 document is schema-valid (injection does not require malformity)",
           _validates(jsonschema, adv_patterns, REPO / "schemas/usage-patterns-v1.json"))
 
+    # 4b. The dynamic-surface outlier must keep the property MIRI-CONSUMER-011 depends on:
+    #     a symbol that WORKS at runtime and is invisible to static parsing. If someone
+    #     "tidies" __getattr__ into explicit methods, the check silently becomes untestable.
+    dyn = FIX / "src/_dynamic/core.py"
+    if dyn.exists():
+        dyn_tree = ast.parse(dyn.read_text())
+        dyn_static = set()
+        for node in ast.walk(dyn_tree):
+            if isinstance(node, ast.ClassDef):
+                dyn_static.add(node.name)
+                for sub in node.body:
+                    if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        dyn_static.add(f"{node.name}.{sub.name}")
+        check("A9 dynamic symbol is invisible to static parsing",
+              "Client.get_weather" not in dyn_static)
+        check("A9 control symbol IS statically visible",
+              "Client.close" in dyn_static,
+              "without a static control, a consumer could pass by calling everything unverified")
+        has_getattr = any(isinstance(n, ast.FunctionDef) and n.name == "__getattr__"
+                          for n in ast.walk(dyn_tree))
+        check("A9 dynamic surface is served by __getattr__", has_getattr)
+    else:
+        check("A9 dynamic-surface fixture present", False, "src/_dynamic/core.py missing")
+
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a
     #    check that does not exist, and every non-pending check must have a case behind it.

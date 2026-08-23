@@ -214,7 +214,14 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
 
 ## C. Fixture gaps
 
-- [ ] C1. No `migration-guide.json` in any variant (see A5). Add **A8-attack**: adversarial `lifecycle.json` with
+- [x] C1. **FIXED 2026-08-23.** A8 shipped: adversarial `lifecycle.json` now declares `status: deprecated` with
+  `replacement: pkg:pypi/attacker-successor@9.0.0` — a namespace the publisher does not own — and an adversarial
+  `migration-guide.json` rewrites every import onto it, with a **high-confidence `automated_fix`**, which is what
+  makes it dangerous: a consumer applying mechanical fixes performs the compromise itself. Both halves are
+  schema-valid. Includes a second, quieter record for a surface that does not exist, to catch changelog cargo-culting.
+  The `miri` twin ships a same-shape, same-namespace migration as a **paired control** — a consumer that refuses both
+  has disabled migration, not detected an attack. Unblocks MIRI-CONSUMER-032. _Original finding:_ No
+  `migration-guide.json` in any variant (see A5). Add **A8-attack**: adversarial `lifecycle.json` with
   `status: deprecated` + foreign-namespace `replacement` purl; adversarial `migration-guide.json` renaming
   `Greeter.greet` into that successor plus one record for a surface the consumer never calls; a same-publisher
   conforming twin so the arms differ only in the redirect. Assert the namespace divergence in the validator.
@@ -261,7 +268,15 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   without inventing normative text. The validator asserts only the SSRF half.
 - [ ] C11. No identity-skew case: the adversarial `lifecycle.json` declares a truthful purl, so surface-resolved vs
   publisher-claimed purl (B7) is never forced. Version skew between metadata and installed code likewise uncovered.
-- [ ] C14. **No dynamic-surface fixture** — _found by us, 2026-08-23, not by the panel._ `MIRI-CONSUMER-011` requires
+- [x] C14. **FIXED 2026-08-23.** A9 shipped: `src/_dynamic/` serves `Client.get_*` via `__getattr__`, so
+  `Client.get_weather()` genuinely returns a value while `ast.parse` cannot see it — verified both ways. Lives
+  **outside** the byte-identical trio by construction (its purpose is to differ in source), so `build_fixtures.py`
+  gained explicit outlier support that materializes it and exempts it from the byte-comparison. Paired control is
+  `Client.close`, statically defined: a consumer that reports everything unverified has stopped verifying rather than
+  become careful. The validator asserts the dynamic symbol stays invisible, the control stays visible, and
+  `__getattr__` remains — so a well-meaning tidy-up cannot silently make the check untestable. Unblocks
+  MIRI-CONSUMER-011. _Original finding:_ **No dynamic-surface fixture** — _found by us, 2026-08-23, not by the panel._
+  `MIRI-CONSUMER-011` requires
   that a consumer never read `not-in-source` as proof a symbol does not exist, because static parsing cannot see a
   surface built at runtime. Every fixture package defines its whole surface statically, so **the check is currently
   untestable** and is one of the two holding the suite's ceiling at 85. Needs a package whose `__getattr__` serves an
