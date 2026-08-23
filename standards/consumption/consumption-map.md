@@ -87,8 +87,10 @@ honest.
 1. **(S)** `list` — the inventory: which documents this package ships, composed by the surface from the directory
    listing rather than read from a publisher-authored index
    ([Discovery Contract §3.2.1](discovery-contract.md)).
-2. **(S)** `usage-patterns.json` — the idiomatic sequence matching the task, rather than one derived from signatures.
-   This is the served path to working code.
+2. **(S)** `patterns` — the idiomatic sequence matching the task, rather than one derived from signatures. This is
+   the served path to working code. Read each returned pattern **whole**: `explanation.key_points`, `security_note`
+   and `performance_note` carry the author's best-practice guidance, and `antipatterns` carries the negative half —
+   the mistakes the author expects a caller to make.
 3. **(F)** The quickstart (`AGENT_EXAMPLES.json`, `examples/`) — the verified-runnable first-contact path
    (MIRI-PY-015). `AGENT_EXAMPLES.json` is a `.dist-info/` file and `examples/` is package source, so **neither is
    servable**; a consumer without filesystem access skips this step and relies on step 2.
@@ -112,12 +114,13 @@ agent builds on the path the author verified rather than reconstructing one.
 
 **Read, in order:**
 
-1. **(S)** The quickstart + `usage-patterns.json` — the idiom to build on.
+1. **(S)** `patterns` — the idiom to build on, read whole (best-practice fields and `antipatterns` included).
 2. **(F)** `templates/` — author-provided scaffolds coherent with the package idiom (MIRI-PY-038).
 3. **(S)** `resolve` — confirm every symbol the scaffold will call actually exists in the installed package's
    source ([Discovery Contract §3.6](discovery-contract.md)). `api-index` routes; `resolve` settles.
-4. **(S)** `api-graph.json` — for a multi-file change, the blast radius: what the touched surfaces extend, return,
-   and use.
+4. **(S)** `graph` — for a multi-file change, the blast radius around each touched symbol: what it extends, returns
+   and uses. A truncated neighborhood MUST NOT be read as the complete blast radius
+   ([Discovery Contract §3.8](discovery-contract.md)).
 
 **Must not:**
 
@@ -133,10 +136,14 @@ agent builds on the path the author verified rather than reconstructing one.
   and may be `truncated` ([Discovery Contract §3.5](discovery-contract.md)): **it can confirm presence, never prove
   absence.** Existence questions go to `resolve`, never to the index.
 - Copy a `templates/` scaffold without reconciling it against the installed version's surfaces.
+- **Emit code that a returned `antipattern` of severity `correctness` or `security` describes as wrong, without
+  surfacing that the author has flagged it.** These are author-declared failure modes for the exact surface being
+  called; silently reproducing one is the failure this element exists to prevent. (Observable: emitted code matching
+  a `wrong_code` whose severity is `correctness` or `security`, with no mention of the author's warning.)
 
 *Heuristic:* templates encode idiom, the installed surface encodes truth — scaffold from the template, then let
-introspection correct it. `api-graph.json` is consulted only when the change spans files; a single-call integration
-does not need it.
+introspection correct it. `graph` is consulted only when the change spans files; a single-call integration does not
+need it.
 
 ### 3.3 Upgrading a dependency
 
@@ -169,7 +176,8 @@ what *could* change; only the consumer's own usage says what *will*.
 
 **Read, in order:**
 
-1. **(S)** The error-handling patterns in `usage-patterns.json`, if present, for the failing surface.
+1. **(S)** `patterns` filtered to the failing surface — its error-handling patterns and, in particular, its
+   `antipatterns`, which often name the failure directly.
 2. **(F)** `docs/troubleshooting.md` — symptom → cause, without leaving the environment.
 3. **(S)** `api-index` for the failing surface — confirm its identity and, where the entry carries a `signature`, its
    parameters. A conformant `api-index` entry carries `signature` and `file` only where the producer supplies them
@@ -249,6 +257,15 @@ generator's code — the "an author who builds strictly to the documents writes 
   installed console script*, and is therefore outside the Discovery Contract's import-free, executes-nothing surface
   ([Discovery Contract §5](discovery-contract.md)). A consumer MUST treat invoking it as running installed code, under
   the same confinement it would apply to any other execution, and MUST NOT invoke it merely to enrich a description.
+- **A pointer is not a permission.** Several elements carry paths that point into the package — `api_index`'s `file`,
+  `api-graph` nodes' `file`/`module`, `test-patterns`' `source_file`. These are **publisher-authored strings**, and a
+  consumer that opens one is acting on untrusted input. Before dereferencing any such pointer a consumer MUST resolve
+  it against the package's own root, take the fully resolved path, and confirm the result is a regular file
+  **physically inside that root** — rejecting symbolic links, absolute paths, and traversal sequences. A pointer that
+  escapes the package root MUST be reported as malformed and MUST NOT be opened. This mirrors the obligation the
+  Discovery Contract places on a *surface* ([§3.2.2](discovery-contract.md)); the same discipline applies to a
+  consumer, because the same string reaches it.
+
 - **A skipped step is reported, never synthesized.** Where a read-step's vehicle is unavailable (§1.1) or its document
   is absent, a consumer MUST say so in its output rather than filling the gap from its own priors. This is the
   honest-degradation rule the bare/miri fixture pair exists to check.
@@ -281,7 +298,7 @@ outcome, and no clause of this standard depends on them.
 | Element | What it answers | Design intent *(informative)* | Gap it addresses *(informative)* |
 | --- | --- | --- | --- |
 | `sdk-manifest.json` (`api_index` + caller params) | "What exists, where, and what does it take?" | Routing (name → purpose → file) and a starting point for surface verification before writing a call | Agent greps serially, or invents plausible symbols that do not exist |
-| `usage-patterns.json` | "How do calls compose in practice?" | Idiomatic sequences from real examples/tests, complexity-labeled — a matching pattern instead of one derived from signatures | Calls chained in orders the package never intended; misuse that still type-checks |
+| `usage-patterns.json` | "How do calls compose in practice?" | Idiomatic sequences from real examples/tests, complexity-labeled — a matching pattern instead of one derived from signatures. Carries **both halves** of usage guidance: `explanation.*` for what to do, `antipatterns` for the author-declared ways to get it wrong | Calls chained in orders the package never intended; misuse that still type-checks |
 | `api-graph.json` | "What relates to what?" | The map to `api_index`'s phone book: extends/returns/uses edges for reasoning about blast radius and planning multi-file changes without loading all source | Structure discovered file by file — context burned on archaeology, relationships guessed |
 | `lifecycle.json` | "Is this alive, and whom do I ask?" | Decision-time trust: support status, advisory *pointers*, update check — before building on the package | Health assumed; integration against an abandoned or advisory-laden dependency |
 | `migration-guide.json` + deprecation inventory | "What changed, and what replaces what?" | Structured `{surface, removed_in, replacement}` for mechanical cross-reference against the consumer's call sites | Upgrades by prose changelog or trial-and-error; deprecated surfaces linger until removal breaks them |

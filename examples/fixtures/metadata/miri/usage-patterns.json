@@ -27,6 +27,15 @@
       },
       "tags": [
         "quickstart"
+      ],
+      "antipatterns": [
+        {
+          "name": "Treating an unknown language code as an error",
+          "wrong_code": "try:\n    greet(\"Ada\", language=\"zz\")\nexcept ValueError:\n    ...",
+          "right_code": "greeting = greet(\"Ada\", language=\"zz\")  # falls back to English",
+          "why": "An unrecognised language code falls back to English and never raises. Code that catches an exception here is dead, and code that relies on one is wrong.",
+          "severity": "correctness"
+        }
       ]
     },
     {
@@ -51,6 +60,15 @@
       ],
       "tags": [
         "configuration"
+      ],
+      "antipatterns": [
+        {
+          "name": "Rebuilding Greeter inside a loop",
+          "wrong_code": "for name in names:\n    print(Greeter(language=\"es\").greet(name))",
+          "right_code": "g = Greeter(language=\"es\")\nfor name in names:\n    print(g.greet(name))",
+          "why": "Constructing a Greeter per iteration re-does the language lookup for every name and obscures that the language is fixed for the whole loop.",
+          "severity": "performance"
+        }
       ]
     }
   ]

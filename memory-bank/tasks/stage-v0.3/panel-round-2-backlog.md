@@ -168,13 +168,30 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   from the declared registry without installing (with its own SSRF and no-execution rules), **or** an explicit
   out-of-scope statement in §1/§6.2 plus a fix to Map §3.3 step 3 so no read-step depends on an unanswerable
   operation.
-- [ ] **B4. Filtered access to the big documents.** A `usage-patterns` operation (filter by `query`/`category`/
+- [x] **B4. Filtered access to the big documents.** **DONE 2026-08-23.** Added two derived-view operations: `patterns`
+  (§3.7 — filter `usage-patterns.json` by `category`/`complexity`/`query`, default cap 10) and `graph` (§3.8 — the
+  neighborhood of one symbol in `api-graph.json`, with `depth`/`direction`, default cap 50). Measurement corrected an
+  assumption: `api-graph.json` is only 1.7 KB on the sample while `usage-patterns.json` is the largest document at 14
+  KB — so the filtering need was the reverse of expected, and both earn an operation on scale. §3 now frames the eight
+  operations as three kinds — retrieval, derived views, determination — with a rule for when a new one is justified,
+  so the set cannot grow arbitrarily. `query` deliberately does NOT match `code`, so it cannot be used to grep source
+  by proxy. _Original ask:_ A `usage-patterns` operation (filter by `query`/`category`/
   `complexity`, capped) and a symbol-scoped `api-graph {package, symbol, depth, direction}` returning a neighbourhood
   rather than the whole graph. Both carrying `truncated`/`cap`.
-- [ ] **B5. An anti-patterns field.** The guidance an author most wants to convey — "never construct this
+- [x] **B5. An anti-patterns field.** **DONE 2026-08-23.** `usage_pattern.antipatterns` added to
+  `usage-patterns-v1.json`: `{name, wrong_code, right_code, why, severity}` where severity is
+  `correctness|security|performance|style`. Author-declared, never inferred. Backward compatible — sample and fixture
+  still validate. The fixture now ships two real antipatterns, one `correctness` and one `performance`. _Original
+  ask:_ The guidance an author most wants to convey — "never construct this
   per-request", "not thread-safe", "do not retry this error class" — has **no field anywhere**. Proposal:
   `antipatterns: [{name, wrong_code, right_code, why}]` in `usage-patterns-v1.json`.
-- [ ] **B6. Routed, gated best-practice fields.** `explanation.key_points`/`security_note`/`performance_note` exist but
+- [x] **B6. Routed, gated best-practice fields.** **DONE 2026-08-23.** The fields are no longer optional-and-unread:
+  Map §3.1 and §3.2 now direct a consumer to read each returned pattern **whole** —
+  `explanation.key_points`/`security_note`/`performance_note` plus `antipatterns` — §3.4 routes to `antipatterns` for
+  diagnosis, and §3.7 forbids a surface stripping those fields to save space (the filter selects which patterns, never
+  which parts of one). A new MUST NOT makes the negative half enforceable: a consumer may not emit code a
+  `correctness`/`security` antipattern describes as wrong without surfacing the author's warning. Element-audit row
+  updated to name both halves. _Original ask:_ `explanation.key_points`/`security_note`/`performance_note` exist but
   no read-step names them, no audit row mentions them, no check gates them — a fully conforming package can ship zero
   best-practice content.
 - [x] **B7. A surface-derived `purl`.** **FIXED 2026-08-23.** New §4.1.1: `purl` MUST be derived from the installed
@@ -189,7 +206,9 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
   distribution's own name+version, never read from a publisher document; where `identity.purl` disagrees, serve the
   derived value and optionally flag the mismatch. Split the §4.1 row so `purl` is REQUIRED where identity resolved and
   MUST be omitted where it did not.
-- [ ] **B8. Path confinement** (same as A10; recorded here as the capability: exact-name allowlist + realpath check +
+- [x] **B8. Path confinement** **Closed 2026-08-23 — duplicate of A10**, fixed there (§3.2.2: single-segment name
+  grammar, realpath confinement, symlink rejection). _Original ask:_ (same as A10; recorded here as the capability:
+  exact-name allowlist + realpath check +
   symlink rejection + a normative single-segment name grammar, which also dissolves the `agent-metadata/README.md`
   spelling inconsistency).
 
@@ -222,7 +241,11 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
 - [ ] C9. **A4 is calibrated against a cap no spec fixes** (see A14). Make the fixture self-calibrating
   (`build_fixtures.py --api-index-cap N`, N+5 pads) and write the assumed cap into a machine-readable
   `expected/api-index.json` the validator reads instead of a module constant.
-- [ ] C10. **A7's traversal half tests a rule that exists in neither consumption spec** — no clause forbids
+- [x] C10. **FIXED 2026-08-23** — Map §4 gains "a pointer is not a permission": before dereferencing any
+  publisher-authored path (`api_index.file`, graph `file`/`module`, `source_file`) a consumer MUST resolve it against
+  the package root, take the realpath, and confirm a regular file physically inside it — rejecting symlinks, absolute
+  paths and traversal. Mirrors the surface's §3.2.2 obligation for the consumer actor. _Original finding:_ **A7's
+  traversal half tests a rule that exists in neither consumption spec** — no clause forbids
   dereferencing an `api_index` `file` pointer that escapes the package root, so no check can be written against it
   without inventing normative text. The validator asserts only the SSRF half.
 - [ ] C11. No identity-skew case: the adversarial `lifecycle.json` declares a truthful purl, so surface-resolved vs

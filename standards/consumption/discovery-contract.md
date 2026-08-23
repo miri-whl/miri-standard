@@ -8,8 +8,8 @@
 
 The producer standards define the `agent-metadata/` directory an artifact ships. This specification defines how an
 agent **obtains** that metadata at the moment it is deciding what to call: a **transport-agnostic metadata-query
-contract** of six read-only operations — `list`, `document`, `lifecycle`, `migration-guide`, `api-index`,
-`resolve` — of which an
+contract** of eight read-only operations — retrieval (`document`, with `lifecycle` and `migration-guide`
+shorthands), derived views (`api-index`, `patterns`, `graph`), and determination (`list`, `resolve`) — of which an
 **MCP context server** is the first binding. The contract adds the wire discipline the producer surfaces already carry:
 a **surface-owned response envelope** that versions and frames every answer without reshaping the publisher's bytes, a
 structured **absence-versus-error** discriminator that a hostile package cannot forge, and **import-free discovery** so
@@ -75,7 +75,7 @@ read-steps with the vehicle that supplies it, so that no reading order depends o
 
 ## 3. The Metadata-Query Contract
 
-A conformant metadata-query surface exposes these six read-only operations, and no others (§9). Each is defined by its
+A conformant metadata-query surface exposes these eight read-only operations, and no others (§9). Each is defined by its
 input, its payload, and its semantics; every response is wrapped in the §4 envelope.
 
 | Operation | Input | Payload key | Serves |
@@ -86,10 +86,25 @@ input, its payload, and its semantics; every response is wrapped in the §4 enve
 | `migration-guide` | `package` | `document` | Shorthand for `document` with `name: "migration-guide.json"` |
 | `api-index` | `package`, optional `query` | `entries` | A capped, filtered routing view derived from `sdk-manifest.json` |
 | `resolve` | `package`, `symbol` | `resolution` | Whether a symbol exists in the installed package's **source**, and where |
+| `patterns` | `package`, optional `category`/`complexity`/`query` | `patterns` | A capped, filtered view of `usage-patterns.json` |
+| `graph` | `package`, `symbol`, optional `depth`/`direction` | `graph` | The neighborhood of one symbol in `api-graph.json` |
 
 `lifecycle` and `migration-guide` are **named shorthands**, not distinct capabilities: each MUST return exactly what
 `document` would return for the same package and document name. They exist because they are the two highest-traffic
 queries and because the reference binding already ships them.
+
+The operations fall into three kinds, and the distinction is what keeps the set from growing arbitrarily:
+
+- **Retrieval** — `document`, and its `lifecycle`/`migration-guide` shorthands. Returns a document **verbatim**. These
+  are shorthands, not distinct capabilities: each MUST return exactly what `document` would for the same name.
+- **Derived views** — `api-index`, `patterns`, `graph`. Each projects **one large document** into a capped, filtered
+  answer to a question a consumer actually asks, rather than making it read the whole file to find the part it needs.
+- **Determination** — `list`, `resolve`. Answers the surface computes from the environment, not from any single
+  document.
+
+A new operation is justified only when it is a **derived view whose parent document is large enough that verbatim
+retrieval defeats the purpose of asking** (§3.2.3), or a determination no document can answer. Anything else belongs
+in `document`.
 
 ### 3.1 `list`
 
@@ -345,6 +360,73 @@ This asymmetry is the same shape as `api-index`'s (§3.5) but the opposite way r
 Between them, a positive from `resolve` is the strongest existence evidence the contract offers, because it comes
 from the source rather than from the publisher's description of the source.
 
+### 3.7 `patterns`
+
+**Input:** `{ "package": "<import-name>", "category": "<optional>", "complexity": "<optional>",
+"query": "<optional substring>" }`.
+
+**Payload:** `patterns` — a filtered view of `usage-patterns.json`'s `patterns` array, each entry carried whole:
+
+```json
+{
+  "schema_version": "1", "ok": true, "present": true,
+  "package": "greet_miri", "purl": "pkg:pypi/greet-miri@1.0.0",
+  "truncated": false, "cap": 10,
+  "patterns": [
+    { "id": "reused_greeter", "name": "Reused greeter", "complexity": "beginner",
+      "category": "basic_usage", "code": "…", "explanation": { "key_points": ["…"] } }
+  ]
+}
+```
+
+`usage-patterns.json` is typically the **largest** document a package ships — 14 KB on this standard's own
+three-class sample SDK — and the [Consumption Map](consumption-map.md) asks a consumer to read "the idiomatic
+sequence **matching the task**", which is a filter, not a file read. Serving the whole array to answer a question
+about one pattern is the case §3.2.3 exists to prevent.
+
+Filters compose (all supplied filters must match). `category` and `complexity` match exactly; `query` matches
+case-insensitively against `id`, `name`, and `description` — **not** against `code`, so a consumer cannot use it to
+grep the package's source by proxy. Ordering, capping, truncation and continuation follow §3.5.1, with a default
+`cap` of **10**.
+
+A pattern entry is returned **whole**: the `explanation.key_points`, `security_note` and `performance_note` fields
+are the package's best-practice content ([Consumption Map §5](consumption-map.md)), and a surface MUST NOT strip them
+to save space. The filter selects *which* patterns, never *which parts of* a pattern.
+
+### 3.8 `graph`
+
+**Input:** `{ "package": "<import-name>", "symbol": "<dotted-name>", "depth": <optional int>,
+"direction": "<optional>" }` — `direction` is `out` (edges from the symbol), `in` (edges to it), or `both`
+(default). `depth` defaults to `1`.
+
+**Payload:** `graph` — the neighborhood of `symbol` in `api-graph.json`, as nodes and the edges connecting them:
+
+```json
+{
+  "schema_version": "1", "ok": true, "present": true,
+  "package": "greet_miri", "purl": "pkg:pypi/greet-miri@1.0.0",
+  "symbol": "RateLimitError", "depth": 2, "direction": "out",
+  "truncated": false, "cap": 50,
+  "graph": {
+    "nodes": { "RateLimitError": { "type": "class", "file": "exceptions.py" },
+               "APIError": { "type": "class", "file": "exceptions.py" } },
+    "edges": [ { "from": "RateLimitError", "to": "APIError", "kind": "extends" } ]
+  }
+}
+```
+
+The audit row for `api-graph.json` claims it lets a consumer reason about blast radius and plan multi-file changes
+**"without loading all source"** — a claim its only previous access path defeated, since `document("api-graph.json")`
+loads the entire graph to answer a question about one symbol. On a small package that is cheap; on a large one the
+graph scales with the whole public surface, and the element's stated purpose is spent obtaining it. `graph` is what
+makes that claim true rather than aspirational.
+
+`symbol` MUST be resolved against the graph's node keys, which share the dotted key space used by `api_index` and
+`resolve` (§3.6). A `symbol` absent from the graph is **not** an error and **not** document-absence: it is
+`present: true` with an empty `nodes`/`edges` — the graph exists, the symbol is simply not in it. Traversal is capped
+per §3.5.1 (default `cap` **50** nodes); where the neighborhood exceeds the cap the surface MUST set
+`truncated: true`, and a consumer MUST NOT read a truncated neighborhood as the complete blast radius.
+
 ## 4. The Response Envelope
 
 Every response from every operation in §3 is a JSON object — never a bare array — whose top level is **owned entirely
@@ -370,7 +452,8 @@ signal it cannot write, but only if "which keys are the surface's" is fully stat
 | `next_cursor` | `list`, `api-index`, when truncated | Continuation token for the same ordering (§3.5.1) |
 | `error` | Failures only | The structured error object (§4.3) |
 | `symbol` | `resolve` | The symbol the answer is about |
-| `packages` / `document` / `entries` / `resolution` | Per operation | The payload |
+| `depth`, `direction` | `graph` | The traversal actually performed |
+| `packages` / `document` / `entries` / `resolution` / `patterns` / `graph` | Per operation | The payload |
 
 #### 4.1.1 `purl` Is Surface-Derived, Never Publisher-Read
 
@@ -497,6 +580,8 @@ MCP binding exposes the operations as MCP tools over JSON-RPC 2.0 (stdio):
 | `migration-guide` | `miri_migration_guide` |
 | `api-index` | `miri_api_index` |
 | `resolve` | `miri_resolve` |
+| `patterns` | `miri_patterns` |
+| `graph` | `miri_graph` |
 
 ### 6.1 Mapping
 
