@@ -153,8 +153,13 @@ surface MUST return an `AMBIGUOUS_PACKAGE` error (§4.3) rather than silently pi
 
 #### 3.2.1 The Servable Set
 
-`name` MUST be a member of the servable set below **and** one of the documents the package advertised in
-`list.documents`.
+`name` MUST be a member of the servable set below.
+
+`list.documents` is the **input domain** for `document` — what a package advertises is what an agent has reason to
+ask for — but it is **not a precondition**. A servable `name` that the package does not ship returns an *absent*
+response (§4.2), never `DOCUMENT_NOT_SERVABLE`. Requiring membership would classify the contract's flagship absence
+case as an error and collapse exactly the distinction §4.2 exists to protect: asking a bare package for its
+`lifecycle.json` is a well-formed question with the answer "it ships none".
 
 | Servable | Not servable |
 |---|---|
@@ -216,15 +221,24 @@ every document the Map routes to is either servable here or explicitly labelled 
 hundreds of kilobytes. A capped router (§3.5) beside an uncapped bulk fetch is not "pointers, not dumps"; it is a
 pointer with an unbounded escape hatch beside it.
 
-A conformant surface therefore MUST declare a `max_bytes` for `document`, MUST report it on every response, and where
-the serialized document exceeds it MUST set `truncated: true` rather than returning the excess. **A truncated document
-MUST NOT be presented, by surface or consumer, as the complete document**, and a consumer MUST NOT parse a truncated
-payload as though it were well-formed JSON — truncation is reported, not repaired.
+The default `max_bytes` is **262144** (256 KiB), measured on the document's serialized bytes as read from disk. A
+surface MAY declare a different value and MUST report the value in force as `max_bytes` on every `document` response
+(§4.1). Pinning a number matters for the same reason §3.5.1 pins the caps: an unstated bound means two conformant
+surfaces disagree about the same document, and a check written against one is vacuous on the other.
 
-Truncation is a backstop, not the intended path. Where a consumer needs part of a large document, the filtered
-operations are the right tool: `api-index` (§3.5) for routing rather than `document("sdk-manifest.json")`. Filtered
-access to the remaining large documents is not yet specified; until it is, a surface SHOULD set `max_bytes` high
-enough that ordinary packages are served whole, and the honest scaling statement in §2 applies.
+Where a document exceeds the bound the surface MUST set `truncated: true` and **MUST omit the `document` key
+entirely**. It MUST NOT return a partial object, a truncated string, or a repaired fragment: a payload key that
+sometimes holds a document and sometimes holds a prefix of one is a shape no consumer can parse safely, and repairing
+publisher bytes invents content the publisher did not write. A truncated response is therefore a response *about* a
+document rather than one containing it — `reason` SHOULD state the document's actual size so a consumer can say
+something useful.
+
+**A truncated response MUST NOT be presented, by surface or consumer, as the complete document.**
+
+Truncation is a backstop, not the intended path. Where a consumer needs part of a large document, the derived views
+are the right tool: `api-index` (§3.5) for routing, `patterns` (§3.7) for usage, `graph` (§3.8) for relationships —
+each capped and filterable, and each existing precisely so that `document` is rarely the right call on a large
+package. The honest scaling statement in §2 applies.
 
 ### 3.3 `lifecycle`
 
@@ -439,19 +453,26 @@ This table is **exhaustive**: these are the only keys that may appear at a respo
 un-forgeability argument in §4.2 depends on the surface owning a *known, closed* key set — a publisher cannot forge a
 signal it cannot write, but only if "which keys are the surface's" is fully stated rather than sampled.
 
+`ok` and `present` answer different questions and are evaluated in order: **`ok` first.** A surface MUST omit
+`present` entirely when `ok` is `false`, and a consumer MUST treat `present` as meaningful only when `ok` is `true`.
+Without that order a consumer reading `present` first reports a parse failure as "the package ships no such document"
+— the absent-versus-failed collapse §4.2 exists to prevent.
+
 | Field | Presence | Meaning |
 |---|---|---|
 | `schema_version` | Always | The wire-schema version of the **envelope**, owned and stamped by the surface |
 | `ok` | Always | `true` for a served answer, `false` for a failure (§4.3) |
-| `present` | Document-returning operations, and `api-index` | Whether the requested document exists (§4.2) |
+| `present` | `document` and its shorthands, `api-index`, `patterns`, `graph`, `resolve` — and **MUST be omitted whenever `ok` is `false`** | Whether the subject exists: the document for `document`, the parent document for a derived view, the module for `resolve` (§4.2) |
 | `package` | Where a package was named or resolved | The import name the answer is about |
 | `purl` | Where identity resolved (§4.1.1) | Surface-derived provenance (§9.1) |
 | `name` | `document` and its shorthands | The document name the answer is about |
 | `reason` | Absent responses (§4.2) | Free-text explanation for humans — **never a machine field** |
-| `truncated`, `cap` | `list`, `api-index`, `document` | Whether the payload was cut, and the bound in force (§3.2.3, §3.5.1) |
-| `next_cursor` | `list`, `api-index`, when truncated | Continuation token for the same ordering (§3.5.1) |
+| `truncated` | `list`, `api-index`, `patterns`, `graph`, `document` | Whether the payload was cut (§3.2.3, §3.5.1) |
+| `cap` | `list`, `api-index`, `patterns`, `graph` | The entry bound in force (§3.5.1) |
+| `max_bytes` | `document` and its shorthands | The serialized-size bound in force (§3.2.3) |
+| `next_cursor` | `list`, `api-index`, `patterns`, when truncated | Continuation token for the same ordering (§3.5.1). `graph` has no cursor (§3.8). |
 | `error` | Failures only | The structured error object (§4.3) |
-| `symbol` | `resolve` | The symbol the answer is about |
+| `symbol` | `resolve`, `graph` | The symbol the answer is about |
 | `depth`, `direction` | `graph` | The traversal actually performed |
 | `packages` / `document` / `entries` / `resolution` / `patterns` / `graph` | Per operation | The payload |
 
@@ -660,7 +681,7 @@ vehicle?). Where a surface logs, each entry carries:
 | Field | Meaning |
 |---|---|
 | `timestamp` | RFC 3339 UTC instant of the query |
-| `operation` | One of the §3 operation names — `list`, `document`, `lifecycle`, `migration-guide`, `api-index` — **never** the binding's tool name, so logs are comparable across bindings |
+| `operation` | The §3 operation name — one of the eight in the §3 table — **never** the binding's tool name, so logs are comparable across bindings. Stated by reference rather than enumerated here, so the vocabulary cannot go stale when the operation set changes. |
 | `arguments` | The operation's input as received |
 | `outcome` | `served`, `absent`, or `error` — the §4 result class, so reach and success are distinguishable |
 | `session` | An opaque correlation id for the invoking session, so entries can be grouped into runs and treatment arms |

@@ -53,8 +53,8 @@ Each read-step below is labelled with the delivery vehicle that supplies it
 These four labels are the complete set. A step carries exactly one; there is no compound label.
 
 A consumer MUST skip a step whose vehicle is unavailable to it and continue with the next; a skipped step is reported,
-never silently synthesized (§4). Every **(S)** step is servable by `list`, `document`, `lifecycle`,
-`migration-guide`, `api-index`, or `resolve` — the Discovery Contract is deliberately sized so that no normative
+never silently synthesized (§4). Every **(S)** step is answerable by one of the eight operations in the
+[Discovery Contract §3](discovery-contract.md) table — the contract is deliberately sized so that no normative
 read-order depends on an answer no operation can give. In particular a **server-only consumer can complete every
 task in §3**, including the generative ones: `resolve` is what makes the anti-hallucination rule dischargeable
 without filesystem access.

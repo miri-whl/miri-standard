@@ -57,12 +57,23 @@ mechanically decidable from one response.
 
 Identical to the sibling profiles, so one grading vocabulary spans the standard:
 
-- **Score** = Σ weights of passing checks (0–100).
-- **Level**: **M** (MUST) or **S** (SHOULD).
-- Any failing **M** check makes the surface **non-conforming regardless of score**; the score is still reported,
-  capped at 74.
-- **Grade bands**: 90–100 **Gold** · 75–89 **Silver** · 50–74 **Bronze** · <50 non-conforming.
-- A check whose fixture cannot be driven is **forfeited and reported**, never silently passed.
+- **Score** = Σ weights of passing checks, over the *effective denominator* (see forfeits below).
+- **Level**: **M** (MUST — required for conformance) or **S** (SHOULD — quality signal).
+- **Conformance is a gate, not a band.** A program failing any **M** check is **non-conforming**, and a
+  non-conforming result carries **no grade** — only the score, capped at 74, to show distance. Grades describe
+  conforming programs only.
+- **Grade bands (conforming programs only)**: 90–100 **Gold** · 75–89 **Silver** · 50–74 **Bronze**.
+
+Because nearly all weight in this profile sits on MUST checks, a conforming program will in practice land in Gold
+and the lower bands will rarely be occupied. That is intended: the bands exist so the vocabulary matches the
+producer checklists, not because a conforming consumer is expected to score badly. A profile whose SHOULD weight
+grows will occupy them naturally.
+
+**Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
+forfeited check leaves **both** the numerator and the denominator: the score is computed over what was actually
+exercised, so forfeiting cannot inflate or deflate it. The report MUST carry the forfeited count and the effective
+denominator beside the score, and a forfeited **M** check means **conformance is undetermined** — reported as such,
+never as conforming and never as a failure.
 
 ## 4. The Checks
 
@@ -146,9 +157,11 @@ A consumer emits no responses, so it cannot be held to the shape of one. A surfa
 call, so it cannot be held to the judgment a consumer exercises. Scoring them together would produce a number that
 answers neither "can I trust this server" nor "can I trust this agent" — and when it dropped, would not say which.
 
-The division is exactly the actor table in [Consumer Conformance §4](consumer-conformance.md): every obligation
-marked there as binding the **Surface** appears here as a numbered check, and nothing appears in both. That table was
-written as a declared gap; this document closes it.
+The division follows the actor table in [Consumer Conformance §4](consumer-conformance.md): every obligation marked
+there as binding the **Surface** is numbered here, and every category in §4 appears in that table. The one obligation
+named on both sides is absence — a surface must *signal* it correctly and a consumer must *report* it correctly,
+which are different failures that can occur independently. That table was written as a declared gap; this document
+closes it.
 
 ## 6. Check Definitions
 

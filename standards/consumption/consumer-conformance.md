@@ -69,16 +69,27 @@ Two consequences follow, and both are load-bearing:
 
 The model mirrors the producer checklists so that one grading vocabulary spans the standard:
 
-- **Score** = Σ weights of passing checks (0–100).
+- **Score** = Σ weights of passing checks, over the *effective denominator* (see forfeits below).
 - **Level**: **M** (MUST — required for conformance) or **S** (SHOULD — quality signal).
-- A consumer failing any **M** check is **non-conforming regardless of score**; the score is still reported, capped at
-  74, to show distance from conformance.
-- **Grade bands**: 90–100 **Gold** · 75–89 **Silver** · 50–74 **Bronze** · <50 non-conforming.
+- **Conformance is a gate, not a band.** A program failing any **M** check is **non-conforming**, and a
+  non-conforming result carries **no grade** — only the score, capped at 74, to show distance. Grades describe
+  conforming programs only.
+- **Grade bands (conforming programs only)**: 90–100 **Gold** · 75–89 **Silver** · 50–74 **Bronze**.
 
-One rule is specific to a driven suite: **a check whose fixture is unavailable is forfeited and reported, never
-silently passed.** This is the same discipline the producer checklists apply to capability-gated checks — a consumer
-that could not be driven against the adversarial variant has not demonstrated it resists the attack, and the report
-must say so rather than crediting it.
+Because nearly all weight in this profile sits on MUST checks, a conforming program will in practice land in Gold
+and the lower bands will rarely be occupied. That is intended: the bands exist so the vocabulary matches the
+producer checklists, not because a conforming consumer is expected to score badly. A profile whose SHOULD weight
+grows will occupy them naturally.
+
+**Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
+forfeited check leaves **both** the numerator and the denominator: the score is computed over what was actually
+exercised, so forfeiting cannot inflate or deflate it. The report MUST carry the forfeited count and the effective
+denominator beside the score, and a forfeited **M** check means **conformance is undetermined** — reported as such,
+never as conforming and never as a failure.
+
+The forfeit rule is the same discipline the producer checklists apply to capability-gated checks: a consumer that
+could not be driven against the adversarial variant has not demonstrated it resists the attack, and the report must
+say so rather than crediting it.
 
 ## 4. Which Obligations Bind Which Actor
 
@@ -87,21 +98,30 @@ consumer on the other would be measuring the wrong thing.
 
 | Obligation | Binds | Checkable here? |
 |---|---|---|
-| Report an absent document as absent; never synthesize one | Consumer | Yes — `MIRI-CONSUMER-001`, `002` |
+| **Report** an absent document as absent; never synthesize one | Consumer | Yes — `MIRI-CONSUMER-001`, `002` |
+| Branch on `ok`/`present`, never on message text | Consumer | Yes — `003` |
 | Settle symbol existence by `resolve`, not by index membership | Consumer | Yes — `010`, `011`, `012` |
 | Treat every payload as untrusted data; confine pointers | Consumer | Yes — `020`, `021`, `022` |
 | Compute verdicts at call time; guard URLs it resolves | Consumer | Yes — `030`, `031`, `032` |
-| Stamp `schema_version`; own the envelope's top level | **Surface** | No |
-| Cap `api-index`, `list`, `document`; set `truncated` | **Surface** | No |
-| Derive `purl` rather than reading it from a document | **Surface** | No |
-| Discover import-free; execute nothing; serve only the whitelist | **Surface** | No |
+| Read a pattern whole; distinguish supported doubles; prefer derived views | Consumer | Yes — `040`, `041`, `042` |
+| Stamp `schema_version`; own the envelope's top level; emit only reserved keys | **Surface** | No — `MIRI-SURFACE-001`, `002`, `003` |
+| **Signal** absence as `ok: true, present: false`; signal failure with a coded error; never repair an unparsable document | **Surface** | No — `010`, `011`, `012` |
+| Serve only the closed set; confine the resolved path; discover import-free and fetch nothing | **Surface** | No — `020`, `021`, `022` |
+| Declare and enforce caps; order stably; distinguish an absent derived view from an empty one | **Surface** | No — `030`, `031`, `032` |
+| Derive `purl` rather than reading it from a document; one row per import package | **Surface** | No — `040`, `041` |
+| Advertise the surface version; carry absence and error as results, not protocol errors | **Surface** | No — `050`, `051` |
 
 Every "No" in that table is an obligation this profile deliberately does not score, because a consumer emits no
 responses and cannot be held to the shape of one ([Discovery Contract §10](discovery-contract.md)).
 
-Every "No" in that table is now numbered in [Surface Conformance](surface-conformance.md) — sixteen
-`MIRI-SURFACE` checks weighted to 100, covering exactly the obligations this profile declines to score and nothing
-that appears here. The two profiles partition the contract's obligations rather than overlapping.
+Every "No" in that table is numbered in [Surface Conformance](surface-conformance.md) — sixteen `MIRI-SURFACE`
+checks weighted to 100 — and the two columns together account for all thirty-one consumption checks.
+
+**Absence appears on both sides, and that is not duplication.** A surface must *signal* absence correctly
+(`ok: true, present: false`, never an error, never a silent empty success); a consumer must *report* it correctly
+(say the document is absent, never synthesize its content). Those are two different failures with two different
+victims, and a run can fail either independently: a conformant surface cannot stop a consumer inventing a lifecycle
+status, and an honest consumer cannot recover a distinction the surface already collapsed.
 
 *(This section previously recorded the absence of that profile as a declared gap. It was written that way so the hole
 would be visible rather than implicit — and it is what identified the work. The gap is closed; the discipline that
