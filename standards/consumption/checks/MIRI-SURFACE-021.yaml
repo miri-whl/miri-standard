@@ -1,0 +1,40 @@
+# MIRI-SURFACE-021 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-021
+name: Confines the resolved path; rejects symlinks and traversal
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Boundaries
+weight: 8
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each path served from outside the package's agent-metadata directory
+short_description: Confines the resolved path; rejects symlinks and traversal
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Confines the resolved path;
+  rejects symlinks and traversal.'
+examples:
+  violation: 'agent-metadata/usage-patterns.json -> symlink -> ~/.ssh/id_rsa   # served'
+  compliant: '{"schema_version": "1", "ok": false, "error": {"code": "DOCUMENT_NOT_SERVABLE", "retryable": false}}
+
+    # resolved path is a symlink leaving the package root'
+rationale: Name-string filtering is not confinement. A whitelisted `usage-patterns.json` shipped as a symlink to
+  a private key contains no traversal sequence and no absolute prefix, passes every string check, and is then read
+  with the surface's own filesystem privileges. Editable and source-tree installs preserve symlinks, which is exactly
+  the shape the fixtures are built in.
+fires_when:
+- A `name` carrying a directory prefix, absolute prefix, or traversal sequence is accepted or normalized
+- The resolved realpath lies outside the package's `agent-metadata/` directory and is served
+- A symbolic link is followed rather than rejected
+remediation:
+- Treat `name` as a single path segment; reject anything else rather than normalizing it
+- Resolve, realpath, and require a regular file physically inside the directory; reject symlinks outright
+suggested_fix: Treat `name` as a single path segment; reject anything else rather than normalizing it
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-021.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-021/

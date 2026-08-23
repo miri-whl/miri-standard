@@ -1,0 +1,38 @@
+# MIRI-SURFACE-030 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-030
+name: Declares and enforces its caps, and sets `truncated` when it drops content
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Bounded Answers
+weight: 6
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each capped response that omits its cap or its truncation flag
+short_description: Declares and enforces its caps, and sets `truncated` when it drops content
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Declares and enforces its
+  caps, and sets `truncated` when it drops content.'
+examples:
+  violation: '{"entries": {...25 of 2060...}, "ok": true}   # no cap, no truncated'
+  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true, \"cap\": 25, \"truncated\": true,\n \"\
+    next_cursor\": \"…\", \"entries\": {...}}"
+rationale: 'A consumer cannot tell a complete answer from a cut one unless the surface says. Silence here is what
+  lets a hostile package hide a symbol by padding its index past the cap: the consumer sees a plausible list, no
+  truncation flag, and concludes the missing surface does not exist.'
+fires_when:
+- A capped operation returns without `cap`
+- 'Entries or bytes are dropped without `truncated: true`'
+- More than `cap` entries are returned
+remediation:
+- Report `cap` on every response from `list`, `api-index`, `patterns`, `graph`, and `document`
+- 'Set `truncated: true` whenever anything was dropped, including when the surface cannot continue'
+suggested_fix: Report `cap` on every response from `list`, `api-index`, `patterns`, `graph`, and `document`
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-030.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-030/

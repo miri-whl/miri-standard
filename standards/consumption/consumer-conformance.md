@@ -12,7 +12,8 @@ defines what a **conformant consumer** is: fifteen numbered checks, `MIRI-CONSUM
 weighted to 100, verified by **driving a consumer against fixtures and observing its output**.
 
 It also states plainly what a consumer check *cannot* verify. Several obligations in the contract bind the surface,
-not the consumer, and a profile that quietly scored a consumer on them would be measuring the wrong program.
+not the consumer, and a profile that quietly scored a consumer on them would be measuring the wrong program — those
+are numbered separately in [Surface Conformance](surface-conformance.md).
 
 ## Table of Contents
 
@@ -98,11 +99,13 @@ consumer on the other would be measuring the wrong thing.
 Every "No" in that table is an obligation this profile deliberately does not score, because a consumer emits no
 responses and cannot be held to the shape of one ([Discovery Contract §10](discovery-contract.md)).
 
-**Declared gap: there is no surface conformance profile yet.** The surface obligations above are normative and
-currently unverified by any numbered check — the reference implementation could regress on every one of them and no
-check in this standard would fire. A Surface Conformance profile *(Planned)* is the sibling this document needs; it
-is recorded here rather than left implicit, per the bidirectional audit rule in
-[Consumption Map §5](consumption-map.md).
+Every "No" in that table is now numbered in [Surface Conformance](surface-conformance.md) — sixteen
+`MIRI-SURFACE` checks weighted to 100, covering exactly the obligations this profile declines to score and nothing
+that appears here. The two profiles partition the contract's obligations rather than overlapping.
+
+*(This section previously recorded the absence of that profile as a declared gap. It was written that way so the hole
+would be visible rather than implicit — and it is what identified the work. The gap is closed; the discipline that
+surfaced it is the bidirectional audit rule in [Consumption Map §5](consumption-map.md).)*
 
 ## 5. The Checks
 

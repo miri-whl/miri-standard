@@ -18,8 +18,10 @@ it, and the standard cannot say what makes the producer metadata worth shipping 
   what order, what not to do, and an audit of what every metadata element is for.
 - [Consumer Conformance](consumer-conformance.md) — what a conformant consumer is: 15 numbered `MIRI-CONSUMER`
   checks weighted to 100, verified by **driving** a consumer against the fixtures rather than by inspecting an
-  artifact. States explicitly which obligations bind the surface instead, and records that a Surface Conformance
-  profile does not yet exist.
+  artifact.
+- [Surface Conformance](surface-conformance.md) — what a conformant metadata-query surface is: 16 numbered
+  `MIRI-SURFACE` checks weighted to 100. One profile per actor: the contract binds two programs that fail
+  differently, and a single score would not say which one is broken.
 
 ## Fixtures
 

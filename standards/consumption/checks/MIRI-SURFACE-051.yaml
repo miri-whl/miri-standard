@@ -1,0 +1,37 @@
+# MIRI-SURFACE-051 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-051
+name: Carries absence and error as tool results, never as protocol errors
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Binding
+weight: 3
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each served answer signalled as a transport protocol error
+short_description: Carries absence and error as tool results, never as protocol errors
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Carries absence and error
+  as tool results, never as protocol errors.'
+examples:
+  violation: '{"jsonrpc": "2.0", "error": {"code": -32602, "message": "no lifecycle.json"}}'
+  compliant: '{"content": [{"type": "text", "text": "{\"schema_version\":\"1\",\"ok\":true,\"present\":false,…}"}]}'
+rationale: Absence and a coded error are both *served answers* — the surface did its job and is reporting a fact.
+  Sending either as a JSON-RPC protocol error puts them in a channel that carries no envelope, so the consumer loses
+  `present`, `purl`, and the error code, and must infer from transport machinery what the contract took care to
+  state explicitly.
+fires_when:
+- A §4.2 absence is returned as a JSON-RPC error
+- A §4.3 error envelope is returned as a JSON-RPC error rather than as a tool result
+remediation:
+- Return absence and contract errors as ordinary tool results carrying the full envelope
+- 'Reserve protocol errors for malformed requests: unknown tool, schema-invalid input'
+suggested_fix: Return absence and contract errors as ordinary tool results carrying the full envelope
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-051.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-051/

@@ -45,6 +45,12 @@ HEAD — a regression on your side turns the standard red for unrelated reasons,
 
 ## 3. Conform `miri mcp` to the Discovery Contract (the main work)
 
+**Acceptance is now numbered.** `standards/consumption/surface-conformance.md` defines 16 `MIRI-SURFACE` checks
+weighted to 100 — the obligations below map onto them, so "conformant" is a score rather than a judgement call. The
+highest-weight ones are `MIRI-SURFACE-002` (nest the payload, never merge), `010` (absence is not an error), `020`
+(closed servable set), `021` (realpath confinement), `022` (import-free, fetch nothing) and `040` (derive `purl`).
+Items 3a–3g below are the same work, described as changes rather than as checks.
+
 v0.3 specifies the metadata-query contract your MCP server is the first binding of. The contract now has **six**
 operations; you ship four. It was written from your
 implementation, so most of it already matches — the gaps are the wire discipline. Current state referenced against

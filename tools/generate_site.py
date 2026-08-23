@@ -134,8 +134,19 @@ def _md_blocks(text, out):
 
 
 def load_checks(meta):
+    """Load a site target's checks.
+
+    A directory may hold more than one check family — standards/consumption/checks/ holds
+    both consumer and surface checks, which share a suite and a contract but score
+    separately. `match` selects by the check's own `target`, so a shared directory cannot
+    silently merge two families into one index whose weights sum to 200.
+    """
     files = sorted((REPO / meta["dir"]).glob("*.yaml"))
-    return [{"path": f, "doc": yaml.safe_load(f.read_text())} for f in files]
+    docs = [{"path": f, "doc": yaml.safe_load(f.read_text())} for f in files]
+    want = meta.get("match")
+    if want:
+        docs = [d for d in docs if d["doc"]["target"] == want]
+    return docs
 
 
 def category_rows(checks):

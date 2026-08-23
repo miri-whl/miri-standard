@@ -37,7 +37,7 @@ then adds the wire discipline the panel demanded:
 - [x] §9 consumer-side security (untrusted framing, per-response provenance, no prompt-templates, SSRF guard).
 - [x] Linters green (markdownlint / cspell / links) + wired into `standards/README.md`.
 - [x] Feed each new normative clause into `MIRI-CONSUMER-NNN` checks — done with the numbering above.
-- [ ] miri-py conforms `miri mcp` to §4 (schema_version + absence envelope + surface version) — their side.
+- [ ] miri-py conforms `miri mcp` to §4 — their side. **Acceptance is now the 16 `MIRI-SURFACE` checks**, not prose.
 
 ### Pillar 2 — Consumption Map (RFC Ask 1 + 1b) — DRAFTED
 

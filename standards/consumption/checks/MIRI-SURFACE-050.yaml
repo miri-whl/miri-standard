@@ -1,0 +1,36 @@
+# MIRI-SURFACE-050 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-050
+name: Advertises the surface version at the normative path
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Binding
+weight: 4
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each binding that does not advertise a surface version
+short_description: Advertises the surface version at the normative path
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Advertises the surface version
+  at the normative path.'
+examples:
+  violation: '{"protocolVersion": "2024-11-05", "serverInfo": {"name": "miri", "version": "1.0"}}'
+  compliant: "{\"protocolVersion\": \"2024-11-05\", \"capabilities\": {\"miri\": {\"surface_version\": \"1\"}},\n\
+    \ \"serverInfo\": {\"name\": \"miri\", \"version\": \"1.0\"}}"
+rationale: The transport's protocol version names the transport, and `serverInfo.version` names the implementation.
+  Neither names the *contract*. Without a distinct surface version a client cannot negotiate the metadata contract
+  independently of the transport it happens to ride, which is the whole reason the contract is transport-agnostic.
+fires_when:
+- '`initialize` advertises no surface version at the normative path'
+- The surface version is conflated with the transport protocol version or with `serverInfo.version`
+remediation:
+- Advertise the surface version at `capabilities.miri.surface_version` as a string
+suggested_fix: Advertise the surface version at `capabilities.miri.surface_version` as a string
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-050.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-050/

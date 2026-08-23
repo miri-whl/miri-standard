@@ -28,8 +28,8 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Stable check ID; never renumbered. Extension (health-only) checks use the MIRI-PYX-/MIRI-CLIX- namespaces.",
-      "pattern": "^MIRI-(PY|CLI|PYX|CLIX|CONSUMER|CONSUMERX)-\\d{3}$"
+      "description": "Stable check ID; never renumbered. Producer targets are PY and CLI; consumption targets are CONSUMER (a metadata consumer) and SURFACE (a metadata-query surface). Extension (health-only) checks use the matching X namespace and carry weight 0.",
+      "pattern": "^MIRI-(PY|CLI|PYX|CLIX|CONSUMER|CONSUMERX|SURFACE|SURFACEX)-\\d{3}$"
     },
     "name": {
       "type": "string",
@@ -41,7 +41,8 @@
       "enum": [
         "python-wheel",
         "cli",
-        "consumer"
+        "consumer",
+        "surface"
       ],
       "description": "Artifact type this alert applies to"
     },

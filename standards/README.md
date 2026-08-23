@@ -78,6 +78,8 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
   runtime-failure, security, and the generative scaffold task), plus the element-value audit
 - **[Consumer Conformance](consumption/consumer-conformance.md)** - 15 numbered, weighted checks defining what a
   conformant consumer is, verified by driving it against the fixture set
+- **[Surface Conformance](consumption/surface-conformance.md)** - 16 numbered, weighted checks defining what a
+  conformant metadata-query surface is
 
 ### Future Language Standards
 
@@ -112,6 +114,8 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
   the read-order/prohibition split, and the audit of what every metadata element is for
 - **[Consumer Conformance (Consumption)](consumption/consumer-conformance.md)** - `MIRI-CONSUMER-001`…`042`: the
   behavioral conformance profile for a metadata consumer
+- **[Surface Conformance (Consumption)](consumption/surface-conformance.md)** - `MIRI-SURFACE-001`…`051`: the
+  conformance profile for a metadata-query surface
 
 ### Proposed Standards
 

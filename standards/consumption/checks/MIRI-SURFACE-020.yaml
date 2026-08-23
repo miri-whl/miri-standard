@@ -1,0 +1,39 @@
+# MIRI-SURFACE-020 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-020
+name: Serves only the closed servable set; refuses anything else
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Boundaries
+weight: 8
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each document served from outside the servable set
+short_description: Serves only the closed servable set; refuses anything else
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Serves only the closed servable
+  set; refuses anything else.'
+examples:
+  violation: document(name="prompt-templates.md") -> the file contents
+  compliant: "{\"schema_version\": \"1\", \"ok\": false, \"package\": \"greet_miri\",\n \"error\": {\"code\": \"\
+    DOCUMENT_NOT_SERVABLE\", \"retryable\": false}}"
+rationale: The servable set is closed on a stated principle — only schema-governed documents are servable, and no
+  free-form natural-language document ever is — because prose is the highest-risk payload a publisher controls and
+  a document with no schema has no property a consumer can verify before it reaches a model's context. A surface
+  that extends the set reopens the injection channel refusing prompt-templates.md was meant to close.
+fires_when:
+- A request for `prompt-templates.md`, `README.md`, or any document outside §3.2.1's set returns the file
+- A name absent from the package's `list.documents` is served
+- The surface returns a filesystem error rather than `DOCUMENT_NOT_SERVABLE`
+remediation:
+- Check the requested name against the closed set before touching the filesystem
+- Return `DOCUMENT_NOT_SERVABLE` for anything else — never the file, never a filesystem error
+suggested_fix: Check the requested name against the closed set before touching the filesystem
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-020.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-020/

@@ -1,0 +1,37 @@
+# MIRI-SURFACE-031 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-031
+name: Orders entries stably and offers cursor continuation
+target: surface
+status: active
+added_in: 0.3-draft
+level: SHOULD
+category: Bounded Answers
+weight: 4
+conditional: false
+severity:
+  default: LOW
+  violation_unit: each unstable ordering or missing continuation token
+short_description: Orders entries stably and offers cursor continuation
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Orders entries stably and
+  offers cursor continuation.'
+examples:
+  violation: api-index(...) -> entries in dict-insertion order, varying per process
+  compliant: api-index(...) -> lexicographic, stable, with next_cursor when truncated
+rationale: Without a stable order, "the first 25" is a different 25 per call and truncation is unreproducible —
+  a conformance check written against a padded index becomes flaky rather than wrong. Continuation is what makes
+  a capped surface completable in-band instead of forcing a consumer to guess.
+fires_when:
+- Identical requests return entries in different orders
+- A truncated response omits `next_cursor` where the surface can continue
+- A supplied `cursor` does not continue the same ordering
+remediation:
+- Order entries lexicographically by name and keep the order stable across identical requests
+- Return `next_cursor` on truncation and accept it as `cursor` to continue
+suggested_fix: Order entries lexicographically by name and keep the order stable across identical requests
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-031.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-031/

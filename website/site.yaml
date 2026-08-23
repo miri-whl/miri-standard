@@ -17,11 +17,18 @@ targets:
     title: Command-line tools
     prefix: MIRI-CLI
     checklist: standards/cli/linter-checklist.md
-  consumption:
+  consumer:
     dir: standards/consumption/checks
+    match: consumer
     title: Metadata consumers
     prefix: MIRI-CONSUMER
     checklist: standards/consumption/consumer-conformance.md
+  surface:
+    dir: standards/consumption/checks
+    match: surface
+    title: Metadata surfaces
+    prefix: MIRI-SURFACE
+    checklist: standards/consumption/surface-conformance.md
 
 # Specification documents rendered as site pages (source of truth stays the markdown).
 specs:
@@ -37,6 +44,10 @@ specs:
     title: Consumer Conformance
     status: 0.3-draft
     lede: What a conformant consumer is, and how it is verified by being driven rather than inspected.
+  - source: standards/consumption/surface-conformance.md
+    title: Surface Conformance
+    status: 0.3-draft
+    lede: What a conformant metadata-query surface is — the obligations a consumer cannot be held to.
 
 # Sidebar navigation. href is site-relative; external links are absolute; planned rows
 # are inert (the repo's rule: planned documents are listed as plain text, never linked).
@@ -58,10 +69,12 @@ nav:
       - { label: Introspection schema, planned: true }
   - label: Consumption
     items:
-      - { label: Check definitions, href: checks/consumption/index.html }
+      - { label: "Consumer checks", href: checks/consumer/index.html }
+      - { label: "Surface checks", href: checks/surface/index.html }
       - { label: Discovery contract, href: discovery-contract.html }
       - { label: Consumption map, href: consumption-map.html }
       - { label: Consumer conformance, href: consumer-conformance.html }
+      - { label: Surface conformance, href: surface-conformance.html }
       - { label: "Originating RFC (superseded) ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/proposals/20260821-consumption-specification.md" }
   - label: Go / Rust
     items:

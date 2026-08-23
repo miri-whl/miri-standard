@@ -1,0 +1,44 @@
+# MIRI-SURFACE-002 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-002
+name: Nests the payload; never merges publisher bytes into the envelope
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Envelope Integrity
+weight: 8
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each response whose payload shares the envelope namespace
+short_description: Nests the payload; never merges publisher bytes into the envelope
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Nests the payload; never
+  merges publisher bytes into the envelope.'
+examples:
+  violation: '{"schema_version": "1", "ok": false, "error": {...}, "identity": {...}}
+
+    # publisher wrote ok/error into lifecycle.json and the surface merged it'
+  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true,\n \"document\": {\"ok\": false, \"error\"\
+    : {...}, \"identity\": {...}}}\n# the publisher's keys stay inside `document` and mean nothing to the envelope"
+rationale: 'This is the clause the entire anti-forgery argument rests on. If publisher bytes are merged into the
+  top level rather than nested under a payload key, a package can write `ok`, `present` or `error` into its own
+  document and forge the surface''s signals — the adversarial fixture does exactly that. Wrapping also avoids invalidating
+  the document: the producer schemas set additionalProperties false, so injecting an envelope field would make a
+  conforming document non-conforming.'
+fires_when:
+- A payload document's keys appear at the envelope's top level
+- The surface injects `schema_version` or any envelope field into the payload document
+- The surface hoists a payload field into the envelope
+remediation:
+- 'Nest every payload under its operation''s payload key: `document`, `entries`, `packages`, `patterns`, `graph`,
+  `resolution`'
+- Never mutate the payload document — relay the bytes as parsed, adding nothing and removing nothing
+suggested_fix: 'Nest every payload under its operation''s payload key: `document`, `entries`, `packages`, `patterns`,
+  `graph`, `resolution`'
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-002.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-002/
