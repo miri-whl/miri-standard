@@ -295,7 +295,17 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
 
 ## F. Scoring-model defects found by dogfooding
 
-- [ ] **Deprecation Coherence awards 20 of 100 points for having never deprecated anything.** Found by scoring
+- [x] **Deprecation Coherence awards 20 of 100 points for having never deprecated anything.** **FIXED 2026-08-23.**
+  The rule was not the `conditional` flag but what it meant: a conditional check scored its **full weight
+  automatically**, so labelling more checks conditional would have relabelled the defect rather than fixed it. The
+  scoring model in both producer checklists now reads _not-applicable is not a pass_ — such a check leaves **both**
+  numerator and denominator, and the score is a percentage of what was actually assessed. Nine checks that quantify
+  over deprecations and are unfireable when there are none were reclassified conditional
+  (MIRI-PY-028/029/031/032/035, MIRI-CLI-031/032/034/038). Fixing it also surfaced **eight pre-existing lockstep
+  breaks** — checks conditional in YAML but unannotated in the prose tables — now zero. 32/100 (PY) and 26/100 (CLI)
+  are conditional, which is the size of what was being auto-awarded. Recorded as a breaking change for miri-py; the
+  sample SDK's 75/Silver was computed on the old model and will move.
+  _Original finding:_ Found by scoring
   arghos: it took 20/22 in that category purely by absence of opportunity, which lifted its total from a real 19 to
   a reported 39. A scoring model that gives a fifth of the total for project youth measures age, not quality. Only
   four of the eight checks are marked `conditional`; the rest pass vacuously without being marked as such. Options:

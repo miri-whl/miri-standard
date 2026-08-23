@@ -179,6 +179,28 @@ The log is the H5 instrument, so its fields need to be analysis-ready:
 - Add `session`: an opaque correlation id, so entries group into runs and treatment arms.
 - Unchanged: logging MUST NOT influence any response, and a logging failure MUST NOT break a query.
 
+## 3h. Implement the corrected scoring model (**changes every score you emit**)
+
+The scoring model changed on the standard side, and this one is breaking: **a conditional check whose condition does
+not apply is now `not_applicable` — it leaves both the numerator and the denominator**, where it previously scored
+its full weight automatically.
+
+- **Score** = Σ passing weights ÷ Σ **applicable** weights, as a percentage.
+- A report MUST carry the not-applicable count and the effective denominator beside the score.
+- `forfeited` (condition applies, linter cannot assess) behaves the same way: out of both.
+
+This is not cosmetic. **32 of 100 points in MIRI-PY and 26 of 100 in MIRI-CLI are now conditional**, and nine checks
+were reclassified as conditional in the same change (MIRI-PY-028/029/031/032/035, MIRI-CLI-031/032/034/038) because
+they quantify over deprecations and are unfireable when there are none.
+
+**Why:** scoring a real CLI showed 20 of its 100 points awarded for having never deprecated anything, lifting a
+genuine 19 to a reported 39. The old model made a score a function of project age rather than quality, so two scores
+of 75 were not comparable — which is the one thing a score exists to allow.
+
+**Expect the sample SDK's number to move.** The CI gate asserts `is_conforming`, not a value, so it will not break —
+but the reported figure will change and the 75/Silver we have cited is on the old model. `lint-report-v1.json` needs
+the `not_applicable` count and effective denominator as fields.
+
 ## 4. Fix the `generate` bugs (blocks the standard's sample gate)
 
 Still open from step-3, and it blocks the standard's CI from moving to the honest

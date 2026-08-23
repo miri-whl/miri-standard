@@ -12,11 +12,19 @@ weights sum to exactly **100**, so a CLI's Miri score is the sum of the weights 
 
 ## Scoring Model
 
-Identical to the [Python checklist](../python/linter-checklist.md): **Score** = Σ weights of passing checks; **M**
-checks are required for conformance (any M failure caps the reported score at 74); *conditional* checks score
-automatically when inapplicable. The previous-release checks (MIRI-CLI-030, 033, 035, 036, 037) are *conditional*, so a
-first release — with no prior release to diff against — scores them at full weight and can reach Gold; they forfeit
-weight only when a prior release exists but the linter cannot fetch it.
+Identical to the [Python checklist](../python/linter-checklist.md): **Score** = Σ weights of passing checks ÷ Σ
+weights of *applicable* checks, as a percentage; **M** checks are required for conformance (any M failure caps the
+reported score at 74).
+
+**Not-applicable is not a pass.** A *conditional* check whose condition does not apply leaves **both** the numerator
+and the denominator, and the report MUST carry the not-applicable count and the effective denominator beside the
+score. The previous-release checks (MIRI-CLI-030, 033, 035, 036, 037) are *conditional*, so a first release — with no
+prior release to diff against — is scored on what it can be scored on and can still reach Gold. A check forfeits
+(also reported, also out of the denominator) when the condition does apply but the linter cannot assess it.
+
+This replaces an earlier rule under which such checks scored full weight automatically, which made the score a
+function of project age rather than of quality. It was found by scoring a real CLI: 20 of its 100 points came from
+Deprecation Coherence, awarded for never having deprecated anything, which lifted a genuine 19 to a reported 39.
 
 **Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
 · <50 non-conforming.
@@ -82,20 +90,20 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-CLI-027 | M | Offline degradation | Offline returns `update_available: null`, exit 0 — not an error | [CLI Spec §5.1](cli-lifecycle-specification.md) | 1 |
 | MIRI-CLI-028 | M | Security urgency | `urgency: security` set when an advisory covers the running version | [CLI Spec §5.1](cli-lifecycle-specification.md) | 2 |
 | MIRI-CLI-029 | M | changelog --since | `changelog --since <v> --json` implemented | [CLI Spec §5.2](cli-lifecycle-specification.md) | 4 |
-| MIRI-CLI-030 | M | Changelog coverage | Output covers added/removed/deprecated surfaces, schema bumps, exit-code changes | [CLI Spec §5.2](cli-lifecycle-specification.md) | 1 |
+| MIRI-CLI-030 | M | Changelog coverage | Output covers added/removed/deprecated surfaces, schema bumps, exit-code changes (*conditional*: needs a prior release)| [CLI Spec §5.2](cli-lifecycle-specification.md) | 1 |
 
 ### E. Deprecation Coherence (22 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-CLI-031 | M | Lifecycle blocks | Every deprecated flag/subcommand carries a `lifecycle` object | [CLI Spec §6](cli-lifecycle-specification.md) | 3 |
-| MIRI-CLI-032 | M | Two-phase fields | `deprecated_since` and `removed_in`/`replacement` populated | [CLI Spec §6.1](cli-lifecycle-specification.md) / [RFC 9745](https://www.rfc-editor.org/info/rfc9745/) + [RFC 8594](https://www.rfc-editor.org/info/rfc8594/) | 2 |
-| MIRI-CLI-033 | M | Teaching errors | Invoking a removed surface yields the structured error (code, `retryable: false`, `suggestions`) — not a generic parse failure | [CLI Spec §6/§6.3-4](cli-lifecycle-specification.md) | 4 |
-| MIRI-CLI-034 | M | Warnings on stderr | Grace-period deprecation warnings never touch stdout | [CLI Spec §2.5](cli-lifecycle-specification.md) / [Signaling §3.3-5](update-and-vulnerability-signaling.md) | 2 |
-| MIRI-CLI-035 | M | Grace period | Deprecated surfaces function for ≥1 minor release before removal | [CLI Spec §7.3](cli-lifecycle-specification.md) / [K8s deprecation policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/) *(informative)* | 3 |
-| MIRI-CLI-036 | M | Changelog coherence | Every deprecation appears in `changelog --since` of the deprecating release | [CLI Spec §6.3-1](cli-lifecycle-specification.md) | 3 |
-| MIRI-CLI-037 | M | No silent removals | Every removed surface was deprecated in ≥1 earlier release | [CLI Spec §6.3-2](cli-lifecycle-specification.md) | 3 |
-| MIRI-CLI-038 | M | Replacements resolve | Every `replacement` names a surface in the current `--describe` | [CLI Spec §6.3-3](cli-lifecycle-specification.md) | 2 |
+| MIRI-CLI-031 | M | Lifecycle blocks | Every deprecated flag/subcommand carries a `lifecycle` object (*conditional*: no deprecated surfaces to check)| [CLI Spec §6](cli-lifecycle-specification.md) | 3 |
+| MIRI-CLI-032 | M | Two-phase fields | `deprecated_since` and `removed_in`/`replacement` populated (*conditional*: no deprecated surfaces to check)| [CLI Spec §6.1](cli-lifecycle-specification.md) / [RFC 9745](https://www.rfc-editor.org/info/rfc9745/) + [RFC 8594](https://www.rfc-editor.org/info/rfc8594/) | 2 |
+| MIRI-CLI-033 | M | Teaching errors | Invoking a removed surface yields the structured error (code, `retryable: false`, `suggestions`) — not a generic parse failure (*conditional*: no removed surfaces to invoke)| [CLI Spec §6/§6.3-4](cli-lifecycle-specification.md) | 4 |
+| MIRI-CLI-034 | M | Warnings on stderr | Grace-period deprecation warnings never touch stdout (*conditional*: no deprecated surfaces to check)| [CLI Spec §2.5](cli-lifecycle-specification.md) / [Signaling §3.3-5](update-and-vulnerability-signaling.md) | 2 |
+| MIRI-CLI-035 | M | Grace period | Deprecated surfaces function for ≥1 minor release before removal (*conditional*: needs a prior release)| [CLI Spec §7.3](cli-lifecycle-specification.md) / [K8s deprecation policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/) *(informative)* | 3 |
+| MIRI-CLI-036 | M | Changelog coherence | Every deprecation appears in `changelog --since` of the deprecating release (*conditional*: no deprecations to appear)| [CLI Spec §6.3-1](cli-lifecycle-specification.md) | 3 |
+| MIRI-CLI-037 | M | No silent removals | Every removed surface was deprecated in ≥1 earlier release (*conditional*: no removed surfaces)| [CLI Spec §6.3-2](cli-lifecycle-specification.md) | 3 |
+| MIRI-CLI-038 | M | Replacements resolve | Every `replacement` names a surface in the current `--describe` (*conditional*: no deprecated surfaces to check)| [CLI Spec §6.3-3](cli-lifecycle-specification.md) | 2 |
 
 ### F. Safety (12 points)
 
