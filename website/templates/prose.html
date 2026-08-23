@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% import '_macros.html' as m %}
+{% block title %}{{ page_title }}{% endblock %}
+{% block content %}
+{{ m.spec_header(page_heading, page_meta) }}
+{% if page_lede %}<p class="lede">{{ page_lede }}</p>{% endif %}
+<article class="prose">
+{{ body | safe }}
+</article>
+{% endblock %}

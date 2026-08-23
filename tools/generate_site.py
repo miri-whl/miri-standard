@@ -41,10 +41,46 @@ def codeish(s):
 # ---- tiny markdown renderer for docs/origin-story.md ----
 def md_inline(s):
     s = html.escape(s)
+    # Code spans first: their contents must not be reinterpreted as emphasis, and the
+    # specs lean on backticks heavily (`ok`, `present`, `api-index`).
+    spans = []
+
+    def _stash(m):
+        spans.append(m.group(1))
+        return f"\x00{len(spans) - 1}\x00"
+
+    s = re.sub(r"`([^`]+)`", _stash, s)
     s = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", s)
     s = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"<em>\1</em>", s)
     s = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r'<a href="\2">\1</a>', s)
+    s = re.sub(r"\x00(\d+)\x00", lambda m: f"<code>{spans[int(m.group(1))]}</code>", s)
     return s
+
+
+def rewrite_links(md, doc_path, rendered, github):
+    """Point a spec's relative links somewhere that resolves in the published site.
+
+    Rewritten on the markdown, before rendering, so there is one code path and no HTML
+    parsing. A link to a doc the site renders becomes a local page; everything else goes
+    to GitHub, so no link silently 404s.
+    """
+    src_dir = doc_path.parent.relative_to(REPO).as_posix()
+
+    def fix(m):
+        text, href = m.group(1), m.group(2)
+        if href.startswith(("http", "mailto:", "#")):
+            return m.group(0)
+        path, _, frag = href.partition("#")
+        suffix = f"#{frag}" if frag else ""
+        try:
+            rel = (doc_path.parent / path).resolve().relative_to(REPO).as_posix()
+        except ValueError:
+            return m.group(0)
+        if rel in rendered:
+            return f"[{text}]({rendered[rel]}{suffix})"
+        return f"[{text}]({github}/blob/main/{rel}{suffix})"
+
+    return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", fix, md)
 
 
 def md_to_html(text):
@@ -75,7 +111,16 @@ def _md_blocks(text, out):
             lines = lines[1:]  # document h1 is rendered by the page header
         if not lines:
             continue
-        if lines[0].lstrip().startswith(">"):
+        if len(lines) >= 2 and lines[0].lstrip().startswith("|") and re.match(r"^\s*\|[\s:|-]+\|\s*$", lines[1]):
+            def cells(row):
+                return [c.strip() for c in row.strip().strip("|").split("|")]
+            head = "".join(f"<th>{md_inline(c)}</th>" for c in cells(lines[0]))
+            body = "".join(
+                "<tr>" + "".join(f"<td>{md_inline(c)}</td>" for c in cells(r)) + "</tr>"
+                for r in lines[2:] if r.lstrip().startswith("|"))
+            out.append(f'<div class="tablewrap"><table><thead><tr>{head}</tr></thead>'
+                       f"<tbody>{body}</tbody></table></div>")
+        elif lines[0].lstrip().startswith(">"):
             quote = " ".join(l.lstrip().lstrip(">").strip() for l in lines)
             out.append(f"<blockquote>{md_inline(quote)}</blockquote>")
         elif re.match(r"^\s*[-*] ", lines[0]):
@@ -141,7 +186,13 @@ def main():
     for target, meta in site["targets"].items():
         checks = load_checks(meta)
         musts = sum(1 for c in checks if c["doc"]["level"] == "MUST")
-        targets[target] = {"meta": meta, "checks": [c["doc"] for c in checks], "musts": musts}
+        ids = [c["doc"]["id"] for c in checks]
+        targets[target] = {
+            "meta": meta, "checks": [c["doc"] for c in checks], "musts": musts,
+            # Ranges come from the real IDs: a target's numbering need not be contiguous
+            # (consumer runs 001–042 across 15 checks), so a count is not a range.
+            "first_id": ids[0], "last_num": ids[-1].rsplit("-", 1)[1],
+        }
 
         d = out / "checks" / target
         d.mkdir()
@@ -162,9 +213,35 @@ def main():
     (out / "origin.html").write_text(env.get_template("origin.html").render(
         site=site, root="", active="origin.html",
         body=md_to_html((REPO / "docs/origin-story.md").read_text())))
+    # Specification documents rendered as site pages. Until 0.3 the site rendered only
+    # check pages, so the specifications themselves — the actual deliverable — existed
+    # on the site as outbound GitHub links and nothing else.
+    specs = site.get("specs", [])
+    rendered = {sp["source"]: pathlib.Path(sp["source"]).name.replace(".md", ".html") for sp in specs}
+    for sp in specs:
+        src = REPO / sp["source"]
+        md = rewrite_links(src.read_text(), src.resolve(), rendered, site["github"])
+        body = re.sub(r"^\s*<h1>.*?</h1>", "", md_to_html(md), count=1, flags=re.S)
+        (out / rendered[sp["source"]]).write_text(env.get_template("prose.html").render(
+            site=site, root="", active=rendered[sp["source"]],
+            page_title=sp["title"], page_heading=sp["title"],
+            page_meta=[("Document", sp["source"]), ("Status", sp.get("status", "Draft"))],
+            page_lede=sp.get("lede"), body=body))
+
+    wn = md_to_html((REPO / "docs/whats-new-0.3.md").read_text())
+    # Drop the source H1: the page header supplies the title, so rendering both duplicates it.
+    wn = re.sub(r"^\s*<h1>.*?</h1>", "", wn, count=1, flags=re.S)
+    (out / "whats-new.html").write_text(env.get_template("prose.html").render(
+        site=site, root="", active="whats-new.html",
+        page_title="What's new in 0.3",
+        page_heading="What's new in " + site["version"].split("-")[0],
+        page_meta=[("Document", "docs/whats-new-0.3.md"), ("Version", site["version"])],
+        page_lede="0.1 and 0.2 specified what an artifact ships. 0.3 specifies how an agent consumes it.",
+        body=wn))
 
     n = sum(len(t["checks"]) for t in targets.values())
-    print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + landing + origin")
+    print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + "
+          f"{len(specs)} spec pages + landing + origin + whats-new")
 
 
 if __name__ == "__main__":

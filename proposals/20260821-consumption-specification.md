@@ -1,12 +1,34 @@
 # Proposal (RFC): A Consumption Specification for the MIRI Standard
 
 - **Authors**: MIRI Standard maintainers
-- **Status**: Draft — *Request for Comments*; deferred to post-v0.2 (see Sequencing)
+- **Status**: **Superseded** by the v0.3 consumption suite — see *Disposition* below
 - **Created**: 2026-08-21
-- **Updated**: 2026-08-21
+- **Updated**: 2026-08-23
 - **Tracking Issue**: *(to be filed)*
 - **Pre-review**: Reviewed by the six-member standing panel on 2026-08-21 (see **Panel Pre-Review** below);
   consolidated report `miri-consumption-spec-review-2026-08-21` in the project's generated-reports set.
+
+## Disposition — what became of this RFC
+
+**This document is a record, not current guidance.** It argued for work that has since been specified; where it and
+the shipped specifications differ, **the specifications are correct**. It is kept because the reasoning that produced
+a standard is worth preserving alongside the standard, and because two of its five asks were *not* adopted as written
+— which a reader deserves to see rather than infer from silence.
+
+| Ask | Outcome | Where it went |
+|---|---|---|
+| 1 — Task-to-document consumption map | **Delivered, expanded** | [Consumption Map §3](../standards/consumption/consumption-map.md). Four tasks became six: a generative scaffolding task and a testing task were added, the latter after a review found testing had no element, no schema and no read-step anywhere in the standard. |
+| 1b — Element-by-element audit | **Delivered, strengthened** | [Consumption Map §5](../standards/consumption/consumption-map.md). The audit rule is now **bidirectional**: the element→task direction proposed here could not catch a capability that was never defined, which is exactly how the testing gap hid. |
+| 2 — Discovery contract | **Delivered, substantially expanded** | [Discovery Contract](../standards/consumption/discovery-contract.md). The four operations sketched here became **eight**, after review found the reading order routed to documents no operation could serve and the anti-hallucination rule could not be discharged by any tool call. |
+| 3 — Consumer conformance profile | **Delivered** | [Consumer Conformance](../standards/consumption/consumer-conformance.md). Fifteen `MIRI-CONSUMER` checks weighted to 100. The profile also states which obligations bind the *surface* instead and are deliberately not scored. |
+| 4 — Verification contract | **Not adopted** | Four reviewers independently judged a publisher-authored command the consumer runs to be a spec-blessed remote code execution, contradicting "metadata is data, never instructions". The reshaped form — a resolvable entry point verified by introspection, never a shell string — is **not in 0.3** and remains open. |
+| 5 — Paired fixture and demonstration harness | **Partially delivered** | [`examples/fixtures/`](../examples/fixtures/) ships the bare/miri pair plus an adversarial twin and a dynamic-surface outlier, with nine attacks and machine-readable expected outputs. The **comparison harness** — the side-by-side demonstration — is still open. |
+
+Two scope decisions were made after this RFC and are not reflected in the text below: pre-install and target-version
+questions are **out of scope for 0.3** (answering them would require the surface to fetch from a registry, which
+contradicts its fetch-nothing posture), and the reference consumer is named **`miri consume`**, not `miri brief`.
+
+---
 
 ## Abstract
 

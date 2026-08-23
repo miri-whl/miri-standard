@@ -23,7 +23,7 @@
     <div class="card-title">{{ data.meta.title }}</div>
     <div class="mono stat">{{ data.checks | length }}<span class="stat-unit"> checks</span></div>
     <p class="stat-sub">{{ data.musts }} MUST · {{ data.checks | length - data.musts }} SHOULD · weights Σ = 100</p>
-    <a class="mono stat-link" href="checks/{{ target }}/index.html">{{ data.meta.prefix }}-001…{{ '%03d' | format(data.checks | length) }} →</a>
+    <a class="mono stat-link" href="checks/{{ target }}/index.html">{{ data.first_id }}…{{ data.last_num }} →</a>
   </div>
   {% endfor %}
 </div>

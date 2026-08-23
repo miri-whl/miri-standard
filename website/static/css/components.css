@@ -90,6 +90,11 @@ p { margin: 0 0 var(--space-4); max-width: var(--measure-prose); }
 .avatar { display: block; image-rendering: pixelated; }
 
 /* Data tables */
+/* Spec tables can be wider than the column (the envelope-field and check tables especially),
+   so they scroll inside their own wrapper rather than forcing the page to scroll sideways. */
+.tablewrap { overflow-x: auto; margin: var(--space-2) 0 var(--space-6); }
+.tablewrap > table { margin: 0; }
+.tablewrap table { min-width: 32rem; }
 table { width: 100%; border-collapse: collapse; margin: var(--space-2) 0 var(--space-6); }
 th { text-align: left; padding: var(--space-2) var(--space-3); font-family: var(--font-mono);
      font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: var(--tracking-caps);

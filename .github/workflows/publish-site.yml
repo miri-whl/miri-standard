@@ -9,10 +9,11 @@ on:
   push:
     branches: [main]
     paths:
-      - 'standards/python/checks/**'
-      - 'standards/cli/checks/**'
+      # Any target's checks, so a new suite does not silently stop triggering a publish
+      # (consumption was added in 0.3 and would not have matched the per-target list).
+      - 'standards/*/checks/**'
       - 'schemas/**'
-      - 'docs/origin-story.md'
+      - 'docs/*.md'
       - 'website/**'
       - 'tools/generate_site.py'
   workflow_dispatch:
