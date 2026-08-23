@@ -64,8 +64,11 @@ without filesystem access.
 Each task in §3 is given as a read-order, a set of prohibitions, and an informative note, and the three carry
 different force:
 
-- **Read, in order** — the recommended reading sequence. It is **SHOULD** for a general consumer and **MUST** for the
-  reference consumer (`miri consume`, Consumer Conformance), skipping steps whose vehicle is unavailable (§1.1).
+- **Read, in order** — the recommended reading sequence, **SHOULD** for every consumer including the reference one,
+  skipping steps whose vehicle is unavailable (§1.1). It is deliberately **not** a MUST, because reading order is
+  internal and unobservable: [Consumer Conformance §2](consumer-conformance.md) can only check what a consumer says
+  or emits, so a MUST here would be a requirement its own named enforcer declines to verify. What the order buys is
+  stated in the heuristics; what is *enforced* is the prohibitions below.
 - **Must not** — **correctness and safety prohibitions**, **MUST** for any conformant consumer. Each is verifiable
   from a consumer's *observable output* by driving a reference consumer against the paired bare/miri and
   adversarial-metadata fixtures. Where a prohibition constrains only unobservable internal ordering, it is stated as
@@ -74,9 +77,9 @@ different force:
   violates one is wasteful, not wrong, and Consumer Conformance grades them separately from the MUSTs.
 - *Heuristic* — informative. Judgment calls and rationale that no linter adjudicates; never a verdict.
 
-The split is the answer to "is a heterogeneous consumer contract enforceable?": the read-*order* is graded guidance,
-but the prohibitions are hard rules checkable against a reference tool, and it is the prohibitions that keep a consumer
-honest.
+The split is the answer to "is a heterogeneous consumer contract enforceable?": the read-*order* is graded guidance
+precisely because it cannot be observed from outside, while the prohibitions are hard rules checkable against a
+reference tool. It is the prohibitions that keep a consumer honest, and no clause claims otherwise.
 
 ## 3. The Task-to-Document Map
 
@@ -313,7 +316,8 @@ outcome, and no clause of this standard depends on them.
 ## 6. Conformance
 
 The prohibitions in §3 and the interpretation rules in §4 are the checkable consumer requirements; they will be
-numbered `MIRI-CONSUMER-NNN` in the forthcoming Consumer Conformance document and verified against the reference
+numbered `MIRI-CONSUMER-NNN` in [Consumer Conformance](consumer-conformance.md) and verified against the reference
 consumer (`miri consume`) driven on the paired bare/miri fixture and an adversarial-metadata twin. The read-order
-lists are the reference consumer's required behavior and the general consumer's SHOULD; the **Should not** items are
-graded separately as budget preferences. This document defines the contract those checks encode.
+lists are SHOULD for every consumer and are not scored, because ordering is unobservable from outside; the
+**Should not** items are graded separately as budget preferences. This document defines the contract those checks
+encode.

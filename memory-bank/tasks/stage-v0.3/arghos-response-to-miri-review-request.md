@@ -54,7 +54,7 @@ That is why we want to build **#7 first** — see phasing.
 
 You asked for a declared, configurable field set. We want to ship a fixed Pydantic model:
 
-```
+```python
 Finding:
   severity: Severity        # closed enum
   document: str             # required — stable document id

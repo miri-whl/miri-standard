@@ -1,6 +1,6 @@
 # MIRI-CONSUMER-042 — generated with the Consumer Conformance profile; canonical source of truth.
 id: MIRI-CONSUMER-042
-name: Prefers a derived view over retrieving a whole document
+name: Never presents a whole-document retrieval as a derived view
 target: consumer
 status: active
 added_in: 0.3-draft
@@ -10,15 +10,16 @@ weight: 1
 conditional: false
 severity:
   default: LOW
-  violation_unit: each whole-document retrieval where a derived view would answer
-short_description: Prefers a derived view over retrieving a whole document
-long_description: This check verifies the consumer uses the filtered operations where they answer the question,
-  rather than retrieving a whole document and filtering client-side.
+  violation_unit: each whole-document retrieval reported as a scoped answer
+short_description: Never presents a whole-document retrieval as though a derived view had been used
+long_description: Budget preference, graded separately from the correctness MUSTs. Restated as an output claim because
+  which operation a consumer called is a request-side fact the profile's verification model cannot observe (§2);
+  what it can observe is the claim the consumer makes about what it read.
 rationale: This is a budget preference, not a correctness rule, and is graded separately as such. Retrieving a large
   document to use one part of it is the behavior the derived views were added to make unnecessary.
 fires_when:
-- The consumer retrieves a whole document where a derived view with an available filter would have answered the
-  question
+- The consumer's output claims a filtered or routing view was used when the whole document was retrieved
+- The consumer reports a document's full contents as though they were a scoped answer to the question asked
 remediation:
 - Use `api-index`, `patterns`, or `graph` where the question is a routing, pattern, or relationship question
 suggested_fix: Use `api-index`, `patterns`, or `graph` where the question is a routing, pattern, or relationship

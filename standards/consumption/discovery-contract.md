@@ -80,14 +80,14 @@ input, its payload, and its semantics; every response is wrapped in the §4 enve
 
 | Operation | Input | Payload key | Serves |
 |---|---|---|---|
-| `list` | optional `query` | `packages` | Which installed packages ship agent-metadata, and which documents each has |
+| `list` | optional `query`, `limit`, `cursor` | `packages` | Which installed packages ship agent-metadata, and which documents each has |
 | `document` | `package`, `name` | `document` | Any single whitelisted agent-metadata document, verbatim |
 | `lifecycle` | `package` | `document` | Shorthand for `document` with `name: "lifecycle.json"` |
 | `migration-guide` | `package` | `document` | Shorthand for `document` with `name: "migration-guide.json"` |
-| `api-index` | `package`, optional `query` | `entries` | A capped, filtered routing view derived from `sdk-manifest.json` |
+| `api-index` | `package`, optional `query`, `limit`, `cursor` | `entries` | A capped, filtered routing view derived from `sdk-manifest.json` |
 | `resolve` | `package`, `symbol` | `resolution` | Whether a symbol exists in the installed package's **source**, and where |
-| `patterns` | `package`, optional `category`/`complexity`/`query` | `patterns` | A capped, filtered view of `usage-patterns.json` |
-| `graph` | `package`, `symbol`, optional `depth`/`direction` | `graph` | The neighborhood of one symbol in `api-graph.json` |
+| `patterns` | `package`, optional `category`/`complexity`/`query`, `limit`, `cursor` | `patterns` | A capped, filtered view of `usage-patterns.json` |
+| `graph` | `package`, `symbol`, optional `depth`/`direction`, `limit` | `graph` | The neighborhood of one symbol in `api-graph.json` |
 
 `lifecycle` and `migration-guide` are **named shorthands**, not distinct capabilities: each MUST return exactly what
 `document` would return for the same package and document name. They exist because they are the two highest-traffic
@@ -106,6 +106,34 @@ A new operation is justified only when it is a **derived view whose parent docum
 retrieval defeats the purpose of asking** (§3.2.3), or a determination no document can answer. Anything else belongs
 in `document`.
 
+### 3.0 Input Grammars
+
+Every operation takes caller-supplied strings, and those strings reach the import system and the filesystem. §3.2.2
+gives `name` a grammar and a confinement procedure; the same discipline applies to the rest, and for the same reason:
+these are untrusted inputs, not parameters.
+
+| Input | Grammar | On violation |
+|---|---|---|
+| `package` | A **single top-level import name**: `^[A-Za-z_][A-Za-z0-9_]*$`. MUST NOT contain `.`, `/`, `\`, or any path separator. | `INVALID_INPUT` (§4.3), **without attempting resolution** |
+| `symbol` | A dotted qualified name: `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$`, at most 8 segments | `INVALID_INPUT` |
+| `name` | A single path segment (§3.2.2) | `DOCUMENT_NOT_SERVABLE` |
+| `query`, `category`, `complexity` | Any string, matched literally; never compiled as a pattern | — |
+| `limit` | A positive integer; the effective cap is `min(limit, cap_max)` (§3.5.1) | `INVALID_INPUT` |
+| `cursor` | An opaque string previously returned as `next_cursor` | `INVALID_CURSOR` (§4.3) |
+| `depth` | A positive integer, at most 5 | `INVALID_INPUT` |
+
+**`package` is rejected before resolution, not after.** A dotted value is the dangerous case: resolving `hostile.sub`
+imports the parent package and runs its `__init__`, so a surface that hands a dotted name to the import system has
+already executed code that §5 forbids — and §5's prohibition names "the target", not something imported on the way to
+it. Restricting `package` to a single segment closes that path by construction rather than by care.
+
+**`query` is data, never a pattern.** A surface MUST match it as a literal substring and MUST NOT compile it as a
+regular expression or glob: a caller-supplied pattern against a large corpus is a denial-of-service primitive, and no
+operation's semantics need one.
+
+§5's prohibition extends accordingly: a surface MUST NOT import the target **or any package on the path to resolving
+it**.
+
 ### 3.1 `list`
 
 **Input:** `{ "query": "<optional substring>" }` — an optional case-insensitive filter on the package name.
@@ -114,7 +142,7 @@ in `document`.
 
 ```json
 {
-  "schema_version": "1", "ok": true, "truncated": false, "cap": 100,
+  "schema_version": "1", "ok": true, "truncated": false, "cap": 25,
   "packages": [
     { "package": "weather_sdk", "distribution_name": "weather-sdk", "version": "1.2.0",
       "purl": "pkg:pypi/weather-sdk@1.2.0",
@@ -163,7 +191,7 @@ case as an error and collapse exactly the distinction §4.2 exists to protect: a
 
 | Servable | Not servable |
 |---|---|
-| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `api-graph.json`, `test-patterns.json` | everything else, including `prompt-templates.md` and `README.md` |
+| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `api-graph.json`, `test-patterns.json` *(provisional)* | everything else, including `prompt-templates.md` and `README.md` |
 
 The servable set is **closed and exhaustive**: it is not a sample, and a surface MUST NOT extend it. Membership is
 governed by one criterion, so that future document types are adjudicated by principle rather than by whether anyone
@@ -173,9 +201,29 @@ remembered to list them:
 > for it and a linter check gates it. **No free-form natural-language document is ever servable** — not
 > `prompt-templates.md`, not `README.md`, not embedded prose docs.
 
+**One member is provisional.** `test-patterns.json` has a schema (`schemas/test-patterns-v1.json`) but no producer
+specification section and no gating check, so it does not yet satisfy the second half of the criterion. It is marked
+**provisional** rather than quietly admitted: servable, and flagged in the servable table, until the producer-side
+definition and its check land. A surface MAY serve a provisional document; a consumer MUST NOT treat its presence as
+evidence the producer standard requires it.
+
+Recording this is the point. A closed set whose membership rule is stated and then not applied to its newest member
+is a set governed by whoever edited it last — which is exactly the failure the criterion exists to prevent, and the
+principle is worth more than the tidiness of an unqualified table.
+
 The reason is injection, not tidiness. Free prose is the highest-risk payload a publisher controls, and a document
-with no schema and no check has no property a consumer can verify before putting it in a model's context. A
-schema-governed document can at least be validated, field-typed, and reasoned about.
+with no schema and no check has no property a consumer can verify before putting it in a model's context.
+
+**That rationale is only true if the validation actually happens, so it is normative:** a surface MUST validate a
+document against this standard's schema for that name before serving it, and MUST return `METADATA_UNREADABLE` for a
+document that is well-formed JSON but fails its schema. `METADATA_UNREADABLE` therefore covers schema-invalidity, not
+only malformed JSON.
+
+This does not make served content safe, and must not be read that way. **A schema constrains shape, never meaning:**
+`usage-patterns.json` can pass its schema with arbitrary prose in every string field, which is exactly what the
+adversarial fixture does. Validation buys a consumer field types and a guarantee that the document is the kind of
+thing it claims to be — nothing about what the strings say. Every string field of every served document remains
+untrusted prose.
 
 Two consequences worth stating, because both were previously specified wrong:
 
@@ -302,9 +350,17 @@ a conformance check written against one is vacuous on the other. The following a
 
 - **Value.** The default `cap` is **25**. A surface MAY accept a caller-supplied `limit` up to a declared maximum, and
   MUST NOT return more than the effective cap. The value in force MUST be reported as `cap` on every response.
-- **Ordering.** Entries are ordered **lexicographically by entry name**, and the ordering MUST be stable across
-  identical requests. Without this, "the first 25" is a different 25 per surface and per call, and truncation is
-  unreproducible.
+- **Ordering.** Every capped operation has a declared ordering key, and the ordering MUST be stable across identical
+  requests. Without this, "the first 25" is a different 25 per surface and per call, and truncation is
+  unreproducible. Comparison is by Unicode code point — never locale-aware, which would make ordering depend on the
+  surface's environment.
+
+  | Operation | Ordered by |
+  |---|---|
+  | `list` | the import `package` name |
+  | `api-index` | the entry key |
+  | `patterns` | the pattern `id` |
+  | `graph` | breadth-first from `symbol`; nodes at equal depth by node key; `edges` by `(from, to, kind)` |
 - **Matching.** `query` matches, case-insensitively, against the **entry name only** — not `purpose`, not `file`. A
   surface MUST NOT widen the match, because a consumer cannot distinguish "absent" from "matched on a field I did not
   intend" (and §3.5's presence-only rule already forbids reading absence as non-existence).
@@ -529,18 +585,30 @@ implementation returns absence as a `tools/call` success whose text is an ad-hoc
 no `present` flag — indistinguishable from a real error; conforming it to this clause is the first implementation
 task.)*
 
-#### 4.2.1 Absence for `api-index`
+#### 4.2.1 Absence for Derived Views
 
-`api-index` is derived from `sdk-manifest.json`, so it has an absent case like any document-returning operation: a
-package that ships no `sdk-manifest.json` gets `ok: true`, `present: false`, **no `entries` key**, and a `reason`.
+A derived view is **absent when its parent document is absent**:
 
-A surface MUST NOT signal that absence with `present: true` and an empty `entries` object. The two mean different
-things and a consumer cannot recover the difference: `entries: {}` says *"this package's surface, as filtered, is
-empty"* — a statement about the package — whereas `present: false` says *"there is no manifest to derive an index
-from."* Reading the former as the latter is exactly the absence-implies-non-existence inference §3.5 forbids.
+| Operation | Parent document |
+|---|---|
+| `api-index` | `sdk-manifest.json` |
+| `patterns` | `usage-patterns.json` |
+| `graph` | `api-graph.json` |
 
-Equally, a `query` that matches nothing is **not** absence: the manifest exists, so the response is `present: true`
-with `entries: {}` and `truncated: false`. That is the one case where an empty `entries` is correct.
+In each case the response is `ok: true`, `present: false`, **no payload key**, and a `reason`.
+
+A surface MUST NOT signal that absence with `present: true` and an empty payload. The two mean different things and a
+consumer cannot recover the difference: an empty payload says *"this package's surface, as filtered, is empty"* — a
+statement about the package — whereas `present: false` says *"there is no parent document to derive a view from."*
+Reading the former as the latter is exactly the absence-implies-non-existence inference §3.5 forbids.
+
+**An empty payload with `present: true` is correct in exactly one case:** the parent document exists and the filter
+or traversal matched nothing. A `query` that matches no pattern, or a `symbol` with no edges, is not absence.
+
+`resolve` is not a derived view and its `present` means something narrower: whether the **module that would define
+the symbol** could be located and read. A package with no importable source gets `present: false`; a module that was
+read and simply does not define the symbol gets `present: true` with `found: false` (§3.6.1). Collapsing those two
+would make "I could not look" indistinguishable from "I looked and it is not there."
 
 ### 4.3 The Error Envelope
 
@@ -563,11 +631,26 @@ Contract-specific codes, alongside the §2.6 standard codes:
 | `DOCUMENT_NOT_SERVABLE` | `false` | The requested name is outside the §3.2 whitelist |
 | `NOT_DISCOVERABLE` | `false` | The package could not be resolved without importing it (§5) |
 | `METADATA_UNREADABLE` | `false` | The document exists but could not be read or parsed as declared |
+| `INVALID_INPUT` | `false` | An input violated its §3.0 grammar; the surface rejected it without resolving anything |
+| `INVALID_CURSOR` | `false` | The `cursor` is unrecognized, or does not belong to this request's ordering (§3.5.1) |
 
 `METADATA_UNREADABLE` is the honest answer for a malformed document: a surface MUST NOT repair, re-serialize, or
 partially serve a document it could not parse, and MUST NOT report it as absent.
 
 ### 4.4 A Surface Version Independent of the Transport
+
+Both versions in this contract are **integer strings** — `"1"`, `"2"` — compared numerically, and both are at `"1"`
+for 0.3-draft. They are deliberately not the specification's version: the specification moves on its own clock and a
+draft revision that changes no wire shape must not force a version bump.
+
+A version is incremented only on a **breaking** change to the thing it versions: for `schema_version`, removing or
+retyping a reserved envelope field; for the surface version, removing an operation, removing a required input, or
+changing what an existing response field means. Adding an optional input, adding an operation, or adding an envelope
+field is **not** breaking and MUST NOT bump either.
+
+A consumer encountering a **higher** version than it understands MUST NOT guess: it treats the response as
+unprocessable and says so. There is deliberately no version-mismatch error code, because the mismatch is the
+consumer's to detect and its handling is consumer policy — a surface has no way to know what its caller supports.
 
 A metadata-query surface MUST advertise its own **surface version** — the contract version of the §3 operations —
 distinct from any transport protocol version and from `schema_version` (which versions the envelope). Under the MCP
@@ -642,7 +725,9 @@ target-version answer**, and a consumer MUST NOT synthesize one.
 The MCP `initialize` result advertises the transport's `protocolVersion` (an MCP date) and `serverInfo`. The binding
 MUST additionally advertise the **metadata-query surface version** (§4.4) at the normative path
 `capabilities.miri.surface_version`, as a string — not merely as `serverInfo.version`, which names the implementation
-rather than the contract. A client negotiates the contract version from that field alone. *(The reference server today
+rather than the contract. A client **detects** the contract version from that field alone. The binding is
+server-advertise-only: there is no request in which a client states what it supports, so this is detection, not
+negotiation. *(The reference server today
 advertises only `serverInfo.version`; adding the capability is a binding task.)*
 
 ## 7. Project Declaration
@@ -715,6 +800,7 @@ server:
   many packages.
 - **Never serves `prompt-templates.md`.** That file is the highest-risk injection surface (Agent Metadata §9); it is
   excluded from the §3.2 whitelist, and a server MUST NOT add an operation that serves it.
+- **Fetches nothing** (§9.2): it never resolves a URL found in a served document.
 - **Executes nothing** (§5): it reads and relays, and it discovers import-free.
 - **Binds a local transport only** (stdio or loopback), scoped to its own environment.
 
@@ -723,6 +809,11 @@ server:
 No operation in §3 resolves a package-declared URL. The surface **fetches nothing**: it serves in-wheel bytes only, and
 a surface that fetched an advisory or update-check endpoint on the publisher's say-so would be turning
 publisher-controlled data into server-side requests — precisely the SSRF exposure the producer standard guards.
+
+A surface therefore **MUST NOT resolve, fetch, or issue any network request to a URL appearing in or derived from a
+served document**, and MUST NOT enrich, annotate, or validate a response with the result of such a request. Until now
+this section was written declaratively — "the surface fetches nothing" — while `MIRI-SURFACE-022` scored it as a
+CRITICAL MUST, so a surface that prefetched `update_check.url` failed a check while violating no requirement.
 
 Resolving those URLs is the **consumer's** act, performed at decision time under the SSRF guard in
 [Lifecycle and Security Metadata §9.2](../python/lifecycle-security-metadata.md) (HTTPS-only, block private,

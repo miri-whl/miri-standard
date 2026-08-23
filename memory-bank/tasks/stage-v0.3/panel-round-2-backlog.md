@@ -293,6 +293,29 @@ Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/defer
 - [x] C13. The miri arm is unvalidated against its own schemas (see A2). **Closed by A2** — the validator now
   loop-validates every document in `metadata/miri/` and fails on any with no schema mapping.
 
+## F. Scoring-model defects found by dogfooding
+
+- [ ] **Deprecation Coherence awards 20 of 100 points for having never deprecated anything.** Found by scoring
+  arghos: it took 20/22 in that category purely by absence of opportunity, which lifted its total from a real 19 to
+  a reported 39. A scoring model that gives a fifth of the total for project youth measures age, not quality. Only
+  four of the eight checks are marked `conditional`; the rest pass vacuously without being marked as such. Options:
+  mark the vacuous ones conditional so they are reported as not-applicable rather than passed, or exclude
+  not-applicable weight from the denominator the way the consumption profiles now do for forfeits. The same question
+  applies to MIRI-PY.
+
+## E. Producer-side work the consumption suite created
+
+- [ ] **`test-patterns.json` needs a producer specification section and a gating check.** The consumption suite
+  defined the schema and made the document servable, but the servable set's own criterion requires a schema **and**
+  a linter check — and neither an Agent Metadata section nor a `MIRI-PY-NNN` exists. It is marked _provisional_ in
+  Discovery Contract §3.2.1 until both land. Needs: an Agent Metadata §4.7 (purpose, entry shape, `kind`,
+  `supported_test_doubles`, `requires_network`/`requires_credentials`, and the invariant that entries are extracted
+  from the package's own suite rather than inferred), a `MIRI-PY` check, and the weight redistribution that adding a
+  check to a 100-point target requires.
+- [ ] **`antipatterns` has the same gap, one level down.** `usage_pattern.antipatterns` was added to
+  `usage-patterns-v1.json` with a `severity` enum that no producer prose defines, while `MIRI-CONSUMER-040` grades
+  consumers on `correctness`/`security` entries. The enum needs a producer-side definition.
+
 ## D. Regression status from round 1 (10 prior findings)
 
 | # | Finding | Status |

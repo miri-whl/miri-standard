@@ -179,7 +179,7 @@ Whether the consumer computes trust at call time or reads it off a shipped file.
 |---|---|---|---|---|
 | MIRI-CONSUMER-040 | M | Surfaces a `correctness`/`security` antipattern before emitting matching code | 2 | `miri` |
 | MIRI-CONSUMER-041 | M | Never presents a synthesized mock as the package's supported test double | 1 | `miri` |
-| MIRI-CONSUMER-042 | S | Prefers a derived view over retrieving a whole document | 1 | `miri` |
+| MIRI-CONSUMER-042 | S | Never presents a whole-document retrieval as though a derived view had been used | 1 | `miri` |
 
 ### Category Summary
 
