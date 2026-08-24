@@ -25,7 +25,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2
+            "limit": 2
           },
           "expect": {
             "ok": true,
@@ -38,7 +38,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2,
+            "limit": 2,
             "cursor": "<from step 1>"
           },
           "expect": {
@@ -61,7 +61,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2
+            "limit": 2
           },
           "expect": {
             "ok": true,
@@ -73,7 +73,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2,
+            "limit": 2,
             "query": "greet",
             "cursor": "<from step 1>"
           },
@@ -98,7 +98,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2
+            "limit": 2
           },
           "expect": {
             "ok": true,
@@ -110,7 +110,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 10,
+            "limit": 10,
             "cursor": "<from step 1>"
           },
           "expect": {
@@ -134,7 +134,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2,
+            "limit": 2,
             "query": ""
           },
           "expect": {
@@ -147,7 +147,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2,
+            "limit": 2,
             "cursor": "<from step 1>"
           },
           "expect": {
@@ -169,7 +169,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2,
+            "limit": 2,
             "cursor": "not-a-real-cursor"
           },
           "expect": {
@@ -194,7 +194,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2
+            "limit": 2
           },
           "expect": {
             "ok": true,
@@ -206,7 +206,7 @@
           "request": {
             "operation": "api-index",
             "package": "greet_miri",
-            "cap": 2,
+            "limit": 2,
             "cursor": "anything"
           },
           "expect": {

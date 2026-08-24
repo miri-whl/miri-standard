@@ -52,6 +52,13 @@ Each read-step below is labelled with the delivery vehicle that supplies it
 
 These four labels are the complete set. A step carries exactly one; there is no compound label.
 
+One further label, **(S?)**, marks a step served by an operation the surface is permitted to decline: the document is
+in the servable set but is **provisional** ([Discovery Contract §3.2.1](discovery-contract.md)), so a conformant
+surface may not advertise it at all. It is distinguished from **(S)** because §1.1's guarantee — that every **(S)**
+step is answerable by one of the eight operations — would otherwise be false for it, and a guarantee with one silent
+exception is worse than a guarantee with a named one. A consumer treats **(S?)** exactly as **(S)** except that an
+absent answer is the expected case rather than a degraded one.
+
 A consumer MUST skip a step whose vehicle is unavailable to it and continue with the next; a skipped step is reported,
 never silently synthesized (§4). Unavailability and inapplicability are **separate** grounds with separate reported
 reasons, and a consumer needs both: a vehicle it does not have is `unavailable-vehicle`, while a step whose stated
@@ -195,8 +202,14 @@ need it.
    ([Discovery Contract §6.2.1](discovery-contract.md)); a prospective "what breaks if I move to 1.5.0?" has no
    operation in 0.3 and MUST NOT be answered from the shipped file.
 2. **(C)** Cross-reference each record against the consumer codebase's **own call sites**.
-3. **(S)** `resolve` — confirm each `replacement` surface exists in the **installed** package before emitting a call
-   to it (§3.2). Installedness is observable from the operation's own answer, so this step needs no vehicle the
+3. **(S)** `list`, then `resolve` — confirm each `replacement` surface exists in the **installed** package before
+   emitting a call to it (§3.2). Two operations, because a `replacement` is a **purl** and `resolve` takes an
+   **import name**, and nothing converts one to the other by string manipulation: a purl names a distribution, an
+   import name names a package, and the two differ routinely (`pkg:pypi/scikit-learn` imports as `sklearn`). The
+   bridge is `list`, whose rows carry both — a consumer scans them for the row whose `purl` matches the
+   `replacement` and takes that row's `package` as the name to resolve. A replacement absent from `list` is not
+   installed, which is the `PACKAGE_NOT_INSTALLED` case below reached one step earlier. Installedness is observable from
+   the operation's own answer, so this step needs no vehicle the
    contract lacks: a `resolve` against a package that is not installed returns `ok: false` with
    `PACKAGE_NOT_INSTALLED` ([Discovery Contract §4.3](discovery-contract.md)), which is a *different* answer from
    `present: false` — the latter says the package is installed and the symbol is not in it. On
@@ -280,7 +293,7 @@ the agent *whom to ask*; it never answers *on their behalf*.
 
 **Read, in order:**
 
-1. **(S)** `test-patterns.json` — how the package's own suite exercises the surface being integrated, and which test
+1. **(S?)** `test-patterns.json` — how the package's own suite exercises the surface being integrated, and which test
    doubles the package **ships** for consumers. This document is **provisional**
    ([Discovery Contract §3.2.1](discovery-contract.md)) and a conforming package need not ship it, so an absent
    response here is the expected case rather than a defect — §4's honest-degradation rule governs, and the remaining
@@ -296,10 +309,13 @@ the agent *whom to ask*; it never answers *on their behalf*.
 - Present a **synthesized mock as the package's supported test double.** Only entries in
   `supported_test_doubles` are supported; anything the consumer invents is its own, and MUST be described as such.
   (Observable: a claimed "official" fake that appears in no `supported_test_doubles` entry.)
-- Run a pattern whose `requires_network` or `requires_credentials` is `true` without explicit opt-in — meaning a
-  decision the operator made **for this class of pattern, after being shown the flag**, whether per-run or as
-  standing configuration. A blanket "yes to everything" the operator granted before any flag was surfaced is not
-  opt-in to this, and neither is a default the consumer ships enabled — and never
+- - Run a pattern whose `requires_network` or `requires_credentials` is `true` without explicit opt-in — meaning the
+  consumer
+  **emitted the flag and the pattern's identity, then received a decision naming that class of pattern** — per-run or
+  as standing configuration. Both halves are in the consumer's own output and input, which is what makes this
+  checkable: a suite drives the consumer against a flagged pattern and asserts the flag appears in the output before
+  any run occurs. A blanket "yes to everything" carries no class, so it does not satisfy the rule, and neither does a
+  default the consumer ships enabled — and never
   fabricate or substitute credentials to make one run.
 - Report that a package "has no tests" from the absence of `test-patterns.json`. Absence is evidence-scoped (§4): it
   means no test patterns were generated, not that the package is untested.

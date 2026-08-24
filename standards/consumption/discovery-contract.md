@@ -109,9 +109,9 @@ and it is written as a prohibition because every operation admitted here is one 
 suite must implement forever.
 
 "Large enough" is a gate on future editors, so it carries a threshold rather than a sentiment: a derived view is
-justified where the parent document exceeds `max_bytes`'s **default of 262144 bytes** for a package of ordinary size,
-or where the answer the consumer needs is a bounded selection from an unbounded collection — an index over every
-public symbol, a neighborhood within a whole call graph. A view that merely reformats a document a consumer could
+justified where the parent document exceeds `max_bytes`'s **default of 262144 bytes** for any package the editor can
+point to, or where the answer the consumer needs is a bounded selection from an unbounded collection — an index over
+every public symbol, a neighborhood within a whole call graph. A view that merely reformats a document a consumer could
 have read in full is not justified however convenient it is, because each operation is a permanent surface that every
 binding and every conformance suite must then implement. The three derived views in 0.3-draft each clear this bar,
 and the test is written down so a fourth has to clear it too.
@@ -535,7 +535,7 @@ to save space. The filter selects *which* patterns, never *which parts of* a pat
 
 ### 3.8 `graph`
 
-**Input:** `{ "package": "<import-name>", "symbol": "<dotted-name>", "depth": <optional int>,
+**Input:** `{ "package": "<import-name>", "symbol": "<dotted-name>", "depth": <optional int>, "limit": <optional int>,
 "direction": "<optional>" }` — `direction` is `out` (edges from the symbol), `in` (edges to it), or `both`
 (default). `depth` defaults to `1`.
 
@@ -779,7 +779,8 @@ consumer's to detect and its handling is consumer policy — a surface has no wa
 A metadata-query surface MUST advertise its own **surface version** — the contract version of the §3 operations —
 distinct from any transport protocol version and from `schema_version` (which versions the envelope). Under the MCP
 binding the MCP `protocolVersion` is the transport's version, not this contract's; §6.3 fixes where the surface
-version is carried. This lets a consumer negotiate the metadata contract without conflating it with the transport it
+version is carried. This lets a consumer **detect** the metadata contract's version without conflating it with the
+transport it
 happens to ride.
 
 ## 5. Import-Free Discovery

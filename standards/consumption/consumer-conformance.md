@@ -110,7 +110,7 @@ forfeited **M** check emits **no grade at all**, since grades describe conformin
 established that it is one. It still emits the score over the effective denominator, which is why the two are not in
 conflict — the score says how much of what *was* exercised passed, and the absent grade says the run did not exercise
 enough to conclude. A report that prints "Gold, conformance undetermined" has stated a contradiction; a report that
-prints "score 96 over an effective denominator of 88, 1 MUST forfeited, conformance undetermined" has stated the
+prints "score 96 — 90 of 94 applicable weight passing, 1 MUST forfeited, conformance undetermined" has stated the
 truth. Forfeited **S** checks carry no such consequence: they leave conformance decided and a grade emitted.
 
 The forfeit rule is the same discipline the producer checklists apply to capability-gated checks: a consumer that
@@ -119,8 +119,21 @@ say so rather than crediting it.
 
 ## 4. Which Obligations Bind Which Actor
 
-The Discovery Contract places obligations on two different programs, and only one of them is a consumer. Scoring a
-consumer on the other would be measuring the wrong thing.
+The Discovery Contract places obligations on **three** programs, and only one of them is a consumer. Scoring a
+consumer on the others would be measuring the wrong thing.
+
+The third is the **harness-configuration generator** — the tool that reads a project's `[tool.miri.consume]` table and
+emits an `.mcp.json` or its equivalent. [Discovery Contract §7](discovery-contract.md) binds it with four rules: the
+closed grammar, rejecting a declaration carrying any unknown key, never auto-launching what it generates, and
+producing byte-identical output regardless of what the project's dependencies declare. **None of the four is scored
+by either profile in 0.3-draft**, and that is a gap rather than a decision — it is recorded here because a reader
+counting obligations against checks will find the shortfall, and finding it stated is better than finding it hidden.
+
+The gap is bounded and deliberate. A generator is a build-time tool with no wire contract and no request/response
+shape, so it needs a third profile driven differently — against project trees rather than against fixture packages —
+and inventing that profile as a footnote to this one would produce checks nobody had thought through. The four rules
+are normative on the generator today whether or not a suite scores them; what is missing is the suite. Until it
+exists, a consumer that also generates harness configuration is scored here only on its consumer behavior.
 
 Each row states the obligations its listed checks enforce, so a reader can move between the two without inferring the
 mapping; where a row lists three checks it names three obligations, in the checks' own order.
