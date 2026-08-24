@@ -16,8 +16,9 @@ Identical to the [Python checklist](../python/linter-checklist.md): **Score** = 
 weights of *applicable* checks, as a percentage; **M** checks are required for conformance (any M failure caps the
 reported score at 74).
 
-**Not-applicable is not a pass.** A *conditional* check whose condition does not apply leaves **both** the numerator
-and the denominator, and the report MUST carry the not-applicable count and the effective denominator beside the
+**Not-applicable is not a pass.** A *conditional* check whose condition does not apply is **excluded from
+both** the numerator and the denominator — removed from the calculation, never counted as a failure — and the report
+MUST carry the not-applicable count and the effective denominator beside the
 score. The previous-release checks (MIRI-CLI-030, 033, 035, 036, 037) are *conditional*, so a first release — with no
 prior release to diff against — is scored on what it can be scored on and can still reach Gold. A check forfeits
 (also reported, also out of the denominator) when the condition does apply but the linter cannot assess it.

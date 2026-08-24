@@ -55,9 +55,12 @@ These four labels are the complete set. A step carries exactly one; there is no 
 A consumer MUST skip a step whose vehicle is unavailable to it and continue with the next; a skipped step is reported,
 never silently synthesized (§4). Every **(S)** step is answerable by one of the eight operations in the
 [Discovery Contract §3](discovery-contract.md) table — the contract is deliberately sized so that no normative
-read-order depends on an answer no operation can give. In particular a **server-only consumer can complete every
-task in §3**, including the generative ones: `resolve` is what makes the anti-hallucination rule dischargeable
-without filesystem access.
+read-order depends on an answer no operation can give. A **server-only consumer can complete the normative core of
+  every task in §3**,
+including the generative ones: `resolve` is what makes the anti-hallucination rule dischargeable without filesystem
+access. It cannot perform the **(F)** and **(X)** steps — `templates/` in §3.2, the quickstart in §3.1, `--describe`
+in §4 — and is not expected to: those are skipped and reported per the rule above. No **prohibition** and no
+**(S)** step depends on a vehicle a server-only consumer lacks, which is the property that actually matters.
 
 ## 2. Force of Each Clause
 
@@ -141,8 +144,13 @@ agent builds on the path the author verified rather than reconstructing one.
 - Copy a `templates/` scaffold without reconciling it against the installed version's surfaces.
 - **Emit code that a returned `antipattern` of severity `correctness` or `security` describes as wrong, without
   surfacing that the author has flagged it.** These are author-declared failure modes for the exact surface being
-  called; silently reproducing one is the failure this element exists to prevent. (Observable: emitted code matching
-  a `wrong_code` whose severity is `correctness` or `security`, with no mention of the author's warning.)
+  called; silently reproducing one is the failure this element exists to prevent.
+
+  *Matching* is deliberately narrow, because a broad reading would make the rule undecidable: emitted code **matches**
+  a `wrong_code` when it calls **the same surface in the same shape** — same callable, same argument arity, and the
+  same construction site relative to any enclosing loop or handler the `wrong_code` shows. It is **not** a textual
+  comparison and **not** a semantic-equivalence judgment. Where a consumer cannot decide, the rule does not fire;
+  a check written against this MUST fire only on the narrow reading.
 
 *Heuristic:* templates encode idiom, the installed surface encodes truth — scaffold from the template, then let
 introspection correct it. `graph` is consulted only when the change spans files; a single-call integration does not
@@ -225,9 +233,12 @@ the agent *whom to ask*; it never answers *on their behalf*.
 **Read, in order:**
 
 1. **(S)** `test-patterns.json` — how the package's own suite exercises the surface being integrated, and which test
-   doubles the package **ships** for consumers.
+   doubles the package **ships** for consumers. This document is **provisional**
+   ([Discovery Contract §3.2.1](discovery-contract.md)) and a conforming package need not ship it, so an absent
+   response here is the expected case rather than a defect — §4's honest-degradation rule governs, and the remaining
+   steps stand on their own.
 2. **(S)** `api-index` — confirm the surface under test, and its `signature` where the producer supplies one.
-3. **(S)** `usage-patterns.json` — the idiomatic call sequence the test should exercise, so the test covers real usage
+3. **(S)** `patterns` — the idiomatic call sequence the test should exercise, so the test covers real usage
    rather than an invented one.
 
 **Must not:**
@@ -259,7 +270,10 @@ generator's code — the "an author who builds strictly to the documents writes 
   ([CLI Lifecycle Spec §3](../cli/cli-lifecycle-specification.md)) — which is an **(X)** vehicle: it *executes the
   installed console script*, and is therefore outside the Discovery Contract's import-free, executes-nothing surface
   ([Discovery Contract §5](discovery-contract.md)). A consumer MUST treat invoking it as running installed code, under
-  the same confinement it would apply to any other execution, and MUST NOT invoke it merely to enrich a description.
+  the same confinement it would apply to any other execution. A consumer MUST invoke it **only when the task it was
+  given requires the CLI surface** — the user asked about a command, or a call site under edit uses one. Restating it
+  as a condition on the task rather than on the consumer's motive is deliberate: "merely to enrich" was a statement
+  about intent, which nothing outside the consumer can observe, and an unobservable clause cannot be a MUST.
 - **A pointer is not a permission.** Several elements carry paths that point into the package — `api_index`'s `file`,
   `api-graph` nodes' `file`/`module`, `test-patterns`' `source_file`. These are **publisher-authored strings**, and a
   consumer that opens one is acting on untrusted input. Before dereferencing any such pointer a consumer MUST resolve
@@ -268,6 +282,13 @@ generator's code — the "an author who builds strictly to the documents writes 
   escapes the package root MUST be reported as malformed and MUST NOT be opened. This mirrors the obligation the
   Discovery Contract places on a *surface* ([§3.2.2](discovery-contract.md)); the same discipline applies to a
   consumer, because the same string reaches it.
+
+- **Every URL from metadata is guarded, in every task.** A consumer MUST apply the SSRF guard in
+  [Lifecycle and Security Metadata §9.2](../python/lifecycle-security-metadata.md) — HTTPS only, block private,
+  link-local and cloud-metadata ranges, re-validate after redirects, forward no credentials — to **any** URL it
+  resolves from any served document, not only to `advisory_sources` and `update_check` in §3.5. Documents carry
+  URL-shaped strings in many fields, the surface fetches none of them ([Discovery Contract §9.2](discovery-contract.md)),
+  and a guard scoped to one task is a guard a consumer forgets in the other five.
 
 - **A skipped step is reported, never synthesized.** Where a read-step's vehicle is unavailable (§1.1) or its document
   is absent, a consumer MUST say so in its output rather than filling the gap from its own priors. This is the

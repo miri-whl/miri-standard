@@ -17,8 +17,9 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 - A wheel with any failing **M** check is **non-conforming regardless of score**; its score is still reported, capped at
   74, to show distance from conformance.
 - **Not-applicable is not a pass.** A *conditional* check whose condition does not apply is **not applicable**: it
-  leaves **both** the numerator and the denominator, and the report MUST carry the not-applicable count and the
-  effective denominator beside the score. The score is therefore a percentage of what was actually assessed.
+  is **excluded from both** the numerator and the denominator — removed from the calculation, never counted as a
+  failure — and the report MUST carry the not-applicable count and the effective denominator beside the score. The
+  score is therefore a percentage of what was actually assessed.
 
   This replaces an earlier rule under which such a check scored its full weight automatically. That rule made the
   score a function of project age: an artifact with nothing to deprecate collected the whole deprecation category for

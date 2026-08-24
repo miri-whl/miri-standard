@@ -222,8 +222,12 @@ only malformed JSON.
 This does not make served content safe, and must not be read that way. **A schema constrains shape, never meaning:**
 `usage-patterns.json` can pass its schema with arbitrary prose in every string field, which is exactly what the
 adversarial fixture does. Validation buys a consumer field types and a guarantee that the document is the kind of
-thing it claims to be — nothing about what the strings say. Every string field of every served document remains
-untrusted prose.
+thing it claims to be — nothing about what the strings say.
+
+**Every string field of every served document is untrusted prose, and a consumer MUST treat it as such** regardless
+of which document it came from, whether that document passed validation, or how the field is named. Passing a schema
+is not a safety property and MUST NOT be relayed as one: a surface MUST NOT describe a validated document as
+"verified", "trusted", or "safe", because the only thing validation established is shape.
 
 Two consequences worth stating, because both were previously specified wrong:
 
@@ -369,6 +373,17 @@ a conformance check written against one is vacuous on the other. The following a
   continue MUST still set `truncated: true` — silently returning a partial answer as though complete is the failure
   this whole section exists to prevent.
 
+  `truncated: true` **without** `next_cursor` therefore means exactly one thing: *this surface cannot continue this
+  listing.* It is a valid state, not a defect, and a consumer MUST read it as "there is more and I cannot reach it"
+  rather than retrying or inferring a fault.
+
+  A cursor is **scoped to the exact request that produced it** — same operation, package, filters, and effective cap.
+  A surface MUST reject a cursor presented with any of those changed and MUST NOT silently restart the ordering: a
+  consumer that alters a filter mid-listing and receives page two of a different query has no way to detect it.
+  Lifetime is the surface's own affair and MAY be as short as one process, but an expired cursor MUST be rejected as
+  `INVALID_CURSOR` rather than treated as absent — "your cursor is stale" and "you sent no cursor" lead a consumer to
+  different actions.
+
 A consumer MUST NOT infer the size of a package's surface from `cap`, from the number of entries returned, or from
 `truncated` being `false` after a `query` — a filtered response is complete only *with respect to that filter*.
 
@@ -491,6 +506,13 @@ loads the entire graph to answer a question about one symbol. On a small package
 graph scales with the whole public surface, and the element's stated purpose is spent obtaining it. `graph` is what
 makes that claim true rather than aspirational.
 
+**`cap` bounds the answer; `depth` bounds the walk, and the cap wins.** A traversal that would exceed `cap` before
+reaching the requested `depth` MUST stop at the cap and set `truncated: true`. It MUST NOT silently reduce `depth` to
+fit, and MUST NOT exceed `cap` to honour `depth`. The response reports the `depth` actually *performed* (§4.1), so a
+consumer can distinguish a depth-2 answer from a depth-2 request that only got one hop. Because the neighborhood is
+walked breadth-first (§3.5.1), a truncated result is always a complete prefix by distance rather than an arbitrary
+subset.
+
 `symbol` MUST be resolved against the graph's node keys, which share the dotted key space used by `api_index` and
 `resolve` (§3.6). A `symbol` absent from the graph is **not** an error and **not** document-absence: it is
 `present: true` with an empty `nodes`/`edges` — the graph exists, the symbol is simply not in it. Traversal is capped
@@ -519,7 +541,7 @@ Without that order a consumer reading `present` first reports a parse failure as
 | `schema_version` | Always | The wire-schema version of the **envelope**, owned and stamped by the surface |
 | `ok` | Always | `true` for a served answer, `false` for a failure (§4.3) |
 | `present` | `document` and its shorthands, `api-index`, `patterns`, `graph`, `resolve` — and **MUST be omitted whenever `ok` is `false`** | Whether the subject exists: the document for `document`, the parent document for a derived view, the module for `resolve` (§4.2) |
-| `package` | Where a package was named or resolved | The import name the answer is about |
+| `package` | Whenever the request named one — **including on every error**, echoed as received | The import name the answer is about |
 | `purl` | Where identity resolved (§4.1.1) | Surface-derived provenance (§9.1) |
 | `name` | `document` and its shorthands | The document name the answer is about |
 | `reason` | Absent responses (§4.2) | Free-text explanation for humans — **never a machine field** |
@@ -528,6 +550,7 @@ Without that order a consumer reading `present` first reports a parse failure as
 | `max_bytes` | `document` and its shorthands | The serialized-size bound in force (§3.2.3) |
 | `next_cursor` | `list`, `api-index`, `patterns`, when truncated | Continuation token for the same ordering (§3.5.1). `graph` has no cursor (§3.8). |
 | `error` | Failures only | The structured error object (§4.3) |
+| `purl_mismatch` | Where a served document claimed a different `purl` (§4.1.1) | The publisher-claimed value the surface rejected |
 | `symbol` | `resolve`, `graph` | The symbol the answer is about |
 | `depth`, `direction` | `graph` | The traversal actually performed |
 | `packages` / `document` / `entries` / `resolution` / `patterns` / `graph` | Per operation | The payload |
@@ -540,8 +563,10 @@ distribution's own recorded name and version**, never by reading `identity.purl`
 served document. Otherwise a package declaring `pkg:pypi/requests@2.31.0` inherits requests' trust tier by simply
 saying so — a forgery inside the very namespace §4 claims is un-forgeable.
 
-Where a served `identity.purl` disagrees with the derived value, the surface MUST serve the derived value, and SHOULD
-signal the mismatch (it is a strong tampering indicator). `purl` MUST be present on every response whose subject
+Where a served `identity.purl` disagrees with the derived value, the surface MUST serve the derived value and **MUST
+signal the mismatch** as `purl_mismatch`, carrying the value the document claimed. A surface that silently corrects
+it denies the consumer the one observable sign that a package is claiming an identity it does not have — and a
+tampering indicator nobody can see is not an indicator. `purl` MUST be present on every response whose subject
 package resolved — including `DOCUMENT_NOT_SERVABLE` and `METADATA_UNREADABLE` — and MUST be omitted where identity
 did not resolve: `PACKAGE_NOT_INSTALLED`, `AMBIGUOUS_PACKAGE`, `NOT_DISCOVERABLE`.
 
@@ -744,11 +769,18 @@ boundary. Its grammar is therefore closed:
 ```toml
 [tool.miri.consume]
 server = "miri"      # REQUIRED. Closed enumeration; "miri" selects the standard context server.
-transport = "stdio"  # OPTIONAL. One of: "stdio", "loopback". Default "stdio".
+transport = "stdio"  # OPTIONAL. One of: "stdio", "loopback" (defined below). Default "stdio".
 ```
 
 - `server` MUST be a value from a **closed enumeration** defined by this specification; `"miri"` is the only value in
   0.3-draft, and it selects "run the standard Miri context server for this environment."
+- `transport` selects how the client reaches that server, and both values are defined here because a value in a
+  closed enumeration with no stated meaning is not a contract. `"stdio"`: the client launches the server as a child
+  process and speaks JSON-RPC over its standard streams. `"loopback"`: the server listens on a TCP socket bound to a
+  loopback address (`127.0.0.1` or `::1`) on an ephemeral port, and **MUST refuse to bind any other interface** — a
+  metadata surface reachable from off-host is a different threat model than this contract addresses. The port is
+  discovered out of band; this specification defines no discovery mechanism, so a client that cannot determine it
+  MUST fail rather than scan.
 - The table MUST NOT contain any other key. In particular, `command`, `args`, `env`, `url`, and `path` are
   **structurally excluded**: a declaration can select a known server, never describe an arbitrary process to execute.
   A consumer encountering an unknown key MUST reject the declaration rather than ignore the key.
@@ -812,8 +844,11 @@ publisher-controlled data into server-side requests — precisely the SSRF expos
 
 A surface therefore **MUST NOT resolve, fetch, or issue any network request to a URL appearing in or derived from a
 served document**, and MUST NOT enrich, annotate, or validate a response with the result of such a request. Until now
-this section was written declaratively — "the surface fetches nothing" — while `MIRI-SURFACE-022` scored it as a
-CRITICAL MUST, so a surface that prefetched `update_check.url` failed a check while violating no requirement.
+this section was written declaratively — "the surface fetches nothing" — while a CRITICAL MUST scored it, so a surface
+that prefetched `update_check.url` failed a check while violating no requirement.
+
+This obligation is scored as `MIRI-SURFACE-023`, separately from import-freedom (`MIRI-SURFACE-022`): the two
+are different prohibitions caught by different fixtures, and an import canary cannot detect a fetch.
 
 Resolving those URLs is the **consumer's** act, performed at decision time under the SSRF guard in
 [Lifecycle and Security Metadata §9.2](../python/lifecycle-security-metadata.md) (HTTPS-only, block private,

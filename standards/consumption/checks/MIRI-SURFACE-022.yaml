@@ -1,17 +1,17 @@
 # MIRI-SURFACE-022 — generated with the Surface Conformance profile; canonical source of truth.
 id: MIRI-SURFACE-022
-name: Discovers import-free; executes nothing and fetches nothing
+name: Discovers import-free; executes nothing
 target: surface
 status: active
 added_in: 0.3-draft
 level: MUST
 category: Boundaries
-weight: 8
+weight: 5
 conditional: false
 severity:
   default: CRITICAL
-  violation_unit: each package imported, executed, or fetched during a query
-short_description: Discovers import-free; executes nothing and fetches nothing
+  violation_unit: each package imported or executed during a query
+short_description: Discovers import-free; executes nothing
 long_description: 'Surface obligation from the Discovery Contract. This check verifies: Discovers import-free; executes
   nothing and fetches nothing.'
 examples:
@@ -23,11 +23,11 @@ rationale: 'Discovery runs over every installed package, including ones nobody h
   data into server-side requests.'
 fires_when:
 - Any query imports the target package or executes any of its code
-- The surface fetches a package-declared URL such as `update_check.url` or an advisory endpoint
 - A package that cannot be resolved without importing is imported rather than reported `NOT_DISCOVERABLE`
+- Resolving a dotted `package` value imports the parent package on the way to the target (§3.0)
 remediation:
 - Resolve locations through the import system's path finders and read files; never import the target
-- 'Fetch nothing: relaying the declared URL is the whole obligation, and resolving it is the consumer''s act'
+- Reject a dotted `package` before attempting resolution, so the parent is never imported either
 suggested_fix: Resolve locations through the import system's path finders and read files; never import the target
 references:
 - title: Discovery Contract

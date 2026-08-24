@@ -8,7 +8,7 @@
 
 The [Discovery Contract](discovery-contract.md) places obligations on two programs. The
 [Consumer Conformance](consumer-conformance.md) profile numbers the ones that bind a **consumer** and states plainly
-that it does not score the rest. This document is that rest: sixteen checks, `MIRI-SURFACE-001` through
+that it does not score the rest. This document is that rest: seventeen checks, `MIRI-SURFACE-001` through
 `MIRI-SURFACE-051`, weighted to 100, defining what a conformant **metadata-query surface** is.
 
 Without it the contract's most load-bearing guarantees — that the envelope cannot be forged, that absence is
@@ -70,14 +70,15 @@ producer checklists, not because a conforming consumer is expected to score badl
 grows will occupy them naturally.
 
 **Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
-forfeited check leaves **both** the numerator and the denominator: the score is computed over what was actually
-exercised, so forfeiting cannot inflate or deflate it. The report MUST carry the forfeited count and the effective
+forfeited check is **excluded from both** the numerator and the denominator — it is removed from the calculation
+entirely, not counted as a failure. The score is computed over what was actually exercised, so forfeiting cannot
+inflate or deflate it. The report MUST carry the forfeited count and the effective
 denominator beside the score, and a forfeited **M** check means **conformance is undetermined** — reported as such,
 never as conforming and never as a failure.
 
 ## 4. The Checks
 
-Sixteen checks, weights summing to 100. IDs are stable and are never renumbered.
+Seventeen checks, weights summing to 100. IDs are stable and are never renumbered.
 
 ### A. Envelope Integrity (20 points)
 
@@ -107,7 +108,8 @@ What the surface will and will not do. Every check here is a refusal.
 |---|---|---|---|---|
 | MIRI-SURFACE-020 | M | Serves only the closed servable set; refuses anything else | 8 | request trace |
 | MIRI-SURFACE-021 | M | Confines the resolved path; rejects symlinks and traversal | 8 | `symlinked` |
-| MIRI-SURFACE-022 | M | Discovers import-free; executes nothing and fetches nothing | 8 | import canary |
+| MIRI-SURFACE-022 | M | Discovers import-free; executes nothing | 5 | import canary |
+| MIRI-SURFACE-023 | M | Fetches nothing: never resolves a URL found in a served document | 3 | `adversarial` (A7) |
 
 ### D. Bounded Answers (16 points)
 
@@ -137,11 +139,11 @@ What the surface will and will not do. Every check here is a refusal.
 |---|---|---|
 | A. Envelope Integrity | 3 | 20 |
 | B. Absence and Error | 3 | 22 |
-| C. Boundaries | 3 | 24 |
+| C. Boundaries | 4 | 24 |
 | D. Bounded Answers | 3 | 16 |
 | E. Provenance and Identity | 2 | 11 |
 | F. Binding | 2 | 7 |
-| **Total** | **16** | **100** |
+| **Total** | **17** | **100** |
 
 **Every check above now has an executable case.** The fixtures those cases name — the `malformed` variant, the
 `symlinked` document, the import canary, the `spoofed` identity document, the `consuming-project` declarations and

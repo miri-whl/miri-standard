@@ -82,8 +82,9 @@ producer checklists, not because a conforming consumer is expected to score badl
 grows will occupy them naturally.
 
 **Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
-forfeited check leaves **both** the numerator and the denominator: the score is computed over what was actually
-exercised, so forfeiting cannot inflate or deflate it. The report MUST carry the forfeited count and the effective
+forfeited check is **excluded from both** the numerator and the denominator — it is removed from the calculation
+entirely, not counted as a failure. The score is computed over what was actually exercised, so forfeiting cannot
+inflate or deflate it. The report MUST carry the forfeited count and the effective
 denominator beside the score, and a forfeited **M** check means **conformance is undetermined** — reported as such,
 never as conforming and never as a failure.
 
@@ -106,7 +107,8 @@ consumer on the other would be measuring the wrong thing.
 | Read a pattern whole; distinguish supported doubles; prefer derived views | Consumer | Yes — `040`, `041`, `042` |
 | Stamp `schema_version`; own the envelope's top level; emit only reserved keys | **Surface** | No — `MIRI-SURFACE-001`, `002`, `003` |
 | **Signal** absence as `ok: true, present: false`; signal failure with a coded error; never repair an unparsable document | **Surface** | No — `010`, `011`, `012` |
-| Serve only the closed set; confine the resolved path; discover import-free and fetch nothing | **Surface** | No — `020`, `021`, `022` |
+| Serve only the closed set; confine the resolved path; discover import-free | **Surface** | No — `020`, `021`, `022` |
+| Never resolve a URL found in a served document | **Surface** | No — `023` |
 | Declare and enforce caps; order stably; distinguish an absent derived view from an empty one | **Surface** | No — `030`, `031`, `032` |
 | Derive `purl` rather than reading it from a document; one row per import package | **Surface** | No — `040`, `041` |
 | Advertise the surface version; carry absence and error as results, not protocol errors | **Surface** | No — `050`, `051` |
@@ -114,8 +116,8 @@ consumer on the other would be measuring the wrong thing.
 Every "No" in that table is an obligation this profile deliberately does not score, because a consumer emits no
 responses and cannot be held to the shape of one ([Discovery Contract §10](discovery-contract.md)).
 
-Every "No" in that table is numbered in [Surface Conformance](surface-conformance.md) — sixteen `MIRI-SURFACE`
-checks weighted to 100 — and the two columns together account for all thirty-one consumption checks.
+Every "No" in that table is numbered in [Surface Conformance](surface-conformance.md) — seventeen `MIRI-SURFACE`
+checks weighted to 100 — and the two columns together account for all thirty-two consumption checks.
 
 **Absence appears on both sides, and that is not duplication.** A surface must *signal* absence correctly
 (`ok: true, present: false`, never an error, never a silent empty success); a consumer must *report* it correctly

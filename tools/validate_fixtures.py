@@ -234,7 +234,9 @@ def main() -> int:
     #    check that does not exist, and every non-pending check must have a case behind it.
     import re
     goldens = sorted(p for p in EXPECTED.glob("A*.json"))
-    check_ids = {f.stem for f in (REPO / "standards/consumption/checks").glob("MIRI-CONSUMER-*.yaml")}
+    # Both check families live here — a golden may cite either, and scoping this to one
+    # namespace silently rejected every valid MIRI-SURFACE citation.
+    check_ids = {f.stem for f in (REPO / "standards/consumption/checks").glob("MIRI-*.yaml")}
     check("golden expectations present", len(goldens) >= 6, f"{len(goldens)} found")
     cited = set()
     for g in goldens:
