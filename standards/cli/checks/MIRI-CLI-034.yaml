@@ -22,6 +22,9 @@ rationale: 'Spec §2.5 confines machine payloads to stdout and all deprecation a
   The grace period of §7.3 only works if the deprecated surface keeps functioning, and a corrupted payload means
   it does not.'
 fires_when:
+- Invoking a surface whose `lifecycle.status` is `deprecated` emits no deprecation warning on **either** channel —
+  the grace period exists so that a caller is told before removal, and a tool that warns nowhere satisfies every
+  clause about *which channel* the warning avoids by never emitting one
 - Invoking a surface whose `lifecycle.status` is `deprecated` with the JSON output flag produces stdout that is
   not a single parseable JSON document
 - Deprecation notice text (e.g. a line matching /deprecat/i naming the surface) appears in captured stdout rather

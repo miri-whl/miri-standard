@@ -104,6 +104,14 @@ Standard error codes:
 | `CONFIRMATION_REQUIRED` | `false` | A destructive action needs `--force`/`--yes`; the caller must add it |
 | `FLAG_REMOVED` | `false` | The flag or subcommand was removed; the caller must use its replacement (§6) |
 
+**A defined code carries an obligation to raise it.** A CLI MUST answer a malformed or invalid argument with this
+envelope and `VALIDATION` — never by accepting the value and reporting success. The rule is stated because a code
+table alone does not create one: a tool that silently coerces an unparseable `--since` into "everything" satisfies
+every clause about the *shape* of its errors by never producing one, and its caller receives a complete history it
+believes to be a delta. Where an argument has a documented type — a version, a path, an enumerated value — a value
+outside that type is invalid input, and the machine channel must say so rather than guess. A tool that deliberately
+accepts a lenient form MUST document it as valid, which converts the silence into a contract.
+
 Code-specific fields (e.g. `flag` and `removed_in` for `FLAG_REMOVED`) are added alongside these. This envelope is the
 canonical error format referenced by the error-handling checks. `schema_version` is the ecosystem convention for the
 wire-schema version of *any* machine-readable JSON document these tools emit — including linter reports and other
