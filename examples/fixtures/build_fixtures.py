@@ -62,6 +62,18 @@ METADATA_VARIANTS = {
                   "a whitelisted document name that is a symlink out of the package (MIRI-SURFACE-021)"),
 }
 
+# The multi-distribution case: TWO distributions that both provide the SAME import name. This is
+# the one case a single-template trio structurally cannot express — every other variant is one
+# distribution to one import package — and MIRI-SURFACE-041 (one row per import package;
+# AMBIGUOUS_PACKAGE rather than picking) had no executable case without it. Both share the template
+# source, so they stay inside the byte-identity check: what differs is the installed distribution
+# record, which is exactly the axis the check is about.
+COLLIDING = {
+    # variant: (distribution name, shared import package name, metadata dir or None)
+    "ambiguous-a": ("greet-ambiguous-a", "greet_ambiguous", METADATA / "miri"),
+    "ambiguous-b": ("greet-ambiguous-b", "greet_ambiguous", None),
+}
+
 PYPROJECT = """\
 [build-system]
 requires = ["setuptools>=68"]
@@ -133,6 +145,28 @@ def build(out: pathlib.Path) -> int:
             PYPROJECT.format(dist=dist, pkg=pkg, variant=variant, meta=variant))
         built[variant] = pkg_dir
         print(f"  {variant:15s} -> {why}")
+
+    for variant, (dist, pkg, meta_dir) in COLLIDING.items():
+        root = out / variant
+        if root.exists():
+            shutil.rmtree(root)
+        pkg_dir = root / "src" / pkg
+        shutil.copytree(TEMPLATE, pkg_dir)
+        if meta_dir is not None:
+            shutil.copytree(meta_dir, pkg_dir / "agent-metadata")
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(dist=dist, pkg=pkg, variant=variant,
+                             meta="no" if meta_dir is None else "miri"))
+        built[variant] = pkg_dir
+        print(f"  {variant:15s} -> distribution {dist} providing import name {pkg}")
+
+    collide = {pkg for _, pkg, _ in COLLIDING.values()}
+    if len(collide) != 1 or len({d for d, _, _ in COLLIDING.values()}) != len(COLLIDING):
+        print("FAIL: COLLIDING must be several distributions sharing ONE import name",
+              file=sys.stderr)
+        return 1
+    print(f"  collision verified: {len(COLLIDING)} distributions both providing "
+          f"`{collide.pop()}` — the AMBIGUOUS_PACKAGE case (MIRI-SURFACE-041)")
 
     # The honesty check: identical source across every variant, verified byte-for-byte.
     # OUTLIERS are excluded by construction — they exist to differ.

@@ -102,9 +102,19 @@ The operations fall into three kinds, and the distinction is what keeps the set 
 - **Determination** — `list`, `resolve`. Answers the surface computes from the environment, not from any single
   document.
 
-A new operation is justified only when it is a **derived view whose parent document is large enough that verbatim
-retrieval defeats the purpose of asking** (§3.2.3), or a determination no document can answer. Anything else belongs
-in `document`.
+A future revision of this contract **MUST NOT** add an operation unless it is a **derived view whose parent document
+is large enough that verbatim retrieval defeats the purpose of asking** (§3.2.3), or a determination no document can
+answer. Anything else belongs in `document`. The rule binds editors of this specification rather than implementers,
+and it is written as a prohibition because every operation admitted here is one every binding and every conformance
+suite must implement forever.
+
+"Large enough" is a gate on future editors, so it carries a threshold rather than a sentiment: a derived view is
+justified where the parent document exceeds `max_bytes`'s **default of 262144 bytes** for a package of ordinary size,
+or where the answer the consumer needs is a bounded selection from an unbounded collection — an index over every
+public symbol, a neighborhood within a whole call graph. A view that merely reformats a document a consumer could
+have read in full is not justified however convenient it is, because each operation is a permanent surface that every
+binding and every conformance suite must then implement. The three derived views in 0.3-draft each clear this bar,
+and the test is written down so a fourth has to clear it too.
 
 ### 3.0 Input Grammars
 
@@ -117,7 +127,7 @@ these are untrusted inputs, not parameters.
 | `package` | A **single top-level import name**: `^[A-Za-z_][A-Za-z0-9_]*$`. MUST NOT contain `.`, `/`, `\`, or any path separator. | `INVALID_INPUT` (§4.3), **without attempting resolution** |
 | `symbol` | A dotted qualified name: `^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$`, at most 8 segments | `INVALID_INPUT` |
 | `name` | A single path segment (§3.2.2) | `DOCUMENT_NOT_SERVABLE` |
-| `query`, `category`, `complexity` | Any string, matched literally; never compiled as a pattern | — |
+| `query`, `category`, `complexity` | Any string, compared as **text, never compiled as a pattern** — no globbing, no regex, no wildcard. Comparison applies **NFC normalization first, then simple case folding** (Unicode 15 §5.18, `toCasefold` without the full or Turkic variants) to both the query and the candidate — in that order, because folding first can produce a string NFC would then alter, so the two orders disagree on real inputs; the operation sections state where it applies | — |
 | `limit` | A positive integer; the effective cap is `min(limit, cap_max)` (§3.5.1) | `INVALID_INPUT` |
 | `cursor` | An opaque string previously returned as `next_cursor` | `INVALID_CURSOR` (§4.3) |
 | `depth` | A positive integer, at most 5 | `INVALID_INPUT` |
@@ -243,8 +253,11 @@ Two consequences worth stating, because both were previously specified wrong:
 
 #### 3.2.2 Name Grammar and Path Confinement
 
-The `name` argument is a **single path segment**, matching `^[A-Za-z0-9_.-]+$` and containing no `/`, no `\`, and no
-`..`. It is a document name, never a path: a surface MUST reject any `name` carrying a directory prefix, an absolute
+The `name` argument is a **single path segment**, matching `^[A-Za-z0-9_-]+(\.[A-Za-z0-9_-]+)*$`. That grammar admits
+the interior dots of `test-patterns.json` while excluding `..`, a leading dot, and a trailing dot by construction —
+stating the prohibition in the pattern rather than beside it, so a surface that implements the regex alone is still
+correct. It carries no `/` and no `\`. It is a document name, never a path: a surface MUST reject any `name` carrying a
+directory prefix, an absolute
 prefix, or a traversal sequence, and MUST NOT attempt to normalize one into an acceptable form.
 
 Confinement MUST be enforced on the **resolved path**, not on the name string. A surface MUST:
@@ -274,7 +287,10 @@ hundreds of kilobytes. A capped router (§3.5) beside an uncapped bulk fetch is 
 pointer with an unbounded escape hatch beside it.
 
 The default `max_bytes` is **262144** (256 KiB), measured on the document's serialized bytes as read from disk. A
-surface MAY declare a different value and MUST report the value in force as `max_bytes` on every `document` response
+surface MAY declare a different value, which MUST lie between **65536** (64 KiB) and **8388608** (8 MiB) inclusive. The
+floor exists because a bound below it truncates documents this standard requires to be servable in full, turning a
+configuration knob into silent non-conformance; the ceiling exists because "pointers, not dumps" is a property of the
+contract, not a preference. A surface MUST report the value in force as `max_bytes` on every `document` response
 (§4.1). Pinning a number matters for the same reason §3.5.1 pins the caps: an unstated bound means two conformant
 surfaces disagree about the same document, and a check written against one is vacuous on the other.
 
@@ -365,10 +381,23 @@ a conformance check written against one is vacuous on the other. The following a
   | `api-index` | the entry key |
   | `patterns` | the pattern `id` |
   | `graph` | breadth-first from `symbol`; nodes at equal depth by node key; `edges` by `(from, to, kind)` |
+
+  Every ordering above is ascending by **Unicode code point** over the NFC-normalized key — not locale collation,
+  which varies by machine and would make the same surface paginate differently for two consumers. Where a row names
+  a tuple, the comparison is lexicographic over its fields in the order written.
 - **Matching.** `query` matches, case-insensitively, against the **entry name only** — not `purpose`, not `file`. A
   surface MUST NOT widen the match, because a consumer cannot distinguish "absent" from "matched on a field I did not
   intend" (and §3.5's presence-only rule already forbids reading absence as non-existence).
-- **Continuation.** Where a surface drops entries it MUST return a `next_cursor` string alongside `truncated: true`,
+- **Continuation.** Continuation is defined for the three **listing** operations — `list`, `api-index`, `patterns` —
+  whose answers are flat sequences that a later page can extend. It is **not** defined for `graph`, whose answer is a
+  walk whose shape depends on where the previous walk stopped; `graph` reports `truncated: true` and **MUST NOT** emit
+  `next_cursor`,
+  nor accept a `cursor` input — a consumer receiving one from a `graph` response MUST ignore it rather than present
+  it back, since a surface that emits one is signalling a continuation this contract gives it no way to honor —
+  and a consumer that needs more re-requests it with a larger `depth` or a narrower `symbol`. §4.1's cursor row is the
+  authoritative list of operations that carry one.
+
+  For those three: where a surface drops entries it MUST return a `next_cursor` string alongside `truncated: true`,
   and MUST accept that value as an optional `cursor` input to continue the same ordering. A surface that cannot
   continue MUST still set `truncated: true` — silently returning a partial answer as though complete is the failure
   this whole section exists to prevent.
@@ -377,12 +406,38 @@ a conformance check written against one is vacuous on the other. The following a
   listing.* It is a valid state, not a defect, and a consumer MUST read it as "there is more and I cannot reach it"
   rather than retrying or inferring a fault.
 
-  A cursor is **scoped to the exact request that produced it** — same operation, package, filters, and effective cap.
-  A surface MUST reject a cursor presented with any of those changed and MUST NOT silently restart the ordering: a
-  consumer that alters a filter mid-listing and receives page two of a different query has no way to detect it.
-  Lifetime is the surface's own affair and MAY be as short as one process, but an expired cursor MUST be rejected as
-  `INVALID_CURSOR` rather than treated as absent — "your cursor is stale" and "you sent no cursor" lead a consumer to
-  different actions.
+  A cursor is **scoped to the exact request that produced it**: the same operation, the same `package`, the same
+  effective `cap`, and the same **filter inputs**, which this contract enumerates per operation so that "changed" is
+  decidable rather than a matter of judgment —
+
+  | Operation | Filter inputs a cursor is scoped to |
+  |---|---|
+  | `list` | `query` (`list` takes no `package`; its `query` filters package names — §3.1) |
+  | `api-index` | `query` |
+  | `patterns` | `query`, `category`, `complexity` |
+
+  An input absent from a request and an input present-but-empty are the **same** filter value for this comparison, for
+  **every** filter input above and not only `query`: a surface MUST NOT treat `category: ""` and no `category` as
+  different scopes any more than it may for `query`, because consumers serialize the two interchangeably. Filter
+  values are compared after the same NFC-then-casefold normalization §3.0 specifies for matching, so two requests
+  differing only in the case or normalization form of a filter are one scope rather than two.
+
+  A surface presented with a cursor whose scope has changed **MUST answer `INVALID_CURSOR`**, and MUST NOT silently
+  restart the ordering:
+  a consumer that alters a filter mid-listing and receives page two of a different query has no way to detect it. The
+  rejection is `INVALID_CURSOR` (§4.3) — the same code as a malformed or expired cursor, deliberately, because the
+  three are indistinguishable to a surface holding an opaque token and a consumer's remedy for all three is identical:
+  restart the listing from no cursor. A surface MUST NOT answer a scope-changed cursor with `INVALID_INPUT`, which
+  would send a consumer to inspect its arguments rather than its pagination.
+
+  Lifetime is the surface's own affair and MAY be as short as one process. A surface that retains no cursor state at
+  all still satisfies this section: it MUST reject **every** presented cursor as `INVALID_CURSOR`, which is the honest
+  report of "I cannot continue", and it MUST NOT then also emit `next_cursor`, since a token it will never honor is a
+  false promise of continuation. Emitting `truncated: true` with no `next_cursor` is the conforming shape for such a
+  surface, and it is also how a consumer **detects** one: absent `next_cursor` on a truncated response is the
+  surface saying it cannot continue, and a consumer MUST NOT then synthesize a cursor, retry the same request hoping
+  for one, or loop. It reports the listing as incomplete (§4.2's honest-degradation posture) and moves on. There is
+  no state in which a conformant consumer repeatedly presents cursors to a surface that keeps rejecting them.
 
 A consumer MUST NOT infer the size of a package's surface from `cap`, from the number of entries returned, or from
 `truncated` being `false` after a `query` — a filtered response is complete only *with respect to that filter*.
@@ -508,8 +563,12 @@ makes that claim true rather than aspirational.
 
 **`cap` bounds the answer; `depth` bounds the walk, and the cap wins.** A traversal that would exceed `cap` before
 reaching the requested `depth` MUST stop at the cap and set `truncated: true`. It MUST NOT silently reduce `depth` to
-fit, and MUST NOT exceed `cap` to honour `depth`. The response reports the `depth` actually *performed* (§4.1), so a
-consumer can distinguish a depth-2 answer from a depth-2 request that only got one hop. Because the neighborhood is
+fit, and MUST NOT exceed `cap` to honor `depth`. The response reports the `depth` actually *performed* (§4.1), defined
+as **`0` where `nodes` is empty, and otherwise the greatest distance from `symbol` of any
+node present in `nodes`** — not the last level walked to completion. A cap that cuts a level in half therefore still
+reports that level, and `truncated: true` is what says the level is partial; the two fields answer different
+questions and a consumer needs both. A consumer can thus distinguish a depth-2 answer from a depth-2 request that
+only got one hop. Because the neighborhood is
 walked breadth-first (§3.5.1), a truncated result is always a complete prefix by distance rather than an arbitrary
 subset.
 
@@ -540,19 +599,19 @@ Without that order a consumer reading `present` first reports a parse failure as
 |---|---|---|
 | `schema_version` | Always | The wire-schema version of the **envelope**, owned and stamped by the surface |
 | `ok` | Always | `true` for a served answer, `false` for a failure (§4.3) |
-| `present` | `document` and its shorthands, `api-index`, `patterns`, `graph`, `resolve` — and **MUST be omitted whenever `ok` is `false`** | Whether the subject exists: the document for `document`, the parent document for a derived view, the module for `resolve` (§4.2) |
+| `present` | `document` and its shorthands, `api-index`, `patterns`, `graph`, `resolve` — and **MUST be omitted whenever `ok` is `false`**, and **MUST be omitted from `list`**, whose answer is an environment scan rather than a claim about one subject: an empty `packages` array means no installed package ships metadata, which is a complete answer, not an absent one | Whether the subject exists: the document for `document`, the parent document for a derived view, the module for `resolve` (§4.2) |
 | `package` | Whenever the request named one — **including on every error**, echoed as received | The import name the answer is about |
-| `purl` | Where identity resolved (§4.1.1) | Surface-derived provenance (§9.1) |
+| `purl` | Where identity resolved (§4.1.1) | Surface-derived provenance (§9.1). On `INVALID_INPUT` and `INVALID_CURSOR` the surface MUST omit it: those errors are raised *before* the named package is looked up, so any purl would be invented rather than derived |
 | `name` | `document` and its shorthands | The document name the answer is about |
 | `reason` | Absent responses (§4.2) | Free-text explanation for humans — **never a machine field** |
-| `truncated` | `list`, `api-index`, `patterns`, `graph`, `document` | Whether the payload was cut (§3.2.3, §3.5.1) |
+| `truncated` | `list`, `api-index`, `patterns`, `graph`, `document` — **always present on these, `false` when nothing was cut** | Whether the payload was cut (§3.2.3, §3.5.1). Never omitted as a shorthand for `false`: a consumer cannot distinguish an omitted `truncated` from a surface that does not implement capping, and the two warrant different trust |
 | `cap` | `list`, `api-index`, `patterns`, `graph` | The entry bound in force (§3.5.1) |
 | `max_bytes` | `document` and its shorthands | The serialized-size bound in force (§3.2.3) |
 | `next_cursor` | `list`, `api-index`, `patterns`, when truncated | Continuation token for the same ordering (§3.5.1). `graph` has no cursor (§3.8). |
 | `error` | Failures only | The structured error object (§4.3) |
 | `purl_mismatch` | Where a served document claimed a different `purl` (§4.1.1) | The publisher-claimed value the surface rejected |
 | `symbol` | `resolve`, `graph` | The symbol the answer is about |
-| `depth`, `direction` | `graph` | The traversal actually performed |
+| `depth`, `direction` | `graph` — both always present | The traversal actually performed. `direction` carries the **effective** value, so a request that omitted it reports `both` rather than omitting the field; a consumer reading a neighborhood needs to know which way it was walked, and the default being implicit in the request does not make it implicit in the answer |
 | `packages` / `document` / `entries` / `resolution` / `patterns` / `graph` | Per operation | The payload |
 
 #### 4.1.1 `purl` Is Surface-Derived, Never Publisher-Read
@@ -560,7 +619,15 @@ Without that order a consumer reading `present` first reports a parse failure as
 `purl` is the input to a per-namespace trust policy (§9.1), which makes it a **security decision** and therefore the
 one field in this table that must not come from the publisher. A surface MUST derive it from the **installed
 distribution's own recorded name and version**, never by reading `identity.purl` out of `lifecycle.json` or any other
-served document. Otherwise a package declaring `pkg:pypi/requests@2.31.0` inherits requests' trust tier by simply
+served document. The authoritative record is the installed distribution's `.dist-info/METADATA` — its `Name` and
+`Version` fields, per the
+[Core Metadata specification](https://packaging.python.org/en/latest/specifications/core-metadata/) — with `Name`
+normalized per [PEP 503](https://peps.python.org/pep-0503/) before it becomes the purl name. That file is written by
+the installer from the wheel it verified, which is what makes it a different trust source from the wheel's own
+payload; naming it here matters because `importlib.metadata`, a `RECORD` entry, and a package's `__version__`
+attribute are three other plausible readings, and one of them (`__version__`) is publisher-controlled at import time
+and would reintroduce exactly the forgery this clause exists to close. Otherwise a package declaring
+`pkg:pypi/requests@2.31.0` inherits requests' trust tier by simply
 saying so — a forgery inside the very namespace §4 claims is un-forgeable.
 
 Where a served `identity.purl` disagrees with the derived value, the surface MUST serve the derived value and **MUST
@@ -601,7 +668,19 @@ free-text `reason` for humans:
   "reason": "package ships no lifecycle.json" }
 ```
 
-A consumer MUST branch on `ok` and `present`, never on `reason`, which is explicitly not a machine field.
+A consumer MUST branch on `ok` and `present`, never on `reason`, which is explicitly not a machine field. The
+prohibition is not limited to branching: a consumer MUST NOT parse `reason`, match it against patterns, key
+behavior or retries on its content, or relay it as its own conclusion. It may display it, attributed, as the
+surface's explanation.
+
+`reason` is **surface-authored**. A surface MUST NOT copy publisher-controlled bytes into it — not document contents,
+not a parser's echo of the offending line, not a filesystem path drawn from package data. The permitted variable parts
+are values the surface itself computed or received from the *consumer*: the requested `package` and `name` (already
+constrained by §3.0's grammars), sizes, counts, and caps. The reasoning is §9's: the envelope is the one part of the
+response a consumer may read without treating it as hostile, and a field that can carry arbitrary publisher text
+into that trusted region is an injection channel wearing a human-readable label. The same rule binds any
+transport-layer message a binding emits on the surface's behalf (§6) — an MCP protocol error that quotes a publisher
+string has moved the same bytes through a different door.
 
 This is the single most consequential clause in this document: a consumer's **honest-degradation** conformance — that
 it reports an absent document as absent and never synthesizes one — is only checkable if the surface itself tells
@@ -652,7 +731,7 @@ Contract-specific codes, alongside the §2.6 standard codes:
 | `code` | `retryable` | Meaning |
 | --- | --- | --- |
 | `PACKAGE_NOT_INSTALLED` | `false` | No installed package provides that import name |
-| `AMBIGUOUS_PACKAGE` | `false` | Several installed distributions provide that import name (§3.1) |
+| `AMBIGUOUS_PACKAGE` | `false` | Several installed distributions provide that import name. Raised by **every operation that accepts `package`**, not only `list` where §3.1 illustrates it: the ambiguity is a property of the environment, so an operation that resolved it by picking one would answer confidently about a package the consumer did not name |
 | `DOCUMENT_NOT_SERVABLE` | `false` | The requested name is outside the §3.2 whitelist |
 | `NOT_DISCOVERABLE` | `false` | The package could not be resolved without importing it (§5) |
 | `METADATA_UNREADABLE` | `false` | The document exists but could not be read or parsed as declared |
@@ -665,16 +744,36 @@ partially serve a document it could not parse, and MUST NOT report it as absent.
 ### 4.4 A Surface Version Independent of the Transport
 
 Both versions in this contract are **integer strings** — `"1"`, `"2"` — compared numerically, and both are at `"1"`
-for 0.3-draft. They are deliberately not the specification's version: the specification moves on its own clock and a
+for 0.3-draft. "Both" means the two the *surface* owns: the envelope's `schema_version` and the surface version. The
+version fields inside a served payload — `miri_lifecycle_version` and its siblings — are the **publisher's**, are
+governed by the producer specifications that define them, and are **not** integer strings; a surface MUST NOT
+normalize, compare, or reinterpret them, and a consumer MUST NOT apply this section's rules to them. They are
+deliberately not the specification's version: the specification moves on its own clock and a
 draft revision that changes no wire shape must not force a version bump.
+
+**Every binding MUST advertise the surface version, and each binding names the path.** The obligation belongs to this
+section because it is transport-agnostic; only its location is transport-specific. For the MCP binding the path is
+`capabilities.miri.surface_version` in the `initialize` result (§6.3). A binding this specification does not define
+MUST state its own path in the same server-advertise-only shape — read once at connection setup, before any
+operation — and MUST NOT leave a consumer to infer the version from behavior. The advertisement is deliberately *not*
+an envelope field: a per-response copy of a per-connection fact is four extra bytes on every answer and one more
+place for the two to disagree.
 
 A version is incremented only on a **breaking** change to the thing it versions: for `schema_version`, removing or
 retyping a reserved envelope field; for the surface version, removing an operation, removing a required input, or
 changing what an existing response field means. Adding an optional input, adding an operation, or adding an envelope
 field is **not** breaking and MUST NOT bump either.
 
-A consumer encountering a **higher** version than it understands MUST NOT guess: it treats the response as
-unprocessable and says so. There is deliberately no version-mismatch error code, because the mismatch is the
+The mismatch rule below governs **both** versions, since a consumer can meet either unexpectedly and the wrong move
+is the same in both cases. A consumer encountering a **higher** version than it understands — a higher
+`schema_version` on a response, or a higher surface version advertised at connection setup — MUST NOT guess: it
+treats the response as unprocessable and reports the mismatch. A higher surface version is detected *before* any
+operation runs, so the honest response is to report it and issue no operations rather than to try them and interpret
+whatever comes back. Reporting means its output names **the version it received and the highest it
+understands** — both numbers, in the answer it returns to its caller, not only in a log. A consumer that silently
+falls back to a partial reading of the payload has guessed; so has one that reports a generic failure, since the
+caller's remedy is to upgrade the consumer and nothing in a generic failure says so. There is deliberately no
+version-mismatch error code, because the mismatch is the
 consumer's to detect and its handling is consumer policy — a surface has no way to know what its caller supports.
 
 A metadata-query surface MUST advertise its own **surface version** — the contract version of the §3 operations —
@@ -778,16 +877,69 @@ transport = "stdio"  # OPTIONAL. One of: "stdio", "loopback" (defined below). De
   closed enumeration with no stated meaning is not a contract. `"stdio"`: the client launches the server as a child
   process and speaks JSON-RPC over its standard streams. `"loopback"`: the server listens on a TCP socket bound to a
   loopback address (`127.0.0.1` or `::1`) on an ephemeral port, and **MUST refuse to bind any other interface** — a
-  metadata surface reachable from off-host is a different threat model than this contract addresses. The port is
-  discovered out of band; this specification defines no discovery mechanism, so a client that cannot determine it
-  MUST fail rather than scan.
+  metadata surface reachable from off-host is a different threat model than this contract addresses. Its port and
+  credential are discovered through the connection file specified in §7.1.
+
+### 7.1 Loopback Connection File
+
+An enumeration value a client cannot act on is not a contract, so the `loopback` transport specifies its own
+rendezvous. A loopback server MUST write a **connection file** before accepting its first connection and MUST remove
+it on clean shutdown.
+
+**Location.** The first of these that is set to a **non-empty** value: `$MIRI_RUNTIME_DIR`, `$XDG_RUNTIME_DIR/miri`,
+else `~/.miri/run`. A variable set to the empty string is treated as unset, since the shells that export these
+routinely leave empties behind and resolving one would place the file at the filesystem root. The file is named
+`<key>.json`, where `<key>` is the first 16 lowercase hex characters of the SHA-256 of the **UTF-8 bytes of the
+realpath** of the consuming project's root (the directory containing the `pyproject.toml` that carries the
+declaration), hashed exactly as the operating system reports it — **no case normalization, no separator rewriting,
+no trailing-separator trimming beyond what realpath already performs**. Server and client run on one host against one
+path, so byte-equality is both sufficient and the only rule that cannot itself drift; case-folding it would make two
+genuinely distinct paths collide on a case-sensitive filesystem. Deriving
+the name from the project rather than a fixed name lets several projects run servers concurrently without a registry.
+
+**Contents.** A single JSON object:
+
+```json
+{ "schema_version": "1", "address": "127.0.0.1", "port": 51931,
+  "token": "8f2a...", "pid": 4417 }
+```
+
+`token` is at least 128 bits from a cryptographically secure source, encoded as **lowercase hexadecimal**. A single
+encoding is specified rather than a choice, because a client cannot reliably tell hex from base64url — every hex
+string is also valid base64url — and the token is compared as an opaque string anyway, so the choice bought nothing
+and cost interoperability. Every field is
+REQUIRED; a client encountering an unknown field MUST ignore it, and one encountering a missing field MUST fail.
+
+**Permissions.** The directory MUST be created mode `0700` and the file written mode `0600`, both owned by the
+invoking user. A client MUST refuse to use a connection file that is group- or world-readable, or whose owner is not
+the invoking user — the file is a bearer credential, and a loopback port is reachable by every process on the host,
+including other users'. On platforms without POSIX modes, the equivalent is an ACL granting the invoking user alone.
+
+**Authentication.** The client MUST present `token` on every request; the server MUST reject any request without it,
+and MUST NOT vary its rejection by whether the token was absent or wrong. Binding to loopback is not authentication:
+it excludes the network, not the neighbors.
+
+**Staleness.** A client that finds no connection file, or finds one whose `port` refuses connection, MUST fail with a
+clear error. It MUST NOT scan ports, MUST NOT retry across ports, and MUST NOT fall back to `stdio` silently — a
+transport downgrade the operator did not ask for is exactly the failure the closed grammar exists to prevent. A
+server MUST NOT reuse a token **across binds** — that is, it generates a fresh token each time it begins listening on
+a socket, including a restart on the same port and a rebind after a dropped listener, never persisting or reloading a
+previous one — so a stale connection file cannot authenticate against a later server.
+Returning to the declaration's grammar:
+
 - The table MUST NOT contain any other key. In particular, `command`, `args`, `env`, `url`, and `path` are
   **structurally excluded**: a declaration can select a known server, never describe an arbitrary process to execute.
   A consumer encountering an unknown key MUST reject the declaration rather than ignore the key.
-- Generated harness configuration MUST NOT be auto-launched; generation is an explicit user action, never a side
-  effect of opening the project.
-- A *dependency's* metadata MUST NOT influence the *consumer project's* harness configuration; the generator acts only
-  on the consuming project's own declaration.
+- Generated harness configuration MUST NOT be auto-launched. Generation is an explicit user action: it happens only
+  in response to a command the user issues for that purpose, and MUST NOT be triggered by opening the project,
+  opening a file within it, indexing or scanning the workspace, installing or updating a dependency, or restoring the
+  editor's previous session. The list is enumerated because "explicit user action" is otherwise satisfiable by any
+  event a user's action eventually caused, which is all of them.
+- A *dependency's* metadata MUST NOT influence the *consumer project's* harness configuration. Observably: generating
+  configuration for a project MUST produce **byte-identical** output whether its dependencies carry Miri metadata,
+  carry adversarial Miri metadata, or carry none — the `bare`, `miri`, and `adversarial` fixture variants make this a
+  drivable comparison rather than an assertion about the generator's inputs. The generator acts only on the consuming
+  project's own declaration.
 
 ## 8. Discovery Measurement
 
@@ -803,7 +955,11 @@ vehicle?). Where a surface logs, each entry carries:
 | `outcome` | `served`, `absent`, or `error` — the §4 result class, so reach and success are distinguishable |
 | `session` | An opaque correlation id for the invoking session, so entries can be grouped into runs and treatment arms |
 
-The log is measurement only: it MUST NOT influence any response, and a logging failure MUST NOT break a query.
+The log is measurement only. Its two obligations are stated as observable consequences rather than as claims about
+internal wiring, since no suite can inspect a surface's data flow: **identical requests MUST produce identical
+responses whether logging is enabled or disabled**, and **a surface whose log destination is unwritable MUST still
+answer queries normally**. Both are drivable — run the same request under both configurations and compare, point the
+log at an unwritable path and query — which "MUST NOT influence any response" was not.
 *(The reference server implements this behind `miri mcp --log`.)*
 
 Two limits are normative for anyone analyzing it. The log observes **only the context-server vehicle**: in-wheel file
@@ -824,8 +980,14 @@ server:
 - **Owns the envelope** (§4). Publisher bytes are nested under a payload key and never share a namespace with `ok`,
   `present`, or `error`, so a hostile package cannot forge a served, absent, or failed signal by writing those keys
   into its own document.
-- **Labels every payload as untrusted, package-authored data**, never as directive text; a consumer MUST NOT execute
-  a command or follow a step drawn from a payload without out-of-band verification.
+- **Labels every payload as untrusted, package-authored data**, never as directive text. A consumer MUST NOT act on
+  **any** directive drawn from a payload without out-of-band verification. Enumerating two forms — "execute a command,
+  follow a step" — was narrower than the threat: a payload can also purport to restate the consumer's own policy or
+  permissions, reassign its role, cancel or supersede its prior instructions, assert that a later check has already
+  passed, or direct it to retrieve a URL. All of these are directives; none is a command or a step. The decidable
+  formulation is positional rather than lexical: **payload bytes are data in every context they reach**, and a
+  consumer that changes what it does because of what a payload *said to do* has violated this clause regardless of the
+  grammatical form the saying took.
 - **Carries per-response provenance** — the resolved `purl` on every single-package envelope (§4.1) and on every
   `list` row (§3.1) — so a consumer can apply a per-namespace trust policy rather than collapsing every installed
   package's trust into one undifferentiated stream. `list` carries provenance per entry, since one response spans
@@ -847,7 +1009,19 @@ served document**, and MUST NOT enrich, annotate, or validate a response with th
 this section was written declaratively — "the surface fetches nothing" — while a CRITICAL MUST scored it, so a surface
 that prefetched `update_check.url` failed a check while violating no requirement.
 
-This obligation is scored as `MIRI-SURFACE-023`, separately from import-freedom (`MIRI-SURFACE-022`): the two
+Import-freedom is likewise a property of the **process**, not merely of the query path. A surface satisfies it only
+if serving a request causes no package code to execute at any point — which includes the interpreter startup paths a
+naive implementation forgets: a `.pth` file in `site-packages` executing a line at import of `site`, a
+`sitecustomize` or `usercustomize` module, and an entry-point plugin loaded eagerly by a framework. A surface **MUST
+NOT** execute in an interpreter that has the target
+environment on its import path, and MUST NOT load `.pth` files, `sitecustomize`, `usercustomize`, or entry-point
+plugins from it — the prohibition is stated normatively here because describing the bypass without forbidding it
+leaves a surface conforming while executing publisher code before its first request arrives, and no amount of care
+in the handler undoes that. The conforming shape is a discovery path that reads distribution
+metadata and source files without adding the target environment to the importing process — `find_spec` and file
+reads, never `import`.
+
+The fetch obligation is scored as `MIRI-SURFACE-023`, separately from import-freedom (`MIRI-SURFACE-022`): the two
 are different prohibitions caught by different fixtures, and an import canary cannot detect a fetch.
 
 Resolving those URLs is the **consumer's** act, performed at decision time under the SSRF guard in

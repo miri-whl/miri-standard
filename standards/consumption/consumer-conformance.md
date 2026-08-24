@@ -8,7 +8,9 @@
 
 The [Discovery Contract](discovery-contract.md) defines how metadata reaches an agent; the
 [Consumption Map](consumption-map.md) defines what the agent reads and what it must not do with it. This document
-defines what a **conformant consumer** is: fifteen numbered checks, `MIRI-CONSUMER-001` through `MIRI-CONSUMER-042`,
+defines what a **conformant consumer** is: **fifteen** numbered checks whose IDs run from `MIRI-CONSUMER-001` to
+`MIRI-CONSUMER-042`. The numbering is **sparse by design** — IDs are grouped in tens by category and are permanent,
+so the range is an address space, never a count, and gaps are room for later checks rather than missing ones —
 weighted to 100, verified by **driving a consumer against fixtures and observing its output**.
 
 It also states plainly what a consumer check *cannot* verify. Several obligations in the contract bind the surface,
@@ -37,7 +39,15 @@ something, says nothing, or lies.
 
 That is what this profile checks. Every check below is a claim about what a consumer's output must or must not
 contain when driven against a known fixture. A consumer that never touches Miri metadata is out of scope, not
-non-conforming; the profile applies to a program that claims to consume it.
+non-conforming.
+
+Scope is decided by **observation, not by claim**. A program is in scope for this profile when, driven against the
+`miri` fixture, its output differs from its output on the byte-identical `bare` fixture (`examples/fixtures/`, where
+every `.py` file is verified identical across variants, so nothing but the metadata can account for a difference).
+That difference *is* the consumption, and it is what a suite can see from outside. A program whose two outputs match
+consumed nothing and is out of scope regardless of what its documentation says; a program whose outputs differ is in
+scope regardless of whether it advertises Miri support. Anchoring scope in a marketing claim would have made the
+profile's own trigger the one thing in it a suite could not evaluate.
 
 ## 2. The Verification Model
 
@@ -61,8 +71,11 @@ Two consequences follow, and both are load-bearing:
   consumer must not make.
 - **A check needs a fixture that exercises it.** A check with no executable case is a check that passes vacuously.
   The `Case` column in §5 names the fixture each check is driven against, and every check currently has one. Should a
-  future check be added ahead of its fixture, that column MUST say so and the check MUST be reported as not scorable
-  rather than credited — a profile that implies coverage it does not have is the failure this whole standard exists
+  future check be added ahead of its fixture, its `Case` cell MUST read exactly **`none — not scorable`** and the check
+  MUST be reported as not scorable rather than credited. The literal value matters because the alternative is each
+  editor inventing a phrasing and a reader having to judge which dashes and blanks mean "no case"; one fixed string is
+  greppable, and a `Case` cell that is empty or absent is a defect in the table rather than a claim about the check — a
+  profile that implies coverage it does not have is the failure this whole standard exists
   to prevent.
 
 ## 3. Scoring Model
@@ -70,7 +83,11 @@ Two consequences follow, and both are load-bearing:
 The model mirrors the producer checklists so that one grading vocabulary spans the standard:
 
 - **Score** = Σ weights of passing checks, over the *effective denominator* (see forfeits below).
-- **Level**: **M** (MUST — required for conformance) or **S** (SHOULD — quality signal).
+- **Level**: **M** (MUST — required for conformance) or **S** (SHOULD — quality signal). The two levels differ only
+  in gating, never in arithmetic: an **S** check contributes its weight to the numerator when it passes and to the
+  denominator always, exactly as an **M** check does, and a failing **S** check costs its weight and nothing more. It
+  never bars conformance, and a program can be conforming at any score its **S** failures leave it — which is what
+  makes the bands meaningful rather than decorative.
 - **Conformance is a gate, not a band.** A program failing any **M** check is **non-conforming**, and a
   non-conforming result carries **no grade** — only the score, capped at 74, to show distance. Grades describe
   conforming programs only.
@@ -88,6 +105,14 @@ inflate or deflate it. The report MUST carry the forfeited count and the effecti
 denominator beside the score, and a forfeited **M** check means **conformance is undetermined** — reported as such,
 never as conforming and never as a failure.
 
+Undetermined is a third outcome, not a shade of the other two, and it governs the whole report: a run with any
+forfeited **M** check emits **no grade at all**, since grades describe conforming programs and this run has not
+established that it is one. It still emits the score over the effective denominator, which is why the two are not in
+conflict — the score says how much of what *was* exercised passed, and the absent grade says the run did not exercise
+enough to conclude. A report that prints "Gold, conformance undetermined" has stated a contradiction; a report that
+prints "score 96 over an effective denominator of 88, 1 MUST forfeited, conformance undetermined" has stated the
+truth. Forfeited **S** checks carry no such consequence: they leave conformance decided and a grade emitted.
+
 The forfeit rule is the same discipline the producer checklists apply to capability-gated checks: a consumer that
 could not be driven against the adversarial variant has not demonstrated it resists the attack, and the report must
 say so rather than crediting it.
@@ -97,27 +122,30 @@ say so rather than crediting it.
 The Discovery Contract places obligations on two different programs, and only one of them is a consumer. Scoring a
 consumer on the other would be measuring the wrong thing.
 
+Each row states the obligations its listed checks enforce, so a reader can move between the two without inferring the
+mapping; where a row lists three checks it names three obligations, in the checks' own order.
+
 | Obligation | Binds | Checkable here? |
 |---|---|---|
 | **Report** an absent document as absent; never synthesize one | Consumer | Yes — `MIRI-CONSUMER-001`, `002` |
 | Branch on `ok`/`present`, never on message text | Consumer | Yes — `003` |
-| Settle symbol existence by `resolve`, not by index membership | Consumer | Yes — `010`, `011`, `012` |
-| Treat every payload as untrusted data; confine pointers | Consumer | Yes — `020`, `021`, `022` |
-| Compute verdicts at call time; guard URLs it resolves | Consumer | Yes — `030`, `031`, `032` |
-| Read a pattern whole; distinguish supported doubles; prefer derived views | Consumer | Yes — `040`, `041`, `042` |
+| Settle symbol existence by `resolve`, not by index membership; never read a bounded or negative result as a complete one | Consumer | Yes — `010`, `011`, `012` |
+| Treat every payload as untrusted data; confine publisher-authored paths; attribute what it relays rather than adopting it | Consumer | Yes — `020`, `021`, `022` |
+| Compute verdicts at call time; guard URLs it resolves; never act on a publisher-declared replacement unverified | Consumer | Yes — `030`, `031`, `032` |
+| Surface a declared antipattern before emitting matching code; distinguish supported doubles; prefer derived views | Consumer | Yes — `040`, `041`, `042` |
 | Stamp `schema_version`; own the envelope's top level; emit only reserved keys | **Surface** | No — `MIRI-SURFACE-001`, `002`, `003` |
 | **Signal** absence as `ok: true, present: false`; signal failure with a coded error; never repair an unparsable document | **Surface** | No — `010`, `011`, `012` |
 | Serve only the closed set; confine the resolved path; discover import-free | **Surface** | No — `020`, `021`, `022` |
 | Never resolve a URL found in a served document | **Surface** | No — `023` |
-| Declare and enforce caps; order stably; distinguish an absent derived view from an empty one | **Surface** | No — `030`, `031`, `032` |
+| Declare and enforce caps; order stably; distinguish an absent derived view from an empty one; continue a listing or say it cannot | **Surface** | No — `030`, `031`, `032`, `033` |
 | Derive `purl` rather than reading it from a document; one row per import package | **Surface** | No — `040`, `041` |
 | Advertise the surface version; carry absence and error as results, not protocol errors | **Surface** | No — `050`, `051` |
 
 Every "No" in that table is an obligation this profile deliberately does not score, because a consumer emits no
 responses and cannot be held to the shape of one ([Discovery Contract §10](discovery-contract.md)).
 
-Every "No" in that table is numbered in [Surface Conformance](surface-conformance.md) — seventeen `MIRI-SURFACE`
-checks weighted to 100 — and the two columns together account for all thirty-two consumption checks.
+Every "No" in that table is numbered in [Surface Conformance](surface-conformance.md) — eighteen `MIRI-SURFACE`
+checks weighted to 100 — and the two columns together account for all thirty-three consumption checks.
 
 **Absence appears on both sides, and that is not duplication.** A surface must *signal* absence correctly
 (`ok: true, present: false`, never an error, never a silent empty success); a consumer must *report* it correctly
@@ -204,6 +232,19 @@ detected the attack, it has merely disabled migration. A9 pairs a dynamically-se
 one: a consumer that reports everything as unverified has not become careful, it has stopped verifying. A check
 without its control can be passed by a consumer that simply refuses to act.
 
+**A paired check is scored as one check over two runs, and passes only when both arms are correct.** The suite drives
+the consumer twice — once against the hostile arm, once against the control — and awards the check's full weight only
+where the hostile arm produces the required detection *and* the control arm produces the required non-detection.
+Either arm wrong fails the whole check for its full weight; there is no half credit, because half credit is exactly
+what a blanket refusal would earn. If either arm cannot be driven, the check is forfeited as a unit (§3) rather than
+scored on the arm that ran — **unless the arm that did run failed**, in which case the check **fails**. Failure is
+decidable on one arm and conformance is not: a consumer that got the hostile arm wrong is non-conforming whatever the
+control would have shown, whereas one that got it right has demonstrated nothing until the control rules out a
+blanket refusal. Forfeiting a demonstrated failure would let a suite bury a real defect behind an undrivable
+control. `MIRI-CONSUMER-011` (A9: dynamic symbol / static symbol) and `MIRI-CONSUMER-032`
+(A8: cross-namespace replacement / same-namespace replacement) are the two paired checks in this profile, and each
+check's YAML names its two arms.
+
 ## 6. The Circularity Firewall
 
 A conformance suite written by the same project that writes the reference consumer can become a tautology: the tool
@@ -216,8 +257,21 @@ that way.
   changes.
 - **The reference consumer and the reference surface MUST NOT share the code under test.** `miri consume` and
   `miri mcp` may live in one distribution, but a consumer check must not pass because both sides share a helper that
-  makes the answer agree with itself. Where they share code, the suite MUST drive the consumer against **recorded
-  fixture responses** rather than a live surface.
+  makes the answer agree with itself.
+
+  "Code under test" is not a matter of taste, so this profile defines it: for a given check, it is the code that
+  produces the behavior the check's `fires_when` clauses describe — envelope construction and interpretation, cap and
+  truncation handling, absence-versus-error branching, purl derivation and comparison, and payload trust framing. A
+  shared logging helper, argument parser, or JSON codec is **not** code under test; a shared module that decides
+  whether `present` is `false`, or that builds and reads the same envelope on both sides, is.
+
+  The condition is decidable by import graph rather than judgment: the two sides share code under test when the module
+  set reachable from the consumer's entry point intersects the module set reachable from the surface's entry point in
+  any module matching the description above. **When that intersection is non-empty, the suite MUST drive the consumer
+  against recorded fixture responses instead of a live surface** — meaning the JSON envelopes checked in under
+  `examples/fixtures/expected/`, replayed to the consumer verbatim by a stub transport, so the surface's code never
+  runs during the check. Those recordings are authored from this contract, not captured from the reference surface;
+  a recording captured from the implementation would reintroduce the circularity it exists to break.
 - **The adversarial fixture is authored against the threat model, not against the tool.** Its attacks come from the
   producer standard's §9 and from the contract's own claims. If an attack is added because the reference consumer
   happens to survive it, the fixture has started measuring the tool.

@@ -8,8 +8,9 @@
 
 The [Discovery Contract](discovery-contract.md) places obligations on two programs. The
 [Consumer Conformance](consumer-conformance.md) profile numbers the ones that bind a **consumer** and states plainly
-that it does not score the rest. This document is that rest: seventeen checks, `MIRI-SURFACE-001` through
-`MIRI-SURFACE-051`, weighted to 100, defining what a conformant **metadata-query surface** is.
+that it does not score the rest. This document is that rest: **eighteen** checks — the IDs are sparse and grouped in
+tens by category, so the range below is an address space rather than a count — running from `MIRI-SURFACE-001`
+through `MIRI-SURFACE-051`, weighted to 100, defining what a conformant **metadata-query surface** is.
 
 Without it the contract's most load-bearing guarantees — that the envelope cannot be forged, that absence is
 distinguishable from failure, that discovery never executes an unvetted package — are normative prose with nothing
@@ -64,10 +65,20 @@ Identical to the sibling profiles, so one grading vocabulary spans the standard:
   conforming programs only.
 - **Grade bands (conforming programs only)**: 90–100 **Gold** · 75–89 **Silver** · 50–74 **Bronze**.
 
-Because nearly all weight in this profile sits on MUST checks, a conforming program will in practice land in Gold
-and the lower bands will rarely be occupied. That is intended: the bands exist so the vocabulary matches the
-producer checklists, not because a conforming consumer is expected to score badly. A profile whose SHOULD weight
-grows will occupy them naturally.
+**In 0.3-draft every check in this profile is a MUST, so all 100 weight is MUST weight and the bands above are
+unreachable: a conforming surface scores exactly 100 and a non-conforming one gets no grade at all.** The bands are
+stated anyway, and stated as unreachable rather than quietly listed, because the alternative is a reader computing a
+Silver that can never occur. They exist for vocabulary parity with the producer checklists and will become live the
+first time this profile gains a SHOULD.
+
+That every obligation here is a MUST is a fact about what a metadata-query surface *is*, not an oversight. A surface
+has one job — answer queries in the shape this contract specifies — and there is no partial version of that a
+consumer could safely rely on: a surface that forges an envelope field, serves outside the closed set, or paginates
+unstably is not a lower-quality surface but an unusable one. The two checks that briefly carried SHOULD
+(`031` ordering, `033` continuation) were raised to MUST when a review observed that the Discovery Contract states
+both as MUST and that cursor correctness is *defined* in terms of stable ordering — a SHOULD enforcing a MUST is a
+gap, and scoring cursor continuation while permitting the unstable ordering that makes continuation meaningless is
+a check that cannot fail honestly.
 
 **Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
 forfeited check is **excluded from both** the numerator and the denominator — it is removed from the calculation
@@ -78,7 +89,7 @@ never as conforming and never as a failure.
 
 ## 4. The Checks
 
-Seventeen checks, weights summing to 100. IDs are stable and are never renumbered.
+Eighteen checks, weights summing to 100. IDs are stable and are never renumbered.
 
 ### A. Envelope Integrity (20 points)
 
@@ -86,9 +97,9 @@ The surface owns the top level of every response. This is the category the whole
 
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
-| MIRI-SURFACE-001 | M | Stamps `schema_version` on every response | 6 | any |
+| MIRI-SURFACE-001 | M | Stamps `schema_version` — the string `"1"` in 0.3-draft — on every response | 6 | any |
 | MIRI-SURFACE-002 | M | Nests the payload; never merges publisher bytes into the envelope | 8 | `adversarial` (A1/A2) |
-| MIRI-SURFACE-003 | M | Emits only reserved keys at the top level | 6 | any |
+| MIRI-SURFACE-003 | M | Emits only the keys reserved by Discovery Contract §4.1 at the top level | 6 | any |
 
 ### B. Absence and Error (22 points)
 
@@ -98,7 +109,7 @@ The discrimination the contract calls its single most consequential clause.
 |---|---|---|---|---|
 | MIRI-SURFACE-010 | M | Reports absence as `ok: true, present: false` — never as an error | 8 | `bare` |
 | MIRI-SURFACE-011 | M | Reports failure as `ok: false` with a coded `error` object | 7 | request traces |
-| MIRI-SURFACE-012 | M | Reports an document it could not parse as `METADATA_UNREADABLE`, never absent or repaired | 7 | `malformed` |
+| MIRI-SURFACE-012 | M | Reports a document it could not read as JSON as `METADATA_UNREADABLE`, never absent or repaired | 7 | `malformed` |
 
 ### C. Boundaries (24 points)
 
@@ -116,21 +127,22 @@ What the surface will and will not do. Every check here is a refusal.
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
 | MIRI-SURFACE-030 | M | Declares and enforces its caps, and sets `truncated` when it drops content | 6 | `adversarial` (A4) |
-| MIRI-SURFACE-031 | S | Orders entries stably and offers cursor continuation | 4 | `adversarial` (A4) |
+| MIRI-SURFACE-031 | M | Orders entries stably across repeated requests | 2 | `adversarial` (A4) |
 | MIRI-SURFACE-032 | M | Distinguishes an absent `api-index` from an empty one | 6 | `bare`, `miri` |
+| MIRI-SURFACE-033 | M | Offers cursor continuation and rejects an out-of-scope cursor | 2 | `cap` trace |
 
 ### E. Provenance and Identity (11 points)
 
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
 | MIRI-SURFACE-040 | M | Derives `purl` from the installed distribution; never reads it from a document | 6 | identity skew |
-| MIRI-SURFACE-041 | M | Emits one row per import package; errors rather than picking among ambiguous ones | 5 | multi-distribution |
+| MIRI-SURFACE-041 | M | Emits one row per import package; errors rather than picking among ambiguous ones | 5 | `ambiguous-a` + `ambiguous-b` (A12) |
 
 ### F. Binding (7 points)
 
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
-| MIRI-SURFACE-050 | M | Advertises the surface version at the normative path | 4 | any |
+| MIRI-SURFACE-050 | M | Advertises the surface version at its binding's normative path — for MCP, `capabilities.miri.surface_version` in `initialize` (Discovery Contract §6.3) | 4 | any |
 | MIRI-SURFACE-051 | M | Carries absence and error as tool results, never as protocol errors | 3 | `bare`, request trace |
 
 ### Category Summary
@@ -140,20 +152,24 @@ What the surface will and will not do. Every check here is a refusal.
 | A. Envelope Integrity | 3 | 20 |
 | B. Absence and Error | 3 | 22 |
 | C. Boundaries | 4 | 24 |
-| D. Bounded Answers | 3 | 16 |
+| D. Bounded Answers | 4 | 16 |
 | E. Provenance and Identity | 2 | 11 |
 | F. Binding | 2 | 7 |
-| **Total** | **17** | **100** |
+| **Total** | **18** | **100** |
 
-**Every check above now has an executable case.** The fixtures those cases name — the `malformed` variant, the
+**All eighteen checks now have an executable case.** The fixtures those cases name — the `malformed` variant, the
 `symlinked` document, the import canary, the `spoofed` identity document, the `consuming-project` declarations and
 the request-trace set — were built after this profile, precisely because the profile is what made clear which cases
 were missing. `tools/validate_fixtures.py` asserts each stays live.
 
-One case has not been built: **multi-distribution** (`MIRI-SURFACE-041`, one row per import package and
-`AMBIGUOUS_PACKAGE`) needs two distributions providing the same import name, which cannot be expressed by a fixture
-set built from one template. It is defined but **not yet scorable**, and a report MUST forfeit it rather than credit
-it — which under the corrected scoring model (§3) means it leaves both the numerator and the denominator.
+The last of them was **multi-distribution** (`MIRI-SURFACE-041`, one row per import package and
+`AMBIGUOUS_PACKAGE`), which needs two distributions providing one import name and so could not be a variant of a
+fixture set built from a single template. It was carried as defined-but-not-scorable until a review pointed out what
+that actually cost: `041` is a **MUST**, so by §3's rule every run forfeiting it reported conformance **undetermined**
+and emitted no grade — the profile could never grade anything, permanently, on paper. The answer was to build the
+case (`ambiguous-a` and `ambiguous-b`, two distributions both providing `greet_ambiguous`, sharing the template
+source so the collision is the only variable) rather than to write more prose about the gap. **Every check in this
+profile now has a case a suite can drive.**
 
 ## 5. Why These Are Not Consumer Checks
 

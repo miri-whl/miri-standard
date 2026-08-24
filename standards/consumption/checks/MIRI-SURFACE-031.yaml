@@ -1,33 +1,37 @@
 # MIRI-SURFACE-031 — generated with the Surface Conformance profile; canonical source of truth.
 id: MIRI-SURFACE-031
-name: Orders entries stably and offers cursor continuation
+name: Orders entries stably across repeated requests
 target: surface
 status: active
 added_in: 0.3-draft
-level: SHOULD
+level: MUST
 category: Bounded Answers
-weight: 4
+weight: 2
 conditional: false
 severity:
   default: LOW
   violation_unit: each unstable ordering or missing continuation token
-short_description: Orders entries stably and offers cursor continuation
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Orders entries stably and
-  offers cursor continuation.'
+short_description: Orders entries stably across repeated requests
+long_description: 'Surface obligation from the Discovery Contract (3.5.1). This check verifies one property only:
+  that every listing operation returns entries in the ordering 3.5.1 assigns it, ascending by Unicode code point
+  over the NFC-normalized key, and that the ordering is identical across identical requests. Cursor continuation
+  is a separate obligation scored by MIRI-SURFACE-033, because a surface can order perfectly and continue not at
+  all, and a single check covering both cannot say which failed.'
 examples:
-  violation: api-index(...) -> entries in dict-insertion order, varying per process
-  compliant: api-index(...) -> lexicographic, stable, with next_cursor when truncated
+  violation: api-index(...) called twice -> entries in dict-insertion order, differing between the two calls
+  compliant: api-index(...) called twice -> identical code-point ordering by entry key both times
 rationale: Without a stable order, "the first 25" is a different 25 per call and truncation is unreproducible —
-  a conformance check written against a padded index becomes flaky rather than wrong. Continuation is what makes
-  a capped surface completable in-band instead of forcing a consumer to guess.
+  a conformance check written against a padded index becomes flaky rather than wrong, and a consumer that pages
+  through a listing silently sees some entries twice and others never. Locale collation is the common cause — it
+  varies by machine, so two consumers of one surface disagree about what page two contains.
 fires_when:
-- Identical requests return entries in different orders
-- A truncated response omits `next_cursor` where the surface can continue
-- A supplied `cursor` does not continue the same ordering
+- Two identical requests return the same entries in different orders
+- Entries are ordered by locale collation rather than Unicode code point
+- A listing operation orders by a key other than the one 3.5.1 assigns it
 remediation:
-- Order entries lexicographically by name and keep the order stable across identical requests
-- Return `next_cursor` on truncation and accept it as `cursor` to continue
-suggested_fix: Order entries lexicographically by name and keep the order stable across identical requests
+- Order entries ascending by Unicode code point over the NFC-normalized key named for that operation in 3.5.1
+- Keep the ordering independent of dict insertion, locale, and process
+suggested_fix: Order by Unicode code point over the operation's assigned key, stably across identical requests
 references:
 - title: Discovery Contract
   url: discovery-contract.md

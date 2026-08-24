@@ -1,0 +1,224 @@
+{
+  "note": "C7 \u2014 continuation traces. MIRI-SURFACE-033 was split out of 031 because ordering and continuation fail independently and a combined check cannot say which broke. Continuation had no case at all: every prior fixture varies what a package ships or what a single request asks, and a cursor defect only appears across a SEQUENCE of requests. Each case is an ordered request sequence plus the envelope a conformant surface MUST return for each step. A surface that keeps no cursor state is conformant via the `stateless_surface` case and MUST NOT be scored against the others.",
+  "cursor_scope": {
+    "note": "Discovery Contract \u00a73.5.1 \u2014 the filter inputs a cursor is scoped to, per operation. A cursor presented with any of these changed MUST be rejected as INVALID_CURSOR. `list` takes no `package`; its `query` filters package names.",
+    "list": [
+      "query"
+    ],
+    "api-index": [
+      "query"
+    ],
+    "patterns": [
+      "query",
+      "category",
+      "complexity"
+    ]
+  },
+  "cases": [
+    {
+      "id": "continues_same_ordering",
+      "checks": [
+        "MIRI-SURFACE-033"
+      ],
+      "sequence": [
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2
+          },
+          "expect": {
+            "ok": true,
+            "present": true,
+            "truncated": true,
+            "next_cursor": "<opaque>"
+          }
+        },
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2,
+            "cursor": "<from step 1>"
+          },
+          "expect": {
+            "ok": true,
+            "present": true,
+            "entries_disjoint_from_step_1": true,
+            "entries_follow_step_1_in_ordering": true
+          }
+        }
+      ],
+      "why": "The baseline. A cursor that returns page one again is worse than no cursor at all: the consumer believes it has read the whole surface having read a prefix twice."
+    },
+    {
+      "id": "rejects_scope_change_query",
+      "checks": [
+        "MIRI-SURFACE-033"
+      ],
+      "sequence": [
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2
+          },
+          "expect": {
+            "ok": true,
+            "truncated": true,
+            "next_cursor": "<opaque>"
+          }
+        },
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2,
+            "query": "greet",
+            "cursor": "<from step 1>"
+          },
+          "expect": {
+            "ok": false,
+            "error": {
+              "code": "INVALID_CURSOR",
+              "retryable": false
+            }
+          }
+        }
+      ],
+      "why": "\u00a73.5.1's scope rule. Honoring this cursor hands the consumer page two of a different query with no way to detect the substitution."
+    },
+    {
+      "id": "rejects_scope_change_cap",
+      "checks": [
+        "MIRI-SURFACE-033"
+      ],
+      "sequence": [
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2
+          },
+          "expect": {
+            "ok": true,
+            "truncated": true,
+            "next_cursor": "<opaque>"
+          }
+        },
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 10,
+            "cursor": "<from step 1>"
+          },
+          "expect": {
+            "ok": false,
+            "error": {
+              "code": "INVALID_CURSOR",
+              "retryable": false
+            }
+          }
+        }
+      ],
+      "why": "Effective cap is part of the scope. A cursor honored across a cap change either skips entries or repeats them, and the consumer sees neither."
+    },
+    {
+      "id": "empty_and_absent_filter_are_one_scope",
+      "checks": [
+        "MIRI-SURFACE-033"
+      ],
+      "sequence": [
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2,
+            "query": ""
+          },
+          "expect": {
+            "ok": true,
+            "truncated": true,
+            "next_cursor": "<opaque>"
+          }
+        },
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2,
+            "cursor": "<from step 1>"
+          },
+          "expect": {
+            "ok": true,
+            "present": true,
+            "entries_disjoint_from_step_1": true
+          }
+        }
+      ],
+      "why": "The control for the two rejection cases above. \u00a73.5.1 makes an absent filter and an empty one the same scope, because consumers serialize the two interchangeably \u2014 a surface that rejects here has not become strict, it has become unusable."
+    },
+    {
+      "id": "not_invalid_input",
+      "checks": [
+        "MIRI-SURFACE-033"
+      ],
+      "sequence": [
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2,
+            "cursor": "not-a-real-cursor"
+          },
+          "expect": {
+            "ok": false,
+            "error": {
+              "code": "INVALID_CURSOR",
+              "retryable": false
+            }
+          }
+        }
+      ],
+      "why": "A garbage cursor is INVALID_CURSOR, never INVALID_INPUT. The codes route the consumer differently: one says restart the listing, the other says inspect your arguments."
+    },
+    {
+      "id": "stateless_surface",
+      "checks": [
+        "MIRI-SURFACE-033"
+      ],
+      "applies_when": "The surface retains no cursor state.",
+      "sequence": [
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2
+          },
+          "expect": {
+            "ok": true,
+            "truncated": true,
+            "next_cursor_absent": true
+          }
+        },
+        {
+          "request": {
+            "operation": "api-index",
+            "package": "greet_miri",
+            "cap": 2,
+            "cursor": "anything"
+          },
+          "expect": {
+            "ok": false,
+            "error": {
+              "code": "INVALID_CURSOR",
+              "retryable": false
+            }
+          }
+        }
+      ],
+      "why": "\u00a73.5.1 makes this conformant, not deficient: `truncated: true` with no `next_cursor` honestly reports 'there is more and I cannot reach it'. What a stateless surface MUST NOT do is emit a token it will never honor."
+    }
+  ]
+}

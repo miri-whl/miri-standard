@@ -11,6 +11,7 @@ both). Exit 0 = all invariants hold, 1 = a fixture has rotted, 2 = jsonschema mi
 """
 import ast
 import json
+import re
 import pathlib
 import sys
 
@@ -229,10 +230,51 @@ def main() -> int:
     else:
         check("request-side attack cases present", False)
 
+    # 4b. Continuation traces. A cursor defect only appears across a SEQUENCE of requests, so it
+    #     needs its own trace file: every other fixture varies one request or one shipped package.
+    curs = EXPECTED / "cursor.json"
+    if curs.exists():
+        d = json.loads(curs.read_text())
+        cases = d["cases"]
+        check("continuation cases present", len(cases) >= 5, f"{len(cases)} cases")
+        bad = [c["id"] for c in cases if not c.get("checks") or len(c.get("sequence", [])) < 1]
+        check("every continuation case names checks and a request sequence", not bad, str(bad))
+        # The scope table is the decidable part of 3.5.1; if it drifts from the spec the trace
+        # stops testing what the spec says.
+        scope = d["cursor_scope"]
+        check("cursor scope table covers exactly the three listing operations",
+              set(scope) - {"note"} == {"list", "api-index", "patterns"}, str(sorted(set(scope) - {"note"})))
+        check("cursor scope excludes graph", "graph" not in scope)
+        # Rejection cases and their control must both be present, or the trace can be passed by a
+        # surface that simply rejects every cursor.
+        ids = {c["id"] for c in cases}
+        check("continuation trace pairs rejection with a control",
+              {"rejects_scope_change_query", "empty_and_absent_filter_are_one_scope"} <= ids,
+              f"have {sorted(ids)}")
+        check("continuation trace covers the stateless surface", "stateless_surface" in ids)
+    else:
+        check("continuation cases present", False)
+
+    # 4c. The multi-distribution collision. MIRI-SURFACE-041 was a MUST with no case, which under
+    #     the scoring model left conformance permanently undetermined for every run.
+    build = FIX / "build"
+    if build.is_dir():
+        colliding = {}
+        for root in sorted(build.glob("ambiguous-*")):
+            toml = (root / "pyproject.toml").read_text()
+            dist = re.search(r'^name = "([^"]+)"', toml, re.M).group(1)
+            pkgs = [d.name for d in (root / "src").iterdir() if d.is_dir()]
+            colliding[dist] = pkgs
+        check("multi-distribution fixture built", len(colliding) >= 2, f"{sorted(colliding)}")
+        names = {p for pkgs in colliding.values() for p in pkgs}
+        check("colliding distributions share exactly one import name", len(names) == 1, str(sorted(names)))
+        check("colliding distributions are distinct", len(colliding) == len(set(colliding)))
+    else:
+        check("multi-distribution fixture built", False, "run build_fixtures.py first")
+
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a
     #    check that does not exist, and every non-pending check must have a case behind it.
-    import re
     goldens = sorted(p for p in EXPECTED.glob("A*.json"))
     # Both check families live here — a golden may cite either, and scoping this to one
     # namespace silently rejected every valid MIRI-SURFACE citation.

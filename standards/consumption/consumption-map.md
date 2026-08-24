@@ -53,14 +53,33 @@ Each read-step below is labelled with the delivery vehicle that supplies it
 These four labels are the complete set. A step carries exactly one; there is no compound label.
 
 A consumer MUST skip a step whose vehicle is unavailable to it and continue with the next; a skipped step is reported,
-never silently synthesized (§4). Every **(S)** step is answerable by one of the eight operations in the
+never silently synthesized (§4). Unavailability and inapplicability are **separate** grounds with separate reported
+reasons, and a consumer needs both: a vehicle it does not have is `unavailable-vehicle`, while a step whose stated
+condition does not hold — §4's restriction on invoking a CLI, a fallback whose trigger did not fire — is
+`not-applicable`. Collapsing the two would let a consumer that simply never invokes anything report the same thing as
+one that had nothing to invoke.
+
+A consumer can also distinguish "this surface does not serve that document" from "this package did not ship it",
+which matters wherever a step routes to a **provisional** document: `list` returns the `documents` array the surface
+will serve for that package ([Discovery Contract §3.1](discovery-contract.md)), so a name absent from that array is
+the surface declining, while a name present in it that answers `present: false` is the package not shipping it. A
+consumer MUST NOT report the first as evidence about the package. Every **(S)** step is answerable by one of the eight
+operations in the
 [Discovery Contract §3](discovery-contract.md) table — the contract is deliberately sized so that no normative
 read-order depends on an answer no operation can give. A **server-only consumer can complete the normative core of
-  every task in §3**,
-including the generative ones: `resolve` is what makes the anti-hallucination rule dischargeable without filesystem
-access. It cannot perform the **(F)** and **(X)** steps — `templates/` in §3.2, the quickstart in §3.1, `--describe`
+every task in §3 for a package whose surface is a Python API**, including the generative ones: `resolve` is what makes
+the anti-hallucination rule dischargeable without filesystem access. "Normative core" here means the **(S)** steps and
+every prohibition — the parts §2 makes binding — and not the **(F)** and **(X)** steps, which such a consumer cannot
+perform — `templates/` in §3.2, the quickstart in §3.1, `--describe`
 in §4 — and is not expected to: those are skipped and reported per the rule above. No **prohibition** and no
 **(S)** step depends on a vehicle a server-only consumer lacks, which is the property that actually matters.
+
+The qualifier is load-bearing. §4's CLI rule excludes command-line surfaces from `api_index`, so for a package whose
+surface *is* a CLI, the step that establishes what the surface offers is `--describe` — an **(X)** vehicle. A
+server-only consumer therefore cannot complete the normative core for such a package, and MUST report the step as
+skipped with reason `unavailable-vehicle` (§4) rather than answering from the Python-side documents, which describe a
+different surface. Stating this as a flat capability claim would have been the more quotable sentence and the false
+one.
 
 ## 2. Force of Each Clause
 
@@ -148,9 +167,20 @@ agent builds on the path the author verified rather than reconstructing one.
 
   *Matching* is deliberately narrow, because a broad reading would make the rule undecidable: emitted code **matches**
   a `wrong_code` when it calls **the same surface in the same shape** — same callable, same argument arity, and the
-  same construction site relative to any enclosing loop or handler the `wrong_code` shows. It is **not** a textual
-  comparison and **not** a semantic-equivalence judgment. Where a consumer cannot decide, the rule does not fire;
-  a check written against this MUST fire only on the narrow reading.
+  same construction site the `wrong_code` shows. **Construction site** is defined syntactically, not semantically: two
+  calls share a construction site when the sequence of enclosing block constructs between the module or function body
+  and the call is the same sequence of kinds, in the same order — `loop`, `conditional`, `exception handler`,
+  `context manager`, `comprehension`. `for`, `while`, and an async variant are all one `loop` kind; `except` and
+  `finally` are both `exception handler`. Nesting depth and order matter; identifier names, iteration counts, and the
+  conditions themselves do not. So a `wrong_code` that opens a connection inside a `for` body matches emitted code
+  that opens one inside a `while` body, and does not match code that opens one once before the loop — which is
+  precisely the distinction those antipatterns exist to draw. It is **not** a textual
+  comparison and **not** a semantic-equivalence judgment. Where a consumer cannot decide, the rule does not fire.
+
+  The narrowness binds the **check author**, not the consumer, and is stated here rather than only in the check
+  because this paragraph is where the definition lives: `MIRI-CONSUMER-040`'s `fires_when` clauses are written against
+  the construction-site definition above and no broader reading of it, so a consumer is never penalized for failing to
+  match code the definition does not cover. A conformance suite that flags a near-miss has exceeded the check.
 
 *Heuristic:* templates encode idiom, the installed surface encodes truth — scaffold from the template, then let
 introspection correct it. `graph` is consulted only when the change spans files; a single-call integration does not
@@ -166,8 +196,12 @@ need it.
    operation in 0.3 and MUST NOT be answered from the shipped file.
 2. **(C)** Cross-reference each record against the consumer codebase's **own call sites**.
 3. **(S)** `resolve` — confirm each `replacement` surface exists in the **installed** package before emitting a call
-   to it (§3.2). Where the replacement is not yet installed, the record is reported as
-   pending verification, not as a confirmed target.
+   to it (§3.2). Installedness is observable from the operation's own answer, so this step needs no vehicle the
+   contract lacks: a `resolve` against a package that is not installed returns `ok: false` with
+   `PACKAGE_NOT_INSTALLED` ([Discovery Contract §4.3](discovery-contract.md)), which is a *different* answer from
+   `present: false` — the latter says the package is installed and the symbol is not in it. On
+   `PACKAGE_NOT_INSTALLED` the record is reported as **pending verification**, not as a confirmed target and not as a
+   refuted one; the consumer has learned nothing about the replacement except that it cannot check it here.
 
 **Must not:**
 
@@ -189,17 +223,31 @@ what *could* change; only the consumer's own usage says what *will*.
 
 1. **(S)** `patterns` filtered to the failing surface — its error-handling patterns and, in particular, its
    `antipatterns`, which often name the failure directly.
-2. **(F)** `docs/troubleshooting.md` — symptom → cause, without leaving the environment.
+2. **(F)** `docs/troubleshooting.md` — symptom → cause, without leaving the environment. No producer check requires
+   this file, so its absence is the common case rather than a defect; §4's honest-degradation rule governs, and the
+   consumer reports the skip with reason `absent` and continues to step 3, which stands on its own.
 3. **(S)** `api-index` for the failing surface — confirm its identity and, where the entry carries a `signature`, its
    parameters. A conformant `api-index` entry carries `signature` and `file` only where the producer supplies them
-   ([Discovery Contract §3.5](discovery-contract.md)), so a consumer MUST fall back to **(S)** `resolve`, which
-   reports `kind`, `file`, `line` and `signature` from the source, when they are absent.
+   ([Discovery Contract §3.5](discovery-contract.md)).
+4. **(S)** `resolve` the failing surface — **conditional on step 3 returning an entry without `signature` or `file`,
+   or returning no entry for the surface at all while reporting `truncated: true`**, and skipped as
+   `not-applicable` otherwise. The second trigger matters because a capped `api-index` omits entries without saying
+   which: a consumer that treated "not in the response" as "not in the package" would fall foul of the presence-only
+   rule (§4) and skip the step that would have told it the truth. It reports `kind`, `file`, `line` and `signature` from
+   the source. This
+   is a numbered step rather than a clause inside step 3 because §1.1's vehicle labels, §2's force table, and §4's
+   skip-reporting rule all attach to numbered steps — a fallback written inline inherits none of them, and a
+   conformance suite has nothing to drive.
 
 **Must not:**
 
 - Assert that a surface does not exist, or that a signature is wrong, on the basis of an `api-index` response alone
   (§3.2 — capped and filtered; presence only).
-- Present a cause drawn from the metadata as a confirmed diagnosis without reproducing or verifying it.
+- Present a cause drawn from the metadata as a **confirmed** diagnosis. The observable rule is about attribution, not
+  about the consumer's internal certainty: a cause read from a package's own `antipatterns` or troubleshooting
+  document MUST be reported as what the package's author says, attributed to the document it came from, unless the
+  consumer has itself reproduced the failure — and where it has, it says what it did to reproduce. A suite checks the
+  attribution, which is in the output; it cannot check whether the consumer "verified", which is not.
 
 *Heuristic:* exhaust the embedded troubleshooting doc before a web search — the answer is more likely offline, version-
 matched, and author-written than anything a general search returns.
@@ -236,7 +284,9 @@ the agent *whom to ask*; it never answers *on their behalf*.
    doubles the package **ships** for consumers. This document is **provisional**
    ([Discovery Contract §3.2.1](discovery-contract.md)) and a conforming package need not ship it, so an absent
    response here is the expected case rather than a defect — §4's honest-degradation rule governs, and the remaining
-   steps stand on their own.
+   steps stand on their own. A consumer distinguishes the two absences by §1.1's rule: a `test-patterns.json` missing
+   from `list`'s `documents` array is the *surface* declining to serve it, which says nothing about the package,
+   while a name present there answering `present: false` is the *package* not shipping it, which does.
 2. **(S)** `api-index` — confirm the surface under test, and its `signature` where the producer supplies one.
 3. **(S)** `patterns` — the idiomatic call sequence the test should exercise, so the test covers real usage
    rather than an invented one.
@@ -246,7 +296,10 @@ the agent *whom to ask*; it never answers *on their behalf*.
 - Present a **synthesized mock as the package's supported test double.** Only entries in
   `supported_test_doubles` are supported; anything the consumer invents is its own, and MUST be described as such.
   (Observable: a claimed "official" fake that appears in no `supported_test_doubles` entry.)
-- Run a pattern whose `requires_network` or `requires_credentials` is `true` without explicit opt-in, and never
+- Run a pattern whose `requires_network` or `requires_credentials` is `true` without explicit opt-in — meaning a
+  decision the operator made **for this class of pattern, after being shown the flag**, whether per-run or as
+  standing configuration. A blanket "yes to everything" the operator granted before any flag was surfaced is not
+  opt-in to this, and neither is a default the consumer ships enabled — and never
   fabricate or substitute credentials to make one run.
 - Report that a package "has no tests" from the absence of `test-patterns.json`. Absence is evidence-scoped (§4): it
   means no test patterns were generated, not that the package is untested.
@@ -265,16 +318,28 @@ generator's code — the "an author who builds strictly to the documents writes 
   evidence,"* never as *"the package has no such feature."* It MUST NOT synthesize the missing section and MUST NOT
   infer absence-of-feature from absence-of-section.
 - **CLI surfaces are excluded from `api_index`.** Console-script entry points are excluded by construction
-  (MIRI-PY-036). A consumer MUST NOT expect a package's CLI commands to appear in an `api-index` response. Those
+  (MIRI-PY-036). A consumer MUST NOT report a package's CLI commands as absent, unavailable, or non-existent on the
+  basis of their
+  absence from an `api-index` response — the observable form of the rule, since what a consumer *expects* is not
+  visible from outside and only the claim it emits can be checked. Those
   surfaces are described by the CLI's own `--describe`
   ([CLI Lifecycle Spec §3](../cli/cli-lifecycle-specification.md)) — which is an **(X)** vehicle: it *executes the
   installed console script*, and is therefore outside the Discovery Contract's import-free, executes-nothing surface
   ([Discovery Contract §5](discovery-contract.md)). A consumer MUST treat invoking it as running installed code, under
-  the same confinement it would apply to any other execution. A consumer MUST invoke it **only when the task it was
+  the same confinement it would apply to any other execution — and because "the same as whatever you already do"
+  is a floor of zero for a consumer that confines nothing, this map states the minimum: the invocation is
+  `<console-script> --describe` with **no additional arguments**, no shell interpretation of any part of the command
+  line, no publisher-authored string anywhere in the argument vector or environment, a bounded timeout, and output
+  read as data. A consumer that cannot meet that floor MUST skip the step and report it (§4) rather than invoke
+  under weaker terms. A consumer MUST invoke it **only when the task it was
   given requires the CLI surface** — the user asked about a command, or a call site under edit uses one. Restating it
   as a condition on the task rather than on the consumer's motive is deliberate: "merely to enrich" was a statement
   about intent, which nothing outside the consumer can observe, and an unobservable clause cannot be a MUST.
-- **A pointer is not a permission.** Several elements carry paths that point into the package — `api_index`'s `file`,
+- **A pointer is not a permission.** The rule is stated generally and the list that follows is illustrative, not
+  exhaustive: a consumer MUST confine **any** path it takes from **any** served document before dereferencing it,
+  including fields this standard has not yet defined. Enumerating the fields would mean every future metadata element
+  silently arrives unguarded until someone remembers to add it here, which is how this class of bug is normally
+  shipped. The paths in 0.3-draft are `api_index`'s `file`,
   `api-graph` nodes' `file`/`module`, `test-patterns`' `source_file`. These are **publisher-authored strings**, and a
   consumer that opens one is acting on untrusted input. Before dereferencing any such pointer a consumer MUST resolve
   it against the package's own root, take the fully resolved path, and confirm the result is a regular file
@@ -283,16 +348,46 @@ generator's code — the "an author who builds strictly to the documents writes 
   Discovery Contract places on a *surface* ([§3.2.2](discovery-contract.md)); the same discipline applies to a
   consumer, because the same string reaches it.
 
-- **Every URL from metadata is guarded, in every task.** A consumer MUST apply the SSRF guard in
-  [Lifecycle and Security Metadata §9.2](../python/lifecycle-security-metadata.md) — HTTPS only, block private,
-  link-local and cloud-metadata ranges, re-validate after redirects, forward no credentials — to **any** URL it
-  resolves from any served document, not only to `advisory_sources` and `update_check` in §3.5. Documents carry
-  URL-shaped strings in many fields, the surface fetches none of them ([Discovery Contract §9.2](discovery-contract.md)),
+- **Every URL from metadata is guarded, in every task.** The guard is defined normatively in
+  [Lifecycle and Security Metadata §9.2](../python/lifecycle-security-metadata.md); its testable content is restated
+  here because this map scores it, and a check whose pass condition lives in another document is a check an
+  implementer has to go find. A consumer MUST, for **any** URL it resolves from any served document:
+
+  1. Reject any scheme other than `https`.
+  2. Resolve the host and reject any address in a private (RFC 1918), loopback, link-local (including `169.254.0.0/16`
+     and `fd00::/8`), or cloud-metadata range — `169.254.169.254` and `metadata.google.internal` being the ones
+     actually exploited.
+  3. Re-apply both checks **after every redirect**, against the redirect target rather than the original URL.
+  4. Send no credentials, cookies, or `Authorization` header the consumer holds for any other origin.
+  5. Bound the request with a timeout and a response-size limit.
+
+  This applies to **any** URL from any served document, not only to `advisory_sources` and `update_check` in §3.5.
+  Documents carry
+  URL-shaped strings in many fields, the surface fetches none of them ([Discovery Contract
+  §9.2](discovery-contract.md)),
   and a guard scoped to one task is a guard a consumer forgets in the other five.
 
+  The guard binds **emission as well as resolution**. A consumer that hands an unguarded publisher URL to a browser
+  tool, a fetch capability, a subordinate agent, or a user-facing "open this" affordance has not avoided the request —
+  it has arranged for something else to make it, which is the same exposure with the audit trail removed. A consumer
+  MUST therefore either apply the guard before emitting such a URL, or emit it **inert**: displayed as text, attributed
+  to the package that supplied it, and not rendered as an actionable link or passed as a tool argument. Inert is not
+  unchecked — step 1 above still applies, so a `javascript:`, `data:`, `file:`, or unknown-scheme URL is never emitted
+  even as text, because "text" becomes a link the moment a terminal, a chat client, or a markdown renderer gets hold
+  of it and the consumer does not control which of those is downstream.
+
 - **A skipped step is reported, never synthesized.** Where a read-step's vehicle is unavailable (§1.1) or its document
-  is absent, a consumer MUST say so in its output rather than filling the gap from its own priors. This is the
+  is absent, a consumer MUST report the skip rather than filling the gap from its own priors. This is the
   honest-degradation rule the bare/miri fixture pair exists to check.
+
+  "Report" is an observable requirement, so this contract states its minimum rather than leaving each implementation
+  to decide what counts. A conforming report names **the task, the step, and the reason** — the step identified by its
+  §3 task and number (`§3.3 step 2`), the reason drawn from the fixed set `absent`, `unavailable-vehicle`, `error`, or
+  `not-applicable` — and appears in the same output the consumer's answer appears in, not only in a debug log a
+  caller has to opt into. A consumer that answers the task while mentioning the skip nowhere in that answer has
+  synthesized, whatever its logs say. The form is free: a line of prose naming all three parts satisfies this as fully
+  as a structured field, because the check drives the consumer and reads its output rather than inspecting its
+  internals.
 
 ## 5. The Element Audit
 

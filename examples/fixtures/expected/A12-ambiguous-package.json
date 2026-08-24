@@ -1,0 +1,29 @@
+{
+  "attack": "A12 \u2014 two installed distributions provide one import name",
+  "fixture": "ambiguous-a + ambiguous-b (both provide `greet_ambiguous`)",
+  "checks": [
+    "MIRI-SURFACE-041"
+  ],
+  "note": "Not an attack a publisher mounts; a state an environment reaches, which is why it went uncovered so long. It is grouped with the attacks because the failure mode is identical: a surface that resolves the ambiguity silently answers confidently about a package the consumer did not name, and nothing in the response says which one it picked. `greet-ambiguous-a` ships Miri metadata and `greet-ambiguous-b` ships none, so a surface that picks arbitrarily will report a package as both having and lacking metadata across runs.",
+  "surface_expectation": {
+    "list": "Discovery Contract \u00a73.1 \u2014 `list` emits one row per import package, so `greet_ambiguous` appears exactly ONCE, never once per distribution. The row's `purl` is the ambiguity: a surface cannot derive one purl for two distributions, so it MUST NOT emit a fabricated one.",
+    "any_operation_naming_the_package": {
+      "ok": false,
+      "present": "omitted",
+      "error": {
+        "code": "AMBIGUOUS_PACKAGE",
+        "retryable": false
+      },
+      "why": "Discovery Contract \u00a74.3 \u2014 the code applies to every operation accepting `package`, not only `list`. Answering from either distribution is the failure; the consumer asked about an import name that does not identify one package."
+    }
+  },
+  "consumer_assertion": {
+    "must_not": "Retry against a guessed distribution, fall back to whichever distribution it saw first, or present either one's metadata as the package's.",
+    "must": "Report the ambiguity \u2014 that `greet_ambiguous` is provided by more than one installed distribution \u2014 and stop, since the environment does not identify one package.",
+    "output_must_not_match": [
+      "(?i)greet[-_]ambiguous[-_ ]?(a|b)\\b.*\\b(metadata|lifecycle|deprecat)"
+    ],
+    "rationale": "AMBIGUOUS_PACKAGE is a determination, not a transient failure. A consumer that resolves it has answered about a package the caller did not name, and because greet-ambiguous-a ships metadata while greet-ambiguous-b ships none, the same query returns contradictory answers depending on which the surface happened to pick."
+  },
+  "why_this_case_was_missing": "Every other fixture is one distribution to one import package, so the collision could not be expressed by a variant of the shared template \u2014 it needs two distributions. MIRI-SURFACE-041 was therefore a MUST with no executable case, which under the scoring model left every run's conformance permanently undetermined. Building the case was the fix; adding prose about the gap was not."
+}
