@@ -124,8 +124,8 @@ The discrimination the contract calls its single most consequential clause.
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
 | MIRI-SURFACE-010 | M | Reports absence as `ok: true, present: false` — never as an error | 8 | `bare` |
-| MIRI-SURFACE-011 | M | Reports failure as `ok: false` with a coded `error` object | 7 | request traces |
-| MIRI-SURFACE-012 | M | Reports a document it could not read as JSON as `METADATA_UNREADABLE`, never absent or repaired | 7 | `malformed` |
+| MIRI-SURFACE-011 | M | Reports failure as `ok: false` with a coded `error` object | 7 | `expected/requests.json` |
+| MIRI-SURFACE-012 | M | Reports a document it cannot read — unparsable **or** schema-invalid — as `METADATA_UNREADABLE`, never absent or repaired | 7 | `malformed` |
 
 ### C. Boundaries (24 points)
 
@@ -133,9 +133,9 @@ What the surface will and will not do. Every check here is a refusal.
 
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
-| MIRI-SURFACE-020 | M | Serves only the closed servable set; refuses anything else | 8 | request trace |
+| MIRI-SURFACE-020 | M | Serves only the closed servable set; refuses anything else | 8 | `expected/requests.json` |
 | MIRI-SURFACE-021 | M | Confines the resolved path; rejects symlinks and traversal | 8 | `symlinked` |
-| MIRI-SURFACE-022 | M | Discovers import-free; executes nothing | 5 | import canary |
+| MIRI-SURFACE-022 | M | Discovers import-free; executes nothing | 5 | `hostile-import` |
 | MIRI-SURFACE-023 | M | Fetches nothing: never resolves a URL found in a served document | 3 | `adversarial` (A7) |
 
 ### D. Bounded Answers (16 points)
@@ -145,13 +145,13 @@ What the surface will and will not do. Every check here is a refusal.
 | MIRI-SURFACE-030 | M | Declares and enforces its caps, and sets `truncated` when it drops content | 6 | `adversarial` (A4) |
 | MIRI-SURFACE-031 | M | Orders entries stably across repeated requests | 2 | `adversarial` (A4) |
 | MIRI-SURFACE-032 | M | Distinguishes an absent `api-index` from an empty one | 6 | `bare`, `miri` |
-| MIRI-SURFACE-033 | M | Offers cursor continuation and rejects an out-of-scope cursor | 2 | `cap` trace |
+| MIRI-SURFACE-033 | M | Offers cursor continuation and rejects an out-of-scope cursor | 2 | `expected/cursor.json` |
 
 ### E. Provenance and Identity (11 points)
 
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
-| MIRI-SURFACE-040 | M | Derives `purl` from the installed distribution; never reads it from a document | 6 | identity skew |
+| MIRI-SURFACE-040 | M | Derives `purl` from the installed distribution; never reads it from a document | 6 | `spoofed` |
 | MIRI-SURFACE-041 | M | Emits one row per import package; errors rather than picking among ambiguous ones | 5 | `ambiguous-a` + `ambiguous-b` (A12) |
 
 ### F. Binding (7 points)
@@ -159,7 +159,7 @@ What the surface will and will not do. Every check here is a refusal.
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
 | MIRI-SURFACE-050 | M | Advertises the surface version at its binding's normative path — for MCP, `capabilities.miri.surface_version` in `initialize` (Discovery Contract §6.3) | 4 | any |
-| MIRI-SURFACE-051 | M | Carries absence and error as tool results, never as protocol errors | 3 | `bare`, request trace |
+| MIRI-SURFACE-051 | M | Carries absence and error as tool results, never as protocol errors | 3 | `bare`, `expected/requests.json` |
 
 ### Category Summary
 

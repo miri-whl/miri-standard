@@ -118,6 +118,13 @@ and the lower bands will rarely be occupied. That is intended: the bands exist s
 producer checklists, not because a conforming consumer is expected to score badly. A profile whose SHOULD weight
 grows will occupy them naturally.
 
+**Suite capabilities.** Three checks need more of a suite than driving and reading text. `MIRI-CONSUMER-040` needs to
+parse the code the consumer emitted into a syntax tree, because the antipattern match is defined syntactically
+([Consumption Map §3.2](consumption-map.md)); `MIRI-CONSUMER-011` and `MIRI-CONSUMER-032` need to drive two arms and
+compare them (§5). A suite lacking a capability MUST forfeit the affected check under the rule below and say which
+capability it lacked — never approximate it, since a textual near-match to a syntactic rule decides a different
+question and reports the answer as though it decided this one.
+
 **Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
 forfeited check is **excluded from both** the numerator and the denominator — it is removed from the calculation
 entirely, not counted as a failure. The score is computed over what was actually exercised, so forfeiting cannot
@@ -163,10 +170,14 @@ the shape of one; a surface makes no decisions, so it cannot be held to a verdic
 obscure which of them is broken.
 
 The third is the **harness-configuration generator** — the tool that reads a project's `[tool.miri.consume]` table and
-emits an `.mcp.json` or its equivalent. [Discovery Contract §7](discovery-contract.md) binds it with four rules: the
-closed grammar, rejecting a declaration carrying any unknown key, never auto-launching what it generates, and
-producing byte-identical output regardless of what the project's dependencies declare. **None of the four is scored
-by either profile in 0.3-draft**, and that is a gap rather than a decision — it is recorded here because a reader
+emits an `.mcp.json` or its equivalent. [Discovery Contract §7](discovery-contract.md) binds it with four rules, which
+are the four
+normative bullets of that section: honoring the closed grammar, rejecting a declaration carrying any unknown key,
+never auto-launching what it generates, and producing byte-identical output regardless of what the project's
+dependencies declare. If §7 gains a fifth, this count changes with it — the number is a claim about that section and
+is checked against it, not an independent tally. **None of the four is scored
+by either profile in 0.3-draft**, and that is an **open** gap rather than a decision — distinct from the Surface
+Conformance gap noted in §6, which has since been closed — it is recorded here because a reader
 counting obligations against checks will find the shortfall, and finding it stated is better than finding it hidden.
 
 The gap is bounded and deliberate. A generator is a build-time tool with no wire contract and no request/response
@@ -206,7 +217,9 @@ checks weighted to 100 — and the two columns together account for all thirty-t
 victims, and a run can fail either independently: a conformant surface cannot stop a consumer inventing a lifecycle
 status, and an honest consumer cannot recover a distinction the surface already collapsed.
 
-*(This section previously recorded the absence of that profile as a declared gap. It was written that way so the hole
+*(This paragraph concerns the **Surface Conformance profile**, a different gap from the generator gap in §4 above,
+which remains open. This section previously recorded the absence of that profile as a declared gap. It was written that
+way so the hole
 would be visible rather than implicit — and it is what identified the work. The gap is closed; the discipline that
 surfaced it is the bidirectional audit rule in [Consumption Map §5](consumption-map.md).)*
 
@@ -326,7 +339,8 @@ that way.
   runs during the check. Those recordings are authored from this contract, not captured from the reference surface;
   a recording captured from the implementation would reintroduce the circularity it exists to break.
 - **The adversarial fixture is authored against the threat model, not against the tool.** Its attacks come from the
-  producer standard's §9 and from the contract's own claims. If an attack is added because the reference consumer
+  producer standard's [Agent Metadata §9](../python/miri-agent-metadata-specification.md) and from the contract's own
+  claims. If an attack is added because the reference consumer
   happens to survive it, the fixture has started measuring the tool.
 
 ## 7. Check Definitions
@@ -338,6 +352,14 @@ the YAML is correct, and the disagreement is a bug to fix in the same change.
 Every check carries the canonical `severity` and `violation_unit` that implementations MUST use for health scoring,
 exactly as the producer checks do — so that a consumer report and a wheel report can be read side by side without
 translating between two scoring vocabularies.
+
+Both values live in the check's YAML under `severity` (`standards/consumption/checks/<id>.yaml`, governed by
+[`check-v1.json`](../../schemas/check-v1.json)), which is the single source: `default` is one of `LOW MINOR MEDIUM
+HIGH CRITICAL`, and `violation_unit` names the countable thing that is one violation. A report is verified against
+them mechanically — for each finding it emits, its severity string MUST equal the `default` of the check it cites,
+and its count MUST be in that check's `violation_unit`. A report that substitutes its own severity scale is
+non-conforming even where every finding is correct, because the number a reader compares across two reports is then
+measuring two different things.
 
 ## 8. Notes for Implementers
 

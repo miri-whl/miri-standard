@@ -272,6 +272,28 @@ def main() -> int:
     else:
         check("multi-distribution fixture built", False, "run build_fixtures.py first")
 
+    # 4d. Every Case cell names a real artifact. The column claims which fixture drives each check,
+    #     and a review found four cells naming things that existed nowhere ("import canary",
+    #     "identity skew", "request traces") plus one naming the wrong file. A prose label nobody
+    #     can resolve is a coverage claim nobody can check.
+    prof = REPO / "standards/consumption/surface-conformance.md"
+    if prof.exists():
+        variants = {d.name for d in (FIX / "build").iterdir() if d.is_dir()} if (FIX / "build").is_dir() else set()
+        goldens = {f"expected/{f.name}" for f in EXPECTED.glob("*.json")}
+        allowed = variants | goldens | {"any", "none - not scorable"}
+        rows = re.findall(r"^\| (MIRI-SURFACE-\d+) \|[^|]*\|[^|]*\|[^|]*\| ([^|]+) \|", prof.read_text(), re.M)
+        unknown = []
+        for cid, cell in rows:
+            cell = cell.replace("\u2014", "-").strip()
+            # a cell may list several artifacts, and may annotate one with an attack id in parens
+            for tok in re.split(r"[,+]", cell):
+                tok = re.sub(r"\(.*?\)", "", tok).strip().strip("`").strip()
+                if tok and tok not in allowed:
+                    unknown.append(f"{cid}:{tok!r}")
+        check("every surface Case cell names a real fixture or golden", not unknown, "; ".join(unknown))
+    else:
+        check("every surface Case cell names a real fixture or golden", False, "profile missing")
+
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a
     #    check that does not exist, and every non-pending check must have a case behind it.

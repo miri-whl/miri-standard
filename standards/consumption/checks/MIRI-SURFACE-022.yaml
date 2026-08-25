@@ -1,4 +1,3 @@
-# MIRI-SURFACE-022 — generated with the Surface Conformance profile; canonical source of truth.
 id: MIRI-SURFACE-022
 name: Discovers import-free; executes nothing
 target: surface
@@ -12,8 +11,8 @@ severity:
   default: CRITICAL
   violation_unit: each package imported or executed during a query
 short_description: Discovers import-free; executes nothing
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Discovers import-free; executes
-  nothing and fetches nothing.'
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Discovers import-free;
+  executes nothing and fetches nothing.'
 examples:
   violation: 'importlib.import_module(pkg)  # to read its __doc__ for the summary'
   compliant: 'importlib.util.find_spec(pkg)  # location only; metadata read from disk, never executed'
@@ -25,6 +24,10 @@ fires_when:
 - Any query imports the target package or executes any of its code
 - A package that cannot be resolved without importing is imported rather than reported `NOT_DISCOVERABLE`
 - Resolving a dotted `package` value imports the parent package on the way to the target (§3.0)
+- The surface serves a request from an interpreter that has the target environment on its import path, so that
+  a .pth file, sitecustomize, usercustomize, or an eagerly loaded entry-point plugin executed publisher code before
+  the first request arrived. Import-freedom is a property of the process, not of the request handler, and the
+  hostile-import canary detects only the handler path
 remediation:
 - Resolve locations through the import system's path finders and read files; never import the target
 - Reject a dotted `package` before attempting resolution, so the parent is never imported either

@@ -1,4 +1,3 @@
-# MIRI-CONSUMER-040 — generated with the Consumer Conformance profile; canonical source of truth.
 id: MIRI-CONSUMER-040
 name: Surfaces a `correctness`/`security` antipattern before emitting matching code
 target: consumer
@@ -18,6 +17,10 @@ rationale: Antipatterns are the author's statement of how callers actually get t
   least recoverable from signatures and most likely to be absent from a model's priors. Silently reproducing one
   is the exact failure the element was added to prevent.
 fires_when:
+- 'The suite can parse the emitted code into a syntax tree and a construction-site match per Consumption Map 3.2
+  is present, yet the consumer emitted the matching code without surfacing the antipattern. Where the suite cannot
+  parse the emitted code the check is FORFEITED and reported, never passed on a textual approximation: the match
+  is syntactic by definition and a text comparison decides a different question'
 - The consumer emits code matching a declared `wrong_code` of severity `correctness` or `security` without mentioning
   the author's warning
 remediation:
@@ -30,9 +33,9 @@ references:
   type: spec
 examples:
   violation: "for name in names:\n    print(Greeter(language=\"es\").greet(name))"
-  compliant: "g = Greeter(language=\"es\")\nfor name in names:\n    print(g.greet(name))\n# the package flags per-iteration\
-    \ construction as an antipattern (performance): it re-does the\n# language lookup per name and hides that the\
-    \ language is fixed."
+  compliant: "g = Greeter(language=\"es\")\nfor name in names:\n    print(g.greet(name))\n# the package flags\
+    \ per-iteration construction as an antipattern (performance): it re-does the\n# language lookup per name and\
+    \ hides that the language is fixed."
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-040.yaml
   html: https://miri-whl.github.io/checks/miri-consumer-040/

@@ -1,6 +1,5 @@
-# MIRI-SURFACE-012 — generated with the Surface Conformance profile; canonical source of truth.
 id: MIRI-SURFACE-012
-name: Reports an document it could not parse as `METADATA_UNREADABLE`, never absent or
+name: Reports an unreadable document as METADATA_UNREADABLE, never absent or repaired
 target: surface
 status: active
 added_in: 0.3-draft
@@ -11,21 +10,25 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: each malformed document served, repaired, or reported as absent
-short_description: Reports an document it could not parse as `METADATA_UNREADABLE`, never absent or repaired
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Reports an document it could
-  not parse as `METADATA_UNREADABLE`, never absent or repaired.'
+short_description: Reports a document it cannot read — unparsable OR schema-invalid — as `METADATA_UNREADABLE`,
+  never absent or repaired
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Reports an document it
+  could not parse as `METADATA_UNREADABLE`, never absent or repaired.'
 examples:
   violation: '{"ok": true, "present": false, "reason": "no lifecycle.json"}
 
     # the file exists; it is truncated mid-object'
   compliant: "{\"schema_version\": \"1\", \"ok\": false, \"package\": \"greet_malformed\", \"name\": \"lifecycle.json\"\
     ,\n \"error\": {\"code\": \"METADATA_UNREADABLE\", \"retryable\": false}}"
-rationale: A document that fails to parse is neither absent nor fine. Reporting it absent tells a consumer the package
-  ships nothing, which is false and hides a real problem; repairing or partially serving it invents publisher content,
-  which is worse. The honest answer is that the document exists and could not be read.
+rationale: A document that fails to parse is neither absent nor fine. Reporting it absent tells a consumer the
+  package ships nothing, which is false and hides a real problem; repairing or partially serving it invents publisher
+  content, which is worse. The honest answer is that the document exists and could not be read.
 fires_when:
 - A document that fails to parse is reported as absent
 - The surface repairs, re-serializes, or partially serves a document it could not parse
+- 'A document that parses as JSON but fails its schema is reported as absent, repaired, or served as though valid,
+  rather than as METADATA_UNREADABLE. Well-formed and valid are different properties: a surface that checks only
+  the first hands the consumer a document whose shape it has not established'
 remediation:
 - 'Return `ok: false` with `METADATA_UNREADABLE` and identify the document'
 - Never attempt recovery — a partially parsed document is publisher content the publisher did not write

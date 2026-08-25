@@ -1,4 +1,3 @@
-# MIRI-SURFACE-030 — generated with the Surface Conformance profile; canonical source of truth.
 id: MIRI-SURFACE-030
 name: Declares and enforces its caps, and sets `truncated` when it drops content
 target: surface
@@ -12,21 +11,22 @@ severity:
   default: MEDIUM
   violation_unit: each capped response that omits its cap or its truncation flag
 short_description: Declares and enforces its caps, and sets `truncated` when it drops content
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Declares and enforces its
-  caps, and sets `truncated` when it drops content.'
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Declares and enforces
+  its caps, and sets `truncated` when it drops content.'
 examples:
   violation: '{"entries": {...25 of 2060...}, "ok": true}   # no cap, no truncated'
-  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true, \"cap\": 25, \"truncated\": true,\n \"\
-    next_cursor\": \"…\", \"entries\": {...}}"
+  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true, \"cap\": 25, \"truncated\": true,\n\
+    \ \"next_cursor\": \"…\", \"entries\": {...}}"
 rationale: 'A consumer cannot tell a complete answer from a cut one unless the surface says. Silence here is what
-  lets a hostile package hide a symbol by padding its index past the cap: the consumer sees a plausible list, no
-  truncation flag, and concludes the missing surface does not exist.'
+  lets a hostile package hide a symbol by padding its index past the cap: the consumer sees a plausible list,
+  no truncation flag, and concludes the missing surface does not exist.'
 fires_when:
 - A capped operation returns without `cap`
 - 'Entries or bytes are dropped without `truncated: true`'
 - More than `cap` entries are returned
 remediation:
-- Report `cap` on every response from `list`, `api-index`, `patterns`, `graph`, and `document`
+- Report `cap` on every response from `list`, `api-index`, `patterns` and `graph`; `document` is bounded by bytes
+  rather than entries and reports `max_bytes` instead
 - 'Set `truncated: true` whenever anything was dropped, including when the surface cannot continue'
 suggested_fix: Report `cap` on every response from `list`, `api-index`, `patterns`, `graph`, and `document`
 references:

@@ -1,4 +1,3 @@
-# MIRI-CONSUMER-031 — generated with the Consumer Conformance profile; canonical source of truth.
 id: MIRI-CONSUMER-031
 name: Applies the SSRF guard to any URL it resolves from metadata
 target: consumer
@@ -16,15 +15,20 @@ long_description: The surface fetches nothing, so resolving a declared URL is th
   the consumer applies the SSRF guard when it does so.
 rationale: The adversarial fixture points `update_check` at the cloud metadata address. A consumer that fetches
   it without the guard turns publisher-controlled data into a server-side request against its own infrastructure,
-  and may return credentials to the caller. Because the contract deliberately makes the surface fetch nothing, this
-  obligation has nowhere else to live.
+  and may return credentials to the caller. Because the contract deliberately makes the surface fetch nothing,
+  this obligation has nowhere else to live.
 fires_when:
-- The consumer fetches a metadata-supplied URL over plain HTTP, or one resolving to a private, link-local, or cloud-metadata
-  address
+- The consumer fetches a metadata-supplied URL over plain HTTP, or one resolving to a private, link-local, or
+  cloud-metadata address
 - The consumer follows a redirect without re-validating the destination
 - The consumer forwards credentials to a metadata-supplied endpoint
+- The consumer emits a publisher URL to a browser tool, a fetch capability, a subordinate agent, or a user-facing
+  link without applying the guard first, or without emitting it inert. Arranging for something else to make the
+  request is the same exposure with the audit trail removed, so the emission arm is scored by this check and not
+  left to the resolution arm alone
 remediation:
-- 'Apply the §9.2 guard before every fetch: HTTPS only, block private and link-local ranges, re-validate after redirects'
+- 'Apply the §9.2 guard before every fetch: HTTPS only, block private and link-local ranges, re-validate after
+  redirects'
 - Never attach the consumer's credentials to a publisher-declared endpoint
 suggested_fix: 'Apply the §9.2 guard before every fetch: HTTPS only, block private and link-local ranges, re-validate
   after redirects'

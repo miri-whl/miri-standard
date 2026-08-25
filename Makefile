@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: help deps validate validate-sample score-sample site serve clean lint spell links check diagrams
+.PHONY: help deps consistency validate validate-sample score-sample site serve clean lint spell links check diagrams
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -42,6 +42,9 @@ validate-fixtures: fixtures ## Verify the fixture invariants (conforming twin va
 
 diagrams: ## Render any new/changed ```mermaid fence to a committed SVG (needs npx)
 	python3 tools/render_diagrams.py
+
+consistency: ## Catch count/reference/table drift the linters do not see
+	python3 tools/check_consistency.py
 
 site: validate ## Generate the site into .generated/site for local review
 	python3 tools/generate_site.py --out $(OUT)
