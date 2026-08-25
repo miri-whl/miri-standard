@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: help deps validate validate-sample score-sample site serve clean lint spell links check
+.PHONY: help deps validate validate-sample score-sample site serve clean lint spell links check diagrams
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -39,6 +39,9 @@ fixtures: ## Build the consumption fixtures (bare/miri/adversarial) and verify i
 
 validate-fixtures: fixtures ## Verify the fixture invariants (conforming twin valid; adversarial attacks live)
 	@python3 tools/validate_fixtures.py
+
+diagrams: ## Render any new/changed ```mermaid fence to a committed SVG (needs npx)
+	python3 tools/render_diagrams.py
 
 site: validate ## Generate the site into .generated/site for local review
 	python3 tools/generate_site.py --out $(OUT)

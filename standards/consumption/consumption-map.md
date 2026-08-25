@@ -41,7 +41,26 @@ requirements are unchanged. Two postures carry from the rest of the standard and
 ### 1.1 Vehicles
 
 Each read-step below is labelled with the delivery vehicle that supplies it
-([Discovery Contract §1](discovery-contract.md)):
+([Discovery Contract §1](discovery-contract.md)). The label records **what a consumer must possess** to perform the
+step, which is what decides whether the step is skipped:
+
+```mermaid
+flowchart TB
+    C["<b>consumer</b>"]
+    C -->|"needs nothing<br/>but a connection"| S["<b>(S)</b> Served<br/><i>a Discovery Contract operation</i>"]
+    C -->|"needs nothing<br/>but a connection"| SQ["<b>(S?)</b> Served, may be declined<br/><i>a provisional document</i>"]
+    C -->|"needs read access to<br/>site-packages"| F["<b>(F)</b> Filesystem<br/><i>the installed tree</i>"]
+    C -->|"needs to execute<br/>installed code"| X["<b>(X)</b> External<br/><i>e.g. the CLI's --describe</i>"]
+    C -->|"already has it"| W["<b>(C)</b> Consumer workspace<br/><i>the calling project's own source</i>"]
+
+    S --> N["every step a consumer<br/>cannot perform is<br/><b>skipped and reported</b>,<br/>never synthesized"]
+    SQ --> N
+    F --> N
+    X --> N
+```
+
+A **server-only consumer** — no filesystem, no execution — holds the first two columns and nothing else. That is the
+capability floor this map is designed around, and §1.1's guarantee is that the floor is enough for the normative core.
 
 | Label | Vehicle | Availability |
 |---|---|---|
@@ -111,6 +130,40 @@ precisely because it cannot be observed from outside, while the prohibitions are
 reference tool. It is the prohibitions that keep a consumer honest, and no clause claims otherwise.
 
 ## 3. The Task-to-Document Map
+
+Six tasks, each a read-order plus a set of prohibitions. The routing is the substance of this document:
+
+```mermaid
+flowchart LR
+    subgraph T["the six tasks"]
+        direction TB
+        t1["3.1 First use"]
+        t2["3.2 Scaffolding"]
+        t3["3.3 Upgrading"]
+        t4["3.4 Diagnosing"]
+        t5["3.5 Security"]
+        t6["3.6 Writing tests"]
+    end
+    subgraph D["what each reads first"]
+        direction TB
+        d1["api-index · usage-patterns"]
+        d2["templates · usage-patterns"]
+        d3["migration-guide · resolve"]
+        d4["patterns · antipatterns"]
+        d5["lifecycle · advisory sources"]
+        d6["test-patterns · api-index"]
+    end
+    t1 --> d1
+    t2 --> d2
+    t3 --> d3
+    t4 --> d4
+    t5 --> d5
+    t6 --> d6
+```
+
+Every read-step carries a vehicle (§1.1) and every prohibition is a MUST. Where the two disagree — a step whose
+document this consumer cannot reach — the step is skipped and *said* to be skipped; the prohibitions never lapse,
+because a consumer that could not read the evidence is exactly the one that must not guess.
 
 ### 3.1 First use of a package
 

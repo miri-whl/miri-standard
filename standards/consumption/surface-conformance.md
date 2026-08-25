@@ -89,7 +89,23 @@ never as conforming and never as a failure.
 
 ## 4. The Checks
 
-Eighteen checks, weights summing to 100. IDs are stable and are never renumbered.
+Eighteen checks, weights summing to 100. IDs are stable and are never renumbered. Six categories, which follow the
+path a request actually takes through a conformant surface:
+
+```mermaid
+flowchart TB
+    R["request"] --> B["<b>C. Boundaries</b><br/>name grammar · closed servable set<br/>path confinement · import-free<br/>020 021 022 023"]
+    B --> D["<b>D. Bounded Answers</b><br/>caps · stable order · continuation<br/>absent vs empty<br/>030 031 032 033"]
+    D --> E["<b>E. Provenance</b><br/>purl derived, never read<br/>one row per import package<br/>040 041"]
+    E --> A["<b>A. Envelope Integrity</b><br/>surface owns the top level<br/>001 002 003"]
+    A --> AB["<b>B. Absence and Error</b><br/>ok · present · coded errors<br/>010 011 012"]
+    AB --> F["<b>F. Binding</b><br/>surface version · results not<br/>protocol errors · 050 051"]
+    F --> RESP["response"]
+```
+
+The ordering is not decorative. A boundary failure admits bytes the later categories then faithfully wrap and
+provenance-stamp — so a surface that serves a document outside the servable set has already lost, however impeccable its
+envelope is.
 
 ### A. Envelope Integrity (20 points)
 

@@ -11,6 +11,7 @@ Usage: python3 tools/generate_site.py [--out site]
 Requires: pyyaml, jinja2
 """
 import argparse
+import hashlib
 import html
 import pathlib
 import re
@@ -83,29 +84,72 @@ def rewrite_links(md, doc_path, rendered, github):
     return re.sub(r"\[([^\]]+)\]\(([^)]+)\)", fix, md)
 
 
-def md_to_html(text):
+def md_to_html(text, toc=None):
     out = []
     # Pull fenced code blocks out first so blank lines inside them don't split the block.
     for chunk in re.split(r"(```.*?\n.*?\n```)", text, flags=re.S):
         if chunk.startswith("```"):
+            lang = chunk.split("\n", 1)[0][3:].strip()
             body = chunk.split("\n", 1)[1].rsplit("```", 1)[0]
+            if lang == "mermaid":
+                out.append(_mermaid(body))
+                continue
             out.append(f'<div class="codeblock"><pre><code>{html.escape(body.rstrip())}</code></pre></div>')
             continue
-        _md_blocks(chunk, out)
+        _md_blocks(chunk, out, toc)
     return "\n".join(out)
 
 
-def _md_blocks(text, out):
+def _mermaid(body):
+    """Inline the committed rendering of a mermaid fence, keyed by a hash of its source.
+
+    Falls back to the fence as a code block when no rendering exists, so a diagram added to a spec
+    before `make diagrams` has run degrades to readable source rather than breaking the page.
+    """
+    key = hashlib.sha256(body.strip().encode()).hexdigest()[:16]
+    svg = REPO / "website/static/diagrams" / f"{key}.svg"
+    if not svg.exists():
+        return f'<div class="codeblock"><pre><code>{html.escape(body.rstrip())}</code></pre></div>'
+    markup = svg.read_text()
+    # Strip the XML prolog: this is inlined into an HTML document, not served as a standalone file.
+    markup = re.sub(r"^<\?xml[^>]*\?>\s*", "", markup)
+    markup = re.sub(r"^<!DOCTYPE[^>]*>\s*", "", markup)
+    return f'<figure class="diagram">{markup}</figure>'
+
+
+def slugify(text):
+    """GitHub's heading-anchor algorithm.
+
+    Matching it exactly is what makes the specs' own markdown tables of contents — written as
+    `[Problem Statement](#1-problem-statement)` so they work on GitHub — resolve on the site too.
+    Before this, every heading was emitted without an id and every one of those links was dead.
+    """
+    t = re.sub(r"`([^`]*)`", r"\1", text)          # code spans contribute their contents
+    t = re.sub(r"[*_]", "", t)                      # emphasis markers do not
+    t = t.strip().lower()
+    t = re.sub(r"[^\w\s-]", "", t)                  # drop punctuation, keep word chars and spaces
+    return re.sub(r"\s+", "-", t)
+
+
+def _md_blocks(text, out, toc=None):
     for block in re.split(r"\n\s*\n", text):
         lines = [l for l in block.split("\n") if l.strip()]
         if not lines:
             continue
         first = lines[0]
         if first.startswith("### "):
-            out.append(f"<h3>{md_inline(first[4:])}</h3>")
+            raw = first[4:]
+            sid = slugify(raw)
+            out.append(f'<h3 id="{sid}">{md_inline(raw)}</h3>')
+            if toc is not None:
+                toc.append({"level": 3, "id": sid, "text": re.sub(r"[`*_]", "", raw)})
             lines = lines[1:]
         elif first.startswith("## "):
-            out.append(f"<h2>{md_inline(first[3:])}</h2>")
+            raw = first[3:]
+            sid = slugify(raw)
+            out.append(f'<h2 id="{sid}">{md_inline(raw)}</h2>')
+            if toc is not None:
+                toc.append({"level": 2, "id": sid, "text": re.sub(r"[`*_]", "", raw)})
             lines = lines[1:]
         elif first.startswith("# "):
             lines = lines[1:]  # document h1 is rendered by the page header
@@ -232,12 +276,17 @@ def main():
     for sp in specs:
         src = REPO / sp["source"]
         md = rewrite_links(src.read_text(), src.resolve(), rendered, site["github"])
-        body = re.sub(r"^\s*<h1>.*?</h1>", "", md_to_html(md), count=1, flags=re.S)
+        # The specs carry their own markdown table of contents so they navigate on GitHub. On the
+        # site the sticky sidebar renders the same data continuously, so the inline copy is dropped
+        # rather than shown twice — it is the single longest block above the fold on every page.
+        md = re.sub(r"\n## Table of Contents\n.*?(?=\n## )", "\n", md, count=1, flags=re.S)
+        toc = []
+        body = re.sub(r"^\s*<h1>.*?</h1>", "", md_to_html(md, toc), count=1, flags=re.S)
         (out / rendered[sp["source"]]).write_text(env.get_template("prose.html").render(
             site=site, root="", active=rendered[sp["source"]],
             page_title=sp["title"], page_heading=sp["title"],
             page_meta=[("Document", sp["source"]), ("Status", sp.get("status", "Draft"))],
-            page_lede=sp.get("lede"), body=body))
+            page_lede=sp.get("lede"), body=body, toc=toc))
 
     wn = md_to_html((REPO / "docs/whats-new-0.3.md").read_text())
     # Drop the source H1: the page header supplies the title, so rendering both duplicates it.

@@ -78,6 +78,36 @@ read-steps with the vehicle that supplies it, so that no reading order depends o
 A conformant metadata-query surface exposes these eight read-only operations, and no others (§9). Each is defined by its
 input, its payload, and its semantics; every response is wrapped in the §4 envelope.
 
+The eight fall into three kinds, and the kind determines what a consumer may conclude from an answer:
+
+```mermaid
+flowchart LR
+    subgraph RET["Retrieval — serve a document verbatim"]
+        direction TB
+        r1["document"]
+        r2["lifecycle"]
+        r3["migration-guide"]
+    end
+    subgraph DER["Derived views — a bounded selection"]
+        direction TB
+        d1["api-index"]
+        d2["patterns"]
+        d3["graph"]
+    end
+    subgraph DET["Determination — answer a question"]
+        direction TB
+        t1["list"]
+        t2["resolve"]
+    end
+    RET -.->|"absence means<br/>the file is not shipped"| N1["what an absent<br/>answer licenses"]
+    DER -.->|"capped: absence means<br/><b>nothing</b> — it may be<br/>past the cap"| N1
+    DET -.->|"absence is the<br/>answer itself"| N1
+```
+
+The distinction is load-bearing rather than taxonomic. A derived view is **capped**, so a symbol missing from an
+`api-index` response may simply be past the cap — which is why `resolve`, a determination, exists to settle symbol
+existence and why no consumer may settle it from index membership (§3.5).
+
 | Operation | Input | Payload key | Serves |
 |---|---|---|---|
 | `list` | optional `query`, `limit`, `cursor` | `packages` | Which installed packages ship agent-metadata, and which documents each has |
@@ -584,6 +614,24 @@ Every response from every operation in §3 is a JSON object — never a bare arr
 by the surface**. The publisher's bytes appear only nested under a payload key. This separation is what makes the
 absence/error signal trustworthy: a publisher cannot write to the top level, so a publisher cannot forge it.
 
+```mermaid
+flowchart TB
+    P["<b>lifecycle.json</b><br/>publisher-authored<br/>—<br/>hostile copy also writes<br/>ok: false, present: false"]
+    P -->|"surface reads the bytes<br/><b>and never merges them</b>"| ENV
+
+    subgraph ENV["response envelope"]
+        direction TB
+        S["<b>surface-owned top level</b><br/>schema_version · ok · present · purl · reason<br/>closed key set, §4.1"]
+        D["<b>document</b> — the payload key<br/>publisher bytes, served intact<br/><i>the forged ok/present land in here</i>"]
+    end
+
+    ENV --> C["<b>consumer</b><br/>branches on the top-level<br/>ok and present only"]
+```
+
+The forged keys are still in the response — served intact, because the surface does not edit what a publisher wrote.
+They are simply one level down, where they are data rather than signal. That is the whole mechanism: not sanitizing
+the payload, but denying it the position from which it could be believed.
+
 ### 4.1 Reserved Envelope Fields
 
 This table is **exhaustive**: these are the only keys that may appear at a response's top level. The
@@ -657,6 +705,19 @@ an error, nor as a silent empty success. Two independent booleans carry the two 
 
 - `ok` — did the surface serve the request?
 - `present` — does the requested document exist?
+
+```mermaid
+flowchart TB
+    R["response"] --> Q1{"ok"}
+    Q1 -->|"false"| E["<b>failure</b><br/>error { code, retryable }<br/>present MUST be omitted<br/><i>the surface could not answer</i>"]
+    Q1 -->|"true"| Q2{"present"}
+    Q2 -->|"false"| A["<b>absent</b><br/>reason, no payload key<br/><i>the package ships no such document</i>"]
+    Q2 -->|"true"| S["<b>served</b><br/>payload key present<br/><i>here it is</i>"]
+```
+
+Three outcomes, never two. Collapsing *absent* into *failure* makes a consumer retry something that will never
+succeed; collapsing it into *served* with an empty payload makes a consumer report "no advisories" when it means "no
+advisory file". The two booleans exist so that neither collapse is expressible.
 
 An **absent** response (the package ships no such document) is `ok: true`, `present: false`, with no payload key and a
 free-text `reason` for humans:

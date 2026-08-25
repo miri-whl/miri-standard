@@ -55,6 +55,26 @@ The producer checklists ([Python](../python/linter-checklist.md), [CLI](../cli/l
 artifact: the wheel is a fixed object, and a linter reads it. **This profile cannot work that way.** A consumer is a
 program with behavior, so conformance is established by running it, not by reading it.
 
+```mermaid
+flowchart LR
+    subgraph FIX["byte-identical fixtures"]
+        direction TB
+        b["<b>bare</b><br/>no metadata"]
+        m["<b>miri</b><br/>conforming metadata"]
+        a["<b>adversarial</b><br/>metadata that lies"]
+    end
+    FIX -->|"driven against"| C["<b>consumer under test</b><br/><i>a black box</i>"]
+    C --> O["<b>its output</b>"]
+    O --> J{"does the output<br/>match the claim?"}
+    J -->|"yes"| P["pass"]
+    J -->|"no"| F["fail"]
+```
+
+Every `.py` file is verified byte-identical across the variants, so **any difference in the consumer's output is
+attributable to the metadata and nothing else**. That is what lets a check be written against observable output
+rather than against a consumer's internals — and it is why the `adversarial` twin has to exist: a consumer that
+resists an attack and one that never looks are indistinguishable until something lies to them.
+
 Verification is therefore a **driven suite**:
 
 1. Install a fixture variant from [`examples/fixtures/`](../../examples/fixtures/) — `bare`, `miri`, `adversarial`,
@@ -121,6 +141,26 @@ say so rather than crediting it.
 
 The Discovery Contract places obligations on **three** programs, and only one of them is a consumer. Scoring a
 consumer on the others would be measuring the wrong thing.
+
+```mermaid
+flowchart LR
+    G["<b>generator</b><br/>reads [tool.miri.consume]<br/>emits harness config"]
+    C["<b>consumer</b><br/>asks questions,<br/>decides what to believe"]
+    S["<b>surface</b><br/>answers questions,<br/>owns the envelope"]
+    W["<b>wheel</b><br/>agent-metadata/"]
+
+    C <-->|"operations §3<br/>envelopes §4"| S
+    S -->|"reads bytes,<br/>executes nothing"| W
+    G -.->|"configures<br/>the connection"| C
+
+    G --- GN["4 MUSTs<br/><b>unscored in 0.3</b>"]
+    C --- CN["15 MIRI-CONSUMER<br/>checks · this document"]
+    S --- SN["18 MIRI-SURFACE<br/>checks · surface conformance"]
+```
+
+The split matters because the two programs fail differently. A consumer emits no responses, so it cannot be held to
+the shape of one; a surface makes no decisions, so it cannot be held to a verdict. One score covering both would
+obscure which of them is broken.
 
 The third is the **harness-configuration generator** — the tool that reads a project's `[tool.miri.consume]` table and
 emits an `.mcp.json` or its equivalent. [Discovery Contract §7](discovery-contract.md) binds it with four rules: the
