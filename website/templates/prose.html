@@ -4,7 +4,62 @@
 {% block content %}
 {{ m.spec_header(page_heading, page_meta) }}
 {% if page_lede %}<p class="lede">{{ page_lede }}</p>{% endif %}
+<div class="prose-layout">
 <article class="prose">
 {{ body | safe }}
 </article>
+{% if toc %}
+<aside class="toc" aria-label="On this page">
+  <p class="toc-title">On this page</p>
+  <nav>
+    <ol>
+    {% for h in toc %}
+      <li class="lvl{{ h.level }}"><a href="#{{ h.id }}">{{ h.text }}</a></li>
+    {% endfor %}
+    </ol>
+  </nav>
+</aside>
+{% endif %}
+</div>
+<script>
+// Scroll-spy: mark the section the reader is currently under, so the sidebar answers "where am I"
+// as well as "where can I go". A heading counts as passed once its top crosses the trigger line,
+// and the last passed heading is the active one — which keeps a section highlighted while the
+// reader is deep inside it, where the heading itself is far off-screen above.
+(function () {
+  var links = {}, order = [];
+  document.querySelectorAll(".toc a").forEach(function (a) {
+    var id = decodeURIComponent(a.getAttribute("href").slice(1));
+    links[id] = a;
+    order.push(id);
+  });
+  var heads = order.map(function (id) { return document.getElementById(id); }).filter(Boolean);
+  if (!heads.length) return;
+
+  var box = document.querySelector(".toc nav");
+  function paint() {
+    var active = null, line = 96;
+    for (var i = 0; i < heads.length; i++) {
+      if (heads[i].getBoundingClientRect().top <= line) { active = heads[i].id; } else { break; }
+    }
+    if (!active) { active = heads[0].id; }
+    for (var id in links) { links[id].classList.toggle("here", id === active); }
+    var el = links[active];
+    if (box && el && (el.offsetTop < box.scrollTop ||
+        el.offsetTop > box.scrollTop + box.clientHeight - 40)) {
+      box.scrollTop = Math.max(0, el.offsetTop - box.clientHeight / 2);
+    }
+  }
+
+  var queued = false;
+  function onScroll() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () { queued = false; paint(); });
+  }
+  addEventListener("scroll", onScroll, { passive: true });
+  addEventListener("resize", onScroll, { passive: true });
+  paint();
+})();
+</script>
 {% endblock %}
