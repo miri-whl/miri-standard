@@ -24,7 +24,20 @@ fires_when:
 - --describe carries no `advisory_sources`, or the array is empty
 - An entry's `type` is outside osv / osv-internal / osv-local, or its `url` is missing
 - An entry of type "osv" omits the `ecosystem` field needed to scope the OSV.dev query
+- 'No entry is authoritative for the artifact itself: every entry carries `authoritative: false`, which per CLI
+  Spec 4 covers only the dependency tree, and `advisory_coverage` is not `none`. Without this clause the check is
+  satisfied by an array that declares in its own fields that nothing covers the artifact, so a consumer asking
+  whether the tool is vulnerable finds every field valid and no source to query'
+- '`advisory_coverage` is `none` but `support.security_policy` is absent, leaving neither a machine channel nor a
+  human one'
+- 'An entry marked authoritative for the artifact names an ecosystem the artifact is not distributed in: an OSV
+  query keyed on the declared `identity.purl` cannot match records in that ecosystem, so the source is unreachable
+  in practice while well-formed on paper. This clause is scoped to authoritative entries deliberately: a
+  non-authoritative entry covers the dependency tree, where naming the ecosystem the dependencies come from is
+  correct even when the artifact itself is distributed elsewhere'
 remediation:
+- 'Where no OSV ecosystem indexes the artifact, declare `advisory_coverage: none` and publish
+  `support.security_policy` rather than naming an ecosystem the artifact is not distributed in'
 - 'Declare the source matching the distribution channel; for open source, public OSV with the shipping ecosystem: {"type":
   "osv", "ecosystem": "npm", "url": "https://api.osv.dev/v1/query", "authoritative": true}'
 - 'For private CLIs, point at the internal OSV-schema endpoint or offline archive: {"type": "osv-internal", "url": "https://advisories.corp.acme.example/v1/query"},

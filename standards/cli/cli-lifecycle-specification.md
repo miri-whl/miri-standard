@@ -201,6 +201,40 @@ Types: `"osv"` (public OSV.dev), `"osv-internal"` (private endpoint serving OSV-
 OSV database archive). At least one entry is required. Consumers MUST NOT treat an empty public-OSV result as "not
 vulnerable" for a `distribution: "private"` CLI unless public OSV is explicitly listed.
 
+### 4.1 When No Machine-Queryable Source Covers the Artifact
+
+`authoritative: false` means a source covers the artifact's **dependency tree, not advisories against the artifact
+itself** ([Lifecycle and Security Metadata §4](../python/lifecycle-security-metadata.md)). A tool therefore satisfies
+the "at least one entry" rule while declaring, in its own metadata, that nothing authoritative covers it — and a
+consumer asking "does this tool have a known vulnerability?" has nowhere to look while every field validates.
+
+That state is real and sometimes unavoidable. An artifact installed from a git URL, a binary published only as a
+GitHub release, or an internal tool in no package ecosystem may genuinely have no OSV ecosystem that indexes it. The
+standard's answer is neither to force a false claim nor to let the gap pass silently: **an artifact with no
+authoritative machine-queryable source MUST declare that explicitly.**
+
+```json
+{
+  "advisory_sources": [
+    { "type": "osv", "ecosystem": "PyPI", "url": "https://api.osv.dev/v1/query", "authoritative": false }
+  ],
+  "advisory_coverage": "none",
+  "support": { "security_policy": "https://github.com/acme/acme-cli/security/policy" }
+}
+```
+
+`advisory_coverage` is `"authoritative"` (default when omitted — at least one listed source is authoritative for the
+artifact itself) or `"none"`. Declaring `"none"` **requires** `support.security_policy`: the machine channel does not
+cover this artifact, so the human one must be named, and an artifact that can point at neither has no vulnerability
+story at all and should say so rather than imply one.
+
+A consumer that reads `advisory_coverage: "none"` MUST report **"no advisory source covers this artifact"** and MUST
+NOT report "no known vulnerabilities" — the two are opposite claims that an empty query result renders identical.
+This is the same rule as the empty-advisory-list case, applied one level up: the standard's whole posture is that an
+artifact declares where authoritative answers live, and where they do not live is equally a fact worth declaring.
+Choosing a purl that names an ecosystem the artifact is not distributed in, so that a check passes, would be a
+falsehood a scanner acts on; this field is what makes the honest choice a conformant one.
+
 ## 5. Update Check and Machine-Readable Changelog
 
 ### 5.1 `check-update`
