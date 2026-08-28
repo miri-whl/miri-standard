@@ -103,7 +103,10 @@ will serve for that package ([Discovery Contract §3.1](discovery-contract.md)),
 the surface declining, while a name present in it that answers `present: false` is the package not shipping it. A
 consumer MUST NOT report the first as evidence about the package. Observably: driven against a surface that omits
 `test-patterns.json` from `list`'s `documents` array, the consumer's returned artifact MUST NOT contain a claim that
-the *package* lacks test patterns — it may say the surface does not serve them, or say nothing. The two fixtures
+the *package* lacks test patterns. Bounded so a checker can decide it: a claim is any sentence whose subject is the
+package or one of its surfaces and whose predicate asserts absence — "greet ships no test patterns", "there are no
+examples for this". A statement about the *surface* ("this server does not serve test patterns") is not such a claim
+and is the correct thing to say — it may say the surface does not serve them, or say nothing. The two fixtures
 differ only in the surface's advertisement, so the difference in output is the whole measurement. Every **(S)** step is
 answerable by one of the eight
 operations in the
@@ -308,6 +311,11 @@ need it.
    operation is involved or needed: the vehicle is the calling project's own source, which the consumer necessarily
    has because it is the thing being migrated, read with whatever mechanism the consumer already uses to read the
    code it edits.
+
+   The `surface` value driving that search is **publisher-authored**, so the pointer rule (§4) applies to it as a
+   search key: a consumer MUST treat it as a literal identifier, never compiling it as a regular expression, glob or
+   query fragment, and MUST NOT let it select files outside the consumer's own project. A migration record naming a
+   surface of `.*` should match one symbol or none, not every line in the codebase being migrated.
 3. **(S)** `list`, then `resolve` — confirm each `replacement` surface exists in the **installed** package before
    emitting a call to it (§3.2). Two operations, because a `replacement` is a **purl** and `resolve` takes an
    **import name**, and nothing converts one to the other by string manipulation: a purl names a distribution, an
@@ -362,17 +370,25 @@ need it.
   ([Lifecycle and Security Metadata §9.3](../python/lifecycle-security-metadata.md)). A `replacement` purl is
   publisher-authored and may point into a namespace the publisher does not control; a compromised release can redirect
   dependents onto an attacker-held successor. The consumer surfaces the claim for a human decision and MUST flag a
-  replacement whose purl namespace differs from the deprecated package's. **Namespace** here is the purl `type` and
-  `namespace` components together, compared after the normalization the purl specification defines **for that
-  type** — for `pkg:pypi` that is [PEP 503](https://peps.python.org/pep-0503/) normalization (lowercase, runs of
-  `-`, `_` and `.` collapsed to a single `-`), so `Acme_SDK` and `acme-sdk` are one namespace and not two. Comparing
-  raw bytes would make an ordinary spelling difference look like a supply-chain redirect, which is the false
-  positive most likely to make an implementer disable the check entirely — for `pkg:pypi/acme-sdk@2.0` that is
-  `pkg:pypi/` with an empty namespace, and for `pkg:npm/@acme/sdk@2.0` it is `pkg:npm/@acme`. The package *name*
-  is deliberately not part of the comparison: a maintainer renaming their own package within one namespace is the
-  ordinary case this rule must not fire on, while a replacement crossing to a different type or namespace has left
-  the original maintainer's control, which is the signal ([Lifecycle and Security Metadata
-  §9.3](../python/lifecycle-security-metadata.md)).
+  replacement whose purl namespace differs from the deprecated package's. **Namespace** is the purl `type` and
+  `namespace`
+  components, normalized as the purl specification defines for that type. Where the type *has* a namespace, that
+  comparison is the strong signal and is unambiguous: `pkg:npm/@acme/sdk` to `pkg:npm/@evil/sdk` has left the
+  original maintainer's control.
+
+  **PyPI has no namespace component**, so for `pkg:pypi` this comparison is always equal and detects nothing on its
+  own. The documented attack ([Lifecycle and Security Metadata §9.3](../python/lifecycle-security-metadata.md)) is
+  `pkg:pypi/greet-adversarial` redirecting to `pkg:pypi/attacker-successor` — same type, both namespaces empty. A
+  namespace rule stated without this would read as rigorous while failing silently on the ecosystem this standard
+  addresses first.
+
+  Where the type has no namespace the comparison falls back to the **package name**, normalized per
+  [PEP 503](https://peps.python.org/pep-0503/) for `pkg:pypi` (lowercase; runs of `-`, `_` and `.` collapsed to a
+  single `-`), so `Acme_SDK` and `acme-sdk` are one package rather than a redirect. A replacement naming a
+  *different* package is then flagged — which catches the attack, and also catches a legitimate rename, because in a
+  namespace-less ecosystem **the metadata does not distinguish them**. That is the honest position rather than a
+  defect: the consumer flags, a human confirms, and `MIRI-CONSUMER-032`'s first clause already forbids auto-migrating
+  without that confirmation. Suppressing the flag to avoid the false alarm would suppress the attack signal with it.
 
 *Heuristic:* an upgrade plan reads as "affected at N sites," not as a changelog paraphrase. The migration guide names
 what *could* change; only the consumer's own usage says what *will*.
@@ -411,7 +427,10 @@ what *could* change; only the consumer's own usage says what *will*.
 - Present a cause drawn from the metadata as a **confirmed** diagnosis. The observable rule is about attribution, not
   about the consumer's internal certainty: a cause read from a package's own `antipatterns` or troubleshooting
   document MUST be reported as what the package's author says, attributed to the document it came from, unless the
-  consumer has itself reproduced the failure — and where it has, it says what it did to reproduce. A suite checks the
+  consumer has itself reproduced the failure — and where it has, **it says what it did to reproduce**, which is what
+  makes the exception checkable: the escape is available only to a consumer whose output contains the reproduction
+  steps. A consumer that claims verification without showing it has not taken the exception, it has skipped the
+  attribution. A suite checks the
   attribution, which is in the output; it cannot check whether the consumer "verified", which is not.
 
 *Heuristic:* exhaust the embedded troubleshooting doc before a web search — the answer is more likely offline, version-
@@ -556,8 +575,11 @@ generator's code — the "an author who builds strictly to the documents writes 
 - **Publisher-authored code is read, never run.** `usage-patterns.json` carries `code`, `wrong_code` and
   `right_code`; `test-patterns.json` carries `code`, `setup` and `teardown`. These are **illustrations of how to call
   a package, not programs the consumer executes**. A consumer MUST NOT execute, `eval`, import, or pass to a
-  subprocess any `code`-bearing field from a served document. It may show the text, quote it, or use it as a model
-  for code it writes and the caller reviews — the distinction is that reviewed code entered the world through the
+  subprocess any `code`-bearing field from a served document, **and MUST NOT place one into the prompt or input of a
+  subordinate agent, tool or model except as explicitly quoted and attributed data**. The second half matters as much
+  as the first: an agent handed a package's `code` field as though it were instruction has been instructed by the
+  package, and no subprocess was involved. It may show the text, quote it, or use it as a model for code it writes
+  and the caller reviews — the distinction is that reviewed code entered the world through the
   consumer's normal output path, where a human or a policy can see it, while executed code did not. The one
   execution this map permits is a **test pattern run under §3.6's opt-in gate**, which is exactly why that gate
   exists; every other `code` field is inert text. This is the same rule as "a pointer is not a permission", applied

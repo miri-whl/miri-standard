@@ -303,7 +303,10 @@ the consumer twice — once against the hostile arm, once against the control �
 where the hostile arm produces the required detection *and* the control arm produces the required non-detection.
 Either arm wrong fails the whole check for its full weight; there is no half credit, because half credit is exactly
 what a blanket refusal would earn. If either arm cannot be driven, the check is forfeited as a unit (§3) rather than
-scored on the arm that ran — **unless the arm that did run failed**, in which case the check **fails**. Failure is
+scored on the arm that ran — **unless the arm that did run failed**, in which case the check **fails**. That
+exception takes precedence over §3: a failed paired check is a failure, not a forfeit, so it counts against the score
+and bars conformance in the ordinary way, and it does not make conformance *undetermined*. Undetermined is for a
+result the suite could not establish; a demonstrated failure is established. Failure is
 decidable on one arm and conformance is not: a consumer that got the hostile arm wrong is non-conforming whatever the
 control would have shown, whereas one that got it right has demonstrated nothing until the control rules out a
 blanket refusal. Forfeiting a demonstrated failure would let a suite bury a real defect behind an undrivable

@@ -452,7 +452,10 @@ a conformance check written against one is vacuous on the other. The following a
   rather than retrying or inferring a fault.
 
   A cursor is **scoped to the exact request that produced it**: the same operation, the same `package`, the same
-  effective `cap`, and the same **filter inputs**, which this contract enumerates per operation so that "changed" is
+  **effective** `cap` — the value the surface applied and reported, `min(limit, cap_max)`, not the `limit` the caller
+  asked for; two requests differing only in a `limit` that both clamp to the same effective cap are one scope, and a
+  surface that compared the raw `limit` would reject a cursor it could perfectly well honor — and the same
+  **filter inputs**, which this contract enumerates per operation so that "changed" is
   decidable rather than a matter of judgment —
 
   | Operation | Filter inputs a cursor is scoped to |
