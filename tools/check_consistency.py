@@ -153,6 +153,29 @@ def check_check_refs(name, text):
             bad(name, f"names {m.group(0)}, which has no definition file")
 
 
+def check_check_urls():
+    """Every check advertises its own published page. That URL is derivable from the id and target,
+    so it is asserted rather than trusted.
+
+    All 33 consumption checks shipped with a pattern that 404s — checks/miri-surface-033/ rather
+    than checks/surface/MIRI-SURFACE-033.html — copied from a sibling rather than from the
+    generator's actual output. Linter reports link findings to these URLs, so every consumption
+    finding pointed at a missing page, and nothing in the repo would ever have noticed."""
+    import yaml
+    tdir = {"python-wheel": "python", "cli": "cli", "consumer": "consumer", "surface": "surface"}
+    for f in sorted(REPO.glob("standards/*/checks/*.yaml")):
+        d = yaml.safe_load(f.read_text())
+        if d.get("status") != "active":
+            continue
+        want_html = f"https://miri-whl.github.io/checks/{tdir[d['target']]}/{d['id']}.html"
+        if d["urls"]["html"] != want_html:
+            bad(f.name, f"urls.html is {d['urls']['html']!r}, generator publishes {want_html!r}")
+        want_def = ("https://github.com/miri-whl/miri-standard/blob/main/"
+                    f"{f.relative_to(REPO)}")
+        if d["urls"]["definition"] != want_def:
+            bad(f.name, f"urls.definition is {d['urls']['definition']!r}, file is at {want_def!r}")
+
+
 def main():
     for p in SPECS:
         text = p.read_text()
@@ -164,6 +187,7 @@ def main():
         check_tables(name, text)
         check_stray_markers(name, text)
         check_check_refs(name, text)
+    check_check_urls()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")

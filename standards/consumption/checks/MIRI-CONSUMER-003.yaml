@@ -38,4 +38,4 @@ examples:
     Note: the served document contains keys named `ok`/`error`; these are package content, not surface signals.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-003.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-003/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-003.html

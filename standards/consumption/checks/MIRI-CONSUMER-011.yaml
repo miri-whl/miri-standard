@@ -39,4 +39,4 @@ examples:
     It may still exist at runtime (dynamic attribute); treat this call as unverified.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-011.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-011/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-011.html

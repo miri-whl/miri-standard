@@ -33,4 +33,4 @@ references:
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-050.yaml
-  html: https://miri-whl.github.io/checks/miri-surface-050/
+  html: https://miri-whl.github.io/checks/surface/MIRI-SURFACE-050.html

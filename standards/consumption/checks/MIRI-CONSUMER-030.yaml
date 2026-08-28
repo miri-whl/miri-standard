@@ -41,4 +41,4 @@ examples:
     This is NOT a clean bill of health — the question is unanswered.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-030.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-030/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-030.html

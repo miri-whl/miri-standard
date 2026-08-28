@@ -44,4 +44,4 @@ examples:
     installed source. I have not emitted a call to it.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-010.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-010/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-010.html

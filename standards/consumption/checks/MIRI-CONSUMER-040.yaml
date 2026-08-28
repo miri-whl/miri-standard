@@ -38,4 +38,4 @@ examples:
     \ hides that the language is fixed."
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-040.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-040/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-040.html

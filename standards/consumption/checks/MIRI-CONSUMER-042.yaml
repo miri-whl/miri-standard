@@ -33,4 +33,4 @@ examples:
   compliant: 'api-index(package="pandas", query="read_csv")   # routing view, capped'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-042.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-042/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-042.html
