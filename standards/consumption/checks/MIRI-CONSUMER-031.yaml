@@ -46,4 +46,4 @@ examples:
     Blocked by the SSRF guard; not fetched.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-031.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-031/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-031.html

@@ -40,4 +40,4 @@ examples:
     Reporting the pointer as malformed; not opening it.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-021.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-021/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-021.html

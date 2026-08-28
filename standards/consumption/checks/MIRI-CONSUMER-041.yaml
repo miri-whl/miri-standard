@@ -33,4 +33,4 @@ examples:
     not the package''s, and nothing guarantees it matches real behavior.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-041.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-041/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-041.html

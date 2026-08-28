@@ -48,4 +48,4 @@ references:
   type: spec
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-002.yaml
-  html: https://miri-whl.github.io/checks/miri-surface-002/
+  html: https://miri-whl.github.io/checks/surface/MIRI-SURFACE-002.html

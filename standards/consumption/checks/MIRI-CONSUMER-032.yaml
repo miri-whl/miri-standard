@@ -45,4 +45,4 @@ examples:
     I have not installed it or rewritten any call sites.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-032.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-032/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-032.html

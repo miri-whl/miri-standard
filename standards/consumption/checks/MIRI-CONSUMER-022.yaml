@@ -36,4 +36,4 @@ examples:
     claim; I have not independently confirmed it.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-022.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-022/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-022.html

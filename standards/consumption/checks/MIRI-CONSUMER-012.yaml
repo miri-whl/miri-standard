@@ -48,4 +48,4 @@ examples:
     absence from this list is not evidence.'
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-012.yaml
-  html: https://miri-whl.github.io/checks/miri-consumer-012/
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-012.html
