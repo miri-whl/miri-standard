@@ -1,0 +1,382 @@
+# v0.3 Panel Round 2 — complete backlog
+
+**Source:** the journey panel, 2026-08-22 (6 reviewers + chair). Report:
+`.generated/miri-v0.3-journey-review-2026-08-22-*.pdf`. Verdict: the end-to-end journey does not work; it breaks on
+turn one. Of the maintainer's 8 wants: 2 delivered, 4 partial, 2 not delivered.
+
+**This file captures every ask.** Nothing is dropped silently — items we decline get an explicit _Declined:_ note with
+a reason, so the decision is recorded rather than lost.
+
+Legend: `[ ]` open · `[x]` done · `[~]` partially done · `[-]` declined/deferred with reason.
+
+---
+
+## A. Blocks Pillar 3 (must fix before any check is numbered)
+
+- [x] **A1. Both opening steps of the flagship first-use read-order are unservable.** _(CRITICAL, 5 of 6 reviewers)_
+  **FIXED 2026-08-22** together with A4 and A10 — they were one knot. `README.md` dropped from the servable set;
+  step 1 is now `list`, whose inventory is surface-composed from the directory listing. `AGENT_EXAMPLES.json`
+  relabelled **(F)** with its `.dist-info/` location stated; `usage-patterns.json` is the served path to working
+  code. Verified mechanically: **0 unresolvable (S) steps** across the whole Map.
+  _Original finding:_
+  `agent-metadata/README.md` is defined by no producer spec (verified: hits only in the two consumption docs), has no
+  schema, no check, and appears in no sample or fixture. `AGENT_EXAMPLES.json` is a `.dist-info/` file, so the §3.2
+  whitelist row's own right-hand cell ("any path outside `agent-metadata/`") bans it, and `list.documents` can never
+  advertise it — while §3.2 makes membership in `list.documents` a MUST for `name`. `miri-implementation-guide.md:750`
+  writes it to a _third_ path. **Pick one resolution and apply it everywhere.**
+- [x] **A2. The "conforming twin" fixture does not conform.** _(CRITICAL, 4 of 6 — our own bug, verified)_
+  **FIXED 2026-08-22.** Root cause was the validator, not just the data: it had exactly two `jsonschema.validate`
+  calls, both on `lifecycle.json`. Now loop-validates every document in `metadata/miri/` against its mapped schema,
+  and fails loudly on a document with no schema mapping (so a new document cannot be added unvalidated). Fixing the
+  data surfaced four further real errors that had all been passing silently — `api_component.key_methods` must be
+  objects not strings, `version` must match `^\d+\.\d+$`, `categories` is an object not an array, and pattern IDs
+  must be snake_case. All 3 documents now validate; 12/12 invariants hold. The false claim in
+  `stage-v0.3/README.md` has been corrected in place rather than deleted.
+- [x] **A3. The anti-hallucination MUST cannot be discharged by any operation.** **FIXED 2026-08-23.** Added a sixth
+  operation, `resolve {package, symbol}` (§3.6), which settles existence from the installed package's **source** —
+  `ast.parse`, never an import, so §5's import-free property is preserved (verified against the fixture: resolves
+  `Greeter`, `Greeter.greet`, `greet`; correctly rejects both phantoms). §3.6.1 makes the evidence asymmetry
+  normative: `found: true` is strong, `found: false`/`not-in-source` means _not defined statically_ and NOT _does not
+  exist_ (dynamic surfaces are invisible to static parsing), and `module-unreadable` means nothing is known. The Map's
+  must-nots are rekeyed accordingly — a consumer may not present an unconfirmed call as verified, and may not refuse
+  one solely because `resolve` returned `not-in-source`. The undefined `(F/X)` label is gone: the vehicle set is now
+  closed at four, with **(C)** added for the consumer's own workspace, which is what `(F/X)` was conflating. **A
+  server-only consumer can now complete every task in §3.** _Original finding:_ _(CRITICAL)_ The operation set is
+  explicitly closed ("and no others"), every existence path ends in `(F/X)` introspection, and **`(F/X)` is not one of
+  the three labels §1.1 defines** — so "a consumer MUST skip a step whose vehicle is unavailable" is unresolvable for
+  exactly the steps that settle existence. Add `resolve` (see B2) or state plainly that (S)-only consumers cannot
+  complete §3.2/§3.3. Add the confinement obligation: a consumer without a confined execution environment reports the
+  symbol unverified rather than importing an unvetted package.
+- [x] **A4. `agent-metadata/README.md` reopens the injection channel that refusing `prompt-templates.md` closed.**
+  **FIXED 2026-08-22.** Dropped from the servable set, and the general criterion the panel asked for is now normative:
+  **only schema-governed documents are servable; no free-form natural-language document ever is.** So future document
+  types are adjudicated by principle. The element audit row is marked **reserved** rather than deleted.
+  _Original finding:_
+  _(CRITICAL)_ The refused file has a specified structure and a linter check (MIRI-PY-039); the newly-servable one is
+  unconstrained author-authored Markdown with no schema, no check, no producer clause — and it is Map §3.1 **step 1**.
+  A hostile publisher moves its payload there verbatim. Drop it from the whitelist, or require the surface to
+  **compose** the inventory itself from the directory listing so the bytes are surface-owned. Add the general
+  criterion the whitelist lacks: **no free-form natural-language document is servable**, so future document types are
+  adjudicated by principle rather than by whether someone remembered to list them.
+- [~] **A5. Map §3.3 (upgrading) has zero fixture coverage.** _Spec half done 2026-08-22:_ the §9.3
+  replacement-redirect attack now has normative consumer-side text — Map §3.3 gains a MUST NOT against automatically
+  installing or migrating onto a declared `replacement`, plus a MUST to flag a replacement whose purl namespace
+  differs from the deprecated package's. That was the missing normative hook C10 flagged. _Fixture half still open._
+  _Original finding (CRITICAL):_ No `migration-guide.json` in any variant, so
+  an entire normative task, its two MUST-NOTs, the `migration-guide` operation, and the producer standard's
+  highest-severity attack (§9.3 replacement redirect) are unexercisable. **A reference consumer that silently
+  auto-migrates onto an attacker-declared `replacement` purl passes the current fixture set clean.**
+- [x] **A6. **FIXED 2026-08-23.** `examples/fixtures/consuming-project/` ships five paired `pyproject.toml` files —
+  one conforming, four hostile (`command`/`args`, `env`, an unknown key, an out-of-enumeration `server`). The README
+  states the distinction the check turns on: **rejecting is not ignoring** — a generator that strips the hostile key
+  and proceeds has normalised an attack into an acceptable form. _Original finding:_ `[tool.miri.consume]` has no
+  fixture at all.** _(CRITICAL)_ The only arbitrary-execution trust boundary in
+  the contract. `build_fixtures.py`'s pyproject template emits no `[tool.miri]` table, so the closed grammar, the
+  MUST-reject-unknown-key rule, no-auto-launch, and dependency-cannot-influence-harness are all untested.
+- [x] **A7. `document` is uncapped and unfilterable** **FIXED 2026-08-23.** New §3.2.3 Size Bound: a surface MUST
+  declare `max_bytes` for `document`, report it, and set `truncated: true` rather than returning the excess; a
+  truncated document MUST NOT be presented as complete and MUST NOT be parsed as well-formed JSON. §2's "pointers, not
+  dumps" principle now states the scaling regime honestly — the saving is a function of the source-to-metadata size
+  ratio, largest on big packages and occasionally negative on tiny ones — and forbids asserting a saving that has not
+  been measured. _Original finding:_ inside a contract whose stated principle is "pointers, not
+  dumps". _(HIGH, 4 of 6)_ §4.1 scopes `truncated`/`cap` to `list` and `api-index` only; the only counterweight is a
+  Map SHOULD-not graded "wasteful, not wrong". One `document("sdk-manifest.json")` on a pandas-scale library returns
+  hundreds of KB in a single conformant result — a larger dump than selectively reading the wheel.
+- [x] **A8. The producer chain never defines `signature` **FIXED 2026-08-23.** `sdk-manifest-v1.json`'s
+  `api_component` now defines `signature` (an AST fact, optional, with the consumer-side rule that its presence MUST
+  NOT be assumed). Backward compatible — sample and fixture still validate. _Remaining:_ generator emission of
+  `signature`/`file` is miri-py's side. _Original finding:_ and does not emit `file`.** _(HIGH)_ `api_component`
+  properties are `[common_errors, complexity, example, file, init_params, key_methods, purpose, related_classes,
+  type, usage_patterns]` — **`signature` is absent from the schema entirely** — and the sample SDK's entries carry
+  neither. Every entry degrades to `{type, purpose}` on the flagship artifact, so the routing view's reason for
+  existing over `document` evaporates. Generation Invariant §5.4 already calls `api_index` "a name→file→signature
+  map", so the invariant and the schema disagree.
+- [x] **A9. `api-graph.json` cannot express a method as a node.** **FIXED 2026-08-23.** Node keys now accept dotted
+  qualified names, so the graph joins the same key space `api_index` uses; `graph_node` gains source-evidenced `file`
+  and `module` so the graph can state which files a change spans. Decisive evidence: `graph_node.type` already
+  enumerated `"method"` while the key pattern could not name one. Verified backward compatible AND load-bearing — the
+  old schema rejected `Greeter.greet`, the new one accepts it. _Original finding:_ _(HIGH)_ Node keys are
+  `^[A-Za-z_][A-Za-z0-9_]*$` + `additionalProperties: false`, so `Greeter.greet` is structurally rejected — while
+  `api_index` keys on exactly that (permitted because `api_index` constrains nothing). **The two key spaces cannot be
+  joined.** `graph_node` is `required: ["type"]` with no `file`/`module`, so the graph cannot say which files a change
+  spans — the exact "blast radius / multi-file" role §5's audit row assigns it. Either align the key spaces and add
+  source-evidenced `file`/`module`, or cut the audit row back to "type and exception hierarchy" and delete the
+  blast-radius claim.
+- [x] **A10. The whitelist guards name strings, not resolved paths.** _(HIGH)_
+  **FIXED 2026-08-22.** New §3.2.2 makes `name` a single path segment (`^[A-Za-z0-9_.-]+$`, no `/`, `\`, or `..`,
+  never normalized) and requires confinement on the **resolved** path: resolve, `realpath`, require a regular file
+  physically inside `agent-metadata/`, reject symlinks outright. States explicitly that name-string filtering alone
+  MUST NOT be relied on, and why editable installs make the symlink shape live. _(B8 is the same item.)_
+  _Original finding:_ Only containment is a blacklist of
+  string shapes. A whitelisted `agent-metadata/usage-patterns.json` shipped as a **symlink to `~/.ssh/id_rsa`**
+  contains no `..`, has no absolute prefix, is advertised by `list`, and is served verbatim. Editable/source-tree
+  installs preserve symlinks — the exact shape the fixtures use.
+- [x] **A11. **FIXED 2026-08-23.** `metadata/malformed/` ships three documents failing three different ways:
+  `lifecycle.json` truncated mid-object (does not parse), `sdk-manifest.json` with a string where `api_index` must be
+  an object (parses, schema-invalid), `usage-patterns.json` missing required pattern fields. The split matters —
+  §3.2.1 now requires schema validation before serving, so `METADATA_UNREADABLE` covers both. _Original finding:_ The
+  fixture trio varies metadata content but never well-formedness.** _(HIGH)_ Every document parses, so
+  of the three-way served/absent/failed discrimination, only two thirds are testable. §4.2 calls the absent-vs-failed
+  split "the single most consequential clause" and notes the reference implementation currently gets it wrong — so the
+  fixture set **cannot detect the very regression the spec names as the first implementation task**.
+- [x] **A12. **FIXED 2026-08-23.** `src/_hostile_import/` writes a sentinel at import time then raises. Demonstrated
+  end to end: sentinel absent before, `ImportError` raised, sentinel present after. A surface that resolves by
+  importing rather than reading leaves it behind. Lives outside the byte-identical trio — a side effect on import is
+  not expressible in shared source. _Original finding:_ Import-free discovery is declared load-bearing and is
+  structurally untestable.** _(HIGH)_ The
+  byte-comparison that makes the trio honest also prevents the adversarial variant carrying an import side effect, so
+  a surface regressed to `importlib.import_module` passes every current fixture. Needs a canary package _outside_ the
+  trio.
+- [x] **A13. The envelope's reserved-field table is not exhaustive **FIXED 2026-08-23.** The table is now declared
+  **exhaustive** (the un-forgeability argument depends on a closed key set) and gains `name`, `reason`, `next_cursor`,
+  with `package`/`purl` split into separate rows. New §4.2.1 defines `api-index` absence and forbids signalling it
+  with an empty `entries` object, while noting the one case where empty `entries` is correct (a `query` matching
+  nothing). B7 fixed alongside — see below. _Original finding:_, and one field in it is publisher-forgeable.**
+  _(HIGH)_ (a) §4.1 omits `name` and `reason`, both of which appear in normative examples and carry normative force
+  ("MUST branch on `ok` and `present`, never on `reason`") — an anti-forgery argument resting on the surface owning a
+  known key set needs that set stated exhaustively. (b) `purl` is the residual publisher path into that namespace
+  (see B7). Also: `api-index` has **no defined absent case**, and signalling absence with an empty `entries` object
+  would be read as "no symbols exist" — the inference §3.5 forbids.
+- [x] **A14. `api-index`'s cap is unspecified in value, ordering and pagination.** **FIXED 2026-08-23.** New §3.5.1
+  pins all four: default `cap` 25 with an optional caller `limit`; stable lexicographic ordering; `query` matches the
+  entry name **only**; `next_cursor`/`cursor` continuation, with `truncated: true` mandatory even where a surface
+  cannot continue. Also forbids inferring surface size from `cap`, entry count, or `truncated: false` after a filter.
+  _Original finding:_ _(HIGH)_ §3.1's example shows 100,
+  §3.5's shows 25 — both conformant. `query`'s matched fields are never stated; ordering and truncation determinism
+  are unspecified; "SHOULD narrow rather than paginate" leaves no cursor. **A conformant surface at cap 50 makes the
+  A4 padding attack vacuous and its future check permanently green while testing nothing.**
+
+## B. Missing capabilities (the standard lacks these entirely)
+
+- [x] **B1. A testing element.** **DONE 2026-08-22** — decided: a first-class `test-patterns.json` element.
+  Shipped: `schemas/test-patterns-v1.json` (patterns keyed `{id, name, kind: unit|integration, surface, setup, code,
+  assertion, teardown, requires_network, requires_credentials, source_file}` plus `supported_test_doubles` and
+  `test_framework`); Consumption Map **§3.6 "Writing tests against a dependency"** with three read-steps and three
+  prohibitions (MUST NOT present a synthesized mock as a supported double; MUST NOT run a network/credential pattern
+  without opt-in or fabricate credentials; MUST NOT read absence as "the package is untested"); added to the §3.2.1
+  servable set; element-audit row added; a validating `test-patterns.json` shipped in the miri fixture and wired into
+  the validator. **The audit rule is now bidirectional** — the original element→task direction is what let this gap
+  hide, since a capability that was never defined cannot fail an elements-only audit.
+  _Remaining downstream:_ a MIRI-PY check gating it, and miri-py generation (handoff item).
+  _Superseded:_ _(HEADLINE — 4 of 6 reviewers independently)_ Maintainer want #5 is served by zero
+  documents, operations, read-steps and schemas. Proposal: `test-patterns.json` with per-surface
+  `{surface, kind: unit|integration, setup, fake_or_mock, assertion, teardown, requires_network}`, generated from the
+  package's own test suite the way `usage-patterns` is generated from examples; add to the §3.2 whitelist; add Map
+  §3.6 "Writing tests against a dependency" with read-order and prohibitions (MUST NOT present a synthesized mock as
+  the package's supported test double; MUST report absence rather than inventing a fixture).
+  **Also: make the §5 audit rule bidirectional** — it currently checks elements→tasks only, so a capability that was
+  never defined passes silently. That rule flaw is why this went unnoticed.
+- [x] **B2. A symbol-existence operation** **DONE 2026-08-23 — same item as A3.** Shipped as `resolve`. _Original
+  ask:_ — `resolve {package, symbol}`. The ground truth only the surface can
+  provide, and the discharge path for A3.
+- [x] **B3. A pre-install / target-version scope.** **DECIDED 2026-08-22 — declared OUT OF SCOPE for 0.3.**
+  Taking it on would mean reading artifacts from a registry, turning publisher-controlled input into server-side
+  network requests — which contradicts the surface fetching nothing (§9.2) and executing nothing (§5), and needs its
+  own threat model. Instead: new **§6.2.1 "Installed Scope Only"** states both unanswerable questions explicitly in a
+  table, and forbids any normative read-order depending on a pre-install or target-version answer. Map §3.3 step 1 is
+  reworded to say `migration-guide` reports the transition _into_ the installed version, and step 3 now verifies the
+  replacement against the **installed** surface, reporting it pending rather than confirmed when it is not installed.
+  Deferred to 0.4. _Original ask:_ Wants #1 and #4. Either a `describe {purl}` variant that reads
+  from the declared registry without installing (with its own SSRF and no-execution rules), **or** an explicit
+  out-of-scope statement in §1/§6.2 plus a fix to Map §3.3 step 3 so no read-step depends on an unanswerable
+  operation.
+- [x] **B4. Filtered access to the big documents.** **DONE 2026-08-23.** Added two derived-view operations: `patterns`
+  (§3.7 — filter `usage-patterns.json` by `category`/`complexity`/`query`, default cap 10) and `graph` (§3.8 — the
+  neighborhood of one symbol in `api-graph.json`, with `depth`/`direction`, default cap 50). Measurement corrected an
+  assumption: `api-graph.json` is only 1.7 KB on the sample while `usage-patterns.json` is the largest document at 14
+  KB — so the filtering need was the reverse of expected, and both earn an operation on scale. §3 now frames the eight
+  operations as three kinds — retrieval, derived views, determination — with a rule for when a new one is justified,
+  so the set cannot grow arbitrarily. `query` deliberately does NOT match `code`, so it cannot be used to grep source
+  by proxy. _Original ask:_ A `usage-patterns` operation (filter by `query`/`category`/
+  `complexity`, capped) and a symbol-scoped `api-graph {package, symbol, depth, direction}` returning a neighbourhood
+  rather than the whole graph. Both carrying `truncated`/`cap`.
+- [x] **B5. An anti-patterns field.** **DONE 2026-08-23.** `usage_pattern.antipatterns` added to
+  `usage-patterns-v1.json`: `{name, wrong_code, right_code, why, severity}` where severity is
+  `correctness|security|performance|style`. Author-declared, never inferred. Backward compatible — sample and fixture
+  still validate. The fixture now ships two real antipatterns, one `correctness` and one `performance`. _Original
+  ask:_ The guidance an author most wants to convey — "never construct this
+  per-request", "not thread-safe", "do not retry this error class" — has **no field anywhere**. Proposal:
+  `antipatterns: [{name, wrong_code, right_code, why}]` in `usage-patterns-v1.json`.
+- [x] **B6. Routed, gated best-practice fields.** **DONE 2026-08-23.** The fields are no longer optional-and-unread:
+  Map §3.1 and §3.2 now direct a consumer to read each returned pattern **whole** —
+  `explanation.key_points`/`security_note`/`performance_note` plus `antipatterns` — §3.4 routes to `antipatterns` for
+  diagnosis, and §3.7 forbids a surface stripping those fields to save space (the filter selects which patterns, never
+  which parts of one). A new MUST NOT makes the negative half enforceable: a consumer may not emit code a
+  `correctness`/`security` antipattern describes as wrong without surfacing the author's warning. Element-audit row
+  updated to name both halves. _Original ask:_ `explanation.key_points`/`security_note`/`performance_note` exist but
+  no read-step names them, no audit row mentions them, no check gates them — a fully conforming package can ship zero
+  best-practice content.
+- [x] **B7. A surface-derived `purl`.** **FIXED 2026-08-23.** New §4.1.1: `purl` MUST be derived from the installed
+  distribution's recorded name and version, never read from `identity.purl` or any served document; where they
+  disagree the surface serves the derived value and SHOULD signal the mismatch as a tampering indicator. Presence is
+  split by error code — required wherever identity resolved (including `DOCUMENT_NOT_SERVABLE`/`METADATA_UNREADABLE`),
+  omitted where it did not. _Original finding:_ §4 argues the envelope is unforgeable because "a publisher cannot
+  write to the
+  top level", yet §4.1 puts `purl` there, §9.1 makes it the input to a per-namespace trust policy, and "resolved" is
+  nowhere defined — the only purl the standard specifies is publisher-authored. **A package declaring
+  `pkg:pypi/requests@2.31.0` inherits requests' trust tier.** Fix: MUST be derived by the surface from the installed
+  distribution's own name+version, never read from a publisher document; where `identity.purl` disagrees, serve the
+  derived value and optionally flag the mismatch. Split the §4.1 row so `purl` is REQUIRED where identity resolved and
+  MUST be omitted where it did not.
+- [x] **B8. Path confinement** **Closed 2026-08-23 — duplicate of A10**, fixed there (§3.2.2: single-segment name
+  grammar, realpath confinement, symlink rejection). _Original ask:_ (same as A10; recorded here as the capability:
+  exact-name allowlist + realpath check +
+  symlink rejection + a normative single-segment name grammar, which also dissolves the `agent-metadata/README.md`
+  spelling inconsistency).
+
+## C. Fixture gaps
+
+- [x] C1. **FIXED 2026-08-23.** A8 shipped: adversarial `lifecycle.json` now declares `status: deprecated` with
+  `replacement: pkg:pypi/attacker-successor@9.0.0` — a namespace the publisher does not own — and an adversarial
+  `migration-guide.json` rewrites every import onto it, with a **high-confidence `automated_fix`**, which is what
+  makes it dangerous: a consumer applying mechanical fixes performs the compromise itself. Both halves are
+  schema-valid. Includes a second, quieter record for a surface that does not exist, to catch changelog cargo-culting.
+  The `miri` twin ships a same-shape, same-namespace migration as a **paired control** — a consumer that refuses both
+  has disabled migration, not detected an attack. Unblocks MIRI-CONSUMER-032. _Original finding:_ No
+  `migration-guide.json` in any variant (see A5). Add **A8-attack**: adversarial `lifecycle.json` with
+  `status: deprecated` + foreign-namespace `replacement` purl; adversarial `migration-guide.json` renaming
+  `Greeter.greet` into that successor plus one record for a surface the consumer never calls; a same-publisher
+  conforming twin so the arms differ only in the redirect. Assert the namespace divergence in the validator.
+- [x] C2. **FIXED 2026-08-23** — same work as A6. _Original finding:_ No `[tool.miri.consume]` fixture (see A6). Add
+  `examples/fixtures/consuming-project/` with paired files:
+  conforming, hostile-command, hostile-unknown-key, hostile-server-value. Pass condition: the generator refuses and
+  emits no harness config. Add a dependency-side probe for the no-influence rule.
+- [x] C3. **FIXED 2026-08-23** — same work as A11. _Original finding:_ No malformed variant (see A11):
+  `lifecycle.json` truncated mid-object, `sdk-manifest.json` with a type-wrong
+  `api_index`, `usage-patterns.json` with a future `schema_version`. Assert `json.JSONDecodeError` in the validator so
+  a well-meaning reformat cannot silently repair it.
+- [x] C4. **FIXED 2026-08-23** — same work as A12. _Original finding:_ No import canary (see A12): a package _outside_
+  the byte-identical trio whose `__init__.py` writes a
+  sentinel and raises. Pass condition: a full `list` plus queries leave no sentinel.
+- [ ] C5. No multi-distribution cases: `AMBIGUOUS_PACKAGE` and the one-row-per-import-package rule are inexpressible
+  in a single-package trio.
+- [x] C6. **FIXED 2026-08-23.** `expected/requests.json` ships 10 request-side cases, each a request plus the envelope
+  a conformant surface MUST return: refused `prompt-templates.md` and `README.md`, traversal, absolute path, nested
+  escape, symlink escape, a servable name the package does not ship (absent, **not** an error — the §3.2.1
+  correction), a dotted `package` rejected before resolution, and both `METADATA_UNREADABLE` shapes. Every other
+  fixture varies what a package _ships_; these vary what a caller _asks_. _Original finding:_ **No request-side
+  attacks at all.** No hostile `name` argument is ever exercised, so
+  `DOCUMENT_NOT_SERVABLE` is never produced and the §3.2 whitelist — the newest and most security-sensitive surface —
+  has zero coverage. Needs a request-trace fixture (`prompt-templates.md`, `../../../../etc/passwd`, `/etc/passwd`,
+  `agent-metadata/../../core.py`, a name absent from `list.documents`) each paired with its expected envelope.
+- [x] C7. **FIXED 2026-08-23.** `metadata/symlinked/usage-patterns.json` is a symlink to a file outside the servable
+  set. The name is whitelisted and passes the grammar — only realpath resolution catches it, which is exactly why
+  §3.2.2 binds confinement to the resolved path. Survives the build (`copytree(symlinks=True)`), asserted by the
+  validator. _Original finding:_ No symlinked-document fixture, so the missing realpath confinement is invisible to
+  the validator.
+- [x] C8. **FIXED 2026-08-23.** The payload is relocated from `sdk-manifest.json`'s top-level `summary` — which no
+  api-index response carries — into an adversarial `usage-patterns.json`, across `description`,
+  `explanation.key_points`, `security_note` and an antipattern's `right_code`. Every one is a field the Map routes a
+  consumer to read whole, so a budget-conformant consumer can no longer pass by never seeing it. The antipattern
+  vector is the sharpest: MIRI-CONSUMER-040 tells consumers to surface `correctness` antipatterns, so the payload is
+  written as advice, exploiting a rule the standard itself added. The document is deliberately **schema-valid**,
+  complementing the schema-invalid `lifecycle.json`: conforming does not make a document safe. The validator's
+  liveness assertion moved with it. _Original finding:_ **A5 can be passed by accident.** Its primary injection
+  payload sits in `sdk-manifest.json`'s top-level
+  `summary`, which no `api-index` response carries and a budget-conformant consumer never sees — so a consumer passes
+  by being _efficient_, not by resisting injection. The residual reachable payload rides on a phantom symbol already
+  caught by A3. The two files the producer specs name as the real injection surfaces (`prompt-templates.md`,
+  `usage-patterns.json`) are absent from the adversarial variant entirely.
+- [x] C9. **FIXED 2026-08-23.** The cap moved out of `tools/validate_fixtures.py` into `expected/cap.json`, with the
+  contract default and reference recorded alongside. A suite driving a surface with a larger declared cap can now
+  detect that the padding no longer truncates and report **not-applicable** rather than a silent pass. _Original
+  finding:_ **A4 is calibrated against a cap no spec fixes** (see A14). Make the fixture self-calibrating
+  (`build_fixtures.py --api-index-cap N`, N+5 pads) and write the assumed cap into a machine-readable
+  `expected/api-index.json` the validator reads instead of a module constant.
+- [x] C10. **FIXED 2026-08-23** — Map §4 gains "a pointer is not a permission": before dereferencing any
+  publisher-authored path (`api_index.file`, graph `file`/`module`, `source_file`) a consumer MUST resolve it against
+  the package root, take the realpath, and confirm a regular file physically inside it — rejecting symlinks, absolute
+  paths and traversal. Mirrors the surface's §3.2.2 obligation for the consumer actor. _Original finding:_ **A7's
+  traversal half tests a rule that exists in neither consumption spec** — no clause forbids
+  dereferencing an `api_index` `file` pointer that escapes the package root, so no check can be written against it
+  without inventing normative text. The validator asserts only the SSRF half.
+- [x] C11. **FIXED 2026-08-23.** `metadata/spoofed/lifecycle.json` claims `identity.purl = pkg:pypi/requests@2.31.0`.
+  It is deliberately **schema-valid** — the annotation lives in a sibling `ATTACK.md` because an `_attack_note` key
+  would make it fail validation, and the point is that a conforming document can still lie about which package it is.
+  _Original finding:_ No identity-skew case: the adversarial `lifecycle.json` declares a truthful purl, so
+  surface-resolved vs
+  publisher-claimed purl (B7) is never forced. Version skew between metadata and installed code likewise uncovered.
+- [x] C14. **FIXED 2026-08-23.** A9 shipped: `src/_dynamic/` serves `Client.get_*` via `__getattr__`, so
+  `Client.get_weather()` genuinely returns a value while `ast.parse` cannot see it — verified both ways. Lives
+  **outside** the byte-identical trio by construction (its purpose is to differ in source), so `build_fixtures.py`
+  gained explicit outlier support that materializes it and exempts it from the byte-comparison. Paired control is
+  `Client.close`, statically defined: a consumer that reports everything unverified has stopped verifying rather than
+  become careful. The validator asserts the dynamic symbol stays invisible, the control stays visible, and
+  `__getattr__` remains — so a well-meaning tidy-up cannot silently make the check untestable. Unblocks
+  MIRI-CONSUMER-011. _Original finding:_ **No dynamic-surface fixture** — _found by us, 2026-08-23, not by the panel._
+  `MIRI-CONSUMER-011` requires
+  that a consumer never read `not-in-source` as proof a symbol does not exist, because static parsing cannot see a
+  surface built at runtime. Every fixture package defines its whole surface statically, so **the check is currently
+  untestable** and is one of the two holding the suite's ceiling at 85. Needs a package whose `__getattr__` serves an
+  attribute no `ast.parse` can find, with a golden asserting `resolve` returns `not-in-source` for a symbol that
+  nonetheless works at runtime.
+- [x] C12. **FIXED 2026-08-23.** `expected/` now holds a golden per attack (A1–A7), each stating the envelope a
+  conformant surface must return and the assertion a conformant consumer must satisfy, keyed to the `MIRI-CONSUMER`
+  checks it exercises. The validator closes the loop **both ways**: a golden may not cite a check that does not exist,
+  every profile check with a named attack case must have a golden, and every assertion regex must compile — an
+  assertion that silently never fires is worse than none. All three mutation-tested. _Original finding:_ **The fixture
+  set ships attack inputs with no expected outputs** — every pass condition is prose in a README
+  column. Add `examples/fixtures/expected/` golden envelopes; this is what turns A1/A2 from surface-behavior
+  assertions filed under consumer pass conditions into checkable properties.
+- [x] C13. The miri arm is unvalidated against its own schemas (see A2). **Closed by A2** — the validator now
+  loop-validates every document in `metadata/miri/` and fails on any with no schema mapping.
+
+## F. Scoring-model defects found by dogfooding
+
+- [x] **Deprecation Coherence awards 20 of 100 points for having never deprecated anything.** **FIXED 2026-08-23.**
+  The rule was not the `conditional` flag but what it meant: a conditional check scored its **full weight
+  automatically**, so labelling more checks conditional would have relabelled the defect rather than fixed it. The
+  scoring model in both producer checklists now reads _not-applicable is not a pass_ — such a check leaves **both**
+  numerator and denominator, and the score is a percentage of what was actually assessed. Nine checks that quantify
+  over deprecations and are unfireable when there are none were reclassified conditional
+  (MIRI-PY-028/029/031/032/035, MIRI-CLI-031/032/034/038). Fixing it also surfaced **eight pre-existing lockstep
+  breaks** — checks conditional in YAML but unannotated in the prose tables — now zero. 32/100 (PY) and 26/100 (CLI)
+  are conditional, which is the size of what was being auto-awarded. Recorded as a breaking change for miri-py; the
+  sample SDK's 75/Silver was computed on the old model and will move.
+  _Original finding:_ Found by scoring
+  arghos: it took 20/22 in that category purely by absence of opportunity, which lifted its total from a real 19 to
+  a reported 39. A scoring model that gives a fifth of the total for project youth measures age, not quality. Only
+  four of the eight checks are marked `conditional`; the rest pass vacuously without being marked as such. Options:
+  mark the vacuous ones conditional so they are reported as not-applicable rather than passed, or exclude
+  not-applicable weight from the denominator the way the consumption profiles now do for forfeits. The same question
+  applies to MIRI-PY.
+
+## E. Producer-side work the consumption suite created
+
+- [ ] **`test-patterns.json` needs a producer specification section and a gating check.** The consumption suite
+  defined the schema and made the document servable, but the servable set's own criterion requires a schema **and**
+  a linter check — and neither an Agent Metadata section nor a `MIRI-PY-NNN` exists. It is marked _provisional_ in
+  Discovery Contract §3.2.1 until both land. Needs: an Agent Metadata §4.7 (purpose, entry shape, `kind`,
+  `supported_test_doubles`, `requires_network`/`requires_credentials`, and the invariant that entries are extracted
+  from the package's own suite rather than inferred), a `MIRI-PY` check, and the weight redistribution that adding a
+  check to a 100-point target requires.
+- [ ] **`antipatterns` has the same gap, one level down.** `usage_pattern.antipatterns` was added to
+  `usage-patterns-v1.json` with a `severity` enum that no producer prose defines, while `MIRI-CONSUMER-040` grades
+  consumers on `correctness`/`security` entries. The enum needs a producer-side definition.
+
+## D. Regression status from round 1 (10 prior findings)
+
+| # | Finding | Status |
+|---|---|---|
+| 1 | Pillars do not compose | **PARTIAL** — `document` added, but two (S) steps still unservable and the whitelist self-contradicts (A1) |
+| 2 | `schema_version` unsatisfiable vs carry-intact | CLOSED |
+| 3 | Envelope forgeable | CLOSED (except `purl` — B7) |
+| 4 | Anti-hallucination on a capped index | **NOT ADJUDICATED** by the regression pass — re-verify independently |
+| 5 | CLI §2.6 reuse dropped `ok` | CLOSED |
+| 6 | `list` a bare array | CLOSED |
+| 7 | per-response `purl` provenance | **PARTIAL** — §4.3's error example omits `purl` (A13) |
+| 8 | api-index entry shape vs producer | **PARTIAL** — over-requiring fixed, but producer still defines no `signature` (A8) |
+| 9 | Identity axes conflated | CLOSED |
+| 10 | SSRF guarded wrong actor / dangling cites | CLOSED |
+
+## E. Do not churn (affirmed by every reviewer)
+
+The surface-owned envelope (wrapping not merging); the orthogonal `ok`/`present` split with `reason` explicitly not a
+machine field; the spec's candour about its own reference implementation (**keep that clause until `miri mcp`
+conforms**); the fixtures' anti-rot design (byte-comparison, liveness assertions, the inverse assertion that the
+adversarial document must _fail_ validation, the AST walk); the identity-axis separation and `AMBIGUOUS_PACKAGE`; the
+SSRF ownership split; `usage-patterns.json` as an element.
+
+**Strategic note:** lead the value case with `lifecycle.json` — 873 bytes replacing an unbounded search, facts an
+agent cannot derive from source — _not_ with the context-budget argument, which the measurements (~8.7% on the
+sample SDK) do not yet support.

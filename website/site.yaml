@@ -3,7 +3,7 @@
 # static/css/, markup comes from templates/).
 github: https://github.com/miri-whl/miri-standard
 site_url: https://miri-whl.github.io
-version: 0.2-draft
+version: 0.3-draft
 status_badge: Incubation
 
 targets:
@@ -17,6 +17,37 @@ targets:
     title: Command-line tools
     prefix: MIRI-CLI
     checklist: standards/cli/linter-checklist.md
+  consumer:
+    dir: standards/consumption/checks
+    match: consumer
+    title: Metadata consumers
+    prefix: MIRI-CONSUMER
+    checklist: standards/consumption/consumer-conformance.md
+  surface:
+    dir: standards/consumption/checks
+    match: surface
+    title: Metadata surfaces
+    prefix: MIRI-SURFACE
+    checklist: standards/consumption/surface-conformance.md
+
+# Specification documents rendered as site pages (source of truth stays the markdown).
+specs:
+  - source: standards/consumption/discovery-contract.md
+    title: Discovery Contract
+    status: 0.3-draft
+    lede: How a package's metadata reaches an agent at the moment it decides what to call.
+  - source: standards/consumption/consumption-map.md
+    title: Consumption Map
+    status: 0.3-draft
+    lede: What to read, per task, in what order — and what not to do with it.
+  - source: standards/consumption/consumer-conformance.md
+    title: Consumer Conformance
+    status: 0.3-draft
+    lede: What a conformant consumer is, and how it is verified by being driven rather than inspected.
+  - source: standards/consumption/surface-conformance.md
+    title: Surface Conformance
+    status: 0.3-draft
+    lede: What a conformant metadata-query surface is — the obligations a consumer cannot be held to.
 
 # Sidebar navigation. href is site-relative; external links are absolute; planned rows
 # are inert (the repo's rule: planned documents are listed as plain text, never linked).
@@ -24,6 +55,7 @@ nav:
   - label: Project
     items:
       - { label: Overview, href: index.html }
+      - { label: What's new in 0.3, href: whats-new.html }
       - { label: Origin story, href: origin.html }
   - label: Python
     items:
@@ -35,6 +67,15 @@ nav:
       - { label: Check definitions, href: checks/cli/index.html }
       - { label: "Linter checklist ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/cli/linter-checklist.md" }
       - { label: Introspection schema, planned: true }
+  - label: Consumption
+    items:
+      - { label: "Consumer checks", href: checks/consumer/index.html }
+      - { label: "Surface checks", href: checks/surface/index.html }
+      - { label: Discovery contract, href: discovery-contract.html }
+      - { label: Consumption map, href: consumption-map.html }
+      - { label: Consumer conformance, href: consumer-conformance.html }
+      - { label: Surface conformance, href: surface-conformance.html }
+      - { label: "Originating RFC (superseded) ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/proposals/20260821-consumption-specification.md" }
   - label: Go / Rust
     items:
       - { label: "Go scope sketch ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/go/README.md" }

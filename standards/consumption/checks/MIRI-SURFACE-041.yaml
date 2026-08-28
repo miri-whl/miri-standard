@@ -1,0 +1,37 @@
+# MIRI-SURFACE-041 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-041
+name: Emits one row per import package; errors rather than picking among ambiguous one
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Provenance and Identity
+weight: 5
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each ambiguous import name silently resolved to one distribution
+short_description: Emits one row per import package; errors rather than picking among ambiguous ones
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Emits one row per import
+  package; errors rather than picking among ambiguous ones.'
+examples:
+  violation: list() -> one row for a distribution providing two metadata-bearing packages
+  compliant: "{\"schema_version\": \"1\", \"ok\": false,\n \"error\": {\"code\": \"AMBIGUOUS_PACKAGE\", \"retryable\"\
+    : false}}"
+rationale: One distribution can ship several top-level import packages, and a namespace package can split one import
+  name across distributions. A surface that silently picks one answers confidently about a package the consumer
+  did not ask about, and the consumer has no way to detect the substitution.
+fires_when:
+- '`list` collapses several metadata-bearing import packages from one distribution into a single row'
+- An import name provided by more than one installed distribution is resolved to one without an error
+remediation:
+- Emit one `list` row per import package, each with its own purl
+- Return `AMBIGUOUS_PACKAGE` rather than choosing among candidates
+suggested_fix: Emit one `list` row per import package, each with its own purl
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-041.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-041/

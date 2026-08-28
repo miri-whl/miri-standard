@@ -4,20 +4,19 @@ _Last updated: 2026-08-21._
 
 ## Current focus
 
-Working the v0.2 backlog (`tasks/stage-v0.2/`) on the `stage-0.2` branch. **42 of 44 standard-side items are done**
-and committed; the site regenerates, all schemas and 83 checks validate, and both weight tables sum to 100. Highlights
-from the v0.2 pass: the honesty/committee/governance cleanup; the whole CLI-contradiction cluster; the Python check
-refinements; the §9 Security Considerations threat model; conformance profiles (Miri Core vs Full) with first-release
-Gold reachability; the CLI `--describe` schema (`cli-describe-v1.json`); manifest↔code verification folded into
-MIRI-PY-036; a buildable, Miri-conforming sample SDK; and de-referenced/added JSON Schemas.
+**v0.3 — the Consumption Standard**, on the `phase-0.3` branch. v0.2 is merged; the site and miri-py are caught up.
+v0.3 closes the producer→consumer loop the review rounds kept flagging: v0.1/v0.2 say what an artifact _ships_, v0.3
+says how an agent _consumes_ it. The maintainer considers this the final step for the core thesis — "the miri-py MCP
+implementing that, and teaching the agent how to use the package."
 
-Only two backlog items remain, both genuine **decisions** left for review:
+Plan lives in `tasks/stage-v0.3/README.md` (three pillars + guardrails, mapped from the RFC's five asks). **Pillar 1 —
+the Discovery Contract — is drafted:** `standards/consumption/discovery-contract.md`, grounded in the real `miri mcp`
+(four tools, import-free discovery, api-index cap 25), with the panel's wire discipline made normative (top-level
+`schema_version`, an absence-vs-error envelope, a surface version independent of the MCP protocol date, MCP as one
+binding). Suite indexed in `standards/README.md`; all three doc linters green.
 
-- **The stash / `standards/python` renames** — the "fix cross-links broken by the renames" item only applies if the
-  stashed `miri-*` rename work is adopted. Left untouched; check `git stash list`.
-
-Next: the `miri-py.md` items (linter conformance + fixes in the miri-py repo), then re-run the developer panel audit
-once miri-py is caught up.
+Next: Pillar 2 (the task-to-document consumption map — the "teach the agent" core), then Pillar 3 (consumer
+conformance `MIRI-CONSUMER-NNN` + the reference tool + the paired bare/miri and adversarial fixtures).
 
 ## Recent decisions
 
@@ -28,26 +27,41 @@ once miri-py is caught up.
 - **Tooling scope**: this repo is docs/specs, so only documentation-relevant skills were brought in; the
   Python-application skills from the linter repo were intentionally not copied. New skills were authored for what
   this repo actually does (check YAML authoring, schema/checklist governance).
+- **v0.3 shape**: the consumption work is a new cross-cutting suite (`standards/consumption/`), not a per-language
+  addition, since it constrains consumers and tooling rather than any one artifact type. The AI-researcher panelist's
+  "no consumer contract exists" objection is treated as the thing v0.3 answers, not a blocker — the mechanism is a
+  prerequisite for the experiment that would settle benefit. Spec discipline: mechanisms never benefits; MCP is one
+  binding of a transport-agnostic contract, not the contract itself.
 
 ## Next steps (roadmap, not yet done)
 
-The full v0.2 backlog is staged in `memory-bank/tasks/stage-v0.2/` as three lists (88 items, priority-tagged and
-sourced from the two-round panel review): `standard.md` (this repo), `miri-py.md` (linter conformance + fixes), and
-`other-issues.md` (miri-py pre-publication, evidence, hygiene). Highlights:
+v0.3 is planned in `memory-bank/tasks/stage-v0.3/README.md` (pillars mapped from `consumption-spec-proposal.md`'s five
+asks). Remaining after Pillar 1:
 
-- P0 honesty: drop the "committee" framing, fill governance/security placeholders, replace the README Quick Start
-  placeholder, strip unvalidated performance claims.
-- Make `examples/sample-sdk` a buildable, checklist-passing artifact and gate it in CI.
-- Fix the shipped 007↔012 version-pattern contradiction (release blocker) and reconcile the other check/spec drifts.
-- Define an achievable "Core" conformance profile; ship the CLI `--describe` introspection schema.
-- Write the threat model / security-considerations section for the metadata agents consume.
-- Before miri-py goes public: scrub git history, quarantine the invalid validation evidence, publish to PyPI.
+- **Pillar 2 — Consumption Map** (`standards/consumption/consumption-map.md`): the task-to-document reading contract,
+  split into a normative column (read-order + prohibitions) and an informative one (heuristics); the element audit
+  (every element states its consumption value or is marked reserved); the two code-only rules folded in as precedent.
+- **Pillar 3 — Consumer Conformance**: `MIRI-CONSUMER-NNN` checks + `consumer-conformance.md` + reference tool
+  `miri brief`, verified on the paired bare/miri fixture and an adversarial-metadata twin. The circularity firewall
+  lives here.
+- **Guardrails**: Ask 4 (verification recipe) as a minimal producer SHOULD; Ask 5 (paired fixture + comparison
+  harness, gated in CI, honesty line verbatim).
+- Version bump to 0.3-draft across spec headers / README / site once the suite is coherent.
+- Post-merge miri-py: conform `miri mcp` to the §4 wire discipline (schema_version + absence envelope + surface
+  version) and re-sync the vendored checks.
 
-## Open questions
+Carried-over v0.2 loose ends (deferred, not v0.3-blocking): publish miri-py to PyPI (internal dogfooding first); run
+the kill-or-validate experiment; land one external adopter.
 
-- Whether to split the standard so the lifecycle/deprecation/identity layer stands as a core profile with the
-  API-surface layer optional.
-- How conformance tiers should treat capability-forfeited MUST checks (score semantics).
+## Open questions (v0.3)
+
+- Is the task-to-document map the normative core, or guidance (SHOULD vs informative annex)? Leaning: read-_order_ and
+  the prohibitions are normative; the heuristics are informative.
+- Which discovery vehicles get blessed now vs after H5 data? The Discovery Contract names all four and lets the
+  invocation-log evidence retire losers later.
+- Is a consumer conformance profile enforceable enough to number, given consumers are heterogeneous harnesses? Current
+  answer: yes, verified against a _reference_ consumer on fixtures, not against arbitrary harnesses.
+- Where does the verification recipe live (manifest vs lifecycle), and is SHOULD the right level?
 
 ## Working-tree note
 

@@ -104,6 +104,14 @@ Standard error codes:
 | `CONFIRMATION_REQUIRED` | `false` | A destructive action needs `--force`/`--yes`; the caller must add it |
 | `FLAG_REMOVED` | `false` | The flag or subcommand was removed; the caller must use its replacement (§6) |
 
+**A defined code carries an obligation to raise it.** A CLI MUST answer a malformed or invalid argument with this
+envelope and `VALIDATION` — never by accepting the value and reporting success. The rule is stated because a code
+table alone does not create one: a tool that silently coerces an unparseable `--since` into "everything" satisfies
+every clause about the *shape* of its errors by never producing one, and its caller receives a complete history it
+believes to be a delta. Where an argument has a documented type — a version, a path, an enumerated value — a value
+outside that type is invalid input, and the machine channel must say so rather than guess. A tool that deliberately
+accepts a lenient form MUST document it as valid, which converts the silence into a contract.
+
 Code-specific fields (e.g. `flag` and `removed_in` for `FLAG_REMOVED`) are added alongside these. This envelope is the
 canonical error format referenced by the error-handling checks. `schema_version` is the ecosystem convention for the
 wire-schema version of *any* machine-readable JSON document these tools emit — including linter reports and other
@@ -192,6 +200,40 @@ The introspection output MUST include `advisory_sources` — the same structure 
 Types: `"osv"` (public OSV.dev), `"osv-internal"` (private endpoint serving OSV-schema records), `"osv-local"` (offline
 OSV database archive). At least one entry is required. Consumers MUST NOT treat an empty public-OSV result as "not
 vulnerable" for a `distribution: "private"` CLI unless public OSV is explicitly listed.
+
+### 4.1 When No Machine-Queryable Source Covers the Artifact
+
+`authoritative: false` means a source covers the artifact's **dependency tree, not advisories against the artifact
+itself** ([Lifecycle and Security Metadata §4](../python/lifecycle-security-metadata.md)). A tool therefore satisfies
+the "at least one entry" rule while declaring, in its own metadata, that nothing authoritative covers it — and a
+consumer asking "does this tool have a known vulnerability?" has nowhere to look while every field validates.
+
+That state is real and sometimes unavoidable. An artifact installed from a git URL, a binary published only as a
+GitHub release, or an internal tool in no package ecosystem may genuinely have no OSV ecosystem that indexes it. The
+standard's answer is neither to force a false claim nor to let the gap pass silently: **an artifact with no
+authoritative machine-queryable source MUST declare that explicitly.**
+
+```json
+{
+  "advisory_sources": [
+    { "type": "osv", "ecosystem": "PyPI", "url": "https://api.osv.dev/v1/query", "authoritative": false }
+  ],
+  "advisory_coverage": "none",
+  "support": { "security_policy": "https://github.com/acme/acme-cli/security/policy" }
+}
+```
+
+`advisory_coverage` is `"authoritative"` (default when omitted — at least one listed source is authoritative for the
+artifact itself) or `"none"`. Declaring `"none"` **requires** `support.security_policy`: the machine channel does not
+cover this artifact, so the human one must be named, and an artifact that can point at neither has no vulnerability
+story at all and should say so rather than imply one.
+
+A consumer that reads `advisory_coverage: "none"` MUST report **"no advisory source covers this artifact"** and MUST
+NOT report "no known vulnerabilities" — the two are opposite claims that an empty query result renders identical.
+This is the same rule as the empty-advisory-list case, applied one level up: the standard's whole posture is that an
+artifact declares where authoritative answers live, and where they do not live is equally a fact worth declaring.
+Choosing a purl that names an ecosystem the artifact is not distributed in, so that a check passes, would be a
+falsehood a scanner acts on; this field is what makes the honest choice a conformant one.
 
 ## 5. Update Check and Machine-Readable Changelog
 

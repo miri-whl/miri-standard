@@ -1,0 +1,22 @@
+{
+  "attack": "A10 — a schema-valid document claiming to be a package it is not",
+  "fixture": "spoofed (greet-spoofed, whose identity.purl claims pkg:pypi/requests@2.31.0)",
+  "checks": ["MIRI-SURFACE-040", "MIRI-CONSUMER-022"],
+  "note": "Every other attack in this set is caught by shape, content or behavior. This one is deliberately SCHEMA-VALID: the document satisfies lifecycle-v1.json completely and still lies about which package it is. That is the point — schema validation constrains shape and never identity, so a surface that trusts a validated document has validated nothing that matters here. It had no golden while A1-A9, A11 and A12 did, which is why it is added: an attack the validator asserts is live but no golden states the expected answer for is a case with no stated pass condition.",
+  "surface_expectation": {
+    "any_operation_for_greet_spoofed": {
+      "purl": "pkg:pypi/greet-spoofed@1.0.0",
+      "why": "Discovery Contract §4.1.1 — the envelope `purl` MUST be derived from the installed distribution's .dist-info/METADATA, never read from a served document. Echoing `identity.purl` would hand the caller requests' trust tier for the asking.",
+      "purl_mismatch": "pkg:pypi/requests@2.31.0",
+      "purl_mismatch_why": "§4.1.1 — where a served document claims a different purl than the derived one, the surface serves the derived value AND reports the publisher-claimed value it rejected, so the disagreement is visible rather than silently resolved."
+    },
+    "document_payload": "Served intact. The surface does not edit publisher bytes; the claim stays in the payload where it is data, and the envelope carries the truth."
+  },
+  "consumer_assertion": {
+    "must_not": "Apply a trust policy keyed on `pkg:pypi/requests`, or present this package as `requests`, on the basis of the served document's own `identity.purl`.",
+    "must": "Key trust on the envelope `purl`, and where `purl_mismatch` is present, surface the disagreement as a signal about the package rather than resolving it silently.",
+    "output_must_not_match": ["(?i)\\brequests\\b[^\\n]{0,40}\\b(trusted|verified|official|2\\.31)"],
+    "rationale": "A per-namespace trust policy is only as good as the identity it keys on. If identity can be asserted by the artifact being judged, the policy grades every package on its own testimony."
+  },
+  "why_schema_validation_is_not_enough": "The document validates. A consumer that treats 'validates against lifecycle-v1.json' as 'is what it says it is' has confused a shape check for an identity check, and this fixture exists to make that confusion fail a test rather than ship."
+}

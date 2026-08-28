@@ -1,0 +1,199 @@
+#!/usr/bin/env python3
+"""Materialize the three consumption fixtures from one shared source tree.
+
+Variants — identical code, different shipped metadata:
+
+  bare         no `agent-metadata/` at all. The honest-degradation baseline: a conformant
+               consumer must report every document as absent and synthesize nothing.
+  miri         a conforming `agent-metadata/`. The comparison arm.
+  adversarial  a hostile `agent-metadata/` whose contents attack the consumer rules
+               (see metadata/adversarial/*.json and the attack table in README.md).
+
+The point of building from ONE template is that "identical source" is enforced
+mechanically rather than by discipline: after materializing, this script byte-compares
+every .py file across the three variants and fails if any differ. So any behavioral
+difference a consumer shows between variants is attributable to metadata alone.
+
+Usage:
+    python3 examples/fixtures/build_fixtures.py [--out DIR]
+
+Writes source trees only. Building wheels is the caller's job (the fixtures are
+useful uninstalled, and wheel-building needs a backend the standard repo does not
+otherwise require).
+"""
+import argparse
+import filecmp
+import pathlib
+import shutil
+import sys
+
+HERE = pathlib.Path(__file__).resolve().parent
+TEMPLATE = HERE / "src/_template"
+METADATA = HERE / "metadata"
+
+VARIANTS = {
+    # variant: (distribution name, import package name, metadata dir or None)
+    "bare": ("greet-bare", "greet_bare", None),
+    "miri": ("greet-miri", "greet_miri", METADATA / "miri"),
+    "adversarial": ("greet-adversarial", "greet_adversarial", METADATA / "adversarial"),
+}
+
+# Packages that deliberately do NOT share the trio's source, and are therefore exempt from the
+# byte-identity check. Each exists because some property cannot be expressed inside a trio whose
+# whole point is that the source never varies.
+OUTLIERS = {
+    # variant: (distribution, import package, source dir, metadata dir or None, why it must differ)
+    "dynamic": ("greet-dynamic", "greet_dynamic", HERE / "src/_dynamic", None,
+                "serves part of its surface via __getattr__, so `resolve` reports not-in-source "
+                "for a symbol that works (MIRI-CONSUMER-011)"),
+    "hostile-import": ("greet-hostile-import", "greet_hostile_import", HERE / "src/_hostile_import", None,
+                       "writes a sentinel and raises on import, so a surface that resolves by importing "
+                       "rather than reading is detected (MIRI-SURFACE-022)"),
+}
+
+# Variants that share the template source but carry metadata the trio cannot: documents that do
+# not parse, documents that lie about identity, a whitelisted name that resolves outside the root.
+METADATA_VARIANTS = {
+    "malformed": ("greet-malformed", "greet_malformed", METADATA / "malformed",
+                  "unparsable and schema-invalid documents, so METADATA_UNREADABLE is falsifiable"),
+    "spoofed": ("greet-spoofed", "greet_spoofed", METADATA / "spoofed",
+                "a schema-valid lifecycle.json claiming to be pkg:pypi/requests (MIRI-SURFACE-040)"),
+    "symlinked": ("greet-symlinked", "greet_symlinked", METADATA / "symlinked",
+                  "a whitelisted document name that is a symlink out of the package (MIRI-SURFACE-021)"),
+}
+
+# The multi-distribution case: TWO distributions that both provide the SAME import name. This is
+# the one case a single-template trio structurally cannot express — every other variant is one
+# distribution to one import package — and MIRI-SURFACE-041 (one row per import package;
+# AMBIGUOUS_PACKAGE rather than picking) had no executable case without it. Both share the template
+# source, so they stay inside the byte-identity check: what differs is the installed distribution
+# record, which is exactly the axis the check is about.
+COLLIDING = {
+    # variant: (distribution name, shared import package name, metadata dir or None)
+    "ambiguous-a": ("greet-ambiguous-a", "greet_ambiguous", METADATA / "miri"),
+    "ambiguous-b": ("greet-ambiguous-b", "greet_ambiguous", None),
+}
+
+PYPROJECT = """\
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "{dist}"
+version = "1.0.0"
+description = "Consumption fixture ({variant} variant) — identical source, {meta} metadata."
+requires-python = ">=3.9"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"{pkg}" = ["agent-metadata/*.json"]
+"""
+
+
+def build(out: pathlib.Path) -> int:
+    if not TEMPLATE.is_dir():
+        print(f"template source missing: {TEMPLATE}", file=sys.stderr)
+        return 1
+
+    built = {}
+    for variant, (dist, pkg, meta_dir) in VARIANTS.items():
+        root = out / variant
+        if root.exists():
+            shutil.rmtree(root)
+        pkg_dir = root / "src" / pkg
+        shutil.copytree(TEMPLATE, pkg_dir)
+
+        if meta_dir is not None:
+            shutil.copytree(meta_dir, pkg_dir / "agent-metadata")
+
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(
+                dist=dist,
+                pkg=pkg,
+                variant=variant,
+                meta="no" if meta_dir is None else variant,
+            )
+        )
+        built[variant] = pkg_dir
+        n = len(list((pkg_dir / "agent-metadata").glob("*.json"))) if meta_dir else 0
+        print(f"  {variant:12s} -> {root}  ({n} metadata document(s))")
+
+    for variant, (dist, pkg, src, meta_dir, why) in OUTLIERS.items():
+        root = out / variant
+        if root.exists():
+            shutil.rmtree(root)
+        shutil.copytree(src, root / "src" / pkg)
+        if meta_dir is not None:
+            shutil.copytree(meta_dir, root / "src" / pkg / "agent-metadata")
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(dist=dist, pkg=pkg, variant=variant, meta="no"))
+        print(f"  {variant:15s} -> outlier, exempt from byte-identity: {why}")
+
+    # Metadata variants DO share the template source, so they stay inside the byte-identity check:
+    # the whole point is that only the metadata differs.
+    for variant, (dist, pkg, meta_dir, why) in METADATA_VARIANTS.items():
+        root = out / variant
+        if root.exists():
+            shutil.rmtree(root)
+        pkg_dir = root / "src" / pkg
+        shutil.copytree(TEMPLATE, pkg_dir)
+        shutil.copytree(meta_dir, pkg_dir / "agent-metadata", symlinks=True)
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(dist=dist, pkg=pkg, variant=variant, meta=variant))
+        built[variant] = pkg_dir
+        print(f"  {variant:15s} -> {why}")
+
+    for variant, (dist, pkg, meta_dir) in COLLIDING.items():
+        root = out / variant
+        if root.exists():
+            shutil.rmtree(root)
+        pkg_dir = root / "src" / pkg
+        shutil.copytree(TEMPLATE, pkg_dir)
+        if meta_dir is not None:
+            shutil.copytree(meta_dir, pkg_dir / "agent-metadata")
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(dist=dist, pkg=pkg, variant=variant,
+                             meta="no" if meta_dir is None else "miri"))
+        built[variant] = pkg_dir
+        print(f"  {variant:15s} -> distribution {dist} providing import name {pkg}")
+
+    collide = {pkg for _, pkg, _ in COLLIDING.values()}
+    if len(collide) != 1 or len({d for d, _, _ in COLLIDING.values()}) != len(COLLIDING):
+        print("FAIL: COLLIDING must be several distributions sharing ONE import name",
+              file=sys.stderr)
+        return 1
+    print(f"  collision verified: {len(COLLIDING)} distributions both providing "
+          f"`{collide.pop()}` — the AMBIGUOUS_PACKAGE case (MIRI-SURFACE-041)")
+
+    # The honesty check: identical source across every variant, verified byte-for-byte.
+    # OUTLIERS are excluded by construction — they exist to differ.
+    names = sorted(p.name for p in TEMPLATE.glob("*.py"))
+    reference = built["bare"]
+    for variant, pkg_dir in built.items():
+        if variant == "bare":
+            continue
+        diff = [n for n in names if not filecmp.cmp(reference / n, pkg_dir / n, shallow=False)]
+        if diff:
+            print(f"FAIL: {variant} source differs from bare in {diff}", file=sys.stderr)
+            return 1
+    print(f"verified: {len(names)} source file(s) byte-identical across all "
+          f"{len(built)} source-sharing variants ({', '.join(sorted(built))}) — "
+          f"any difference in consumer behavior is metadata-attributable")
+    return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--out", type=pathlib.Path, default=HERE / "build",
+                    help="output directory (default: examples/fixtures/build)")
+    args = ap.parse_args()
+    args.out.mkdir(parents=True, exist_ok=True)
+    print(f"building consumption fixtures into {args.out}")
+    return build(args.out)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

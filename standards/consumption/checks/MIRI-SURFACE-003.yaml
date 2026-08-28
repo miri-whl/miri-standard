@@ -1,0 +1,34 @@
+# MIRI-SURFACE-003 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-003
+name: Emits only reserved keys at the top level
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Envelope Integrity
+weight: 6
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each unreserved key emitted at the envelope's top level
+short_description: Emits only reserved keys at the top level
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Emits only reserved keys
+  at the top level.'
+examples:
+  violation: '{"schema_version": "1", "ok": true, "cache_hit": true, "document": {...}}'
+  compliant: '{"schema_version": "1", "ok": true, "present": true, "document": {...}}'
+rationale: 'The un-forgeability argument needs the surface to own a *known, closed* key set. A surface that adds
+  its own extra top-level fields erodes that: a consumer cannot tell an unfamiliar key from a forged one, and the
+  reserved-field table stops being exhaustive in practice while still claiming to be.'
+fires_when:
+- A response carries a top-level key outside the reserved set in §4.1
+remediation:
+- Emit only the reserved fields; put anything else inside the payload
+suggested_fix: Emit only the reserved fields; put anything else inside the payload
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-003.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-003/

@@ -1,0 +1,39 @@
+# MIRI-SURFACE-040 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-040
+name: Derives `purl` from the installed distribution; never reads it from a document
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Provenance and Identity
+weight: 6
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each purl read from a publisher document rather than derived
+short_description: Derives `purl` from the installed distribution; never reads it from a document
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Derives `purl` from the
+  installed distribution; never reads it from a document.'
+examples:
+  violation: 'purl = doc["identity"]["purl"]   # publisher-authored'
+  compliant: 'purl = f"pkg:pypi/{dist.metadata[''Name'']}@{dist.version}"   # surface-derived'
+rationale: '`purl` is the input to a per-namespace trust policy, which makes it a security decision — and the one
+  field in the envelope a publisher must not control. If the surface reads `identity.purl` out of lifecycle.json,
+  a package declaring `pkg:pypi/requests@2.31.0` inherits requests'' trust tier by simply saying so, forging a signal
+  inside the namespace §4 claims is un-forgeable.'
+fires_when:
+- The envelope `purl` is read from a served document rather than derived from the installed distribution
+- A disagreement between the derived value and `identity.purl` is resolved in the document's favor
+- '`purl` is emitted on a response whose subject package did not resolve'
+remediation:
+- Derive `purl` from the installed distribution's own recorded name and version
+- Where `identity.purl` disagrees, serve the derived value and signal the mismatch as a tampering indicator
+- Omit `purl` entirely for PACKAGE_NOT_INSTALLED, AMBIGUOUS_PACKAGE and NOT_DISCOVERABLE
+suggested_fix: Derive `purl` from the installed distribution's own recorded name and version
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-040.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-040/

@@ -1,0 +1,7 @@
+{
+  "version": "1.0",
+  "generated_at": "not-a-timestamp",
+  "patterns": [
+    { "id": "missing_required_fields", "name": "Incomplete pattern" }
+  ]
+}

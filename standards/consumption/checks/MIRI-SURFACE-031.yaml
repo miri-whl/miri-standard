@@ -1,0 +1,41 @@
+# MIRI-SURFACE-031 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-031
+name: Orders entries stably across repeated requests
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Bounded Answers
+weight: 2
+conditional: false
+severity:
+  default: LOW
+  violation_unit: each unstable ordering or missing continuation token
+short_description: Orders entries stably across repeated requests
+long_description: 'Surface obligation from the Discovery Contract (3.5.1). This check verifies one property only:
+  that every listing operation returns entries in the ordering 3.5.1 assigns it, ascending by Unicode code point
+  over the NFC-normalized key, and that the ordering is identical across identical requests. Cursor continuation
+  is a separate obligation scored by MIRI-SURFACE-033, because a surface can order perfectly and continue not at
+  all, and a single check covering both cannot say which failed.'
+examples:
+  violation: api-index(...) called twice -> entries in dict-insertion order, differing between the two calls
+  compliant: api-index(...) called twice -> identical code-point ordering by entry key both times
+rationale: Without a stable order, "the first 25" is a different 25 per call and truncation is unreproducible —
+  a conformance check written against a padded index becomes flaky rather than wrong, and a consumer that pages
+  through a listing silently sees some entries twice and others never. Locale collation is the common cause — it
+  varies by machine, so two consumers of one surface disagree about what page two contains.
+fires_when:
+- Two identical requests return the same entries in different orders
+- Entries are ordered by locale collation rather than Unicode code point
+- A listing operation orders by a key other than the one 3.5.1 assigns it
+remediation:
+- Order entries ascending by Unicode code point over the NFC-normalized key named for that operation in 3.5.1
+- Keep the ordering independent of dict insertion, locale, and process
+suggested_fix: Order by Unicode code point over the operation's assigned key, stably across identical requests
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-031.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-031/

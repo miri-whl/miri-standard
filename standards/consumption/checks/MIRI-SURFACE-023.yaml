@@ -1,0 +1,44 @@
+# MIRI-SURFACE-023 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-023
+name: Fetches nothing
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Boundaries
+weight: 3
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each network request derived from a served document
+short_description: 'Fetches nothing: never resolves a URL found in a served document'
+long_description: 'Surface obligation from the Discovery Contract §9.2. Split from MIRI-SURFACE-022 in 0.3-draft:
+  import-free discovery and fetch-nothing are different prohibitions with different failure modes and different
+  evidence, and bundling them meant a surface failing only one still failed a check that could not say which.'
+examples:
+  violation: 'requests.get(doc["update_check"]["url"])  # to annotate the response with "latest version"'
+  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true,\n \"document\": {\"update_check\": {\"\
+    url\": \"http://169.254.169.254/…\"}}}\n# relayed verbatim, never dereferenced"
+rationale: 'A surface that resolves a publisher-declared URL turns publisher-controlled data into server-side requests
+  — the SSRF exposure the producer standard guards, relocated into the query surface itself. The adversarial fixture
+  points `update_check.url` at the cloud-metadata address precisely so this is testable: a conformant surface serves
+  that value unchanged and never dereferences it. Separating it from import-freedom matters because the two are
+  caught by different fixtures — an import canary cannot detect a fetch.'
+fires_when:
+- The surface resolves, fetches, or issues any network request to a URL appearing in or derived from a served document
+- The surface enriches, annotates, or validates a response using the result of such a request
+- An advisory or update-check endpoint is contacted while answering any §3 operation
+remediation:
+- Serve declared URLs as opaque strings; resolving them is the consumer's act under the §9.2 guard
+- Assert in tests that answering every operation issues no outbound connection
+suggested_fix: Serve declared URLs as opaque strings; resolving them is the consumer's act under the §9.2 guard
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+- title: Lifecycle and Security Metadata §9.2
+  url: ../python/lifecycle-security-metadata.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-023.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-023/

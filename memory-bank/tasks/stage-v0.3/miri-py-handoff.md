@@ -1,0 +1,256 @@
+# miri-py work order — v0.3 (Consumption)
+
+**From:** the standard, `phase-0.3` branch
+**Status of the standard side:** Discovery Contract and Consumption Map drafted, panel-reviewed, and revised. Both
+specs are green on all three doc linters; all 83 checks still validate.
+
+**Read first:** `standards/consumption/discovery-contract.md` (the wire contract) and
+`standards/consumption/consumption-map.md` (the reading contract). The §-numbers below refer to the Discovery Contract.
+
+**Explicitly NOT in this work order:** publishing to PyPI. That has moved to **0.4**. Nothing here requires a public
+package — a git tag is enough (item 2).
+
+---
+
+## 1. Re-sync the vendored checks (~10 min, unblocks CI hygiene)
+
+The vendored mirror is stale, and it is now also missing a schema change it needs.
+
+- Current: `src/miri_py/linter/checks/data/PROVENANCE.json` pins `commit_sha: 58b44cd…`, `checklist_version: 0.1-draft`.
+- Upstream is at `607f339` with `checklist_version: 0.2-draft`.
+- The sync ran today but against the old constant, so the pin never moved.
+
+**Do:**
+
+1. `scripts/sync_checks.py:53` — bump `PINNED_SHA` from `58b44cd56870304f9ea3f2a68f70dacfa488abb5` to the current
+   `main` (`607f339`, or a later `main` if it has moved).
+2. Re-run the sync. Verify `PROVENANCE.json` shows `checklist_version: 0.2-draft` and a new `content_sha256`.
+3. Confirm the 100-point-sum invariant and schema validation still pass on the refreshed copy.
+
+**Note a schema widening you will pick up in this sync.** `schemas/check-v1.json` changed on the standard side:
+
+- the check-id pattern is now `^MIRI-(PY|CLI|PYX|CLIX|CONSUMER|CONSUMERX)-\d{3}$`
+- the `target` enum now includes `consumer`
+
+Both are **widenings** — every existing check still validates, so nothing breaks. But an un-synced mirror will reject
+the `MIRI-CONSUMER-NNN` checks when they land, so this sync is a prerequisite for consuming v0.3's conformance work.
+
+## 2. Tag a release (unblocks the standard's CI pin)
+
+The standard's `sample-conformance` job installs miri-py from an **unpinned** git URL, so it scores against your moving
+HEAD — a regression on your side turns the standard red for unrelated reasons, and a loosening passes silently.
+
+**Do:** cut a git tag (e.g. `v0.2.0`) once item 1 lands. That is all we need; we will pin
+`git+https://github.com/miri-whl/miri-py.git@<tag>`. No PyPI publish required.
+
+## 3. Conform `miri mcp` to the Discovery Contract (the main work)
+
+**Acceptance is now numbered.** `standards/consumption/surface-conformance.md` defines 16 `MIRI-SURFACE` checks
+weighted to 100 — the obligations below map onto them, so "conformant" is a score rather than a judgement call. The
+highest-weight ones are `MIRI-SURFACE-002` (nest the payload, never merge), `010` (absence is not an error), `020`
+(closed servable set), `021` (realpath confinement), `022` (import-free, fetch nothing) and `040` (derive `purl`).
+Items 3a–3g below are the same work, described as changes rather than as checks.
+
+v0.3 specifies the metadata-query contract your MCP server is the first binding of. The contract now has **six**
+operations; you ship four. It was written from your
+implementation, so most of it already matches — the gaps are the wire discipline. Current state referenced against
+`src/miri_py/mcp/server.py` and `provider.py`.
+
+### 3a. Adopt the surface-owned response envelope (§4)
+
+**This is the load-bearing change.** Today a `tools/call` result's `text` is the raw producer document (or an ad-hoc
+`{"error": …}`). The contract requires a surface-owned envelope with the publisher's bytes **nested** under a payload
+key, so publisher content can never collide with — or forge — the surface's own signals.
+
+```json
+{ "schema_version": "1", "ok": true, "present": true,
+  "package": "weather_sdk", "purl": "pkg:pypi/weather-sdk@1.2.0",
+  "name": "lifecycle.json",
+  "document": { "…the package's lifecycle.json, byte-for-byte…": "…" } }
+```
+
+Rules: the surface stamps `schema_version`; it MUST NOT inject envelope fields into the payload, and MUST NOT hoist
+payload fields into the envelope. Wrapping matters because the producer schemas set `additionalProperties: false` —
+injecting a field would make a conforming document invalid.
+
+Payload keys by operation: `packages` (list), `document` (document / lifecycle / migration-guide), `entries`
+(api-index), `resolution` (resolve).
+
+### 3b. Split absence from error (§4.2, §4.3)
+
+Today an absent document returns a **success** whose text is `{"error": "no MIRI metadata for …"}` — indistinguishable
+from a real failure, with no machine code. Two independent booleans now carry the two axes:
+
+- **Absent** (package ships no such document): `ok: true`, `present: false`, no payload key, plus a free-text `reason`
+  for humans. Consumers MUST NOT branch on `reason`.
+- **Error** (request could not be served): `ok: false` plus a top-level `error` object, per
+  [CLI §2.6](../../../standards/cli/cli-lifecycle-specification.md) — which does include `ok`.
+
+Contract error codes to implement:
+
+| `code` | `retryable` | When |
+|---|---|---|
+| `PACKAGE_NOT_INSTALLED` | `false` | No installed package provides that import name |
+| `AMBIGUOUS_PACKAGE` | `false` | Several installed distributions provide that import name |
+| `DOCUMENT_NOT_SERVABLE` | `false` | Requested name outside the §3.2 whitelist |
+| `NOT_DISCOVERABLE` | `false` | Could not resolve without importing the package |
+| `METADATA_UNREADABLE` | `false` | Document exists but could not be read/parsed |
+
+`METADATA_UNREADABLE` matters: never repair, re-serialize, partially serve, or report-as-absent a document that failed
+to parse.
+
+Also: a §4.3 error and a §4.2 absence are both **served answers** — they travel as ordinary tool results carrying the
+envelope, never as JSON-RPC protocol errors. Reserve protocol errors for malformed requests (unknown tool,
+schema-invalid input), which is what you already do for unknown tools.
+
+### 3c. Add a fifth tool: `miri_document` (§3.2)
+
+This is what makes the Consumption Map executable over a context server. Today four tools serve three documents; the
+Map routes agents to `usage-patterns.json`, `api-graph.json`, `AGENT_EXAMPLES.json`, and `agent-metadata/README.md`
+too, and none were reachable.
+
+- **Input:** `{ package, name }`. `name` must be one the package advertised in `list.documents`.
+- **Servable set (closed):** `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`,
+  `api-graph.json`, `test-patterns.json`. **Nothing else** — the set is exhaustive and a surface MUST NOT extend it.
+- **Never servable:** `prompt-templates.md`, `agent-metadata/README.md`, or any other free-prose file. The governing
+  criterion is now normative: **only schema-governed documents are servable; no free-form natural-language document
+  ever is.** (`README.md` was briefly listed as servable in an earlier draft of this handoff — that was reversed,
+  because unconstrained author Markdown is the same injection channel `prompt-templates.md` is refused for. The
+  inventory an agent needs comes from `list`, composed by the surface from the directory listing.)
+- **Name grammar and confinement (§3.2.2):** `name` is a **single path segment** — no `/`, no `\`, no `..`, never
+  normalized. Resolve it against the package's `agent-metadata/`, take the **realpath**, and require a regular file
+  physically inside that directory; **reject symlinks**. Name-string filtering alone MUST NOT be relied on: a
+  whitelisted `usage-patterns.json` shipped as a symlink to `~/.ssh/id_rsa` contains no `..` and no absolute prefix.
+  Return `DOCUMENT_NOT_SERVABLE` — never a filesystem error, never the file.
+- `miri_lifecycle` and `miri_migration_guide` stay as **named shorthands** and MUST return exactly what
+  `miri_document` returns for the same package and name.
+
+### 3c-bis. Add a sixth tool: `miri_resolve` (§3.6)
+
+The operation that settles whether a symbol actually exists. Without it the Consumption Map's anti-hallucination rule
+cannot be discharged by any tool call, which is the defect it was added to fix.
+
+- **Input:** `{ package, symbol }`, where `symbol` is a dotted qualified name (`Greeter`, `Greeter.greet`).
+- **Implementation:** **parse the source, never import it.** `ast.parse` over the module that would define the symbol
+  keeps this compatible with the import-free rule you already implement in `provider.py` — an unvetted package is
+  read, never run.
+- **Response:** `resolution: {found, evidence, kind, file, line, signature?}`.
+- **The asymmetry is normative and must not be collapsed:** `found: true` + `evidence: "static-source"` is strong
+  evidence; `found: false` + `evidence: "not-in-source"` means *not defined statically*, **not** *does not exist*
+  (`__getattr__`, `setattr`, metaclasses, runtime re-exports are invisible to static parsing). A third value,
+  `module-unreadable`, means nothing is known either way. Emitting `found: false` without distinguishing these two
+  causes would make every consumer wrong about dynamically-generated APIs.
+
+### 3d. `list` — wrap, cap, identify (§3.1)
+
+- Wrap it: a bare array cannot carry `schema_version`/`ok`, so `list` is currently exempt from the discipline that
+  governs everything else.
+- Cap it (declare `cap`, set `truncated`), and accept an optional `query` substring — a large environment can hold
+  hundreds of metadata-shipping packages.
+- Rename the row field `distribution` → **`distribution_name`**. It collided with the CLI `--describe`
+  `identity.distribution`, which is an open-source/private *enum* — same name, two meanings, sibling surfaces.
+- Add `purl` per row.
+- One distribution providing several import packages ⇒ one row each. An import name provided by several distributions
+  ⇒ `AMBIGUOUS_PACKAGE`, never a silent pick.
+
+### 3e. `api-index` — presence only (§3.5)
+
+- Put the cap on the wire (`cap`, alongside the existing `truncated`). `MAX_INDEX_ENTRIES = 25` is right; it just needs
+  to be visible to the consumer.
+- `signature` and `file` are **optional** per entry — the producer's canonical `api_index` does not guarantee either,
+  so do not synthesize them.
+- Normative framing to carry into any docstring/description: **api-index confirms presence, it can never prove
+  absence.** A symbol may be missing because it was capped or query-filtered. Existence is settled by introspecting the
+  installed package, never by index membership.
+
+### 3f. Advertise the surface version (§4.4, §6.3)
+
+`initialize` currently advertises only `protocolVersion` (the MCP date) and `serverInfo.version` (the implementation).
+Neither names the *contract* version. Add it at the normative path **`capabilities.miri.surface_version`** as a string,
+so a client negotiates the metadata contract independently of MCP's protocol date.
+
+### 3g. Invocation log fields (§8)
+
+The log is the H5 instrument, so its fields need to be analysis-ready:
+
+- `operation` MUST be the **contract** operation name (`list`, `document`, `lifecycle`, `migration-guide`,
+  `api-index`) — never the MCP tool name, so logs stay comparable across bindings.
+- Add `outcome`: `served` | `absent` | `error` (the §4 result class, so reach and success are distinguishable).
+- Add `session`: an opaque correlation id, so entries group into runs and treatment arms.
+- Unchanged: logging MUST NOT influence any response, and a logging failure MUST NOT break a query.
+
+## 3h. Implement the corrected scoring model (**changes every score you emit**)
+
+The scoring model changed on the standard side, and this one is breaking: **a conditional check whose condition does
+not apply is now `not_applicable` — it leaves both the numerator and the denominator**, where it previously scored
+its full weight automatically.
+
+- **Score** = Σ passing weights ÷ Σ **applicable** weights, as a percentage.
+- A report MUST carry the not-applicable count and the effective denominator beside the score.
+- `forfeited` (condition applies, linter cannot assess) behaves the same way: out of both.
+
+This is not cosmetic. **32 of 100 points in MIRI-PY and 26 of 100 in MIRI-CLI are now conditional**, and nine checks
+were reclassified as conditional in the same change (MIRI-PY-028/029/031/032/035, MIRI-CLI-031/032/034/038) because
+they quantify over deprecations and are unfireable when there are none.
+
+**Why:** scoring a real CLI showed 20 of its 100 points awarded for having never deprecated anything, lifting a
+genuine 19 to a reported 39. The old model made a score a function of project age rather than quality, so two scores
+of 75 were not comparable — which is the one thing a score exists to allow.
+
+**Expect the sample SDK's number to move.** The CI gate asserts `is_conforming`, not a value, so it will not break —
+but the reported figure will change and the 75/Silver we have cited is on the old model. `lint-report-v1.json` needs
+the `not_applicable` count and effective denominator as fields.
+
+### 3h-bis. Validation data for the new model — the sample SDK as it stands today
+
+Scored with `miri` 0.2.0 against the current sample (old model), for you to check the new implementation against:
+
+- **Reported: 75 conformance, Silver, conforming, 0 MUST failures.**
+- Outcomes: **26 pass, 12 skipped, 2 fail**. Passing weights sum to **68**, so **7 points come from credited
+  skipped checks** — which is the behavior the new model changes.
+- The 12 skipped are a mix and must be treated differently under the new model: capability forfeits
+  (`execution` — 015, 035, 036, 040; `network` — 005, 026, 027; `previous-release` — 030, 034) versus genuine
+  condition-not-applicable (024, 025 SBOM: no binary components; 038).
+- **Four checks pass that cannot fire**: MIRI-PY-028, 029, 031, 032 = **13 points**. The sample declares zero
+  deprecations and zero breaking changes, so every trigger quantifies over an empty set. These are now `conditional`
+  and become not-applicable.
+
+Under the new model those 13 points leave both numerator and denominator. We deliberately are **not** publishing a
+predicted new score — the exact figure depends on how forfeits and not-applicables are separated in your
+implementation, which is the thing being built. What we can say is that 13 points of the current 75 are awarded for
+having nothing to deprecate.
+
+## 4. Fix the `generate` bugs (blocks the standard's sample gate)
+
+Still open from step-3, and it blocks the standard's CI from moving to the honest
+generate → `git diff --exit-code` → build → score loop. Today the gate re-stamps `generated_at` in a temp copy to stay
+MIRI-PY-011-fresh, which is a workaround, not the loop §5.4 describes.
+
+- `miri build --generate-metadata` is a no-op.
+- `miri generate --output-dir` crashes (`str`/`str`).
+- `generate` writes to `src/agent-metadata/` instead of `src/<pkg>/agent-metadata/` for a src-layout package.
+- `generate` omits `migration-guide.json`.
+
+## 5. Naming: the reference consumer is `miri consume`
+
+When the reference consumer is built (Pillar 3, not yet started), the subcommand is **`miri consume`**, not
+`miri brief`. The naming panel was 5-of-6 against "brief" — it connotes a synthesized digest, which cuts against
+declare-sources-not-verdicts, and it shared no stem with its own family (`consumption/`, `[tool.miri.consume]`,
+`MIRI-CONSUMER`). Nothing to do yet; just do not build it under the old name.
+
+---
+
+## Suggested order
+
+1. **Item 1** (sync) — 10 minutes, unblocks everything downstream.
+2. **Item 2** (tag) — minutes, unblocks the standard's CI pin.
+3. **Item 3a + 3b** (envelope + absence/error) — the load-bearing pair; 3b's honest-degradation signal is what all
+   consumer conformance will rest on, and 3a is what makes it un-forgeable.
+4. **Item 3c** (`miri_document`) — what makes the Map real.
+5. **Items 3d–3g**, then **item 4**.
+
+## Open on the standard side (context, no action)
+
+Pillar 3 — the numbered `MIRI-CONSUMER-NNN` checks, the reference consumer, and the paired bare/miri + adversarial
+fixtures — is not written yet. Two independent panels have advised building the **fixture before the numbered checks**,
+so expect the fixture pair to land first.

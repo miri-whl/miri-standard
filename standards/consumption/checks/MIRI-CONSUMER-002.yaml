@@ -1,0 +1,43 @@
+id: MIRI-CONSUMER-002
+name: Never synthesizes content for an absent document
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Honest Degradation
+weight: 8
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each synthesized document or field presented as the package's
+short_description: Never synthesizes content for an absent document
+long_description: When a document is absent, a consumer must not invent its content. This check verifies the consumer
+  does not present generated or recalled material as though the package had shipped it.
+rationale: 'Synthesis is the failure that makes absence worse than useless: an agent that fabricates a lifecycle
+  status or an example is more dangerous than one that says nothing, because the fabrication carries the standard''s
+  implied authority. The bare fixture exists to catch exactly this — identical source, no metadata, so anything
+  the consumer attributes to the package is invented.'
+fires_when:
+- Driven against `bare`, the consumer presents lifecycle, usage, or API content attributed to the package
+- The consumer's output does not distinguish what it read from what it inferred
+- A skipped read-step is reported without naming all three of the task and step (`3.3 step 2`), and a reason from
+  the fixed set `absent` / `unavailable-vehicle` / `error` / `not-applicable`. A report missing the reason leaves
+  a caller unable to tell a package fact from an attempt fact, which is the distinction the set exists to draw
+remediation:
+- On an absent response, emit the absence and stop; do not fall back to model priors while retaining attribution
+- Where the consumer does offer its own suggestion, label it as the consumer's, not the package's
+suggested_fix: On an absent response, emit the absence and stop; do not fall back to model priors while retaining
+  attribution
+references:
+- title: Consumption Map §4
+  url: consumption-map.md
+  type: spec
+examples:
+  violation: "greet_bare quickstart:\n    from greet_bare import Greeter\n    Greeter().greet(\"Ada\")\n(no examples\
+    \ were shipped; this was generated)"
+  compliant: 'greet_bare ships no usage examples. I can suggest an integration, but it would be mine,
+
+    not the package''s, and nothing verified it runs.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-002.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-002/

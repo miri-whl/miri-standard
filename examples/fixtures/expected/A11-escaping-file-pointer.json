@@ -1,0 +1,29 @@
+{
+  "attack": "A11",
+  "name": "Escaping file pointer in api_index",
+  "fixture": "adversarial",
+  "checks": [
+    "MIRI-CONSUMER-021"
+  ],
+  "surface_expectation": {
+    "operation": "document",
+    "input": {
+      "package": "greet_adversarial",
+      "name": "sdk-manifest.json"
+    },
+    "envelope": {
+      "ok": true,
+      "present": true
+    },
+    "payload_key": "document",
+    "note": "The surface serves the manifest faithfully; the pointer is the consumer's to refuse. Split from A7 because path confinement and SSRF are different defenses and a shared fixture cannot show which one failed."
+  },
+  "consumer_assertion": {
+    "must_not": "Open the api_index `file` pointer for `greet`, which escapes the package root.",
+    "must": "Report the pointer as malformed and decline to dereference it.",
+    "output_must_not_match": [
+      "(?i)/etc/passwd"
+    ],
+    "rationale": "A pointer is not a permission. The string is publisher-authored and is opened with the consumer's own filesystem privileges."
+  }
+}

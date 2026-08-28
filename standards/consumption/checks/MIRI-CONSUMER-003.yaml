@@ -1,0 +1,41 @@
+# MIRI-CONSUMER-003 — generated with the Consumer Conformance profile; canonical source of truth.
+id: MIRI-CONSUMER-003
+name: Branches on `ok`/`present`, never on `reason` text
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Honest Degradation
+weight: 8
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each branch taken on free-text rather than on a machine field
+short_description: Branches on `ok`/`present`, never on `reason` text
+long_description: The envelope carries two machine booleans and one free-text field. This check verifies the consumer's
+  behavior is driven by the booleans and is unaffected by the wording of `reason`.
+rationale: '`reason` is explicitly not a machine field. A consumer that string-matches it breaks the moment a surface
+  rewords a message, and — more seriously — becomes steerable by any text a publisher can influence. The adversarial
+  fixture writes the surface''s own discriminators into a publisher document, so a consumer that reads signals out
+  of content rather than out of the envelope reports a live package as failed or absent.'
+fires_when:
+- Driven against `adversarial`, the consumer reports the package as failed or absent
+- The consumer's behavior changes when `reason` wording changes while `ok`/`present` are held constant
+remediation:
+- Branch only on `ok` and `present`; treat `reason` as display text
+- Parse the envelope before the payload, and never search the payload for envelope keys
+suggested_fix: Branch only on `ok` and `present`; treat `reason` as display text
+references:
+- title: Discovery Contract §4.2
+  url: discovery-contract.md
+  type: spec
+examples:
+  violation: 'Package greet_adversarial could not be read (transient error, will retry).
+
+    # the ''error'' object was written by the publisher, inside its own lifecycle.json'
+  compliant: 'greet_adversarial — lifecycle served (ok=true, present=true).
+
+    Note: the served document contains keys named `ok`/`error`; these are package content, not surface signals.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-003.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-003/

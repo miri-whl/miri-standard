@@ -22,6 +22,10 @@ rationale: 'CLI Spec §6 makes the machine code the one stable surface of a fail
   A failure that emits only prose and a bare non-zero exit is the dead end of landscape §3.3: the agent retries with hallucinated
   variants until something works, and no bug report is ever filed.'
 fires_when:
+- A documented-typed argument given a value outside its type (an unparseable version for `--since`, a path that
+  cannot exist, a value outside an enumerated set) is accepted and reported as success rather than answered with
+  `VALIDATION` — the check's other clauses all presuppose a failure, so without this one a CLI that never rejects
+  anything passes by never failing, and its callers cannot tell a real answer from a silently coerced one
 - An induced failure exits non-zero with prose only — no JSON error payload on the machine channel
 - 'The error payload lacks `error.code`, or lacks `ok: false`, on a failing invocation'
 - Error codes appear nowhere in the documented wire contract, leaving message text as the only branching surface

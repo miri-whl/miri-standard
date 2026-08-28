@@ -7,33 +7,37 @@ added_in: 0.1-draft
 level: MUST
 category: Deprecation Coherence
 weight: 2
-conditional: false
+conditional: true
 severity:
   default: MEDIUM
   violation_unit: each warning on stdout
 short_description: Grace-period deprecation warnings never touch stdout
-long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
-  a dead-end error strands every consumer working from stale knowledge. This check verifies: Grace-period deprecation warnings
-  never touch stdout.'
-rationale: 'Spec §2.5 confines machine payloads to stdout and all deprecation and update warnings to stderr, because the
-  two channels have different consumers: stdout feeds a parser, stderr feeds a diagnostician. A warning line prepended to
-  a JSON payload fails every downstream `json.loads` and `jq` invocation simultaneously — and it fails precisely for the
-  consumers who just invoked the deprecated surface, the ones the warning was written to migrate. The grace period of §7.3
-  only works if the deprecated surface keeps functioning, and a corrupted payload means it does not.'
+long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers
+  with a dead-end error strands every consumer working from stale knowledge. This check verifies: Grace-period deprecation
+  warnings never touch stdout.'
+rationale: 'Spec §2.5 confines machine payloads to stdout and all deprecation and update warnings to stderr, because
+  the two channels have different consumers: stdout feeds a parser, stderr feeds a diagnostician. A warning line
+  prepended to a JSON payload fails every downstream `json.loads` and `jq` invocation simultaneously — and it fails
+  precisely for the consumers who just invoked the deprecated surface, the ones the warning was written to migrate.
+  The grace period of §7.3 only works if the deprecated surface keeps functioning, and a corrupted payload means
+  it does not.'
 fires_when:
-- Invoking a surface whose `lifecycle.status` is `deprecated` with the JSON output flag produces stdout that is not a single
-  parseable JSON document
-- Deprecation notice text (e.g. a line matching /deprecat/i naming the surface) appears in captured stdout rather than in
-  captured stderr
-- Warning output interleaves with or prefixes the payload only when the deprecated surface is used — the clean-payload check
-  (MIRI-CLI-011) passes on non-deprecated invocations of the same command
+- Invoking a surface whose `lifecycle.status` is `deprecated` emits no deprecation warning on **either** channel —
+  the grace period exists so that a caller is told before removal, and a tool that warns nowhere satisfies every
+  clause about *which channel* the warning avoids by never emitting one
+- Invoking a surface whose `lifecycle.status` is `deprecated` with the JSON output flag produces stdout that is
+  not a single parseable JSON document
+- Deprecation notice text (e.g. a line matching /deprecat/i naming the surface) appears in captured stdout rather
+  than in captured stderr
+- Warning output interleaves with or prefixes the payload only when the deprecated surface is used — the clean-payload
+  check (MIRI-CLI-011) passes on non-deprecated invocations of the same command
 remediation:
-- Route all warning emission through a diagnostics writer bound to stderr (`fprintf(stderr, ...)`, Rust `eprintln!`, Python
-  `print(..., file=sys.stderr)` — Python's `warnings` module already defaults there)
-- Derive the warning text from the surface's `lifecycle` block per §2.3 so the message, `--describe`, and `changelog --since`
-  cannot disagree
-- 'Add a pipeline test to CI: `cli <cmd> --deprecated-flag --json 1>out.json 2>err.txt && jq -e . out.json && grep -qi deprecated
-  err.txt`'
+- Route all warning emission through a diagnostics writer bound to stderr (`fprintf(stderr, ...)`, Rust `eprintln!`,
+  Python `print(..., file=sys.stderr)` — Python's `warnings` module already defaults there)
+- Derive the warning text from the surface's `lifecycle` block per §2.3 so the message, `--describe`, and `changelog
+  --since` cannot disagree
+- 'Add a pipeline test to CI: `cli <cmd> --deprecated-flag --json 1>out.json 2>err.txt && jq -e . out.json && grep
+  -qi deprecated err.txt`'
 examples:
   violation: '$ tool export --json > out.json
 

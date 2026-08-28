@@ -1,0 +1,41 @@
+id: MIRI-CONSUMER-040
+name: Surfaces a `correctness`/`security` antipattern before emitting matching code
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Usage Fidelity and Budget
+weight: 2
+conditional: false
+severity:
+  default: MINOR
+  violation_unit: each emitted antipattern not surfaced to the caller
+short_description: Surfaces a `correctness`/`security` antipattern before emitting matching code
+long_description: This check verifies that where the package declares a known-wrong usage and the consumer emits
+  code matching it, the consumer says the author flagged it.
+rationale: Antipatterns are the author's statement of how callers actually get this surface wrong — the guidance
+  least recoverable from signatures and most likely to be absent from a model's priors. Silently reproducing one
+  is the exact failure the element was added to prevent.
+fires_when:
+- 'The suite can parse the emitted code into a syntax tree and a construction-site match per Consumption Map 3.2
+  is present, yet the consumer emitted the matching code without surfacing the antipattern. Where the suite cannot
+  parse the emitted code the check is FORFEITED and reported, never passed on a textual approximation: the match
+  is syntactic by definition and a text comparison decides a different question'
+- The consumer emits code matching a declared `wrong_code` of severity `correctness` or `security` without mentioning
+  the author's warning
+remediation:
+- Read each pattern whole and check emitted code against declared antipatterns before returning it
+- Where the code matches, surface the author's `why` alongside it
+suggested_fix: Read each pattern whole and check emitted code against declared antipatterns before returning it
+references:
+- title: Consumption Map §3.2
+  url: consumption-map.md
+  type: spec
+examples:
+  violation: "for name in names:\n    print(Greeter(language=\"es\").greet(name))"
+  compliant: "g = Greeter(language=\"es\")\nfor name in names:\n    print(g.greet(name))\n# the package flags\
+    \ per-iteration construction as an antipattern (performance): it re-does the\n# language lookup per name and\
+    \ hides that the language is fixed."
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-040.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-040/

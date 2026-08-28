@@ -12,15 +12,25 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
 
 ## Scoring Model
 
-- **Score** = Σ weights of passing checks (0–100).
+- **Score** = Σ weights of passing checks ÷ Σ weights of *applicable* checks, as a percentage (0–100).
 - **Level** column: **M** (MUST — required for conformance) or **S** (SHOULD — quality signal).
 - A wheel with any failing **M** check is **non-conforming regardless of score**; its score is still reported, capped at
   74, to show distance from conformance.
-- Checks marked *conditional* (e.g. SBOM only when bundling non-Python components) score their full weight automatically
-  when the condition does not apply.
-- **First releases can reach Gold.** The previous-release checks (MIRI-PY-030, 034) are *conditional*: a first release
-  has no prior release to diff against, so the condition does not apply and they score full weight. They forfeit weight
-  (reported) only when a prior release exists but the linter cannot fetch it — a capability gap, not a failure.
+- **Not-applicable is not a pass.** A *conditional* check whose condition does not apply is **not applicable**: it
+  is **excluded from both** the numerator and the denominator — removed from the calculation, never counted as a
+  failure — and the report MUST carry the not-applicable count and the effective denominator beside the score. The
+  score is therefore a percentage of what was actually assessed.
+
+  This replaces an earlier rule under which such a check scored its full weight automatically. That rule made the
+  score a function of project age: an artifact with nothing to deprecate collected the whole deprecation category for
+  free, and a mature artifact that had genuinely deprecated something had to earn the same points. Two scores of 75
+  meant different things and could not be compared, which is the one thing a score exists to allow. Found by scoring
+  a real CLI, where 20 of 100 points were awarded for never having deprecated anything.
+- **First releases are not penalized.** The previous-release checks (MIRI-PY-030, 034) are *conditional*: a first
+  release has no prior release to diff against, so they are not applicable and leave the denominator — a first
+  release is scored on what it can be scored on, and can still reach Gold. A check forfeits (also reported, also out
+  of the denominator) when the condition *does* apply but the linter lacks the capability to assess it — a capability
+  gap, not a failure.
 - **Gold additionally requires provenance**: a public-index wheel reaches Gold only if MIRI-PY-005 (PEP 740
   attestations) passes — provenance is the anchor for every trust decision the metadata supports (Lifecycle §9.5). A
   wheel otherwise scoring ≥90 without attestations is capped at Silver.
@@ -53,7 +63,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-PY-002 | M | Core metadata valid | `METADATA` parses as Core Metadata 2.x; name normalized | [PEP 566](https://peps.python.org/pep-0566/) / [PEP 503](https://peps.python.org/pep-0503/) | 2 |
 | MIRI-PY-003 | M | Version scheme valid | Version parses under the canonical scheme | [PEP 440](https://peps.python.org/pep-0440/) | 2 |
 | MIRI-PY-004 | S | Declarative build config | `pyproject.toml` with `[project]` table drives the build | [PEP 621](https://peps.python.org/pep-0621/) / [PEP 517](https://peps.python.org/pep-0517/) | 2 |
-| MIRI-PY-005 | S | Publish attestations | Release carries index-hosted attestations (provenance) | [PEP 740](https://peps.python.org/pep-0740/) | 2 |
+| MIRI-PY-005 | S | Publish attestations | Release carries index-hosted attestations (provenance) (*conditional*: public-index releases only)| [PEP 740](https://peps.python.org/pep-0740/) | 2 |
 
 ### B. Agent Metadata Core (20 points)
 
@@ -96,14 +106,14 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-028 | M | PEP 702 markers | Every interface listed as deprecated carries `@deprecated`; decorator message names replacement + removal version | [PEP 702](https://peps.python.org/pep-0702/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 4 |
-| MIRI-PY-029 | M | Inventory derived | Every PEP 702 marker appears in `migration-guide.json` `deprecations` | [Lifecycle §6.2/§6.4-1](lifecycle-security-metadata.md) | 4 |
-| MIRI-PY-030 | M | No silent removals | Every public interface removed since the prior release was listed in an earlier release's `deprecations` | [Lifecycle §6.4-2](lifecycle-security-metadata.md) | 5 |
-| MIRI-PY-031 | M | Replacements resolve | Every `deprecations[].replacement` exists in the new `sdk-manifest.json` | [Lifecycle §6.4-3](lifecycle-security-metadata.md) | 3 |
-| MIRI-PY-032 | M | Removal versions sane | Every `removal_version` is greater than the current release | [Lifecycle §6.4-3](lifecycle-security-metadata.md) / [PEP 440](https://peps.python.org/pep-0440/) | 2 |
+| MIRI-PY-028 | M | PEP 702 markers | Every interface listed as deprecated carries `@deprecated`; decorator message names replacement + removal version (*conditional*: no deprecated surfaces to check)| [PEP 702](https://peps.python.org/pep-0702/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 4 |
+| MIRI-PY-029 | M | Inventory derived | Every PEP 702 marker appears in `migration-guide.json` `deprecations` (*conditional*: no deprecated surfaces to check)| [Lifecycle §6.2/§6.4-1](lifecycle-security-metadata.md) | 4 |
+| MIRI-PY-030 | M | No silent removals | Every public interface removed since the prior release was listed in an earlier release's `deprecations` (*conditional*: needs a prior release)| [Lifecycle §6.4-2](lifecycle-security-metadata.md) | 5 |
+| MIRI-PY-031 | M | Replacements resolve | Every `deprecations[].replacement` exists in the new `sdk-manifest.json` (*conditional*: no deprecated surfaces to check)| [Lifecycle §6.4-3](lifecycle-security-metadata.md) | 3 |
+| MIRI-PY-032 | M | Removal versions sane | Every `removal_version` is greater than the current release (*conditional*: no deprecated surfaces to check)| [Lifecycle §6.4-3](lifecycle-security-metadata.md) / [PEP 440](https://peps.python.org/pep-0440/) | 2 |
 | MIRI-PY-033 | M | Support status coherent | `support.status` in enum; `deprecated`/`eol` ⇒ `replacement` present | [Lifecycle §3.1](lifecycle-security-metadata.md) / [schema](../../schemas/lifecycle-v1.json) | 3 |
-| MIRI-PY-034 | S | Grace period | Deprecated interfaces survive ≥2 releases before removal | [PEP 387](https://peps.python.org/pep-0387/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 2 |
-| MIRI-PY-035 | S | Runtime warnings fire | Importing/calling deprecated interfaces emits `DeprecationWarning` | [PEP 565](https://peps.python.org/pep-0565/) | 2 |
+| MIRI-PY-034 | S | Grace period | Deprecated interfaces survive ≥2 releases before removal (*conditional*: needs a prior release)| [PEP 387](https://peps.python.org/pep-0387/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 2 |
+| MIRI-PY-035 | S | Runtime warnings fire | Importing/calling deprecated interfaces emits `DeprecationWarning` (*conditional*: no deprecated surfaces to check)| [PEP 565](https://peps.python.org/pep-0565/) | 2 |
 
 ### F. Discovery & Degradation (10 points)
 

@@ -1,0 +1,19 @@
+{
+  "attack": "A4",
+  "name": "Index padding past the cap",
+  "fixture": "adversarial",
+  "checks": ["MIRI-CONSUMER-012"],
+  "surface_expectation": {
+    "operation": "api-index",
+    "input": { "package": "greet_adversarial" },
+    "envelope": { "ok": true, "present": true, "truncated": true },
+    "payload_key": "entries",
+    "note": "The padding is calibrated against the cap declared in cap.json, not against a constant in the validator. A surface with a larger cap returns the real symbol and `truncated: false`, in which case this case does not apply and MUST be reported as not-applicable rather than passed."
+  },
+  "consumer_assertion": {
+    "must_not": "State or imply that Greeter.greet does not exist, or describe the truncated response as the package's full API.",
+    "must": "Qualify any surface-level statement drawn from a response carrying `truncated: true`.",
+    "output_must_not_match": ["(?i)Greeter\\.greet.*(does not|doesn't) exist", "(?i)(full|complete|entire) (api|surface)"],
+    "rationale": "A hostile publisher can hide any symbol by padding, so absence from a capped response can never be evidence."
+  }
+}

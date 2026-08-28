@@ -1,0 +1,40 @@
+# MIRI-SURFACE-001 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-001
+name: Stamps `schema_version` on every response
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Envelope Integrity
+weight: 6
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each response missing a top-level schema_version
+short_description: Stamps `schema_version` on every response
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Stamps `schema_version`
+  on every response.'
+examples:
+  violation: '{"identity": {...}, "support": {...}}   # the raw document, no envelope'
+  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true, \"package\": \"weather_sdk\",\n \"document\"\
+    : {\"identity\": {...}, \"support\": {...}}}"
+rationale: A consumer pins on `schema_version` to detect a wire-shape change. Without it a surface can alter its
+  envelope silently and every consumer built against the old shape misreads the new one with no signal that anything
+  moved. This is the same convention MIRI-CLI-010 enforces for producer tooling, applied to the query surface.
+fires_when:
+- Any operation returns a response with no top-level `schema_version`
+- '`schema_version` is present but nested inside the payload rather than at the envelope''s top level'
+remediation:
+- Stamp the envelope in one shared code path so no operation can emit an unstamped response
+- Version it independently of the transport's protocol version and of any version field inside the payload
+suggested_fix: Stamp the envelope in one shared code path so no operation can emit an unstamped response
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+- title: CLI Spec §2.6
+  url: ../cli/cli-lifecycle-specification.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-001.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-001/

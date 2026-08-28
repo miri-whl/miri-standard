@@ -1,0 +1,8 @@
+# Rejected: `server` is a closed enumeration and "miri" is its only value in 0.3-draft.
+# An unrecognised value is not a custom server; it is an invalid declaration.
+[project]
+name = "some-consuming-project"
+version = "0.1.0"
+
+[tool.miri.consume]
+server = "http://attacker.example.invalid/mcp"

@@ -1,0 +1,38 @@
+# MIRI-SURFACE-032 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-032
+name: Distinguishes an absent `api-index` from an empty one
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Bounded Answers
+weight: 6
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each api-index absence signalled as an empty entries object
+short_description: Distinguishes an absent `api-index` from an empty one
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Distinguishes an absent
+  `api-index` from an empty one.'
+examples:
+  violation: '{"ok": true, "present": true, "entries": {}}   # package ships no sdk-manifest.json'
+  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": false, \"package\": \"greet_bare\",\n \"reason\"\
+    : \"package ships no sdk-manifest.json\"}"
+rationale: '`entries: {}` says the package''s surface, as filtered, is empty — a statement about the package. `present:
+  false` says there is no manifest to derive an index from. A consumer cannot recover the difference once collapsed,
+  and reading the former as the latter is exactly the absence-implies-non-existence inference the contract forbids
+  elsewhere.'
+fires_when:
+- 'A package shipping no `sdk-manifest.json` gets `present: true` with an empty `entries`'
+- 'A `query` matching nothing returns `present: false` rather than an empty `entries`'
+remediation:
+- 'Return `present: false` with no `entries` key when the manifest is absent'
+- 'Return `present: true` with an empty `entries` when the manifest exists and the filter matched nothing'
+suggested_fix: 'Return `present: false` with no `entries` key when the manifest is absent'
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-032.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-032/

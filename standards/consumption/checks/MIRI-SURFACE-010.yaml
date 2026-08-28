@@ -1,0 +1,39 @@
+# MIRI-SURFACE-010 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-010
+name: 'Reports absence as `ok: true, present: false` — never as an error'
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Absence and Error
+weight: 8
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each absence reported as an error or as a silent empty success
+short_description: 'Reports absence as `ok: true, present: false` — never as an error'
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Reports absence as `ok:
+  true, present: false` — never as an error.'
+examples:
+  violation: '{"error": "no MIRI metadata for greet_bare"}   # is this absent, or did the lookup fail?'
+  compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": false, \"package\": \"greet_bare\",\n \"name\"\
+    : \"lifecycle.json\", \"reason\": \"package ships no lifecycle.json\"}"
+rationale: Absence and failure mean different things and a consumer must act differently on each. The reference
+  implementation currently conflates them — it returns absence as a success whose text is an ad-hoc error object
+  — which is why the contract names conforming this the first implementation task. A consumer's honest-degradation
+  conformance is only checkable if the surface makes the distinction first.
+fires_when:
+- 'A query for a document the package does not ship returns `ok: false` or an `error` object'
+- 'Absence is signalled by an empty success with no `present: false`'
+- '`present` is absent from a document-returning response'
+remediation:
+- 'Return `ok: true`, `present: false`, no payload key, and a free-text `reason`'
+- 'Keep `ok` and `present` orthogonal: they answer different questions and neither implies the other'
+suggested_fix: 'Return `ok: true`, `present: false`, no payload key, and a free-text `reason`'
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-010.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-010/

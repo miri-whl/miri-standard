@@ -4,7 +4,13 @@
   "title": "Miri Standard SDK Manifest",
   "description": "Schema for sdk-manifest.json - Core API index with structured signatures and metadata",
   "type": "object",
-  "required": ["sdk_version", "generated_at", "miri_version", "quick_reference", "api_index"],
+  "required": [
+    "sdk_version",
+    "generated_at",
+    "miri_version",
+    "quick_reference",
+    "api_index"
+  ],
   "properties": {
     "sdk_version": {
       "type": "string",
@@ -23,26 +29,38 @@
     },
     "quick_reference": {
       "type": "object",
-      "required": ["primary_classes", "key_methods", "common_imports"],
+      "required": [
+        "primary_classes",
+        "key_methods",
+        "common_imports"
+      ],
       "properties": {
         "primary_classes": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Main classes agents should know about"
         },
         "key_methods": {
-          "type": "array", 
-          "items": {"type": "string"},
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
           "description": "Most important methods across all classes"
         },
         "common_imports": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Standard import statements for the SDK"
         },
         "typical_workflow": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Common sequence of operations"
         }
       }
@@ -71,14 +89,18 @@
         "environment_variables": {
           "type": "object",
           "patternProperties": {
-            "^[A-Z_][A-Z0-9_]*$": {"type": "string"}
+            "^[A-Z_][A-Z0-9_]*$": {
+              "type": "string"
+            }
           },
           "description": "Environment variables used by the SDK"
         },
         "config_files": {
           "type": "object",
           "patternProperties": {
-            ".*": {"type": "string"}
+            ".*": {
+              "type": "string"
+            }
           },
           "description": "Configuration files and their purposes"
         }
@@ -88,11 +110,19 @@
   "definitions": {
     "api_component": {
       "type": "object",
-      "required": ["type", "purpose"],
+      "required": [
+        "type",
+        "purpose"
+      ],
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["class", "function", "module", "constant"]
+          "enum": [
+            "class",
+            "function",
+            "module",
+            "constant"
+          ]
         },
         "purpose": {
           "type": "string",
@@ -100,7 +130,11 @@
         },
         "complexity": {
           "type": "string",
-          "enum": ["beginner", "intermediate", "advanced"],
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ],
           "description": "Complexity level for users"
         },
         "init_params": {
@@ -117,17 +151,23 @@
         },
         "usage_patterns": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "IDs of relevant usage patterns"
         },
         "related_classes": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Names of related API components"
         },
         "common_errors": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Common exception types"
         },
         "example": {
@@ -137,12 +177,18 @@
         "file": {
           "type": "string",
           "description": "Source file path"
+        },
+        "signature": {
+          "type": "string",
+          "description": "The component's call signature as it appears in source, e.g. \"Greeter(language: str = 'en')\". An AST fact. Optional: a generator emits it where the source states it, and a consumer MUST NOT assume its presence (Discovery Contract \u00a73.5)."
         }
       }
     },
     "method_info": {
       "type": "object",
-      "required": ["purpose"],
+      "required": [
+        "purpose"
+      ],
       "properties": {
         "purpose": {
           "type": "string",
@@ -157,7 +203,9 @@
         },
         "raises": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Exception types that may be raised"
         },
         "example": {
@@ -166,7 +214,11 @@
         },
         "complexity": {
           "type": "string",
-          "enum": ["beginner", "intermediate", "advanced"]
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ]
         }
       }
     },
@@ -180,7 +232,9 @@
     },
     "parameter_info": {
       "type": "object",
-      "required": ["type"],
+      "required": [
+        "type"
+      ],
       "properties": {
         "type": {
           "type": "string",
@@ -206,7 +260,10 @@
     },
     "error_info": {
       "type": "object",
-      "required": ["when", "common_causes"],
+      "required": [
+        "when",
+        "common_causes"
+      ],
       "properties": {
         "when": {
           "type": "string",
@@ -214,12 +271,16 @@
         },
         "common_causes": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Common causes of this error"
         },
         "solutions": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "How to fix this error"
         }
       }

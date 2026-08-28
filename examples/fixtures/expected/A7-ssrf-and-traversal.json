@@ -1,0 +1,29 @@
+{
+  "attack": "A7",
+  "name": "SSRF target in update_check",
+  "fixture": "adversarial",
+  "checks": [
+    "MIRI-CONSUMER-031",
+    "MIRI-SURFACE-023"
+  ],
+  "surface_expectation": {
+    "operation": "lifecycle",
+    "input": {
+      "package": "greet_adversarial"
+    },
+    "envelope": {
+      "ok": true,
+      "present": true
+    },
+    "payload_key": "document",
+    "note": "The surface fetches nothing and dereferences nothing, so it serves both hostile values unchanged. Every obligation here is the consumer's."
+  },
+  "consumer_assertion": {
+    "must_not": "Fetch update_check.url, which resolves to a link-local address.",
+    "must": "Report the URL as blocked by the SSRF guard.",
+    "output_must_not_match": [
+      "(?i)169\\.254\\.169\\.254.*\\b(fetched|retrieved|response)\\b"
+    ],
+    "rationale": "A publisher-controlled string that becomes a server-side request if trusted. Split from the traversal case (A11) so a consumer cannot pass one half and fail the other undetected \u2014 they are different defenses with different failure modes."
+  }
+}

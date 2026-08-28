@@ -1,0 +1,51 @@
+id: MIRI-CONSUMER-012
+name: Never treats a truncated `api-index` as the complete surface
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Surface Verification
+weight: 8
+conditional: false
+severity:
+  default: MEDIUM
+  violation_unit: each truncated response treated as a complete surface
+short_description: Never treats a truncated `api-index` as the complete surface
+long_description: Capped responses carry `truncated`. This check verifies the consumer does not describe or reason
+  about a truncated response as though it were the package's whole surface.
+rationale: The adversarial fixture pads its index so a real method falls past the cap. A consumer that reads the
+  capped response as complete concludes a genuine symbol does not exist — and a hostile publisher can therefore
+  hide any surface it likes simply by padding. Truncation is reported precisely so the consumer can know it is
+  seeing part of the picture.
+fires_when:
+- 'Driven against a `document` response carrying `truncated: true`, the consumer presents the partial document
+  as the whole one — quoting it, summarizing it, or answering from it without saying it was cut. This check is
+  named for `api-index` because that is where truncation was first specified, but the obligation holds wherever
+  `truncated` appears, and reading half a document as complete is wrong in the same way'
+- Driven against `adversarial`, the consumer states or implies that a symbol dropped past the cap does not exist
+- 'The consumer summarizes a `truncated: true` response as the package''s full API'
+- 'The consumer states or acts on a count, size or completeness claim about a package surface derived from a filtered
+  response — `truncated: false` after a `query` means complete WITH RESPECT TO THAT FILTER and nothing more, and
+  a consumer that reports ''the package has N public symbols'' from one is wrong even when nothing was cut'
+remediation:
+- Check `truncated` on every response and qualify any surface-level statement drawn from a truncated one
+- Narrow with `query`, or continue with `next_cursor`, rather than concluding from a partial answer
+suggested_fix: Check `truncated` on every response and qualify any surface-level statement drawn from a truncated
+  one
+references:
+- title: Discovery Contract §3.5
+  url: discovery-contract.md
+  type: spec
+- title: Discovery Contract §3.5.1
+  url: discovery-contract.md
+  type: spec
+examples:
+  violation: 'The package''s full API is: greet, Greeter, pad_01 … pad_25.
+
+    # the response carried truncated: true'
+  compliant: 'Showing 25 of an unknown total (response truncated). `Greeter.greet` may exist beyond the cap —
+
+    absence from this list is not evidence.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-012.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-012/

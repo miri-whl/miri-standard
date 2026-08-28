@@ -1,0 +1,44 @@
+id: MIRI-SURFACE-022
+name: Discovers import-free; executes nothing
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Boundaries
+weight: 5
+conditional: false
+severity:
+  default: CRITICAL
+  violation_unit: each package imported or executed during a query
+short_description: Discovers import-free; executes nothing
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Discovers import-free;
+  executes nothing and fetches nothing.'
+examples:
+  violation: 'importlib.import_module(pkg)  # to read its __doc__ for the summary'
+  compliant: 'importlib.util.find_spec(pkg)  # location only; metadata read from disk, never executed'
+rationale: 'Discovery runs over every installed package, including ones nobody has vetted. If locating metadata
+  imports the target, a hostile package gains code execution merely by being installed and enumerated — the query
+  surface becomes the attack. The same logic covers fetching: resolving a publisher-declared URL would turn publisher-controlled
+  data into server-side requests.'
+fires_when:
+- Any query imports the target package or executes any of its code
+- A package that cannot be resolved without importing is imported rather than reported `NOT_DISCOVERABLE`
+- Resolving a dotted `package` value imports the parent package on the way to the target (§3.0)
+- The surface serves a request from an interpreter that has the target environment on its import path, so that
+  a .pth file, sitecustomize, usercustomize, or an eagerly loaded entry-point plugin executed publisher code before
+  the first request arrived. Import-freedom is a property of the process, not of the request handler, and the
+  hostile-import canary detects only the handler path
+remediation:
+- Resolve locations through the import system's path finders and read files; never import the target
+- Reject a dotted `package` before attempting resolution, so the parent is never imported either
+suggested_fix: Resolve locations through the import system's path finders and read files; never import the target
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+- title: Lifecycle and Security Metadata §9.2
+  url: ../python/lifecycle-security-metadata.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-022.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-022/

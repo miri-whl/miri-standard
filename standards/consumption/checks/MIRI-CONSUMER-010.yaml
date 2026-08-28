@@ -1,0 +1,47 @@
+# MIRI-CONSUMER-010 — generated with the Consumer Conformance profile; canonical source of truth.
+id: MIRI-CONSUMER-010
+name: Settles symbol existence with `resolve`, not index membership
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Surface Verification
+weight: 9
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each emitted call to a symbol never confirmed by resolve
+short_description: Settles symbol existence with `resolve`, not index membership
+long_description: Before emitting a call, a consumer must confirm the symbol exists. This check verifies it uses
+  the existence operation rather than treating a publisher-authored index as proof.
+rationale: '`api_index` is the publisher''s description of the surface, and the adversarial fixture demonstrates
+  the gap: it claims two symbols that do not exist anywhere in the source. A consumer that generates code from the
+  index sends a caller straight to AttributeError, which is the anti-hallucination failure the standard exists to
+  end. Existence comes from the source; the index only routes.'
+fires_when:
+- Driven against `adversarial`, the consumer emits a call to a symbol present in `api_index` but absent from the
+  source
+- The consumer presents a call as verified without a confirming `resolve` result
+remediation:
+- Call `resolve` for every symbol before emitting a call to it
+- Treat `api-index` as routing only; never as an existence proof
+suggested_fix: Call `resolve` for every symbol before emitting a call to it
+references:
+- title: Discovery Contract §3.6
+  url: discovery-contract.md
+  type: spec
+- title: Consumption Map §3.2
+  url: consumption-map.md
+  type: spec
+examples:
+  violation: 'from greet_adversarial import GreeterPro
+
+    client = GreeterPro(api_key=..., template=...)
+
+    # GreeterPro appears in api_index and does not exist'
+  compliant: '`GreeterPro` is listed in the package''s api_index but resolve reports it is not defined in the
+
+    installed source. I have not emitted a call to it.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-010.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-010/

@@ -1,0 +1,9 @@
+# Rejected: `env` is structurally excluded. Environment injection into a spawned
+# process is the same class of hole as `command`, one step removed.
+[project]
+name = "some-consuming-project"
+version = "0.1.0"
+
+[tool.miri.consume]
+server = "miri"
+env = { LD_PRELOAD = "/tmp/evil.so", PYTHONSTARTUP = "/tmp/evil.py" }

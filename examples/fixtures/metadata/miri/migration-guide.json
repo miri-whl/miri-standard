@@ -1,0 +1,37 @@
+{
+  "from_version": "0.9.0",
+  "to_version": "1.0.0",
+  "migration_type": "major",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "summary": {
+    "breaking_changes": 1,
+    "new_features": 0,
+    "deprecations": 1,
+    "estimated_migration_time": "2 minutes"
+  },
+  "breaking_changes": [
+    {
+      "id": "greeting_signature",
+      "severity": "low",
+      "component": "greet",
+      "change": "greet() takes the language as a keyword argument rather than positionally.",
+      "old_code": "greet(\"Ada\", \"es\")",
+      "new_code": "greet(\"Ada\", language=\"es\")",
+      "reason": "Keyword-only makes the call site readable and leaves room for further options.",
+      "automated_fix": {
+        "find_pattern": "greet\\(([^,]+),\\s*\"(en|es|fr)\"\\)",
+        "replace_pattern": "greet(\\1, language=\"\\2\")",
+        "confidence": "high"
+      }
+    }
+  ],
+  "deprecations": [
+    {
+      "id": "make_greeting",
+      "deprecated": "make_greeting",
+      "replacement": "greet_miri.greet",
+      "removal_version": "2.0.0",
+      "migration": "Replace `make_greeting(name)` with `greet(name)`; behavior is unchanged."
+    }
+  ]
+}

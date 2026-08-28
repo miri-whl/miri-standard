@@ -13,6 +13,8 @@ consistency and enable automated validation of agent metadata.
   - Validates API components, methods, parameters, and error handling
 
 - **[usage-patterns-v1.json](usage-patterns-v1.json)** - Schema for `usage-patterns.json`
+- **[test-patterns-v1.json](test-patterns-v1.json)** - Schema for `test-patterns.json` - unit and integration test
+  patterns extracted from the package's own suite, plus the test doubles it ships
   - Pre-extracted, categorized code patterns
   - Required fields: `version`, `generated_at`, `patterns`
   - Validates pattern structure, categories, and learning paths

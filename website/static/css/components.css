@@ -90,6 +90,11 @@ p { margin: 0 0 var(--space-4); max-width: var(--measure-prose); }
 .avatar { display: block; image-rendering: pixelated; }
 
 /* Data tables */
+/* Spec tables can be wider than the column (the envelope-field and check tables especially),
+   so they scroll inside their own wrapper rather than forcing the page to scroll sideways. */
+.tablewrap { overflow-x: auto; margin: var(--space-2) 0 var(--space-6); }
+.tablewrap > table { margin: 0; }
+.tablewrap table { min-width: 32rem; }
 table { width: 100%; border-collapse: collapse; margin: var(--space-2) 0 var(--space-6); }
 th { text-align: left; padding: var(--space-2) var(--space-3); font-family: var(--font-mono);
      font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: var(--tracking-caps);
@@ -160,15 +165,75 @@ tr.rowlink { cursor: pointer; }
 a.rowname { color: var(--ink-800); text-decoration: none; font-weight: var(--weight-medium); }
 a.rowname:hover { color: var(--gold-700); text-decoration: underline; }
 
-/* Sortable table headers */
-th.sortable { cursor: pointer; user-select: none; }
+/* Sortable table headers.
+   The indicator is a ::after on the header cell, so the label and the arrow are one text run and
+   the browser will break between them if the column is narrow — which drops the arrow onto a second
+   line and makes the whole header row two lines tall. `nowrap` forbids that break and, because a
+   table column is at least as wide as its widest unbreakable content, also gives the column the
+   width it needs. The separator is a non-breaking space for the same reason, so the rule holds even
+   where a future style resets white-space. */
+th.sortable { cursor: pointer; user-select: none; white-space: nowrap; }
 th.sortable:hover { color: var(--gold-700); }
-th.sortable::after { content: " ↕"; opacity: 0.35; }
-th.sortable[data-dir="asc"]::after { content: " ↑"; opacity: 1; color: var(--gold-700); }
-th.sortable[data-dir="desc"]::after { content: " ↓"; opacity: 1; color: var(--gold-700); }
+/* All three glyphs occupy one character cell, so the column does not resize as the sort changes. */
+th.sortable::after { content: "\00a0↕"; opacity: 0.35; }
+th.sortable[data-dir="asc"]::after { content: "\00a0↑"; opacity: 1; color: var(--gold-700); }
+th.sortable[data-dir="desc"]::after { content: "\00a0↓"; opacity: 1; color: var(--gold-700); }
 
 /* Definition-file link line on check pages */
 .deffile { font-size: var(--text-sm); color: var(--text-muted); margin: 0 0 var(--space-6); }
 
 /* Stacked full-width cards (check pages: violation above compliant) */
 .cardstack { display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+
+/* Inlined mermaid renderings. The SVGs carry `width: 100%` and a max-width from mermaid, so the
+   figure only has to bound them and centre the result; the overflow guard is for the wide
+   flowcharts, which must scroll inside the figure rather than widening the page. */
+figure.diagram { margin: var(--space-6) 0; overflow-x: auto; text-align: center; }
+figure.diagram svg { max-width: 100%; height: auto; }
+
+/* ---- Spec pages: article beside a sticky table of contents ----
+   The specs are long (the discovery contract is ~30 headings), and a reader who wanted a different
+   section previously had to scroll back to the top to find one. The sidebar is `position: sticky`
+   inside a grid column, which keeps it in view without taking the article out of normal flow, and
+   scrolls internally when the outline is taller than the viewport. */
+.prose-layout { display: grid; grid-template-columns: minmax(0, 1fr) 15rem; gap: var(--space-10);
+  align-items: start; }
+.prose-layout > article.prose { min-width: 0; }
+
+aside.toc { position: sticky; top: var(--space-6); align-self: start;
+  max-height: calc(100vh - var(--space-12)); display: flex; flex-direction: column;
+  border-left: 1px solid var(--ink-100); padding-left: var(--space-4); }
+aside.toc .toc-title { margin: 0 0 var(--space-3); font-size: var(--text-xs);
+  text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+  font-weight: var(--weight-medium); }
+aside.toc nav { overflow-y: auto; min-height: 0; }
+aside.toc ol { list-style: none; margin: 0; padding: 0; }
+aside.toc li { margin: 0; }
+aside.toc a { display: block; padding: 0.28rem 0; font-size: var(--text-sm);
+  line-height: var(--leading-snug); color: var(--text-muted); text-decoration: none;
+  border-left: 3px solid transparent; margin-left: -0.85rem; padding-left: 0.7rem;
+  border-radius: 0 3px 3px 0; transition: background-color 120ms ease, color 120ms ease; }
+aside.toc a:hover { color: var(--gold-700); background: var(--ink-50); }
+/* Sub-sections indent and sit a step quieter, so the shape of the document is legible at a glance. */
+aside.toc li.lvl3 a { padding-left: 1.55rem; font-size: var(--text-xs); color: var(--ink-500); }
+
+/* The active entry is the one thing on this page a reader tracks with peripheral vision while
+   scrolling, so it is marked on four channels at once — filled band, full-height rule, ink weight
+   and a darker colour. A colour shift alone reads as noise at the edge of vision. */
+aside.toc a.here { color: var(--gold-800); background: var(--gold-50);
+  border-left-color: var(--gold-500); font-weight: var(--weight-semibold); }
+aside.toc li.lvl3 a.here { color: var(--gold-800); font-size: var(--text-sm); }
+
+/* Anchor targets clear the fixed top bar, so a jumped-to heading is not hidden under it. */
+article.prose :is(h2, h3)[id] { scroll-margin-top: var(--space-8); }
+
+/* Below this width there is no room for a second column; the outline collapses into the flow
+   above the article rather than disappearing, since it is the only navigation these pages have. */
+@media (max-width: 1100px) {
+  .prose-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  aside.toc { position: static; max-height: none; order: -1; border-left: 0; padding-left: 0;
+    border-bottom: 1px solid var(--ink-100); padding-bottom: var(--space-4); }
+  aside.toc nav { overflow: visible; }
+  aside.toc ol { columns: 2; column-gap: var(--space-6); }
+}
+@media (max-width: 620px) { aside.toc ol { columns: 1; } }

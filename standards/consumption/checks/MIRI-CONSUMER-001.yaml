@@ -1,0 +1,49 @@
+# MIRI-CONSUMER-001 — generated with the Consumer Conformance profile; canonical source of truth.
+id: MIRI-CONSUMER-001
+name: Reports an absent document as absent
+target: consumer
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Honest Degradation
+weight: 8
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each absent document reported as anything other than absent
+short_description: Reports an absent document as absent
+long_description: A consumer driven against a package that ships no such document must report the absence. This
+  check verifies that the consumer's output states the document is absent rather than omitting the fact or filling
+  the gap.
+rationale: 'Honest degradation is the property that makes the whole bare/miri comparison mean anything: if a consumer
+  answers the same way whether or not the metadata exists, the metadata is not what produced the answer. The Discovery
+  Contract calls the absent-versus-failed split ''the single most consequential clause in this document'' precisely
+  because a consumer''s honesty is only checkable if absence is reported. No existing tool checks this because no
+  existing tool defines a consumer.'
+fires_when:
+- The consumer is driven against the `bare` fixture and its output does not state that the requested document is
+  absent
+- The consumer reports an absent document as an error, or an error as an absence
+- The consumer silently omits any mention of a document it was asked about and did not receive
+remediation:
+- Branch on the envelope's `present` field and emit an explicit 'no such document' statement in the consumer's output
+- Distinguish absence from failure in the output vocabulary, mirroring the `ok`/`present` split
+suggested_fix: Branch on the envelope's `present` field and emit an explicit 'no such document' statement in the
+  consumer's output
+references:
+- title: Discovery Contract §4.2
+  url: discovery-contract.md
+  type: spec
+- title: Consumption Map §4
+  url: consumption-map.md
+  type: spec
+examples:
+  violation: 'greet_bare — lifecycle: active, supported.
+
+    (no lifecycle.json was served; status was assumed)'
+  compliant: 'greet_bare — lifecycle: NOT DECLARED.
+
+    The package ships no lifecycle.json, so support status and advisory sources are unknown.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-001.yaml
+  html: https://miri-whl.github.io/checks/miri-consumer-001/

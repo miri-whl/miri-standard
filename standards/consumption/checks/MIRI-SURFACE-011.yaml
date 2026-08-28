@@ -1,0 +1,38 @@
+# MIRI-SURFACE-011 — generated with the Surface Conformance profile; canonical source of truth.
+id: MIRI-SURFACE-011
+name: 'Reports failure as `ok: false` with a coded `error` object'
+target: surface
+status: active
+added_in: 0.3-draft
+level: MUST
+category: Absence and Error
+weight: 7
+conditional: false
+severity:
+  default: HIGH
+  violation_unit: each failure reported without a machine-readable code
+short_description: 'Reports failure as `ok: false` with a coded `error` object'
+long_description: 'Surface obligation from the Discovery Contract. This check verifies: Reports failure as `ok:
+  false` with a coded `error` object.'
+examples:
+  violation: '{"schema_version": "1", "ok": false, "error": "package not found"}'
+  compliant: "{\"schema_version\": \"1\", \"ok\": false, \"package\": \"nope\",\n \"error\": {\"code\": \"PACKAGE_NOT_INSTALLED\"\
+    , \"retryable\": false}}"
+rationale: A consumer branches on `error.code` to decide whether to retry, re-ask, or stop. Prose alone forces string
+  matching, which breaks on rewording and cannot be tested. The contract reuses the CLI §2.6 envelope so one error
+  vocabulary spans the standard.
+fires_when:
+- 'A failure returns without `ok: false`, or without a top-level `error` object'
+- '`error.code` is absent, or is not one of the codes defined in §4.3'
+- '`error.retryable` is absent, or is true for a failure the identical call can never resolve'
+remediation:
+- 'Return `ok: false` with `error: {code, retryable}` using the §4.3 codes'
+- Set `retryable` true only for transient conditions — never for a request the caller must change
+suggested_fix: 'Return `ok: false` with `error: {code, retryable}` using the §4.3 codes'
+references:
+- title: Discovery Contract
+  url: discovery-contract.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-SURFACE-011.yaml
+  html: https://miri-whl.github.io/checks/miri-surface-011/

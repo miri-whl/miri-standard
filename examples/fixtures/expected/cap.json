@@ -1,0 +1,8 @@
+{
+  "note": "The api-index cap the A4 padding attack is calibrated against. The Discovery Contract §3.5.1 fixes the DEFAULT cap at 25, but a conformant surface may declare a larger one — and at cap 50 the padding no longer truncates, so A4 becomes not-applicable rather than passing. Keeping the value here, rather than as a constant inside tools/validate_fixtures.py, is what lets a suite driving a differently-capped surface detect that and report not-applicable instead of a silent green.",
+  "api_index_cap": 25,
+  "pad_entries": 25,
+  "target_symbol": "Greeter.greet",
+  "contract_default": 25,
+  "contract_reference": "standards/consumption/discovery-contract.md §3.5.1"
+}

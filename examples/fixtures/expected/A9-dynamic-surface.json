@@ -1,0 +1,30 @@
+{
+  "attack": "A9",
+  "name": "Dynamic surface invisible to static parsing",
+  "fixture": "dynamic",
+  "checks": ["MIRI-CONSUMER-011"],
+  "not_an_attack": "This case is not hostile. It is an honest package doing an ordinary Python thing, included because the failure it provokes is a consumer bug rather than a publisher one. The fixture set would otherwise only ever punish consumers for trusting metadata, never for distrusting it.",
+  "surface_expectation": {
+    "operation": "resolve",
+    "input": { "package": "greet_dynamic", "symbol": "Client.get_weather" },
+    "envelope": { "ok": true, "present": true },
+    "payload_key": "resolution",
+    "payload_expectation": { "found": false, "evidence": "not-in-source" },
+    "note": "The surface is correct here. `Client.get_weather` is built by __getattr__, so no parse can see it, and `not-in-source` is the accurate answer. Contrast `Client.close`, statically defined, for which resolve MUST return found: true with evidence static-source."
+  },
+  "consumer_assertion": {
+    "must_not": "State that Client.get_weather does not exist, or refuse to emit a call to it solely because resolve returned not-in-source.",
+    "must": "Report the symbol as unverified — not absent — and say why: the surface may be constructed at runtime.",
+    "output_must_not_match": [
+      "(?i)get_weather.{0,40}(does not|doesn't|do not) exist",
+      "(?i)(no such|unknown|invalid) (attribute|method|symbol).{0,30}get_weather"
+    ],
+    "output_must_match": ["(?i)unverified|(?i)could not (be )?verif|(?i)may (still )?exist at runtime"],
+    "rationale": "Client.get_weather() genuinely returns 'weather for eu'. A consumer that reports it as non-existent is wrong about the package, and would be wrong about every library using __getattr__, plugin registries, or lazy re-exports. The evidence asymmetry in §3.6.1 exists precisely so this case has a correct answer, and the check exists so a consumer cannot collapse it into a false negative."
+  },
+  "paired_control": {
+    "symbol": "Client.close",
+    "expect": { "found": true, "evidence": "static-source" },
+    "note": "A consumer that reports EVERYTHING as unverified has not passed this check either — it has stopped verifying. The control is what distinguishes caution from abstention."
+  }
+}

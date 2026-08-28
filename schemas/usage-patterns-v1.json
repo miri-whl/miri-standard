@@ -4,7 +4,11 @@
   "title": "Miri Standard Usage Patterns",
   "description": "Schema for usage-patterns.json - Pre-extracted, categorized code patterns",
   "type": "object",
-  "required": ["version", "generated_at", "patterns"],
+  "required": [
+    "version",
+    "generated_at",
+    "patterns"
+  ],
   "properties": {
     "version": {
       "type": "string",
@@ -18,7 +22,9 @@
     },
     "patterns": {
       "type": "array",
-      "items": {"$ref": "#/definitions/usage_pattern"},
+      "items": {
+        "$ref": "#/definitions/usage_pattern"
+      },
       "description": "List of usage patterns"
     },
     "categories": {
@@ -43,7 +49,14 @@
   "definitions": {
     "usage_pattern": {
       "type": "object",
-      "required": ["id", "name", "description", "complexity", "category", "code"],
+      "required": [
+        "id",
+        "name",
+        "description",
+        "complexity",
+        "category",
+        "code"
+      ],
       "properties": {
         "id": {
           "type": "string",
@@ -60,7 +73,11 @@
         },
         "complexity": {
           "type": "string",
-          "enum": ["beginner", "intermediate", "advanced"],
+          "enum": [
+            "beginner",
+            "intermediate",
+            "advanced"
+          ],
           "description": "Difficulty level"
         },
         "category": {
@@ -69,7 +86,9 @@
         },
         "tags": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Searchable tags"
         },
         "code": {
@@ -82,22 +101,68 @@
         },
         "variations": {
           "type": "array",
-          "items": {"$ref": "#/definitions/code_variation"},
+          "items": {
+            "$ref": "#/definitions/code_variation"
+          },
           "description": "Alternative implementations"
         },
         "related_patterns": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "IDs of related patterns"
         },
         "prerequisites": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Required knowledge or patterns"
         },
         "estimated_time": {
           "type": "string",
           "description": "Time to understand/implement"
+        },
+        "antipatterns": {
+          "type": "array",
+          "description": "Known-wrong ways to use this surface, with the corrected form. This is the negative half of usage guidance \u2014 \"never construct this per request\", \"this is not thread-safe\", \"do not retry this error class\" \u2014 which has no other home in the standard. Author-declared: emit only where the package states it, never inferred.",
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "why"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "name": {
+                "type": "string",
+                "description": "Short name for the mistake"
+              },
+              "wrong_code": {
+                "type": "string",
+                "description": "The incorrect usage, as code"
+              },
+              "right_code": {
+                "type": "string",
+                "description": "The corrected usage, as code"
+              },
+              "why": {
+                "type": "string",
+                "description": "What goes wrong \u2014 the failure mode, not merely a style preference"
+              },
+              "severity": {
+                "type": "string",
+                "enum": [
+                  "correctness",
+                  "security",
+                  "performance",
+                  "style"
+                ],
+                "description": "The kind of harm. `correctness` and `security` are the ones a consumer must surface before writing a call; `style` is advisory."
+              }
+            }
+          }
         }
       }
     },
@@ -106,12 +171,16 @@
       "properties": {
         "steps": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Step-by-step breakdown"
         },
         "key_points": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Important concepts to understand"
         },
         "security_note": {
@@ -124,14 +193,19 @@
         },
         "parameter_styles": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Different parameter formats supported"
         }
       }
     },
     "code_variation": {
       "type": "object",
-      "required": ["name", "code"],
+      "required": [
+        "name",
+        "code"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -149,7 +223,11 @@
     },
     "category": {
       "type": "object",
-      "required": ["name", "description", "patterns"],
+      "required": [
+        "name",
+        "description",
+        "patterns"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -161,14 +239,20 @@
         },
         "patterns": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Pattern IDs in this category"
         }
       }
     },
     "learning_path": {
       "type": "object",
-      "required": ["name", "description", "patterns"],
+      "required": [
+        "name",
+        "description",
+        "patterns"
+      ],
       "properties": {
         "name": {
           "type": "string",
@@ -180,7 +264,9 @@
         },
         "patterns": {
           "type": "array",
-          "items": {"type": "string"},
+          "items": {
+            "type": "string"
+          },
           "description": "Ordered list of pattern IDs"
         },
         "estimated_total_time": {
