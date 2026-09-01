@@ -1,4 +1,3 @@
-# MIRI-CLI-013 — generated with the checklist table; canonical source of truth.
 id: MIRI-CLI-013
 name: Structured errors
 target: cli
@@ -13,14 +12,15 @@ severity:
   violation_unit: each unstructured failure
   population_unit: all commands in --describe
 short_description: Failures emit JSON with a stable machine `error.code`
-long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
-  turns. This check verifies: Failures emit JSON with a stable machine `error.code`.'
-rationale: 'CLI Spec §6 makes the machine code the one stable surface of a failure: prose wording is free to change between
-  releases, so an agent that branches on message text breaks silently the first time a sentence is reworded. The precedent
-  is settled API practice — AWS service errors carry machine codes such as ThrottlingException that SDK retry classifiers
-  branch on, and RFC 9457 separates the stable problem `type` from the human `detail` field consumers are told not to parse.
-  A failure that emits only prose and a bare non-zero exit is the dead end of landscape §3.3: the agent retries with hallucinated
-  variants until something works, and no bug report is ever filed.'
+long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and
+  burns recovery turns. This check verifies: Failures emit JSON with a stable machine `error.code`.'
+rationale: 'CLI Spec §6 makes the machine code the one stable surface of a failure: prose wording is free to change
+  between releases, so an agent that branches on message text breaks silently the first time a sentence is reworded.
+  The precedent is settled API practice — AWS service errors carry machine codes such as ThrottlingException that
+  SDK retry classifiers branch on, and RFC 9457 separates the stable problem `type` from the human `detail` field
+  consumers are told not to parse. A failure that emits only prose and a bare non-zero exit is the dead end of
+  landscape §3.3: the agent retries with hallucinated variants until something works, and no bug report is ever
+  filed.'
 fires_when:
 - A documented-typed argument given a value outside its type (an unparseable version for `--since`, a path that
   cannot exist, a value outside an enumerated set) is accepted and reported as success rather than answered with
@@ -31,13 +31,14 @@ fires_when:
 - Error codes appear nowhere in the documented wire contract, leaving message text as the only branching surface
 - The same induced failure yields an `error.code` different from the documented one
 remediation:
-- 'Emit {"schema_version": "1", "ok": false, "error": {"code": ...}} as JSON on the machine channel for every failure path, per CLI Spec §6'
-- 'Assign UPPER_SNAKE codes from a closed, documented set (AUTH_EXPIRED, FLAG_REMOVED, RESOURCE_NOT_FOUND) and treat the
-  set as API: codes are added, never repurposed or renumbered'
-- Keep the human explanation in a separate message field that may change freely; keep warnings on stderr so they never corrupt
-  the payload (§2.5)
-- Route removed-surface invocations through the structured FLAG_REMOVED teaching error of §6 rather than the argument parser's
-  generic failure
+- 'Emit {"schema_version": "1", "ok": false, "error": {"code": ...}} as JSON on the machine channel for every
+  failure path, per CLI Spec §6'
+- 'Assign UPPER_SNAKE codes from a closed, documented set (AUTH_EXPIRED, FLAG_REMOVED, RESOURCE_NOT_FOUND) and
+  treat the set as API: codes are added, never repurposed or renumbered'
+- Keep the human explanation in a separate message field that may change freely; keep warnings on stderr so they
+  never corrupt the payload (§2.5)
+- Route removed-surface invocations through the structured FLAG_REMOVED teaching error of §6 rather than the argument
+  parser's generic failure
 examples:
   violation: '$ acme deploy --export
 
@@ -46,10 +47,14 @@ examples:
     $ echo $?
 
     2   # prose only; nothing an agent can branch on survives a rewording'
-  compliant: "$ acme deploy --export\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\": \"FLAG_REMOVED\", \"flag\": \"--export\",\n\
-    \  \"removed_in\": \"1.18.0\", \"retryable\": false,\n  \"suggestions\": [\"use --output archive instead\"]}}"
+  compliant: "$ acme deploy --export\n{\"schema_version\": \"1\", \"ok\": false, \"error\": {\"code\": \"FLAG_REMOVED\"\
+    , \"flag\": \"--export\",\n  \"removed_in\": \"1.18.0\", \"retryable\": false,\n  \"suggestions\": [\"use\
+    \ --output archive instead\"]}}"
 suggested_fix: Emit structured errors with a stable machine error.code.
 references:
+- title: CLI Spec §2.6
+  url: cli-lifecycle-specification.md
+  type: spec
 - title: CLI Spec §6
   url: cli-lifecycle-specification.md
   type: spec

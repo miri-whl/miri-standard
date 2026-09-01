@@ -81,6 +81,12 @@ jobs:
     - name: Validate sample-sdk metadata against schemas
       run: make validate-sample
 
+    # The fourth normative-artifact pair: spec prose x check citations. Gates the mechanically
+    # decidable half — does the cited document and section exist — and leaves the semantic half
+    # to `make references --report`, which is a list for a person rather than a green tick.
+    - name: Verify check citations resolve
+      run: make references
+
   sample-conformance:
     name: Sample SDK Conformance (miri score)
     runs-on: ubuntu-latest
