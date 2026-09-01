@@ -656,6 +656,18 @@ The forged keys are still in the response — served intact, because the surface
 They are simply one level down, where they are data rather than signal. That is the whole mechanism: not sanitizing
 the payload, but denying it the position from which it could be believed.
 
+The envelope has a machine-readable form: [`discovery-envelope-v1.json`](../../schemas/discovery-envelope-v1.json),
+contributed by the miri-py team and derived from a working surface rather than from this prose a second time. It
+encodes the conditional rules that carry the weight — a failure requires an `error`, a served response forbids one,
+an absence requires a `reason` and forbids every payload key, a `cap` requires its `truncated` flag, `graph` may not
+emit a cursor, `list` may not carry `present` — because a flat property list would accept an absence carrying a
+payload and call it valid.
+
+Its root leaves `additionalProperties` **open** deliberately. §3 grew from five operations to eight during 0.3
+drafting, and each new operation implies a payload key a closed root would reject on the day it lands. The reserved
+key set is enforced check-side by `MIRI-SURFACE-003`, which is where a rule about *which* keys are permitted
+belongs; closing the schema as well would schedule the failure mode where a schema forbids a field a MUST requires.
+
 ### 4.1 Reserved Envelope Fields
 
 This table is **exhaustive**: these are the only keys that may appear at a response's top level. The

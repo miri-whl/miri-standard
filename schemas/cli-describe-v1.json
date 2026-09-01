@@ -8,7 +8,8 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "description": "Wire-schema version of this document, carried top-level per MIRI-CLI-010 and versioned independently of identity.version"
+      "pattern": "^[0-9]+$",
+      "description": "Wire-schema version of this document, carried top-level per MIRI-CLI-010 and versioned independently of identity.version. An integer string — \"1\", \"2\" — compared numerically. The format is pinned because it was stated only in prose and examples, and three surfaces had already diverged on it, two emitting \"1.0\" and one \"1\", all validating."
     },
     "identity": {
       "type": "object",

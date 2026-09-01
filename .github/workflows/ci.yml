@@ -81,6 +81,12 @@ jobs:
     - name: Validate sample-sdk metadata against schemas
       run: make validate-sample
 
+    # Contributed with the schema by the miri-py team: 8 conformant envelopes must validate and 16
+    # mutants must each be caught by the rule they exercise. Evidence kept executable rather than
+    # asserted in a document, so a schema edit that stops enforcing a rule fails here.
+    - name: Validate the discovery envelope schema
+      run: make envelope
+
   sample-conformance:
     name: Sample SDK Conformance (miri score)
     runs-on: ubuntu-latest
