@@ -81,6 +81,15 @@ jobs:
     - name: Validate sample-sdk metadata against schemas
       run: make validate-sample
 
+    # The fixture invariants and the consistency checker had never run in CI — they gated
+    # nothing, and the MIRI-SURFACE-012 conflict the miri-py team reported was exactly the
+    # kind of defect they exist to catch. This job already installs pyyaml and jsonschema.
+    - name: Verify fixture invariants
+      run: make validate-fixtures
+
+    - name: Check specification consistency
+      run: make consistency
+
   sample-conformance:
     name: Sample SDK Conformance (miri score)
     runs-on: ubuntu-latest
