@@ -1,6 +1,6 @@
 # Miri Standard: Discovery Contract (Consumption)
 
-*Specification Version: 0.3-draft*
+*Specification Version: 0.3.1-draft*
 *Status: Draft*
 *Created: 2026*
 
