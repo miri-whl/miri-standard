@@ -1,6 +1,6 @@
 # Miri Standard: Surface Conformance (Consumption)
 
-*Specification Version: 0.3-draft*
+*Specification Version: 0.3.1-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -125,7 +125,7 @@ The discrimination the contract calls its single most consequential clause.
 |---|---|---|---|---|
 | MIRI-SURFACE-010 | M | Reports absence as `ok: true, present: false` — never as an error | 8 | `bare` |
 | MIRI-SURFACE-011 | M | Reports failure as `ok: false` with a coded `error` object | 7 | `expected/requests.json` |
-| MIRI-SURFACE-012 | M | Reports a document it cannot read — unparsable **or** schema-invalid — as `METADATA_UNREADABLE`, never absent or repaired | 7 | `malformed` |
+| MIRI-SURFACE-012 | M | Reports a document it cannot **parse** as `METADATA_UNREADABLE`, never absent or repaired | 7 | `malformed` |
 
 ### C. Boundaries (24 points)
 

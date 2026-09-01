@@ -15,6 +15,10 @@ import re
 import pathlib
 import sys
 
+# pyyaml and jsonschema are installed in the schema-validation CI job, which is where this now runs.
+import jsonschema
+import yaml
+
 REPO = pathlib.Path(__file__).resolve().parent.parent
 FIX = REPO / "examples/fixtures"
 EXPECTED = FIX / "expected"
@@ -293,6 +297,86 @@ def main() -> int:
         check("every surface Case cell names a real fixture or golden", not unknown, "; ".join(unknown))
     else:
         check("every surface Case cell names a real fixture or golden", False, "profile missing")
+
+    # 4e. Checks must not contradict the goldens. The miri-py team found MIRI-SURFACE-012 requiring
+    #     a surface to REFUSE schema-invalid documents while six goldens require it to SERVE the
+    #     same documents — and ten of the fifteen consumer checks are driven THROUGH those served
+    #     documents, so enforcing the clause would have disabled most of the consumer profile.
+    #     Neither doc-linting nor schema validation can see a conflict of this shape: one side is
+    #     prose in a YAML field, the other is JSON in a golden.
+    schemas_by_doc = {
+        "lifecycle.json": "lifecycle-v1.json",
+        "sdk-manifest.json": "sdk-manifest-v1.json",
+        "usage-patterns.json": "usage-patterns-v1.json",
+        "api-graph.json": "api-graph-v1.json",
+        "migration-guide.json": "migration-guide-v1.json",
+    }
+    served_invalid = []
+    for g in sorted(EXPECTED.glob("A*.json")):
+        d = json.loads(g.read_text())
+        se = d.get("surface_expectation", {})
+        env = se.get("envelope") or {k: v for k, v in se.items() if k in ("ok", "present")}
+        if not (env.get("ok") is True and env.get("present") is True):
+            continue
+        variant = (d.get("fixture", "") or "").split()[0].strip("(),")
+        for name, schema_name in schemas_by_doc.items():
+            doc_path = FIX / "metadata" / variant / name
+            schema_path = REPO / "schemas" / schema_name
+            if not doc_path.exists() or not schema_path.exists():
+                continue
+            try:
+                doc = json.loads(doc_path.read_text())
+            except json.JSONDecodeError:
+                check(f"golden {g.stem}: a document it requires SERVED must at least parse", False,
+                      f"{variant}/{name} does not parse")
+                continue
+            errs = list(jsonschema.Draft7Validator(json.loads(schema_path.read_text())).iter_errors(doc))
+            if errs:
+                served_invalid.append(f"{variant}/{name}")
+    # Having established which served documents are schema-invalid, no check may demand refusing them.
+    refusers = []
+    for f in sorted((REPO / "standards/consumption/checks").glob("*.yaml")):
+        cd = yaml.safe_load(f.read_text())
+        if cd.get("status") != "active":
+            continue
+        for clause in cd.get("fires_when", []):
+            low = clause.lower()
+            if "schema" in low and ("fails" in low or "invalid" in low) and "metadata_unreadable" in low:
+                refusers.append(cd["id"])
+    check("no check demands refusing a document the goldens require served",
+          not (served_invalid and refusers),
+          f"{sorted(set(refusers))} would refuse {sorted(set(served_invalid))}" if served_invalid and refusers else
+          f"{len(set(served_invalid))} served document(s) are schema-invalid by design; no check refuses them")
+
+    # 4f. Every golden's expected envelope validates against discovery-envelope-v1.json, and a set of
+    #     known-bad shapes does not. The miri-py team supplied the schema with this evidence in a
+    #     document; keeping it here makes it live, so a schema edit that stops catching a violation
+    #     fails the build instead of quietly passing.
+    env_schema_path = REPO / "schemas/discovery-envelope-v1.json"
+    if env_schema_path.exists():
+        env_schema = json.loads(env_schema_path.read_text())
+        jsonschema.Draft7Validator.check_schema(env_schema)
+        V = jsonschema.Draft7Validator(env_schema)
+        accepted = 0
+        for g in sorted(EXPECTED.glob("A*.json")):
+            d = json.loads(g.read_text())
+            se = d.get("surface_expectation", {})
+            env = se.get("envelope") or {k: v for k, v in se.items()
+                                         if k in ("ok", "present", "truncated", "cap")}
+            if not env:
+                continue
+            errs = list(V.iter_errors({"schema_version": "1", **env}))
+            check(f"golden {g.stem}: expected envelope validates", not errs,
+                  errs[0].message[:90] if errs else "")
+            accepted += not errs
+        check("golden envelopes validated against the schema", accepted >= 8, f"{accepted} validated")
+
+        # The reject side is gated comprehensively by tools/validate_envelope_schema.py, contributed
+        # with the schema (16 mutants, each naming the rule it exercises). Duplicating a subset here
+        # would mean two places to update and one to forget; what is unique to this file is that the
+        # project's own GOLDENS conform to the schema, which that script does not read.
+    else:
+        check("discovery-envelope-v1.json present", False)
 
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a

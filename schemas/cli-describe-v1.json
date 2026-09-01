@@ -8,7 +8,8 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "description": "Wire-schema version of this document, carried top-level per MIRI-CLI-010 and versioned independently of identity.version"
+      "pattern": "^[0-9]+$",
+      "description": "Wire-schema version of this document, carried top-level per MIRI-CLI-010 and versioned independently of identity.version. An integer string — \"1\", \"2\" — compared numerically. The format is pinned because it was stated only in prose and examples, and three surfaces had already diverged on it, two emitting \"1.0\" and one \"1\", all validating."
     },
     "identity": {
       "type": "object",
@@ -53,6 +54,11 @@
       "type": "array",
       "minItems": 1,
       "items": {"$ref": "#/definitions/advisory_source"}
+    },
+    "advisory_coverage": {
+      "type": "string",
+      "enum": ["authoritative", "none"],
+      "description": "Whether any listed advisory source is authoritative for the artifact ITSELF, as opposed to its dependency tree (CLI Spec §4.1). Defaults to \"authoritative\" when omitted. \"none\" declares that no machine-queryable source covers this artifact — the honest state for a git-installed or GitHub-release binary in no package ecosystem — and REQUIRES support.security_policy, so the human channel is named where the machine one does not reach. A consumer reading \"none\" MUST report \"no advisory source covers this artifact\" and MUST NOT report \"no known vulnerabilities\"."
     },
     "update_check": {
       "type": "object",

@@ -299,9 +299,23 @@ def main():
         page_lede="0.1 and 0.2 specified what an artifact ships. 0.3 specifies how an agent consumes it.",
         body=wn))
 
+    # The changelog is rendered from the repository's CHANGELOG.md rather than a site-only copy,
+    # so the release notes a reader sees are the ones the repository actually keeps.
+    cl_md = rewrite_links((REPO / "CHANGELOG.md").read_text(),
+                          (REPO / "CHANGELOG.md").resolve(), rendered, site["github"])
+    cl_toc = []
+    cl = re.sub(r"^\s*<h1>.*?</h1>", "", md_to_html(cl_md, cl_toc), count=1, flags=re.S)
+    (out / "changelog.html").write_text(env.get_template("prose.html").render(
+        site=site, root="", active="changelog.html",
+        page_title="Changelog", page_heading="Changelog",
+        page_meta=[("Document", "CHANGELOG.md"), ("Current version", site["version"])],
+        page_lede="What each release delivered, and what a version number promises. "
+                  "A patch release contains bug fixes and clarifications only.",
+        body=cl, toc=[h for h in cl_toc if h["level"] == 2]))
+
     n = sum(len(t["checks"]) for t in targets.values())
     print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + "
-          f"{len(specs)} spec pages + landing + origin + whats-new")
+          f"{len(specs)} spec pages + landing + origin + whats-new + changelog")
 
 
 if __name__ == "__main__":

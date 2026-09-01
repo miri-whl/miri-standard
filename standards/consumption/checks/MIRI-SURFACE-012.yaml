@@ -1,5 +1,5 @@
 id: MIRI-SURFACE-012
-name: Reports an unreadable document as METADATA_UNREADABLE, never absent or repaired
+name: Reports an unparsable document as METADATA_UNREADABLE, never absent or repaired
 target: surface
 status: active
 added_in: 0.3-draft
@@ -10,10 +10,12 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: each malformed document served, repaired, or reported as absent
-short_description: Reports a document it cannot read — unparsable OR schema-invalid — as `METADATA_UNREADABLE`,
-  never absent or repaired
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Reports an document it
-  could not parse as `METADATA_UNREADABLE`, never absent or repaired.'
+short_description: Reports a document it cannot parse as `METADATA_UNREADABLE`, never absent or repaired
+long_description: Surface obligation from the Discovery Contract (4.2). Scoped to READABILITY — whether the bytes
+  parse — and deliberately not to validity. A document that parses is relayed verbatim whatever its schema says,
+  because 3.2 specifies `document` as serving the named document verbatim, and because a surface that gated on
+  validity would refuse the adversarial fixtures that ten of the fifteen consumer checks are driven against, disabling
+  the consumer profile in order to enforce a property the producer checklist already enforces at build time.
 examples:
   violation: '{"ok": true, "present": false, "reason": "no lifecycle.json"}
 
@@ -26,9 +28,6 @@ rationale: A document that fails to parse is neither absent nor fine. Reporting 
 fires_when:
 - A document that fails to parse is reported as absent
 - The surface repairs, re-serializes, or partially serves a document it could not parse
-- 'A document that parses as JSON but fails its schema is reported as absent, repaired, or served as though valid,
-  rather than as METADATA_UNREADABLE. Well-formed and valid are different properties: a surface that checks only
-  the first hands the consumer a document whose shape it has not established'
 remediation:
 - 'Return `ok: false` with `METADATA_UNREADABLE` and identify the document'
 - Never attempt recovery — a partially parsed document is publisher content the publisher did not write
