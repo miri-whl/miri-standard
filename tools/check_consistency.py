@@ -176,6 +176,53 @@ def check_check_urls():
             bad(f.name, f"urls.definition is {d['urls']['definition']!r}, file is at {want_def!r}")
 
 
+def check_fields_against_schemas():
+    """A field a check DEMANDS must be a field some schema PERMITS.
+
+    This is the shape the miri-py team named twice: MIRI-CLI-040 (a forbidden field a MUST
+    required) and then advisory_coverage, which CLI Spec 4.1 specifies and MIRI-CLI-022 requires
+    while cli-describe-v1.json closed additionalProperties without declaring it. A conforming CLI
+    failed our own schema. Both were found by someone building against the text; this makes the
+    class a CI step instead.
+
+    Known-good exclusions are listed rather than pattern-matched, so adding one is a deliberate act
+    that shows up in review."""
+    import json
+    import yaml
+
+    # Names that are legitimately not document fields: purl qualifiers, wheel metadata, and the
+    # wire envelope, which is specified in prose and has no schema yet (tracked separately).
+    NOT_DOCUMENT_FIELDS = {
+        "repository_url",                                  # purl qualifier
+        "entry_points", "console_scripts",                 # wheel metadata, not Miri documents
+        "update_available", "install_hint",                # check-update payload: no schema yet
+        "next_cursor", "max_bytes",                        # Discovery Contract envelope: no schema yet
+    }
+
+    declared = set()
+    for sp in sorted((REPO / "schemas").glob("*.json")):
+        def walk(node):
+            if isinstance(node, dict):
+                if isinstance(node.get("properties"), dict):
+                    declared.update(node["properties"])
+                for v in node.values():
+                    walk(v)
+            elif isinstance(node, list):
+                for v in node:
+                    walk(v)
+        walk(json.loads(sp.read_text()))
+
+    for f in sorted(REPO.glob("standards/*/checks/*.yaml")):
+        d = yaml.safe_load(f.read_text())
+        if d.get("status") != "active":
+            continue
+        text = " ".join(d["fires_when"] + d["remediation"] + [d["short_description"]])
+        for tok in sorted(set(re.findall(r"`([a-z][a-z0-9]*(?:_[a-z0-9]+)+)`", text))):
+            if tok in declared or tok in NOT_DOCUMENT_FIELDS:
+                continue
+            bad(d["id"], f"demands field `{tok}`, which no schema in schemas/ declares")
+
+
 def main():
     for p in SPECS:
         text = p.read_text()
@@ -188,6 +235,7 @@ def main():
         check_stray_markers(name, text)
         check_check_refs(name, text)
     check_check_urls()
+    check_fields_against_schemas()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")
