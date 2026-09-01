@@ -348,6 +348,36 @@ def main() -> int:
           f"{sorted(set(refusers))} would refuse {sorted(set(served_invalid))}" if served_invalid and refusers else
           f"{len(set(served_invalid))} served document(s) are schema-invalid by design; no check refuses them")
 
+    # 4f. Every golden's expected envelope validates against discovery-envelope-v1.json, and a set of
+    #     known-bad shapes does not. The miri-py team supplied the schema with this evidence in a
+    #     document; keeping it here makes it live, so a schema edit that stops catching a violation
+    #     fails the build instead of quietly passing.
+    env_schema_path = REPO / "schemas/discovery-envelope-v1.json"
+    if env_schema_path.exists():
+        env_schema = json.loads(env_schema_path.read_text())
+        jsonschema.Draft7Validator.check_schema(env_schema)
+        V = jsonschema.Draft7Validator(env_schema)
+        accepted = 0
+        for g in sorted(EXPECTED.glob("A*.json")):
+            d = json.loads(g.read_text())
+            se = d.get("surface_expectation", {})
+            env = se.get("envelope") or {k: v for k, v in se.items()
+                                         if k in ("ok", "present", "truncated", "cap")}
+            if not env:
+                continue
+            errs = list(V.iter_errors({"schema_version": "1", **env}))
+            check(f"golden {g.stem}: expected envelope validates", not errs,
+                  errs[0].message[:90] if errs else "")
+            accepted += not errs
+        check("golden envelopes validated against the schema", accepted >= 8, f"{accepted} validated")
+
+        # The reject side is gated comprehensively by tools/validate_envelope_schema.py, contributed
+        # with the schema (16 mutants, each naming the rule it exercises). Duplicating a subset here
+        # would mean two places to update and one to forget; what is unique to this file is that the
+        # project's own GOLDENS conform to the schema, which that script does not read.
+    else:
+        check("discovery-envelope-v1.json present", False)
+
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a
     #    check that does not exist, and every non-pending check must have a case behind it.

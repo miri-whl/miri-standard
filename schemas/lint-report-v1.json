@@ -8,7 +8,8 @@
   "properties": {
     "schema_version": {
       "type": "string",
-      "description": "Wire-schema version of this report document"
+      "pattern": "^[0-9]+$",
+      "description": "Wire-schema version of this report document. An integer string — \"1\", \"2\" — compared numerically. Pinned because the convention lived only in prose and examples, and three surfaces had already diverged on it while all validating; this document is the most widely produced artifact in the ecosystem, so the drift would have propagated furthest from here."
     },
     "target": {
       "type": "string",
