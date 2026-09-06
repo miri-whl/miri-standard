@@ -38,7 +38,35 @@ def strip_fences(text):
 def check_counts(name, text):
     """A number written next to a noun, against the thing actually enumerated nearby."""
     ids = {f.stem for f in CHECK_DIR.glob("*.yaml")}
-    # "<n> checks" claims are checked against the id prefix the document is about
+    # Any number-word standing in for a check count, not only the "**n** checks" phrasing. The
+    # narrow pattern missed "All fifteen ...", "the current fifteen", and "among the fifteen".
+    prefix_for = "MIRI-SURFACE" if "surface" in name else "MIRI-CONSUMER"
+    actual_n = len([i for i in ids if i.startswith(prefix_for)])
+    # A bare number-word is ordinary English ("all eight operations", "of the two"). Only flag one
+    # whose own SENTENCE also names the check family it would be counting — the narrower rule the
+    # first attempt at this check lacked, which produced twelve false positives on this corpus.
+    FAMILY = re.compile(r"\b(MIRI-(?:CONSUMER|SURFACE)\b|consumer checks|surface checks|"
+                        r"the (?:consumer|surface) (?:family|profile))", re.I)
+    for snt in re.split(r"(?<=[.;])\s", strip_fences(text)):
+        if not FAMILY.search(snt):
+            continue
+        for m in re.finditer(r"\b(?:all|the current|among the)\s+\*?\*?(\w+)\*?\*?\b", snt, re.I):
+            word = m.group(1).lower()
+            if word in WORDS and WORDS[word] != actual_n:
+                bad(name, f"says {word!r} in a sentence about {prefix_for}, which has {actual_n} checks")
+    # An ID range is written "X` through `Y" or "X` to `Y" — not any two ids that happen to be near
+    # each other, which is most of a conformance profile.
+    for m in re.finditer(r"`(MIRI-(?:CONSUMER|SURFACE))-(\d+)`\s*(?:through|to)\s*\n?`\1-(\d+)`", text):
+        pre = m.group(1)
+        real = max((int(i.rsplit("-", 1)[1]) for i in ids if i.startswith(pre)), default=0)
+        if int(m.group(3)) < real:
+            bad(name, f"ID range ends at {pre}-{m.group(3)} but {pre}-{real:03d} exists")
+    # The section-opener phrasing both profiles use. It names no family, so the sentence guard
+    # above cannot see it — and it went stale for two rounds before a review caught it.
+    for m in re.finditer(r"\b(\w+) checks, weights summing to 100", text):
+        word = m.group(1).lower()
+        if word in WORDS and WORDS[word] != actual_n:
+            bad(name, f"opener says {word!r}; {prefix_for} has {actual_n} checks")
     for m in re.finditer(r"\*\*?(\w+)\*\*? (?:numbered )?checks\b", text):
         word = m.group(1).lower()
         if word not in WORDS:
@@ -119,11 +147,15 @@ def check_tables(name, text):
     i = 0
     while i < len(lines):
         if lines[i].startswith("|") and i + 1 < len(lines) and re.match(r"^\|[-: |]+\|$", lines[i + 1]):
-            width = lines[i].count("|")
+            # An escaped pipe is cell content, not a separator — markdownlint accepts `\|` and the
+            # table renders correctly. Counting it as a cell boundary reports a defect that is not one.
+            def cells(line):
+                return re.sub(r"\\\|", "", line).count("|")
+            width = cells(lines[i])
             j = i + 2
             while j < len(lines) and lines[j].startswith("|"):
-                if lines[j].count("|") != width:
-                    bad(name, f"table row {j + 1} has {lines[j].count('|') - 1} cells, header has {width - 1}")
+                if cells(lines[j]) != width:
+                    bad(name, f"table row {j + 1} has {cells(lines[j]) - 1} cells, header has {width - 1}")
                 j += 1
             i = j
         else:

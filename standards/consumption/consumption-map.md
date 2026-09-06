@@ -150,7 +150,28 @@ reference tool. It is the prohibitions that keep a consumer honest, and no claus
 
 ## 3. The Task-to-Document Map
 
-Six tasks, each a read-order plus a set of prohibitions. The routing is the substance of this document:
+Six tasks, each a read-order plus a set of prohibitions. The routing is the substance of this document.
+
+Each task also has a **trigger** — the observable moment at which it becomes actionable. A trigger is what a task
+answers *when*, as a vehicle (§1.1) answers *how* and the read-order answers *what*. The triggers are specified in
+the [Agent Integration Contract §3.1](agent-integration-contract.md), and named here because a task whose trigger
+lives only in a binding document is a task the map has described without saying when to perform it:
+
+| Task | Trigger | Level |
+|---|---|---|
+| §3.1 first use | a package not yet used in this session is first referenced | SHOULD |
+| §3.2 scaffolding | new code is about to be written against a package | SHOULD |
+| §3.3 upgrading | a dependency's version is about to change | **REQUIRED** |
+| §3.4 diagnosing | an error naming an installed package is observed | SHOULD |
+| §3.5 security and trust | a dependency is about to be added | **REQUIRED** |
+| §3.6 tests | a test touching a package is about to be written | SHOULD |
+
+**A consumer with no binding is unaffected.** The triggers say when a task *becomes actionable*, not that a consumer
+must watch for them; a consumer invoked directly by a person is triggered by the person, which is the case every
+version of this map before 0.4 assumed. What the column adds is that the moment is now *named*, so an integration
+can fire on it and a check can assert it did.
+
+The routing:
 
 ```mermaid
 flowchart LR
@@ -591,8 +612,10 @@ generator's code — the "an author who builds strictly to the documents writes 
   implementer has to go find. A consumer MUST, for **any** URL it resolves from any served document:
 
   1. Reject any scheme other than `https`.
-  2. Resolve the host and reject any address in a private (RFC 1918), loopback, link-local (including `169.254.0.0/16`
-     and `fd00::/8`), or cloud-metadata range — `169.254.169.254` and `metadata.google.internal` being the ones
+  2. Resolve the host and reject any address in a **private** range (RFC 1918, and IPv6 unique-local `fc00::/7`,
+     which includes `fd00::/8`), a **loopback** range (`127.0.0.0/8`, `::1`), a **link-local** range
+     (`169.254.0.0/16`, and IPv6 `fe80::/10`), or a **cloud-metadata** range — `169.254.169.254` and
+     `metadata.google.internal` being the ones
      actually exploited.
   3. Re-apply both checks **after every redirect**, against the redirect target rather than the original URL.
   4. Connect to **the address that was checked**, not to the hostname a second resolution returns. Checking a name

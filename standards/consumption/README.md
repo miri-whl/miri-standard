@@ -20,6 +20,7 @@ it, and the standard cannot say what makes the producer metadata worth shipping 
   checks weighted to 100, verified by **driving** a consumer against the fixtures rather than by inspecting an
   artifact.
 - [Surface Conformance](surface-conformance.md) — what a conformant metadata-query surface is: 16 numbered
+- [Agent Integration Contract](agent-integration-contract.md) — the triggers that start a task, and the Claude Code binding.
   `MIRI-SURFACE` checks weighted to 100. One profile per actor: the contract binds two programs that fail
   differently, and a single score would not say which one is broken.
 

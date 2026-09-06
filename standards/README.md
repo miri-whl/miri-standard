@@ -116,6 +116,10 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
   behavioral conformance profile for a metadata consumer
 - **[Surface Conformance (Consumption)](consumption/surface-conformance.md)** - `MIRI-SURFACE-001`…`051`: the
   conformance profile for a metadata-query surface
+- **[Agent Integration Contract](consumption/agent-integration-contract.md)** - the missing *when*: six triggers
+  naming the observable moments at which each Consumption Map task becomes actionable, what a push-style integration
+  owes its caller, and what it must never do. Carries the Claude Code binding as §6, as the Discovery Contract
+  carries MCP.
 
 ### Proposed Standards
 

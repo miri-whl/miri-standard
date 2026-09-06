@@ -1,0 +1,44 @@
+id: MIRI-CONSUMER-050
+name: Answers a trigger with nothing to report as absent, never as empty
+target: consumer
+status: active
+added_in: 0.4-draft
+level: MUST
+category: Integration Channel
+weight: 2
+conditional: true
+severity:
+  default: HIGH
+  violation_unit: each trigger firing that violates the rule
+short_description: A trigger with no findings answers with the absent shape, never an empty result or a confirmation
+long_description: 'Consumer obligation from Agent Integration Contract 4.1. Conditional: it applies only to a
+  consumer that implements an integration binding. A consumer invoked directly by a person has no trigger to answer
+  and the check is excluded from both the numerator and the denominator rather than credited.'
+examples:
+  violation: 'dependency.add for greet_bare -> {"ok": true, "present": true, "findings": []}'
+  compliant: 'dependency.add for greet_bare -> {"ok": true, "present": false, "reason": "package ships no agent-metadata"}'
+rationale: A binding that announces 'checked, nothing found' on every edit is a context tax, and the predictable
+  result is that a user disables it — after which the conformant producer, surface and consumer are all still
+  green and the metadata is again never read. The failure the integration contract exists to close is reachable
+  through its own remedy, which is why silence is an obligation rather than a courtesy.
+fires_when:
+- 'Driven with a trigger for a package that ships no agent-metadata, the consumer answers `ok: true, present:
+  true` with an empty `findings` array rather than the absent shape'
+- The consumer emits prose confirming that it checked and found nothing
+- The consumer emits any output at all for a trigger whose task produced no finding
+remediation:
+- 'Answer a trigger with no findings using the Discovery Contract 4.2 absent shape: ok true, present false, a
+  reason, and no payload key'
+- Never emit an empty findings array; absence and emptiness are different answers
+suggested_fix: 'Answer a trigger with no findings using the Discovery Contract 4.2 absent shape: ok true, present
+  false, a reason, and no payload key'
+references:
+- title: Agent Integration Contract §4
+  url: agent-integration-contract.md
+  type: spec
+- title: Consumption Map §3
+  url: consumption-map.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-050.yaml
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-050.html

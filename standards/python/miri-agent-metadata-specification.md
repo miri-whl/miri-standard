@@ -942,6 +942,15 @@ agent-metadata surface.
   disposable container or VM, no ambient credentials, restricted egress) when the artifact is not already trusted, and
   MUST otherwise default to static analysis. A passing execution check attests that the code ran and produced the
   expected signal — never that it was safe to run.
+- **Metadata may reach for control, not only lie about content.** Every item above concerns what the metadata
+  *says*. A shipped field can also attempt to determine what the consumer *does* — asking an integration to fire on
+  every event, at the highest level, regardless of what was observed. A package that can do this consumes the
+  agent's attention on demand, which is a denial-of-context channel rather than a false statement, and nothing in
+  the content-focused rules above closes it. The countermeasure is stated in
+  [Agent Integration Contract §4.3](../consumption/agent-integration-contract.md): trigger behavior derives solely
+  from the observable event and the consumer's own configuration, never from a shipped field. Content and control
+  are different axes, and a threat model covering only the first will keep being surprised by the second.
+
 - **Provenance is the anchor.** Trust in any of this metadata is only as strong as the wheel's provenance; prefer
   metadata from a release carrying a verified PEP 740 attestation (MIRI-PY-005).
 

@@ -1,4 +1,3 @@
-# MIRI-CONSUMER-010 — generated with the Consumer Conformance profile; canonical source of truth.
 id: MIRI-CONSUMER-010
 name: Settles symbol existence with `resolve`, not index membership
 target: consumer
@@ -6,7 +5,7 @@ status: active
 added_in: 0.3-draft
 level: MUST
 category: Surface Verification
-weight: 9
+weight: 8
 conditional: false
 severity:
   default: HIGH
@@ -15,9 +14,9 @@ short_description: Settles symbol existence with `resolve`, not index membership
 long_description: Before emitting a call, a consumer must confirm the symbol exists. This check verifies it uses
   the existence operation rather than treating a publisher-authored index as proof.
 rationale: '`api_index` is the publisher''s description of the surface, and the adversarial fixture demonstrates
-  the gap: it claims two symbols that do not exist anywhere in the source. A consumer that generates code from the
-  index sends a caller straight to AttributeError, which is the anti-hallucination failure the standard exists to
-  end. Existence comes from the source; the index only routes.'
+  the gap: it claims two symbols that do not exist anywhere in the source. A consumer that generates code from
+  the index sends a caller straight to AttributeError, which is the anti-hallucination failure the standard exists
+  to end. Existence comes from the source; the index only routes.'
 fires_when:
 - Driven against `adversarial`, the consumer emits a call to a symbol present in `api_index` but absent from the
   source
