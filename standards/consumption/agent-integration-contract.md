@@ -91,7 +91,8 @@ codes are closed: an open vocabulary is one every binding extends differently, a
 what an event *is* do not interoperate.
 
 **Two are REQUIRED** because their triggers are observable without inference and their findings are actionable only
-before the action lands — a migration guide is worthless after the upgrade, and a foreign-namespace `replacement` is
+before the decision they inform becomes expensive to reverse — a migration guide is worthless after the upgrade, and a
+foreign-namespace `replacement` is
 cheapest to catch while the dependency does not yet exist. REQUIRED means **the binding implements the kind**, not
 that the kind produces output; combined with §4.1, a binding that finds nothing says nothing, so the cost of
 requiring two is close to zero.
@@ -107,8 +108,17 @@ requiring two is close to zero.
 }
 ```
 
-- **`phase`** is `before` or `after`. Every REQUIRED kind is `before`. `runtime.error` is necessarily `after`; no
-  other kind may be.
+- **`phase`** is `before` or `after`, describing whether the action that produced the event has landed.
+  `runtime.error` is necessarily `after`. Every kind other than `runtime.error` and `dependency.add` is `before`.
+
+  **`dependency.add` is the exception, and it was found by building the thing.** The taxonomy originally claimed
+  the trigger point was "before the dependency exists — the only moment before it does". That is unsatisfiable: a
+  package that is not yet installed ships nothing a local surface can read, so there is no `lifecycle.json` to
+  consult until the install lands. A conforming binding therefore fires it **after the install and before any code
+  is written against it**, which is still before the decision that is expensive to reverse — an install is undone
+  with an uninstall; a codebase written against a package is not. A genuinely pre-install trigger requires a
+  registry-side surface, which is a different contract than the one this standard defines, and the schema permits
+  `before` so that such a surface is not forbidden in advance.
 - **`subject`** carries only what the event is *about* — a package name, and where the kind implies one, a version
   constraint or a symbol. It MUST NOT carry a file path, a diff, a buffer, or the user's source. A binding that needs
   the user's code to decide what to say has left this standard's scope and entered the host's.
@@ -364,7 +374,8 @@ mechanism that survives that removal.
 ## 7. Conformance
 
 No new check family. The obligations in §4 restate existing `MIRI-CONSUMER` requirements for a new channel, and are
-scored through that family — with two exceptions, which had no analogue in the consumer family before this document and are
+scored through that family — with two exceptions, which had no analogue in the consumer family before this document and
+are
 the two it adds — `MIRI-CONSUMER-050` and `MIRI-CONSUMER-051`, bringing the family to seventeen:
 
 - **Silence by default** (§4.1) — drive the binding with a `dependency.add` event naming the `bare` fixture, which

@@ -324,11 +324,26 @@ need it.
 
 **Read, in order:**
 
-1. **(S)** `migration-guide` — the structured `{surface, removed_in, replacement}` records and deprecation inventory
+1. **(S)** `lifecycle` — the **package-level** picture before any surface-level one: `support.status`,
+   `support.replacement`, `eol_date`. A package that is itself deprecated with a declared successor changes whether
+   to upgrade at all, and the answer is not in the migration guide.
+
+   This step was absent until an implementer found the gap by building against the task. `migration-guide` carries
+   deprecations of individual **surfaces** — `{surface, removed_in, replacement}` — while a package-level
+   redirect lives in `lifecycle.json` as `support.replacement`. The documented highest-severity attack
+   ([Lifecycle and Security Metadata §9.3](../python/lifecycle-security-metadata.md)) is exactly that: a compromised
+   release marking itself deprecated and naming a successor the original maintainer does not control. A consumer
+   following this task as previously written read the surface-level records, never the package-level ones, and was
+   never told — while the prohibition below, which forbids exactly that redirect, sat in the same section with no
+   read-step supplying the evidence it operates on. **A prohibition whose input the read-order does not fetch is
+   unenforceable**, which is the composition failure §1.1 exists to prevent, one layer subtler than the version that
+   routes a step at a document no operation serves.
+
+2. **(S)** `migration-guide` — the structured `{surface, removed_in, replacement}` records and deprecation inventory
    for the transition **into the installed version**. The surface answers only for what is installed
    ([Discovery Contract §6.2.1](discovery-contract.md)); a prospective "what breaks if I move to 1.5.0?" has no
    operation in 0.3 and MUST NOT be answered from the shipped file.
-2. **(C)** Cross-reference each record against the consumer codebase's **own call sites**. No Discovery Contract
+3. **(C)** Cross-reference each record against the consumer codebase's **own call sites**. No Discovery Contract
    operation is involved or needed: the vehicle is the calling project's own source, which the consumer necessarily
    has because it is the thing being migrated, read with whatever mechanism the consumer already uses to read the
    code it edits.
@@ -337,7 +352,7 @@ need it.
    search key: a consumer MUST treat it as a literal identifier, never compiling it as a regular expression, glob or
    query fragment, and MUST NOT let it select files outside the consumer's own project. A migration record naming a
    surface of `.*` should match one symbol or none, not every line in the codebase being migrated.
-3. **(S)** `list`, then `resolve` — confirm each `replacement` surface exists in the **installed** package before
+4. **(S)** `list`, then `resolve` — confirm each `replacement` surface exists in the **installed** package before
    emitting a call to it (§3.2). Two operations, because a `replacement` is a **purl** and `resolve` takes an
    **import name**, and nothing converts one to the other by string manipulation: a purl names a distribution, an
    import name names a package, and the two differ routinely (`pkg:pypi/scikit-learn` imports as `sklearn`). The
