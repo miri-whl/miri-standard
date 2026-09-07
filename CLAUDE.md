@@ -136,4 +136,6 @@ Project skills live in `.claude/skills/`. Load the matching one before the relev
 writing or review (it encodes the house style and the exact markdownlint/cspell/link rules CI gates on);
 `check-authoring` for adding, editing, or withdrawing a `standards/<target>/checks/*.yaml` definition;
 `schema-governance` for JSON Schema changes, check-weight/checklist edits, example validation, and the site
-generator (the weights-sum-to-100 and schema-enforces-the-spec invariants live there).
+generator (the weights-sum-to-100 and schema-enforces-the-spec invariants live there); `glossary` before
+introducing a defined term, changing a closed vocabulary, or renaming anything, since `docs/glossary.md` is derived
+from the specs and `make consistency` gates the parts of that derivation a machine can see.

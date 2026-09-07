@@ -2,7 +2,7 @@ id: MIRI-CONSUMER-051
 name: Trigger behavior is independent of what the publisher ships
 target: consumer
 status: active
-added_in: 0.4-draft
+added_in: 0.4.0-draft
 level: MUST
 category: Integration Channel
 weight: 4

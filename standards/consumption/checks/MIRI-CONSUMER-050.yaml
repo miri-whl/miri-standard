@@ -2,7 +2,7 @@ id: MIRI-CONSUMER-050
 name: Answers a trigger with nothing to report as absent, never as empty
 target: consumer
 status: active
-added_in: 0.4-draft
+added_in: 0.4.0-draft
 level: MUST
 category: Integration Channel
 weight: 2

@@ -237,3 +237,15 @@ article.prose :is(h2, h3)[id] { scroll-margin-top: var(--space-8); }
   aside.toc ol { columns: 2; column-gap: var(--space-6); }
 }
 @media (max-width: 620px) { aside.toc ol { columns: 1; } }
+
+/* Version in the sidebar. It was previously only in the page footer, where a reader looking for
+   "what version is this" did not find it — and a version nobody can see is a version nobody can
+   cite. Doubles as the changelog entry point, since the next question after "which version" is
+   always "what changed". */
+.sidenav .version { display: flex; align-items: baseline; gap: var(--space-2);
+  margin: 0 0 var(--space-5); padding: 0 0 var(--space-4);
+  border-bottom: 1px solid var(--ink-100); text-decoration: none; }
+.sidenav .version .v { font-family: var(--font-mono); font-size: var(--text-sm);
+  font-weight: var(--weight-semibold); color: var(--gold-700); }
+.sidenav .version .what { font-size: var(--text-xs); color: var(--text-muted); }
+.sidenav .version:hover .what { color: var(--gold-700); }

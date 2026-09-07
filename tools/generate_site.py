@@ -313,9 +313,20 @@ def main():
                   "A patch release contains bug fixes and clarifications only.",
         body=cl, toc=[h for h in cl_toc if h["level"] == 2]))
 
+    gl_md = rewrite_links((REPO / "docs/glossary.md").read_text(),
+                          (REPO / "docs/glossary.md").resolve(), rendered, site["github"])
+    gl_toc = []
+    gl = re.sub(r"^\s*<h1>.*?</h1>", "", md_to_html(gl_md, gl_toc), count=1, flags=re.S)
+    (out / "glossary.html").write_text(env.get_template("prose.html").render(
+        site=site, root="", active="glossary.html",
+        page_title="Glossary", page_heading="Glossary",
+        page_meta=[("Document", "docs/glossary.md"), ("Version", site["version"])],
+        page_lede="Every term this standard defines, and a few it deliberately does not.",
+        body=gl, toc=gl_toc))
+
     n = sum(len(t["checks"]) for t in targets.values())
     print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + "
-          f"{len(specs)} spec pages + landing + origin + whats-new + changelog")
+          f"{len(specs)} spec pages + landing + origin + whats-new + changelog + glossary")
 
 
 if __name__ == "__main__":

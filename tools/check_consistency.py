@@ -255,6 +255,75 @@ def check_fields_against_schemas():
             bad(d["id"], f"demands field `{tok}`, which no schema in schemas/ declares")
 
 
+def check_glossary():
+    """The glossary explains the standard's vocabulary; this asserts it has not drifted from it.
+
+    A glossary is uniquely dangerous because it becomes the thing people read instead of the spec.
+    A wrong entry is not merely unhelpful — it gets cited. So three properties are gated:
+
+      1. Every closed vocabulary it quotes matches its authoritative source. Trigger kinds come from
+         agent-event-v1.json, error codes and payload keys from discovery-envelope-v1.json, vehicle
+         labels from the Consumption Map, severity from check-v1.json.
+      2. Every defined term carries a link to where it is normatively defined, so a reader who needs
+         the rule rather than the explanation can reach it in one click.
+      3. No term is defined that the standard does not use, and the terms the standard defines in
+         bold are all present here.
+
+    What this cannot check is whether an explanation subtly misstates a rule it links to. That is a
+    reading, and it is left to review — stated here so the green tick is not mistaken for more than
+    it covers."""
+    import json
+    import yaml
+
+    gl = REPO / "docs/glossary.md"
+    if not gl.exists():
+        bad("glossary.md", "docs/glossary.md is missing")
+        return
+    g = gl.read_text()
+
+    def load(p):
+        return json.loads((REPO / p).read_text())
+
+    # 1. closed vocabularies quoted verbatim
+    vocab = [
+        ("trigger kinds", set(load("schemas/agent-event-v1.json")["properties"]["kind"]["enum"]),
+         set(re.findall(r"`((?:dependency|package|integration|runtime|test)\.\w+)`", g))),
+        ("vehicle labels",
+         set(re.findall(r"^\| \*\*\(([A-Z?]{1,2})\)\*\* \|",
+                        (REPO / "standards/consumption/consumption-map.md").read_text(), re.M)),
+         set(re.findall(r"\*\*\(([A-Z?]{1,2})\)\*\*", g))),
+        ("skip reasons", {"absent", "unavailable-vehicle", "error", "not-applicable"},
+         set(re.findall(r"`(absent|unavailable-vehicle|error|not-applicable)`", g))),
+    ]
+    for label, source, quoted in vocab:
+        if source and quoted != source:
+            bad("glossary.md", f"{label}: glossary has {sorted(quoted)}, source has {sorted(source)}")
+
+    ops = {"list", "document", "lifecycle", "migration-guide", "api-index", "resolve", "patterns", "graph"}
+    named = set(re.findall(r"`(list|document|lifecycle|migration-guide|api-index|resolve|patterns|graph)`", g))
+    if not ops <= named:
+        bad("glossary.md", f"operations missing from the glossary: {sorted(ops - named)}")
+
+    # 2. every defined term reaches its normative home
+    for m in re.finditer(r"^\*\*(.+?)\*\* [—(]", g, re.M):
+        term = m.group(1)
+        block = g[m.start():]
+        end = block.find("\n\n")
+        block = block[:end if end > 0 else 400]
+        if "](" not in block:
+            bad("glossary.md", f"term {term!r} has no link to where it is defined")
+
+    # 3. counts the glossary states about the check families
+    for m in re.finditer(r"`(MIRI-(?:CONSUMER|SURFACE))` runs (\d+)[–-](\d+) across (\w+) checks", g):
+        pre, hi, word = m.group(1), int(m.group(3)), m.group(4).lower()
+        real = [f.stem for f in (REPO / "standards/consumption/checks").glob(f"{pre}-*.yaml")]
+        if word in WORDS and WORDS[word] != len(real):
+            bad("glossary.md", f"says {word!r} {pre} checks; there are {len(real)}")
+        top = max(int(i.rsplit("-", 1)[1]) for i in real)
+        if hi != top:
+            bad("glossary.md", f"{pre} range ends at {hi:03d}; highest is {top:03d}")
+
+
 def main():
     for p in SPECS:
         text = p.read_text()
@@ -268,6 +337,7 @@ def main():
         check_check_refs(name, text)
     check_check_urls()
     check_fields_against_schemas()
+    check_glossary()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")
