@@ -1,6 +1,6 @@
 # Agent Integration Contract
 
-*Specification Version: 0.4.0-draft*
+*Specification Version: 0.4.1-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -79,7 +79,7 @@ intention is not observable and cannot be a trigger.
 
 | Trigger (`kind`) | Fires when | Map task | Level |
 |---|---|---|---|
-| `dependency.add` | a dependency is about to be added | [§3.5](consumption-map.md) security and trust | REQUIRED |
+| `dependency.add` | a dependency is about to be added | [§3.5](consumption-map.md) security and trust | SHOULD † |
 | `dependency.version_change` | a dependency's version is about to change | [§3.3](consumption-map.md) upgrading | REQUIRED |
 | `package.first_reference` | a package not yet used in this session is first referenced | [§3.1](consumption-map.md) first use | SHOULD |
 | `integration.begin` | new code is about to be written against a package | [§3.2](consumption-map.md) scaffolding | SHOULD |
@@ -90,8 +90,23 @@ The set is **closed**. A binding MUST NOT invent a seventh kind, for the same re
 codes are closed: an open vocabulary is one every binding extends differently, and two bindings that disagree about
 what an event *is* do not interoperate.
 
-**Two are REQUIRED** because their triggers are observable without inference and their findings are actionable only
-before the decision they inform becomes expensive to reverse — a migration guide is worthless after the upgrade, and a
+† **`dependency.add` was REQUIRED in 0.4.0 and is not any more, because it cannot do its job yet.** At the moment
+a dependency is added it is not installed, so it ships nothing a local surface can read: no `agent-metadata/`, no
+`lifecycle.json`, no successor whose namespace could be checked. [Map §3.5](consumption-map.md)'s read-order has no
+subject, and the trigger
+correctly finds nothing every time — for exactly the case that motivated requiring it. Requiring a kind that is
+structurally silent buys a conformance obligation and no safety.
+
+It becomes REQUIRED when a **registry-side surface** exists, which the Discovery Contract does not define today. The
+kind stays in the vocabulary at SHOULD rather than being removed, because a binding that observes an install (as
+opposed to a manifest edit) *can* answer it, and because removing it would lose the place where that future surface
+plugs in. This was found by an implementer building the binding and reporting that the trigger fired correctly and
+found nothing.
+
+**One kind is REQUIRED** — `dependency.version_change` — because it is the case where the change is both observable
+and *checkable*: the old version is installed, so there is metadata to read, and the decision is still reversible.
+Its findings are actionable only before the decision they inform becomes expensive to reverse — a migration guide is
+worthless after the upgrade, and a
 foreign-namespace `replacement` is
 cheapest to catch while the dependency does not yet exist. REQUIRED means **the binding implements the kind**, not
 that the kind produces output; combined with §4.1, a binding that finds nothing says nothing, so the cost of
@@ -122,6 +137,13 @@ requiring two is close to zero.
 - **`subject`** carries only what the event is *about* — a package name, and where the kind implies one, a version
   constraint or a symbol. It MUST NOT carry a file path, a diff, a buffer, or the user's source. A binding that needs
   the user's code to decide what to say has left this standard's scope and entered the host's.
+- **One observable action produces one event**, carrying one subject. Where an action names several packages —
+  `pip install a b c`, a manifest edit adding three requirements — a binding emits one event **per package** but
+  coalesces its *output*, so the caller sees one report about one decision. Three notifications for one install is
+  three interruptions for a single choice, and under §4.1 two of them would be silence, which the caller has no way
+  to associate with the third. Settled this way rather than by adding a plural `subjects` because a subject is what
+  an event is *about*, and an event about three packages is about three things; the coalescing belongs in the host
+  adapter, where the rest of the presentation already lives (§4.1).
 - There is **no host field**, no editor state, no session identifier. A payload a CI runner cannot construct as
   easily as an editor can is over-specified, and the absence of those fields is what makes one binding process serve
   every host.
@@ -180,6 +202,17 @@ and never a machine field ([Discovery Contract §4.2](discovery-contract.md)), a
 here would contradict that rule for the convenience of a caller that does not need it: a consumer wanting to know
 what a package ships asks `list`, which is the operation whose answer that is. A trigger reports what it found, not
 an inventory of what exists.
+
+**The contract response and what a host emits are two layers, and §4.1 governs only the first.** A trigger's
+*answer* is the absent envelope — that is what a golden asserts against, and what makes a binding testable with no
+host at all (§7). What a **host adapter** does with an absent envelope is the binding document's business, and for
+most hosts the right answer is to emit nothing at all.
+
+That distinction is not a technicality. In Claude Code a hook's stdout enters the agent's context, so an adapter
+that printed the absent envelope on every manifest edit would be announcing *checked, nothing found* in JSON —
+which is precisely the context tax this section forbids, arrived at by obeying its letter. The host's own mechanism
+for silence is exit 0 with no output. A conforming Claude Code adapter therefore receives the absent envelope from
+the contract layer and emits nothing (§6.3).
 
 Stating the obligation this way is deliberate. A binding that
 announces *"checked, nothing found"* on every edit is a context tax, and the predictable result is that a user
@@ -323,13 +356,19 @@ lifecycle events in `settings.json`, receiving JSON on stdin.
 | `runtime.error` | `PostToolUse`, matcher `Bash` | command output contains a traceback naming an installed package |
 | `test.author` | `PreToolUse`, matcher `Edit\|Write` | the target path matches the project's test discovery configuration |
 
+A manifest carries **distribution** names, so this binding emits `subject.package_kind: "distribution"` and the
+name exactly as written. It does not attempt a distribution-to-import join, because the mapping lives in the
+installed distribution's own metadata and `dependency.add` fires for a package that is not installed. The consumer
+performs the join where it can and reports honestly where it cannot.
+
 A **dependency manifest** is a file this binding recognizes as declaring the project's dependencies. For Python that
 is `pyproject.toml`, `requirements*.txt`, `setup.cfg`, `setup.py`, `Pipfile`, and `environment.yml`. The list is
 this *binding's*, not the contract's — another host or ecosystem will have a different one — and a binding MUST
 publish its list rather than leaving it to be inferred, because a manifest the binding does not recognize is a
 `dependency.add` that silently never fires.
 
-Both REQUIRED kinds are carried by `PreToolUse` on the edit tools, which is the only moment in this host at which a
+The REQUIRED kind and the `dependency.add` SHOULD are both carried by `PreToolUse` on the edit tools, which is the only
+moment in this host at which a
 dependency change is observable **and** has not yet happened.
 
 ### 6.2 Kinds This Binding Does Not Support

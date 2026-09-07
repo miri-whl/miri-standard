@@ -37,8 +37,13 @@
       "properties": {
         "package": {
           "type": "string",
-          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
-          "description": "The import package name, matching the Discovery Contract §3.0 grammar so an event can be passed to an operation without re-validation."
+          "description": "The name the event is about, as observed. Its grammar depends on `package_kind`, which says which kind of name this is — see that field. An import name matches the Discovery Contract §3.0 grammar and can be passed to an operation without re-validation; a distribution name cannot, and the consumer joins it when it can."
+        },
+        "package_kind": {
+          "type": "string",
+          "enum": ["import", "distribution"],
+          "default": "import",
+          "description": "Which kind of name `package` carries. A manifest edit yields a DISTRIBUTION name — `miri-py`, `python-dateutil`, `greet-adversarial` — and those are not valid import names; the mapping between them lives in the installed distribution's own metadata, so for a package that is not yet installed the two cannot be joined at all. Requiring an import name here made the REQUIRED `dependency.add` mapping in the Claude Code binding unsatisfiable for most real packages, including the fixture this standard's own A13 golden is built on. A consumer joins the two where it can and reports honestly where it cannot, which is the same honest-degradation posture the Consumption Map applies everywhere else."
         },
         "version": {
           "type": "string",
@@ -62,6 +67,16 @@
       "$comment": "§3.2 — only `runtime.error` and `dependency.add` may be `after`. runtime.error reports something that has happened; dependency.add is `after` because a not-yet-installed package is not readable by a local surface. Every other kind fires while its action is still a proposal. This was found by an implementer building the first binding: the schema previously required every REQUIRED kind to be `before` and so rejected the only behavior a local surface can produce.",
       "if": { "properties": { "phase": { "const": "after" } }, "required": ["phase"] },
       "then": { "properties": { "kind": { "enum": ["runtime.error", "dependency.add"] } } }
+    },
+    {
+      "$comment": "§3.2 — an import name must match the Discovery Contract §3.0 grammar, so it can be passed to an operation without re-validation. A distribution name is constrained per PEP 503 instead, which is what a manifest actually contains.",
+      "if": { "properties": { "subject": { "properties": { "package_kind": { "const": "distribution" } }, "required": ["package_kind"] } }, "required": ["subject"] },
+      "then": { "properties": { "subject": { "properties": { "package": { "pattern": "^[A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?$" } } } } }
+    },
+    {
+      "$comment": "§3.2 — the default. Where package_kind is absent or `import`, the name must be a valid import name.",
+      "if": { "not": { "properties": { "subject": { "properties": { "package_kind": { "const": "distribution" } }, "required": ["package_kind"] } }, "required": ["subject"] } },
+      "then": { "properties": { "subject": { "properties": { "package": { "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" } } } } }
     },
     {
       "$comment": "§3.1 — dependency.version_change is about a version, so it carries one. Without this a binding could fire the kind with nothing to distinguish it from dependency.add.",

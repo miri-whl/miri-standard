@@ -7,6 +7,48 @@ breaking change, a **minor** version a backward-compatible addition, and a **pat
 clarifications only. That policy is a contract with implementers, and it is worth keeping strictly: a reader
 should be able to see `0.3.1` and know it contains no additions without having to check.
 
+## 0.4.1 — 2026-09-07
+
+A **patch**: it corrects. Four defects, all found by the miri-py team building the first binding against 0.4.0, and
+one process failure of ours that let two of them ship.
+
+### Fixed
+
+- **Two fixes described as committed were not in the release.** They were committed to a branch that was never
+  pushed, so a search of every remote branch correctly found nothing. The work existed on one machine and was
+  reported as done. Both are now in: §3.3's `lifecycle` step and the event schema's `phase` rule.
+
+- **Consumption Map §3.3 had no `lifecycle` step**, so a consumer following the upgrade task exactly could upgrade a
+  package that is deprecated and names a successor in a foreign purl namespace and never be told — the producer
+  standard's highest-severity documented attack, reachable through correct adherence. The namespace prohibition was
+  already in §3.3's must-not block with no read-step supplying its evidence. **A prohibition whose input the
+  read-order does not fetch is unenforceable.** 0.4.0 made this worse by making §3.3 REQUIRED.
+
+- **`agent-event-v1.json` could not express a real dependency.** `subject.package` required an import name, but a
+  manifest contains **distribution** names, and the mapping between them lives in the installed distribution's own
+  metadata — unavailable for a package that is not yet installed. `miri-py`, `python-dateutil`, `ruamel.yaml` and
+  our own `greet-adversarial` fixture were all rejected. `subject.package_kind` now says which kind of name is
+  carried, with PEP 503 grammar for the distribution case.
+
+- **`dependency.add` is demoted from REQUIRED to SHOULD.** At the moment a dependency is added it is not installed,
+  so it ships nothing a local surface can read and §3.5 has no subject. The trigger fired correctly and found
+  nothing, every time, for the case that motivated requiring it. Requiring a structurally silent kind buys a
+  conformance obligation and no safety. It becomes REQUIRED when a registry-side surface exists; the kind stays in
+  the vocabulary so that surface has somewhere to plug in. **`dependency.version_change` is now the only REQUIRED
+  trigger**, because it is the one where the change is both observable and checkable — the old version is installed.
+
+- **§4.1 required the behavior it forbids, in Claude Code.** A hook's stdout enters the agent's context, so an
+  adapter printing the absent envelope on every manifest edit announces *checked, nothing found* in JSON — the
+  context tax §4.1 exists to prevent, reached by obeying its letter. The contract answer and what a host emits are
+  now explicitly two layers: the absent envelope is what a golden asserts against, and a Claude Code adapter emits
+  nothing.
+
+### Specified
+
+- **Batching.** One observable action produces one event per package, with the binding coalescing *output* so a
+  caller sees one report about one decision. Settled from implementation data rather than by adding a plural
+  `subjects`, because a subject is what an event is about.
+
 ## 0.4.0 — 2026-09-06
 
 A **minor** version: it adds. The Agent Integration Contract is new, two consumer checks are added, and every
@@ -26,8 +68,8 @@ reader to discover.
   never read, and every score stayed green.
 
   Six **triggers**, one per Consumption Map task, naming the observable moment at which each becomes actionable. Two
-  are REQUIRED — a dependency being added, and a version changing — because both fire before an action that is
-  expensive to reverse.
+  were REQUIRED at 0.4.0 — a dependency being added, and a version changing. **0.4.1 demotes the first to SHOULD**;
+  see that entry for why.
 
   The vocabulary matters and *hook* is deliberately not part of it. A hook is a host's mechanism; the word appears
   elsewhere in this standard seven times, every one describing git or setuptools. The sentence that has to keep

@@ -288,14 +288,14 @@ def main():
             page_meta=[("Document", sp["source"]), ("Status", sp.get("status", "Draft"))],
             page_lede=sp.get("lede"), body=body, toc=toc))
 
-    wn = md_to_html((REPO / "docs/whats-new-0.3.md").read_text())
+    wn = md_to_html((REPO / "docs/why-consumption.md").read_text())
     # Drop the source H1: the page header supplies the title, so rendering both duplicates it.
     wn = re.sub(r"^\s*<h1>.*?</h1>", "", wn, count=1, flags=re.S)
-    (out / "whats-new.html").write_text(env.get_template("prose.html").render(
-        site=site, root="", active="whats-new.html",
-        page_title="What's new in 0.3",
-        page_heading="What's new in " + site["version"].split("-")[0],
-        page_meta=[("Document", "docs/whats-new-0.3.md"), ("Version", site["version"])],
+    (out / "why-consumption.html").write_text(env.get_template("prose.html").render(
+        site=site, root="", active="why-consumption.html",
+        page_title="Why consumption",
+        page_heading="Why the standard has a consumption half",
+        page_meta=[("Document", "docs/why-consumption.md")],
         page_lede="0.1 and 0.2 specified what an artifact ships. 0.3 specifies how an agent consumes it.",
         body=wn))
 
@@ -326,7 +326,7 @@ def main():
 
     n = sum(len(t["checks"]) for t in targets.values())
     print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + "
-          f"{len(specs)} spec pages + landing + origin + whats-new + changelog + glossary")
+          f"{len(specs)} spec pages + landing + origin + why-consumption + changelog + glossary")
 
 
 if __name__ == "__main__":

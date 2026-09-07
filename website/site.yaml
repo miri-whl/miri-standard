@@ -3,7 +3,7 @@
 # static/css/, markup comes from templates/).
 github: https://github.com/miri-whl/miri-standard
 site_url: https://miri-whl.github.io
-version: 0.4.0
+version: 0.4.1
 status_badge: Incubation
 
 targets:
@@ -59,7 +59,7 @@ nav:
   - label: Project
     items:
       - { label: Overview, href: index.html }
-      - { label: What's new in 0.3, href: whats-new.html }
+      - { label: Why consumption, href: why-consumption.html }
       - { label: Glossary, href: glossary.html }
       - { label: Changelog, href: changelog.html }
       - { label: Origin story, href: origin.html }

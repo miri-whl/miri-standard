@@ -1,6 +1,6 @@
 # Miri Standard: Consumption Map (Consumption)
 
-*Specification Version: 0.4.0-draft*
+*Specification Version: 0.4.1-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -163,8 +163,12 @@ lives only in a binding document is a task the map has described without saying 
 | §3.2 scaffolding | new code is about to be written against a package | SHOULD |
 | §3.3 upgrading | a dependency's version is about to change | **REQUIRED** |
 | §3.4 diagnosing | an error naming an installed package is observed | SHOULD |
-| §3.5 security and trust | a dependency is about to be added | **REQUIRED** |
+| §3.5 security and trust | a dependency is about to be added | SHOULD † |
 | §3.6 tests | a test touching a package is about to be written | SHOULD |
+
+† `dependency.add` is SHOULD, not REQUIRED: at the moment a dependency is added it is not installed, so it ships
+nothing a local surface can read and this task has no subject. It becomes REQUIRED when a registry-side surface
+exists ([Agent Integration §3.1](agent-integration-contract.md)).
 
 **A consumer with no binding is unaffected.** The triggers say when a task *becomes actionable*, not that a consumer
 must watch for them; a consumer invoked directly by a person is triggered by the person, which is the case every
