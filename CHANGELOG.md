@@ -7,6 +7,79 @@ breaking change, a **minor** version a backward-compatible addition, and a **pat
 clarifications only. That policy is a contract with implementers, and it is worth keeping strictly: a reader
 should be able to see `0.3.1` and know it contains no additions without having to check.
 
+## 0.4.0 — 2026-09-06
+
+A **minor** version: it adds. The Agent Integration Contract is new, two consumer checks are added, and every
+consumer score computed before this release shifts as a result — which is precisely what a minor version is for and
+why none of it could be back-ported to 0.3.1.
+
+The specifications remain **draft** (`0.4.0-draft` in their headers). The contract is specified but the reference
+binding does not exist yet, and two review findings are open against it: no schema governs the `findings` array, and
+no rule maps Consumer Conformance check IDs to `findings[].level`. Both are recorded here rather than left for a
+reader to discover.
+
+### Added
+
+- **[Agent Integration Contract](standards/consumption/agent-integration-contract.md)** — the missing *when*. The
+  standard specified what an artifact ships, how a surface serves it, and what a consumer reads; nothing specified
+  what causes the reading to start. A conformant producer, surface and consumer could coexist with metadata that was
+  never read, and every score stayed green.
+
+  Six **triggers**, one per Consumption Map task, naming the observable moment at which each becomes actionable. Two
+  are REQUIRED — a dependency being added, and a version changing — because both fire before an action that is
+  expensive to reverse.
+
+  The vocabulary matters and *hook* is deliberately not part of it. A hook is a host's mechanism; the word appears
+  elsewhere in this standard seven times, every one describing git or setuptools. The sentence that has to keep
+  working is *"Claude Code delivers a trigger via a hook; CI delivers the same trigger via a step"*, and it only
+  parses if hook is theirs and trigger is ours.
+
+- **[`agent-event-v1.json`](schemas/agent-event-v1.json)** — the event a host sends. It **closes**
+  `additionalProperties`, which is the opposite of the response envelope's open root and deliberately so: the
+  envelope is open so a new operation can add a payload key, and the event is closed so a host **cannot send a file
+  path, a diff, or the user's source**. A prohibition that was prose is now a validation failure.
+
+- **Two consumer checks**, `MIRI-CONSUMER-050` (a trigger with nothing to report answers absent, never empty) and
+  `MIRI-CONSUMER-051` (trigger behavior is independent of what the publisher ships). Both **conditional**: a consumer
+  with no binding has no trigger to answer, so by the not-applicable-is-not-a-pass rule they leave both the numerator
+  and the denominator. The consumer family is now 17 checks, still summing to exactly 100 — six points came from one
+  point off each of six large MUSTs, so no category absorbs the change.
+
+  **This shifts every consumer score computed before it**, which is why it is a minor-version change and cannot be
+  back-ported to a patch.
+
+- **Attack A13** — a shipped field bidding for the agent's attention, planted in the adversarial twin and nowhere
+  else. Every `.py` stays byte-identical across the fixture variants, so driving the same trigger against
+  `adversarial` and `miri` isolates the metadata as the only possible cause.
+
+### Changed
+
+- The **Agent Metadata threat model** gains the axis it was missing. Every item in it concerned what the metadata
+  *says* — narrative files inject, `api_index` can lie, execution is not sandboxed. This is the first concerning
+  what the metadata *makes happen*. A package that can force a trigger has a denial-of-context channel, and a threat
+  model covering only content will keep being surprised by control.
+
+- **Consumption Map §3** gains a trigger column. It belongs there rather than in a binding document because it
+  completes the map's own sentence — task answers *what*, vehicle answers *how*, trigger answers *when* — and is
+  true whether or not any binding is ever written.
+
+### Fixed
+
+- **An IPv6 hole in the SSRF guard.** Link-local was written as `169.254.0.0/16` and `fd00::/8`. `fd00::/8` is
+  unique-local; `fe80::/10`, the actual IPv6 link-local range, was **missing entirely**, so an IPv6 link-local
+  address passed the guard. Now split into private, loopback, link-local and cloud-metadata.
+
+- **A cross-document contradiction** introduced in the same session: the integration contract made `reason`
+  machine-meaningful, which the Discovery Contract forbids outright. Resolved by dropping the claim rather than the
+  rule — a consumer wanting to know what a package ships asks `list`, which is the operation whose answer that is.
+
+### Verification
+
+- `tools/check_consistency.py` gains the section-opener count rule it had been blind to for two rounds, and loses a
+  bug: it counted an escaped pipe as a table-cell separator, reporting a defect markdownlint correctly accepts. A
+  first attempt at the wider count rule produced **twelve false positives** on this corpus and was replaced with a
+  precise one. A checker that cries wolf is worse than no checker.
+
 ## 0.3.1 — 2026-09-01
 
 Bug fixes and clarifications. **No additions to the standard.** Every change either corrects something that was

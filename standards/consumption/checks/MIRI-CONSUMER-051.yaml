@@ -1,0 +1,42 @@
+id: MIRI-CONSUMER-051
+name: Trigger behavior is independent of what the publisher ships
+target: consumer
+status: active
+added_in: 0.4.0-draft
+level: MUST
+category: Integration Channel
+weight: 4
+conditional: true
+severity:
+  default: HIGH
+  violation_unit: each trigger firing that violates the rule
+short_description: No shipped field determines whether, when, or how loudly a trigger fires
+long_description: 'Consumer obligation from Agent Integration Contract 4.3. Conditional: it applies only to a
+  consumer that implements an integration binding.'
+examples:
+  violation: the same dependency.add fires differently for `adversarial` than for `miri`
+  compliant: identical trigger behavior across byte-identical fixtures; only the findings differ
+rationale: 'Every item in the Agent Metadata threat model concerns what the metadata SAYS. This is the first concerning
+  what the metadata MAKES HAPPEN. A package that can force or amplify a trigger has a denial-of-context channel:
+  it consumes the agent''s attention on demand, and no existing rule closes it. Content and control are different
+  axes, and a threat model covering only the first keeps being surprised by the second.'
+fires_when:
+- Driven with the same trigger against the `adversarial` and `miri` fixtures, the consumer's TRIGGER behavior
+  differs — it fires for one and not the other, fires at a different level, or fires more than once. Every .py
+  is byte-identical across the variants, so any difference is metadata-attributable by construction
+- The consumer reads any shipped field to decide whether a trigger fires
+- The consumer reads any shipped field to decide the level or prominence of a finding
+remediation:
+- Derive trigger behavior solely from the observable event and the consumer's own configuration
+- Let shipped metadata determine the CONTENT of a finding, never whether or how loudly one is raised
+suggested_fix: Derive trigger behavior solely from the observable event and the consumer's own configuration
+references:
+- title: Agent Integration Contract §4
+  url: agent-integration-contract.md
+  type: spec
+- title: Consumption Map §3
+  url: consumption-map.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-051.yaml
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-051.html

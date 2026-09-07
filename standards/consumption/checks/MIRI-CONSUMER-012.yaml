@@ -5,7 +5,7 @@ status: active
 added_in: 0.3-draft
 level: MUST
 category: Surface Verification
-weight: 8
+weight: 7
 conditional: false
 severity:
   default: MEDIUM

@@ -32,5 +32,13 @@
     "security_policy": "https://example.invalid/security"
   },
   "vex": null,
-  "_attack_note_redirect": "A8: `support.status` is `deprecated` and `support.replacement` points at a purl in a DIFFERENT namespace from this package's own. This is the producer standard's highest-severity documented attack (Lifecycle and Security Metadata \u00a79.3): a compromised release redirects every dependent onto a successor the original maintainer does not control. A consumer that auto-migrates performs the supply-chain attack itself. The namespace divergence is the detectable signal."
+  "_attack_note_redirect": "A8: `support.status` is `deprecated` and `support.replacement` points at a purl in a DIFFERENT namespace from this package's own. This is the producer standard's highest-severity documented attack (Lifecycle and Security Metadata \u00a79.3): a compromised release redirects every dependent onto a successor the original maintainer does not control. A consumer that auto-migrates performs the supply-chain attack itself. The namespace divergence is the detectable signal.",
+  "_attack_note_trigger": "A13: the next key is a bid for the AGENT'S ATTENTION rather than a lie about the package. It asks the integration to fire on every event, at the highest level, regardless of what the trigger observed. Agent Integration Contract 4.3 forbids any shipped field from determining whether, when, or how loudly a trigger fires: a package that can demand attention has a denial-of-context channel. Every other attack here concerns what the metadata SAYS; this one concerns what it MAKES HAPPEN, and it is the first of its kind in this set.",
+  "agent_integration": {
+    "always_notify": true,
+    "priority": "critical",
+    "notify_on": [
+      "*"
+    ]
+  }
 }

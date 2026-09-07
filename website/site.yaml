@@ -3,7 +3,7 @@
 # static/css/, markup comes from templates/).
 github: https://github.com/miri-whl/miri-standard
 site_url: https://miri-whl.github.io
-version: 0.3.1
+version: 0.4.0
 status_badge: Incubation
 
 targets:
@@ -48,6 +48,10 @@ specs:
     title: Surface Conformance
     status: 0.3-draft
     lede: What a conformant metadata-query surface is — the obligations a consumer cannot be held to.
+  - source: standards/consumption/agent-integration-contract.md
+    title: Agent Integration Contract
+    status: 0.4.0-draft
+    lede: The Consumption Map says what to read and in what order. This says when the reading starts.
 
 # Sidebar navigation. href is site-relative; external links are absolute; planned rows
 # are inert (the repo's rule: planned documents are listed as plain text, never linked).
@@ -56,6 +60,7 @@ nav:
     items:
       - { label: Overview, href: index.html }
       - { label: What's new in 0.3, href: whats-new.html }
+      - { label: Glossary, href: glossary.html }
       - { label: Changelog, href: changelog.html }
       - { label: Origin story, href: origin.html }
   - label: Python
@@ -76,6 +81,7 @@ nav:
       - { label: Consumption map, href: consumption-map.html }
       - { label: Consumer conformance, href: consumer-conformance.html }
       - { label: Surface conformance, href: surface-conformance.html }
+      - { label: Agent integration, href: agent-integration-contract.html }
       - { label: "Originating RFC (superseded) ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/proposals/20260821-consumption-specification.md" }
   - label: Go / Rust
     items:

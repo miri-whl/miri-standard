@@ -38,7 +38,35 @@ def strip_fences(text):
 def check_counts(name, text):
     """A number written next to a noun, against the thing actually enumerated nearby."""
     ids = {f.stem for f in CHECK_DIR.glob("*.yaml")}
-    # "<n> checks" claims are checked against the id prefix the document is about
+    # Any number-word standing in for a check count, not only the "**n** checks" phrasing. The
+    # narrow pattern missed "All fifteen ...", "the current fifteen", and "among the fifteen".
+    prefix_for = "MIRI-SURFACE" if "surface" in name else "MIRI-CONSUMER"
+    actual_n = len([i for i in ids if i.startswith(prefix_for)])
+    # A bare number-word is ordinary English ("all eight operations", "of the two"). Only flag one
+    # whose own SENTENCE also names the check family it would be counting — the narrower rule the
+    # first attempt at this check lacked, which produced twelve false positives on this corpus.
+    FAMILY = re.compile(r"\b(MIRI-(?:CONSUMER|SURFACE)\b|consumer checks|surface checks|"
+                        r"the (?:consumer|surface) (?:family|profile))", re.I)
+    for snt in re.split(r"(?<=[.;])\s", strip_fences(text)):
+        if not FAMILY.search(snt):
+            continue
+        for m in re.finditer(r"\b(?:all|the current|among the)\s+\*?\*?(\w+)\*?\*?\b", snt, re.I):
+            word = m.group(1).lower()
+            if word in WORDS and WORDS[word] != actual_n:
+                bad(name, f"says {word!r} in a sentence about {prefix_for}, which has {actual_n} checks")
+    # An ID range is written "X` through `Y" or "X` to `Y" — not any two ids that happen to be near
+    # each other, which is most of a conformance profile.
+    for m in re.finditer(r"`(MIRI-(?:CONSUMER|SURFACE))-(\d+)`\s*(?:through|to)\s*\n?`\1-(\d+)`", text):
+        pre = m.group(1)
+        real = max((int(i.rsplit("-", 1)[1]) for i in ids if i.startswith(pre)), default=0)
+        if int(m.group(3)) < real:
+            bad(name, f"ID range ends at {pre}-{m.group(3)} but {pre}-{real:03d} exists")
+    # The section-opener phrasing both profiles use. It names no family, so the sentence guard
+    # above cannot see it — and it went stale for two rounds before a review caught it.
+    for m in re.finditer(r"\b(\w+) checks, weights summing to 100", text):
+        word = m.group(1).lower()
+        if word in WORDS and WORDS[word] != actual_n:
+            bad(name, f"opener says {word!r}; {prefix_for} has {actual_n} checks")
     for m in re.finditer(r"\*\*?(\w+)\*\*? (?:numbered )?checks\b", text):
         word = m.group(1).lower()
         if word not in WORDS:
@@ -119,11 +147,15 @@ def check_tables(name, text):
     i = 0
     while i < len(lines):
         if lines[i].startswith("|") and i + 1 < len(lines) and re.match(r"^\|[-: |]+\|$", lines[i + 1]):
-            width = lines[i].count("|")
+            # An escaped pipe is cell content, not a separator — markdownlint accepts `\|` and the
+            # table renders correctly. Counting it as a cell boundary reports a defect that is not one.
+            def cells(line):
+                return re.sub(r"\\\|", "", line).count("|")
+            width = cells(lines[i])
             j = i + 2
             while j < len(lines) and lines[j].startswith("|"):
-                if lines[j].count("|") != width:
-                    bad(name, f"table row {j + 1} has {lines[j].count('|') - 1} cells, header has {width - 1}")
+                if cells(lines[j]) != width:
+                    bad(name, f"table row {j + 1} has {cells(lines[j]) - 1} cells, header has {width - 1}")
                 j += 1
             i = j
         else:
@@ -223,6 +255,75 @@ def check_fields_against_schemas():
             bad(d["id"], f"demands field `{tok}`, which no schema in schemas/ declares")
 
 
+def check_glossary():
+    """The glossary explains the standard's vocabulary; this asserts it has not drifted from it.
+
+    A glossary is uniquely dangerous because it becomes the thing people read instead of the spec.
+    A wrong entry is not merely unhelpful — it gets cited. So three properties are gated:
+
+      1. Every closed vocabulary it quotes matches its authoritative source. Trigger kinds come from
+         agent-event-v1.json, error codes and payload keys from discovery-envelope-v1.json, vehicle
+         labels from the Consumption Map, severity from check-v1.json.
+      2. Every defined term carries a link to where it is normatively defined, so a reader who needs
+         the rule rather than the explanation can reach it in one click.
+      3. No term is defined that the standard does not use, and the terms the standard defines in
+         bold are all present here.
+
+    What this cannot check is whether an explanation subtly misstates a rule it links to. That is a
+    reading, and it is left to review — stated here so the green tick is not mistaken for more than
+    it covers."""
+    import json
+    import yaml
+
+    gl = REPO / "docs/glossary.md"
+    if not gl.exists():
+        bad("glossary.md", "docs/glossary.md is missing")
+        return
+    g = gl.read_text()
+
+    def load(p):
+        return json.loads((REPO / p).read_text())
+
+    # 1. closed vocabularies quoted verbatim
+    vocab = [
+        ("trigger kinds", set(load("schemas/agent-event-v1.json")["properties"]["kind"]["enum"]),
+         set(re.findall(r"`((?:dependency|package|integration|runtime|test)\.\w+)`", g))),
+        ("vehicle labels",
+         set(re.findall(r"^\| \*\*\(([A-Z?]{1,2})\)\*\* \|",
+                        (REPO / "standards/consumption/consumption-map.md").read_text(), re.M)),
+         set(re.findall(r"\*\*\(([A-Z?]{1,2})\)\*\*", g))),
+        ("skip reasons", {"absent", "unavailable-vehicle", "error", "not-applicable"},
+         set(re.findall(r"`(absent|unavailable-vehicle|error|not-applicable)`", g))),
+    ]
+    for label, source, quoted in vocab:
+        if source and quoted != source:
+            bad("glossary.md", f"{label}: glossary has {sorted(quoted)}, source has {sorted(source)}")
+
+    ops = {"list", "document", "lifecycle", "migration-guide", "api-index", "resolve", "patterns", "graph"}
+    named = set(re.findall(r"`(list|document|lifecycle|migration-guide|api-index|resolve|patterns|graph)`", g))
+    if not ops <= named:
+        bad("glossary.md", f"operations missing from the glossary: {sorted(ops - named)}")
+
+    # 2. every defined term reaches its normative home
+    for m in re.finditer(r"^\*\*(.+?)\*\* [—(]", g, re.M):
+        term = m.group(1)
+        block = g[m.start():]
+        end = block.find("\n\n")
+        block = block[:end if end > 0 else 400]
+        if "](" not in block:
+            bad("glossary.md", f"term {term!r} has no link to where it is defined")
+
+    # 3. counts the glossary states about the check families
+    for m in re.finditer(r"`(MIRI-(?:CONSUMER|SURFACE))` runs (\d+)[–-](\d+) across (\w+) checks", g):
+        pre, hi, word = m.group(1), int(m.group(3)), m.group(4).lower()
+        real = [f.stem for f in (REPO / "standards/consumption/checks").glob(f"{pre}-*.yaml")]
+        if word in WORDS and WORDS[word] != len(real):
+            bad("glossary.md", f"says {word!r} {pre} checks; there are {len(real)}")
+        top = max(int(i.rsplit("-", 1)[1]) for i in real)
+        if hi != top:
+            bad("glossary.md", f"{pre} range ends at {hi:03d}; highest is {top:03d}")
+
+
 def main():
     for p in SPECS:
         text = p.read_text()
@@ -236,6 +337,7 @@ def main():
         check_check_refs(name, text)
     check_check_urls()
     check_fields_against_schemas()
+    check_glossary()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")

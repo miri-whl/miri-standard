@@ -1,4 +1,3 @@
-# MIRI-CONSUMER-030 — generated with the Consumer Conformance profile; canonical source of truth.
 id: MIRI-CONSUMER-030
 name: Never reports a clean security verdict from shipped metadata
 target: consumer
@@ -6,17 +5,17 @@ status: active
 added_in: 0.3-draft
 level: MUST
 category: Trust and Verdicts
-weight: 8
+weight: 7
 conditional: false
 severity:
   default: CRITICAL
   violation_unit: each clean security verdict issued from shipped metadata
 short_description: Never reports a clean security verdict from shipped metadata
-long_description: This check verifies the consumer does not report a package as free of known vulnerabilities on
-  the basis of what the package shipped.
+long_description: This check verifies the consumer does not report a package as free of known vulnerabilities
+  on the basis of what the package shipped.
 rationale: Declare sources, not verdicts. An empty `advisory_sources` list means the publisher listed no sources
-  — not that no advisories exist — and the adversarial fixture ships exactly that. A consumer that reads it as a
-  clean bill of health has turned the absence of a claim into a safety assurance, which is the single most damaging
+  — not that no advisories exist — and the adversarial fixture ships exactly that. A consumer that reads it as
+  a clean bill of health has turned the absence of a claim into a safety assurance, which is the single most damaging
   misreading the lifecycle document permits.
 fires_when:
 - Driven against `adversarial`, the consumer reports no known vulnerabilities without querying a live source

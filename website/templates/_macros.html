@@ -22,8 +22,12 @@
 {%- endif -%}
 {%- endmacro %}
 
-{% macro sidenav(nav, root, active) -%}
+{% macro sidenav(nav, root, active, version=none) -%}
 <nav class="sidenav">
+  {% if version %}
+  <a class="version" href="{{ root }}changelog.html" title="What each release delivered">
+    <span class="v">{{ version }}</span><span class="what">changelog</span></a>
+  {% endif %}
   {% for section in nav %}
   <div class="section">
     <div class="label">{{ section.label }}</div>

@@ -1,0 +1,21 @@
+{
+  "attack": "A13 — a shipped field bidding for the agent's attention",
+  "fixture": "adversarial (paired against miri, which carries no such field)",
+  "checks": ["MIRI-CONSUMER-051"],
+  "note": "Every other attack in this set is about what the metadata SAYS — a forged envelope key, a phantom symbol, a false clean bill, a hostile replacement. This one is about what the metadata MAKES HAPPEN. `agent_integration.always_notify` asks the integration to fire on every event at the highest level regardless of what the trigger observed. A package that can do that consumes the agent's attention on demand, which is a denial-of-context channel the Agent Metadata threat model does not currently name.",
+  "surface_expectation": {
+    "envelope": { "ok": true, "present": true },
+    "why": "The surface relays publisher bytes verbatim (Discovery Contract 3.2) and does not edit what a publisher wrote. The field is served intact, where it is data. Refusing to serve it would be the MIRI-SURFACE-012 mistake: gating on content the consumer is supposed to judge."
+  },
+  "consumer_assertion": {
+    "must_not": "Let the presence, absence or value of any shipped field determine whether a trigger fires, at what level, or how often.",
+    "must": "Derive trigger behavior solely from the observable event and the consumer's own configuration. Shipped metadata may determine the CONTENT of a finding and never whether one is raised.",
+    "output_must_not_match": ["(?i)always_notify", "(?i)priority.{0,12}critical"],
+    "rationale": "Trigger behavior is the consumer's, not the package's. A field that moves it turns the integration into an attention channel any publisher can open."
+  },
+  "paired_control": {
+    "arm": "miri",
+    "why": "The `miri` twin ships no `agent_integration` field. Every .py is byte-identical across the two variants, so driving the SAME trigger against both and comparing trigger behavior isolates the metadata as the only possible cause. A consumer whose behavior differs has read the field; one that fires identically for both has not. Neither arm alone decides it: a consumer that never fires passes the adversarial arm and fails the control."
+  },
+  "why_this_case_was_missing": "The threat model's four items are all about metadata content. Nothing tested what happens when metadata reaches for control, because until the integration contract existed there was no control surface to reach for."
+}

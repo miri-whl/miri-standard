@@ -1,0 +1,72 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-whl.github.io/schemas/agent-event-v1.json",
+  "title": "Miri Standard Agent Integration Event",
+  "description": "The request a host sends to an agent-integration binding when a trigger fires (Agent Integration Contract §3.2). The response is a discovery-envelope-v1 document carrying a `findings` payload key.\n\nNote the deliberate asymmetry with discovery-envelope-v1.json, whose root is OPEN. That root is open because a new operation adds a payload key and a closed root would forbid it on the day it lands. This root is CLOSED for the opposite reason: the contract's §3.2 forbids an event carrying a file path, a diff, a buffer, or the user's source, and a closed object is what makes that prohibition mechanical rather than advisory. A host that cannot express its event without adding a field is a host reaching for the user's code.",
+  "type": "object",
+  "required": ["schema_version", "kind", "phase", "subject"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "pattern": "^[0-9]+$",
+      "description": "Wire-schema version of this event. An integer string — \"1\", \"2\" — compared numerically, matching every other schema_version in the standard."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "dependency.add",
+        "dependency.version_change",
+        "package.first_reference",
+        "integration.begin",
+        "runtime.error",
+        "test.author"
+      ],
+      "description": "The observable moment, from the closed set in Agent Integration Contract §3.1. Closed for the same reason the servable set and the error codes are closed: two bindings that disagree about what an event is do not interoperate."
+    },
+    "phase": {
+      "type": "string",
+      "enum": ["before", "after"],
+      "description": "Whether the action has happened. Every REQUIRED kind is `before`, because a migration guide is worthless after the upgrade lands and a foreign-namespace replacement is only cheap to catch while the dependency does not yet exist."
+    },
+    "subject": {
+      "type": "object",
+      "required": ["package"],
+      "additionalProperties": false,
+      "description": "What the event is about, and nothing else. Closed by design: §3.2 forbids a file path, a diff, a buffer or the user's source, and a binding that needs the user's code to decide what to say has left this standard's scope and entered the host's.",
+      "properties": {
+        "package": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "description": "The import package name, matching the Discovery Contract §3.0 grammar so an event can be passed to an operation without re-validation."
+        },
+        "version": {
+          "type": "string",
+          "description": "A version or version specifier, where the kind implies one. Carried as written; this contract does not parse it."
+        },
+        "symbol": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$",
+          "description": "A dotted qualified name, where the kind implies one (runtime.error naming a failing surface, test.author naming the surface under test)."
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "$comment": "Agent Integration Contract §3.2 — runtime.error is necessarily `after`; it reports something that has already happened.",
+      "if": { "properties": { "kind": { "const": "runtime.error" } }, "required": ["kind"] },
+      "then": { "properties": { "phase": { "const": "after" } } }
+    },
+    {
+      "$comment": "§3.2 — no other kind may be `after`. A trigger that fires once the action has landed cannot change it, and the two REQUIRED kinds exist precisely because they fire while the action is still a proposal.",
+      "if": { "properties": { "phase": { "const": "after" } }, "required": ["phase"] },
+      "then": { "properties": { "kind": { "const": "runtime.error" } } }
+    },
+    {
+      "$comment": "§3.1 — dependency.version_change is about a version, so it carries one. Without this a binding could fire the kind with nothing to distinguish it from dependency.add.",
+      "if": { "properties": { "kind": { "const": "dependency.version_change" } }, "required": ["kind"] },
+      "then": { "properties": { "subject": { "required": ["package", "version"] } } }
+    }
+  ]
+}
