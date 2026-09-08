@@ -1,0 +1,30 @@
+{
+  "attack": "C5 \u2014 a private CLI relying solely on public OSV",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-CLI-023"
+  ],
+  "clause": "all three clauses",
+  "note": "The open-source and private paths diverge here and nowhere earlier, which is why identity.distribution must be settled before advisory composition.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [
+        "MIRI-CLI-023"
+      ]
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [
+        "MIRI-CLI-023"
+      ],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "identity.distribution is private; every advisory_sources entry is type osv; no osv-internal or osv-local entry is present."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "A linter that never branches on identity.distribution passes every open-source fixture and fails no test, because until this arm existed there was no private one."
+}

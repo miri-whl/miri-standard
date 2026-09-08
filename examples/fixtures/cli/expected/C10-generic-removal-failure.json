@@ -1,0 +1,30 @@
+{
+  "attack": "C10 \u2014 a removed surface that yields a parse failure instead of a teaching error",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-CLI-033"
+  ],
+  "clause": "clause 1 \u2014 generic parse failure for a surface present in the previous release",
+  "note": "Same flag, same removal, opposite observable behavior \u2014 the sharpest pair in the set, because the conforming arm proves the teaching error is achievable.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [
+        "MIRI-CLI-033"
+      ]
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [
+        "MIRI-CLI-033"
+      ],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "`greet --shout` yields an argparse usage dump on stderr with exit 2. The same invocation against miri-1.1.0 yields SURFACE_REMOVED with retryable:false and suggestions naming --loud."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "Requires previous-release to know --shout ever existed; see C6 on the skip obligation."
+}

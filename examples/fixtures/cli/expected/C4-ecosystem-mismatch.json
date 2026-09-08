@@ -1,0 +1,30 @@
+{
+  "attack": "C4 \u2014 an authoritative source naming an ecosystem the artifact is not in",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-CLI-022"
+  ],
+  "clause": "clause 6 \u2014 authoritative entry names an unreachable ecosystem",
+  "note": "Well-formed on paper, unreachable in practice. Scoped to authoritative entries deliberately: a non-authoritative entry covering the dependency tree may legitimately name another ecosystem.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [
+        "MIRI-CLI-022"
+      ]
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [
+        "MIRI-CLI-022"
+      ],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "identity.purl is pkg:pypi/greetctl; the only authoritative entry names ecosystem npm. An OSV query keyed on the purl can never match it."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "See C3 \u2014 same check, different clause, same block."
+}

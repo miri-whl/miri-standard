@@ -255,6 +255,32 @@ def main():
     check("the arms discriminate: same flag, same removal, opposite observable behavior",
           bool(conforming_teaches.get("suggestions")) and hostile_dumps)
 
+    # --- 5. the goldens themselves ---------------------------------------------------------------------
+    # Ground truth for the attacks. Until 0.5.0 this directory was empty while the wheel side shipped 24
+    # goldens, so nothing stated what a linter MUST report and an inert linter scored like a correct one.
+    import yaml as _yaml
+    gdir = FIX / "expected"
+    goldens = sorted(gdir.glob("C*.json"))
+    check("CLI goldens present, one per attack", len(goldens) == 11, f"{len(goldens)} found")
+    known = {f.stem for f in (REPO / "standards/cli/checks").glob("MIRI-CLI-*.yaml")}
+    covered = set()
+    for g in goldens:
+        d = json.loads(g.read_text())
+        missing = [k for k in ("attack", "fixture", "checks", "clause", "note",
+                               "linter_assertion", "paired_control", "why_this_case_was_missing")
+                   if k not in d]
+        check(f"golden {g.stem}: complete", not missing, f"missing {missing}" if missing else "")
+        unknown = [c for c in d.get("checks", []) if c not in known]
+        check(f"golden {g.stem}: cites real checks", not unknown, f"unknown {unknown}" if unknown else "")
+        la = d.get("linter_assertion", {})
+        paired = la.get("must_report_on", {}).get("arm") != la.get("must_not_report_on", {}).get("arm")
+        check(f"golden {g.stem}: pairs an attack arm against a control arm", paired,
+              "" if paired else "both arms are the same — the case cannot discriminate")
+        covered.add(g.stem.split("-")[0])
+    check("every attack C1-C11 has a golden",
+          covered == {f"C{i}" for i in range(1, 12)},
+          f"missing {sorted({f'C{i}' for i in range(1,12)} - covered)}")
+
     print()
     if failures:
         print(f"{len(failures)} invariant(s) FAILED:", file=sys.stderr)

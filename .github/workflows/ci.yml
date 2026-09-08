@@ -105,6 +105,9 @@ jobs:
     - name: Validate the trigger-response schema in both directions
       run: make findings-schema
 
+    - name: Prove the CLI golden harness discriminates
+      run: make score-cli-linter
+
     # The fourth normative-artifact pair: spec prose x check citations. Gates the mechanically
     # decidable half — does the cited document and section exist — and leaves the semantic half
     # to `make references --report`, which is a list for a person rather than a green tick.

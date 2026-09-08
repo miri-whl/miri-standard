@@ -19,6 +19,27 @@ dogfooding a real tool across four review rounds, because no fixture could find 
 
 Build them with `make cli-fixtures`; verify with `make validate-cli-fixtures`. Both run in `make check`.
 
+## The goldens
+
+`expected/C1.json` … `C11.json` state, for each attack, **which check a linter must report and on which arm**.
+Each is a *pair*: the check must fire on `adversarial-1.1.0` and must **not** fire on `miri-1.1.0`, whose
+`greetctl.py` is byte-identical. That pairing is what makes the suite discriminating — the attack arm catches a
+linter that reports nothing, the control arm catches one that reports everything, and neither decides a case alone.
+
+```bash
+make score-cli-linter                              # prove the harness rejects both degenerate linters
+python3 tools/score_cli_linter.py --report r.json  # grade a real linter
+```
+
+Until this release the directory was empty while the wheel side shipped 24 goldens, so nothing stated what a
+linter must report and an inert linter scored exactly like a correct one. `make score-cli-linter` is the standing
+proof that is no longer true: it grades an inert linter, a screaming one, and a correct one, and fails unless the
+first two are rejected and the third accepted.
+
+`C11` cites no check on purpose. No `MIRI-CLI` check fires on an `agent_integration` bid — the obligation binds a
+*binding* under Agent Integration Contract §4.3 and is scored by `MIRI-CONSUMER-051`. The golden exists to state
+that gap rather than let a reader infer the attack is covered.
+
 ## Why there are two conforming releases
 
 This is the one structural difference from the wheel fixtures, and it is not a convenience.
