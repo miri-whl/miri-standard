@@ -209,7 +209,7 @@ Every "No" in that table is an obligation this profile deliberately does not sco
 responses and cannot be held to the shape of one ([Discovery Contract §10](discovery-contract.md)).
 
 Every "No" in that table is numbered in [Surface Conformance](surface-conformance.md) — eighteen `MIRI-SURFACE`
-checks weighted to 100 — and the two columns together account for all thirty-three consumption checks.
+checks weighted to 100 — and the two columns together account for all thirty-five consumption checks.
 
 **Absence appears on both sides, and that is not duplication.** A surface must *signal* absence correctly
 (`ok: true, present: false`, never an error, never a silent empty success); a consumer must *report* it correctly

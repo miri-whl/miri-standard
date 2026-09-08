@@ -101,7 +101,9 @@ adding the second Production Map exposed.
 
 - **The schemas index listed 7 of 13 schemas.** `cli-describe-v1`, `discovery-envelope-v1`, `agent-event-v1`,
   `scoring-v1` and `lint-report-v1` were never added to `schemas/README.md`, so five schemas the specs depend on
-  were discoverable only by listing the directory. All thirteen are now indexed, and the index is verified complete.
+  were discoverable only by listing the directory. All thirteen are now indexed, and `make consistency` now fails if a schema
+  lacks an index entry. An earlier draft called the index "verified complete" when nothing verified
+  it — the repo's own thesis violated in the sentence claiming to have closed it.
 
 - **The site generator silently overwrote pages whose sources shared a basename.** Output names were derived from
   the source filename alone, so `standards/python/production-map.md` and `standards/cli/production-map.md` both
@@ -183,7 +185,8 @@ reader to discover.
   never read, and every score stayed green.
 
   Six **triggers**, one per Consumption Map task, naming the observable moment at which each becomes actionable. Two
-  were REQUIRED at 0.4.0 — a dependency being added, and a version changing. **0.4.1 demotes the first to SHOULD**;
+  were REQUIRED at 0.4.0 — a dependency being added, and a version changing. **0.5.0 demotes the first to SHOULD**
+  (this release, which began as 0.4.1);
   see that entry for why.
 
   The vocabulary matters and *hook* is deliberately not part of it. A hook is a host's mechanism; the word appears

@@ -48,8 +48,11 @@ The control block is kept in a separate file rather than inside `describe.json` 
 closes `additionalProperties` at the root, so a control key inside the served document would make the conforming arms
 schema-invalid. The wheel fixtures hit the same constraint and solved it the same way.
 
-`greetctl` derives `--help`, `--describe`, `changelog` and its removal errors from that one `describe.json`. That is
-the [CLI Lifecycle Specification](../../../standards/cli/cli-lifecycle-specification.md) §9.6 property — "all of the
+`greetctl` derives `--describe`, `changelog` and its removal errors from that one `describe.json`, and derives the
+command list in `--help` from it. It is not derived *entirely*: the global-options block and the `check-update` and
+`changelog` lines in `--help` are literal strings in `render_help()`, so an earlier claim here that this was "true by
+construction" was false — and the divergence it creates is the one [CLI Lifecycle
+Specification](../../../standards/cli/cli-lifecycle-specification.md) §9.6 property — "all of the
 above derive from the same schema-as-data source as `--help`" — which no check can verify from outside the binary and
 which the [Production Map](../../../standards/cli/production-map.md) §4 records as ungraded. Here it is true by
 construction, so the fixture is a positive example of a requirement the checklist cannot grade.
@@ -58,8 +61,10 @@ construction, so the fixture is a positive example of a requirement the checklis
 
 Each is annotated in place in `data/adversarial-1.1.0.json` or its control file, and each is asserted live by
 `tools/validate_cli_fixtures.py`. A fixture whose attacks have decayed passes trivially and tests nothing — the
-vacuous-pass defect applied to fixtures instead of checks — so the validator is mutation-tested: disarming any attack
-must fail it.
+vacuous-pass defect applied to fixtures instead of checks. The validator is mutation-tested, and an adversarial
+panel found the claim overstated: nine of the eleven fail the validator when disarmed, but C3's assertion tests
+only that an authoritative source is declared (reachability is C4's), and C6's changelog conjunct was satisfied by
+C2's banner rather than by the changelog. Those two are tracked in `memory-bank/tasks/0.5.0-remediation/`.
 
 | ID | Attack | Check |
 | --- | --- | --- |

@@ -90,8 +90,9 @@ checklist lists them in:
   ecosystem the artifact is not distributed in — a condition evaluated by keying an OSV query on the declared
   `identity.purl`. The purl decides whether the advisory sources are reachable.
 - **`identity.purl` precedes the SBOM decision.** `MIRI-CLI-024` is conditional *on the purl*: a `pkg:generic/` purl
-  with a `repository_url` means direct binary distribution and the check applies; a registry purl passes it
-  automatically. An author cannot know whether the SBOM obligation binds until the purl is written.
+  with a `repository_url` means direct binary distribution and the check applies; a registry purl takes it out of
+  scope, excluded from both numerator and denominator rather than scored as passing. An author cannot know whether
+  the SBOM obligation binds until the purl is written.
 - **`identity.distribution` precedes advisory composition.** `MIRI-CLI-023` fires only when `distribution` is
   `private`, and then constrains what `advisory_sources` may contain. The open-source and private paths diverge here
   and nowhere earlier.
@@ -143,13 +144,24 @@ not merely present, so the replacement targets must be settled before the blocks
 **Settled:** `--dry-run`, the destructive and read-vs-write markings, signal handling.
 
 `MIRI-CLI-040` and `MIRI-CLI-041` place fields *inside* the Stage 2 document — a `destructive: true` marker and a
-machine-readable `mutating`/`mode` field on each command's `--describe` entry. They are nonetheless last, because
-**no check makes any other surface depend on them**. Nothing reads them; they are read by consumers.
+machine-readable `mutating`/`mode` field on each command's `--describe` entry.
 
-This is the CLI's counterpart to Stage 4 of the Python map, and carries the same consequence: an author blocked here
-is not blocked on anything else, and these annotations may be added to `--describe` after every other stage is
-verified. `MIRI-CLI-039`, `MIRI-CLI-042`, and `MIRI-CLI-043` constrain runtime behavior rather than any document, and
-are independent of all of the above.
+**This stage is last in the sense that nothing downstream of it exists, not in the sense that it may be deferred**,
+and the distinction is load-bearing. `MIRI-CLI-041` requires the `mutating` field; `MIRI-CLI-039` (MUST, weight 4 —
+the heaviest Safety check) and `MIRI-CLI-042` both draw their entire evaluation population from it, declaring
+`population_unit: all mutating commands in --describe`. An author who defers the marking defers the population those
+two checks are scored over, and `MIRI-CLI-039` cannot be evaluated at all rather than passing.
+
+So the ordering within Stage 5 is itself check-imposed: the `mutating` marking (`MIRI-CLI-041`) precedes `--dry-run`
+(`MIRI-CLI-039`) and the idempotency guarantees (`MIRI-CLI-042`), because it defines what those two are about.
+`MIRI-CLI-040`'s `destructive` marker and `MIRI-CLI-043`'s signal handling are the only genuinely terminal
+obligations here — no check reads either.
+
+An earlier draft of this section claimed "no check makes any other surface depend on them. Nothing reads them." That
+was false, and it was the most damaging kind of error this document can make: it told an author to defer a field a
+weight-4 MUST check consumes. It is recorded rather than silently corrected because the mistake has a shape worth
+recognizing — it was a universal negative written from a mental model of the standard rather than from the check
+text, and the check that refutes it is named in the same paragraph.
 
 ## 3. What Cannot Be Verified Yet
 
@@ -164,8 +176,12 @@ A linter without access to a prior release **MUST skip these and report the skip
 and the denominator, so a first release is scored over what could actually be evaluated. **A first CLI release cannot
 score 100 on a suite that includes them and should not appear to.**
 
-This is a sharper constraint than the wheel standard imposes: the Python checklist has two such checks, the CLI
-checklist has five, and every one of them lives in Stage 4. The reason is structural rather than accidental — a CLI's
+This is a sharper constraint than the wheel standard imposes: the Python checklist has two such checks and the CLI
+checklist has five. Four of them (`033`, `035`, `036`, `037`) are Stage 4's; the fifth, `MIRI-CLI-030`, belongs to
+the Update & Changelog category and is therefore Stage 3's. An earlier draft said all five lived in Stage 4, which
+contradicted this document's own Stage 4 paragraph thirty lines above.
+
+The concentration in Stage 4 is structural rather than accidental — a CLI's
 deprecation contract is a claim about *what the binary used to do*, and a single release contains no evidence of that.
 
 One check requires **network**: `MIRI-CLI-028`, weight 2. A first release linted in an offline sandbox is therefore
@@ -177,16 +193,17 @@ runs the binary declares nothing, while the equivalent wheel check must declare 
 
 ## 4. The Ungraded Requirement
 
-[CLI Lifecycle Specification](cli-lifecycle-specification.md) §9 lists six conditions for conformance. Five map onto
+[CLI Lifecycle Specification §9](cli-lifecycle-specification.md) lists six conditions for conformance. Five map onto
 checks. The sixth does not:
 
-> All of the above derive from the same schema-as-data source as `--help` (§2.3).
+> All of the above derive from the same schema-as-data source as `--help` ([§2.3](cli-lifecycle-specification.md)).
 
 **No check grades this, and no check can.** Two hand-maintained outputs that happen to agree are indistinguishable
 from two outputs derived from one struct, when all a linter may do is run the binary. The requirement is a constraint
 on the *implementation*, and every other clause in the checklist is a constraint on *observable behavior*.
 
-It is named here rather than omitted, because an author reading §9 will otherwise look for the check that enforces
+It is named here rather than omitted, because an author reading [§9](cli-lifecycle-specification.md) will otherwise
+look for the check that enforces
 item 6 and conclude they have missed one. They have not: the requirement is real, it is the design principle the rest
 of the standard is built on, and it is enforced by nothing but the author's own discipline.
 

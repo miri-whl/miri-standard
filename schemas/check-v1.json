@@ -82,7 +82,7 @@
     },
     "conditional": {
       "type": "boolean",
-      "description": "Conditional checks score their full weight automatically when the condition does not apply"
+      "description": "When the condition does not apply, the check is EXCLUDED FROM BOTH the numerator and the denominator - it is removed from the calculation, exactly as a capability-forfeited check is. It is NOT awarded its weight. This is the not-applicable-is-not-a-pass rule: a check whose condition does not hold has not been satisfied, and scoring it as passed would let an artifact earn weight for an absence. Note the predicate itself is not machine-readable - it is stated in fires_when prose - so a linter decides applicability per check, and MUST report which checks it excluded and why."
     },
     "severity": {
       "type": "object",

@@ -425,6 +425,57 @@ def main() -> int:
         check("no trace emits a kind the binding declares unsupported",
               not (kinds_covered - supported), f"found {sorted(kinds_covered - supported)}")
 
+        # Ground truth. Schema validity says a golden is well-formed, not that it is TRUE. These four
+        # assertions are what an adversarial panel found missing after E5 quoted a benign prefix under an
+        # injection finding, E6 graded a MUST at SHOULD, and E4 inferred a purl namespace from an import
+        # name. Each is cheap; each catches a defect that reached a downstream team's acceptance criteria.
+        ARM_FOR = {"greet-bare": "bare", "greet_bare": "bare",
+                   "greet-miri": "miri", "greet_miri": "miri",
+                   "greet-adversarial": "adversarial", "greet_adversarial": "adversarial"}
+        levels = {}
+        for cf in (REPO / "standards/consumption/checks").glob("MIRI-*.yaml"):
+            try:
+                import yaml as _y
+                levels[cf.stem] = _y.safe_load(cf.read_text())["level"].lower()
+            except Exception:
+                pass
+        for g in traces:
+            d = json.loads(g.read_text())
+
+            # (a) cited checks must exist — the A-series has guarded this since 0.3; the E-series did not.
+            unknown = [c for c in d.get("checks", []) if c not in levels]
+            check(f"trace {g.stem}: cites real checks", not unknown, f"unknown {unknown}" if unknown else "")
+
+            # (b) any regex an assertion carries must compile, or it silently never fires.
+            for pat in (d.get("assertions", {}) or {}).get("output_must_not_match", []):
+                try:
+                    re.compile(pat)
+                    check(f"trace {g.stem}: assertion regex compiles", True)
+                except re.error as e:
+                    check(f"trace {g.stem}: assertion regex compiles", False, f"{pat!r}: {e}")
+
+            responses = ([d["expected_response"]] if "expected_response" in d else []) + \
+                        [a["expected_response"] for a in d.get("arms", [])]
+            subjects = [d["event"]["subject"]["package"]] if "event" in d else \
+                       [a["subject_package"] for a in d.get("arms", [])]
+            for rs, subj in zip(responses, subjects + [None] * len(responses)):
+                for f in rs.get("findings", []):
+                    # (c) the level must match a cited check. E6 graded a MUST at SHOULD and wrote a
+                    #     justification for it; a correct implementer would have failed that golden.
+                    cited = [levels[c] for c in d.get("checks", []) if c in levels]
+                    check(f"trace {g.stem}: finding level '{f['level']}' matches a cited check",
+                          not cited or f["level"] in cited, f"cited levels {sorted(set(cited))}")
+
+                    # (d) the source must exist in the arm, and the quote must actually be in it.
+                    arm = ARM_FOR.get(subj or "")
+                    if arm and arm != "bare":
+                        doc = FIX / f"metadata/{arm}/{f['source']}"
+                        check(f"trace {g.stem}: source {f['source']} exists in the {arm} arm", doc.exists())
+                        if doc.exists() and f.get("quote"):
+                            check(f"trace {g.stem}: quote appears in {f['source']}",
+                                  f["quote"] in doc.read_text(),
+                                  f"{f['quote'][:56]!r} not found")
+
         # The discriminating pair of 4.3: one arm must require findings and the other the absent
         # shape. If both arms expected the same shape the case would be passed by a consumer that
         # never fires, which is precisely the weakness A13 has alone.

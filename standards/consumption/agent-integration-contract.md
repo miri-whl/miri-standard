@@ -183,14 +183,25 @@ payload key.
 `findings` is a new payload key, which the envelope schema permits: its root is deliberately open so that a new
 operation or channel can add one without a schema change forbidding it.
 
-The shape is schema-enforced by [`agent-findings-v1.json`](../../schemas/agent-findings-v1.json), which closes
-`task` to the six map sections and `level` to `must`/`should`, and enforces the payload/absence coupling above in
-both directions. Two consequences are worth stating because they are the reason the schema exists rather than a
-prose restatement of it. An empty `findings` array is **rejected**, so a binding cannot satisfy §4.1 by emitting one.
-And a publisher's `priority: "critical"` cannot reach `level` even if a consumer passed it through unexamined — it
-is not in the enum, so the response would simply be invalid. What the schema cannot enforce is that `level` was
-*derived* from the profile rather than copied from a document that happened to say `must`; that is behavioral, and
-is what `MIRI-CONSUMER-051` and the `E3` golden are for.
+The shape is schema-enforced by [`agent-findings-v1.json`](../../schemas/agent-findings-v1.json), which **carries
+the envelope's rules verbatim** rather than restating them — `make consistency` fails if any of them drifts, so the
+"no new response format" claim above is enforced rather than asserted. On top of them it closes `task` to the six
+map sections and `level` to `must`/`should`, couples payload and absence in both directions, requires any
+successful response to state `present`, and denies the host-control shapes §4.4 governs.
+
+Three consequences are worth stating. An empty `findings` array is **rejected**, so a binding cannot satisfy §4.1 by
+emitting one. A publisher's `priority: "critical"` cannot reach `level` even if a consumer passed it through
+unexamined. And a response carrying `findings` must assert `present: true`, so a caller branching on `ok`/`present`
+can never take neither branch.
+
+**What the schema does not enforce, stated in full rather than by example**, because naming one gap implies the rest
+are covered: that `level` was *derived* from the profile rather than copied; that `reason` carries no publisher
+bytes; that a consumer does not branch on `reason`; that `source` names a genuinely served document; that `quote`
+is bytes actually present in it; that `task` is the section that really produced the finding; and that the *number*
+of findings is publisher-independent (§4.3 names count as trigger behavior, and no `maxItems` expresses it). These
+are behavioral. `MIRI-CONSUMER-051` and the `E3` golden cover the first; `make validate-fixtures` now checks
+`source`, `quote` and `level` against ground truth for every golden; the rest are unenforced today and are listed
+here so a reader does not assume otherwise.
 
 ## 4. Obligations
 

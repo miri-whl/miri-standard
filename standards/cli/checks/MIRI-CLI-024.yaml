@@ -24,7 +24,7 @@ rationale: 'Only the Go toolchain makes binaries legible by default — the embe
   (≥2.0.1).'
 fires_when:
 - '`identity.purl` indicates direct binary distribution (`pkg:generic/` with `repository_url`) — registry-distributed CLIs
-  pass this conditional check automatically'
+  are out of scope and are excluded from both numerator and denominator, never scored as passing'
 - the binary yields no embedded module inventory (`go version -m` fails, no `.dep-v0` section) and `build_info.embedded_modules`
   is absent or `false`
 - '`identity.sbom` is absent, or the referenced URL/path does not resolve to a CycloneDX/SPDX document for the release under

@@ -1,31 +1,37 @@
 {
-  "trace": "E1 — a trigger with nothing to report",
+  "trace": "E1 \u2014 a trigger with nothing to report",
   "clause": "Agent Integration Contract 4.1",
-  "checks": ["MIRI-CONSUMER-050"],
-  "note": "The bare fixture ships no agent-metadata/ at all. This is the case a binding gets wrong by being helpful: announcing 'checked, nothing found' on every manifest edit is the context tax 4.1 forbids, and the predictable result is a user disabling the binding — after which the conformant producer, surface and consumer are all still green and the metadata is again never read. The failure the contract exists to close is reachable through its own remedy.",
+  "checks": [
+    "MIRI-CONSUMER-050"
+  ],
+  "note": "The bare fixture ships no agent-metadata/ at all. This is the case a binding gets wrong by being helpful: announcing 'checked, nothing found' on every manifest edit is the context tax 4.1 forbids, and the predictable result is a user disabling the binding \u2014 after which the conformant producer, surface and consumer are all still green and the metadata is again never read. The failure the contract exists to close is reachable through its own remedy.",
   "event": {
     "schema_version": "1",
     "kind": "dependency.add",
-    "phase": "before",
-    "subject": { "package": "greet-bare", "package_kind": "distribution" }
+    "phase": "after",
+    "subject": {
+      "package": "greet-bare",
+      "package_kind": "distribution"
+    }
   },
   "expected_response": {
     "schema_version": "1",
     "ok": true,
     "present": false,
-    "reason": "greet-bare ships no agent-metadata/ directory"
+    "reason": "task 3.5 found nothing to report"
   },
   "assertions": {
     "must_not": [
-      "Emit an empty findings array — silence is the absent shape, not an empty payload.",
+      "Emit an empty findings array \u2014 silence is the absent shape, not an empty payload.",
       "Emit prose confirming that the trigger ran.",
       "Report present:false as evidence about what the package ships; that question is `list`'s to answer."
     ],
-    "reason_is_free_text": "The reason string is for humans and is never matched on. A binding wording it differently still conforms; one omitting it does not."
+    "reason_is_free_text": "The reason string is for humans and is never matched on. It must NOT assert what the package ships \u2014 \"greet-bare ships no agent-metadata/\" is a claim whose subject is the package and whose predicate asserts absence, which Map \u00a71.1 defines as prohibited and which this golden's own `must_not` forbids two lines down. A trigger reports what it found, not an inventory of what exists."
   },
   "host_layer": {
     "note": "4.1 governs the CONTRACT response, not what a host emits. These are two layers.",
-    "claude_code": "The adapter receives this absent envelope and emits NOTHING — exit 0, no stdout. In this host a hook's stdout enters the agent's context, so printing the absent envelope would be the very context tax the clause forbids, arrived at by obeying its letter (6.3)."
+    "claude_code": "The adapter receives this absent envelope and emits NOTHING \u2014 exit 0, no stdout. In this host a hook's stdout enters the agent's context, so printing the absent envelope would be the very context tax the clause forbids, arrived at by obeying its letter (6.3)."
   },
-  "why_this_case": "It is the only trace where the correct output is no output, and the only one a binding can fail by doing more work rather than less."
+  "why_this_case": "It is the only trace where the correct output is no output, and the only one a binding can fail by doing more work rather than less.",
+  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite."
 }

@@ -55,6 +55,9 @@ consistency: ## Catch count/reference/table drift the linters do not see
 envelope: ## Validate discovery-envelope-v1.json in both directions (accept + reject)
 	python3 tools/validate_envelope_schema.py
 
+findings-schema: ## Validate agent-findings-v1.json in both directions (accept + reject)
+	@python3 tools/validate_findings_schema.py
+
 references: ## Verify every check's spec citations resolve (--report for reconciliation)
 	python3 tools/check_references.py
 
@@ -80,4 +83,4 @@ links: ## Check Markdown links (CI: markdown-link-check)
 	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
 		-exec npx markdown-link-check -q -c .markdown-link-check.json {} \;
 
-check: validate validate-sample validate-fixtures validate-cli-fixtures lint spell ## Run everything CI runs locally (except link check and the miri score gate)
+check: validate validate-sample validate-fixtures validate-cli-fixtures findings-schema lint spell ## Run everything CI runs locally (except link check and the miri score gate)

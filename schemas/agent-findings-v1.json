@@ -2,26 +2,82 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://miri-whl.github.io/schemas/agent-findings-v1.json",
   "title": "Agent Integration Trigger Response",
-  "description": "The response a trigger returns, per Agent Integration Contract 3.3. This is the Discovery Contract 4 envelope with one payload key, `findings` - it is NOT a new response format, and every rule the envelope states applies here unchanged. The root is deliberately OPEN, matching discovery-envelope-v1: the envelope permits a new channel to add a payload key without a schema change forbidding it, and closing it here would contradict the document that admits `findings` in the first place. What this schema adds over the envelope is the closed vocabulary of a finding and the payload/absence coupling of 3.3.",
+  "description": "The response a trigger returns, per Agent Integration Contract 3.3. This IS the Discovery Contract 4 envelope with one payload key, `findings` - and it is built by copying that envelope's rules verbatim rather than restating them. An earlier version re-typed a subset by hand while the prose claimed 'every rule the envelope states applies here unchanged'; eleven documents the envelope rejected validated here, including schema_version '1.0' - the exact divergence the envelope pins against because two implementations had already diverged on it. tools/check_consistency.py now fails if any rule here drifts from the envelope, so the claim is enforced rather than asserted. The root stays OPEN exactly as the envelope's does, with the host-control shapes of 4.4 explicitly denied below.",
   "type": "object",
-  "required": ["schema_version", "ok"],
+  "required": [
+    "schema_version",
+    "ok"
+  ],
   "additionalProperties": true,
   "properties": {
     "schema_version": {
       "type": "string",
-      "description": "Surface-owned, per Discovery Contract 4. Independent of any package version and of the host protocol date."
+      "description": "The wire-schema version of the ENVELOPE, stamped by the surface (\u00a74.1). Versioned independently of the transport's protocol version, of the metadata-query surface version (\u00a74.4), and of any version field inside the payload. A consumer pins on this to detect a wire-shape change. An integer string \u2014 \"1\", \"2\" \u2014 compared numerically. The format is pinned because it was stated only in prose and examples, and two implementations had already diverged on it: one emitting \"1\" and one \"1.0\", both validating.",
+      "examples": [
+        "1"
+      ],
+      "pattern": "^[0-9]+$"
     },
     "ok": {
       "type": "boolean",
-      "description": "Surface-owned. A publisher cannot forge it: publisher bytes nest under a payload key and never reach this level."
+      "description": "Whether the surface served the request. False only for a \u00a74.3 failure; a document the package does not ship is a SUCCESSFUL answer with `present: false` (\u00a74.2)."
     },
     "present": {
       "type": "boolean",
-      "description": "true when the trigger has findings to report; false when it found nothing (4.1). NOTE the narrowed meaning: in the Discovery Contract `present: false` means the document does not exist, here it means THIS TRIGGER FOUND NOTHING. A consumer must not read it as evidence about what the package ships - that question is `list`'s to answer."
+      "description": "Whether the requested document exists. Independent of `ok`: the two booleans carry two different axes, and a consumer branches on both rather than on `reason` text."
+    },
+    "package": {
+      "type": "string",
+      "description": "The resolved top-level import name the answer is about."
+    },
+    "purl": {
+      "type": "string",
+      "description": "The resolved package URL (\u00a79 provenance). Derived by the surface from the installed distribution \u2014 never read out of a served document, so a package cannot borrow another's identity.",
+      "examples": [
+        "pkg:pypi/weather-sdk@1.2.0"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "description": "The document name the answer is about, for document-returning operations."
     },
     "reason": {
       "type": "string",
-      "description": "Free text for humans, never a machine field (Discovery Contract 4.2). Required with `present: false` so a silent trigger still says why it was silent. Deliberately NOT a closed set: adding a machine-readable cause here would contradict the envelope rule for the convenience of a caller that should be asking `list` instead."
+      "description": "Free text for humans explaining an absence (\u00a74.2). Surface-authored: it MUST NOT carry publisher bytes, which would make it an injection channel wearing a human-readable label (MIRI-SURFACE-002). Consumers MUST NOT branch on it."
+    },
+    "truncated": {
+      "type": "boolean",
+      "description": "Whether entries were dropped to respect the declared cap (\u00a73.5.1)."
+    },
+    "cap": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "The cap this surface declares for the operation. Declared on the wire so a consumer knows a listing is bounded; the default is 25 and a conformant surface may declare a larger one."
+    },
+    "next_cursor": {
+      "type": "string",
+      "description": "Continuation token for the same ordering (\u00a73.5.1). A surface that keeps no cursor state MUST NOT emit this \u2014 `truncated: true` with no `next_cursor` honestly reports 'there is more and I cannot reach it', and emitting a token that will never be honored is the violation."
+    },
+    "error": {
+      "$ref": "#/definitions/error",
+      "description": "Present exactly when `ok` is false (\u00a74.3)."
+    },
+    "packages": {
+      "type": "array",
+      "description": "Payload of `list` (\u00a73.1): one row per import package.",
+      "items": {
+        "$ref": "#/definitions/package_row"
+      }
+    },
+    "document": {
+      "description": "Payload of `document` / `lifecycle` / `migration-guide` (\u00a73.2\u20133.4): the publisher's document, VERBATIM. Deliberately unconstrained here \u2014 the surface relays these bytes and neither validates nor reshapes them; the producer checklists govern their validity at build time, and the consumer profile governs what a consumer may rely on."
+    },
+    "entries": {
+      "type": "object",
+      "description": "Payload of `api-index` (\u00a73.5): a capped, filtered routing view keyed by symbol name. Confirms presence; can never prove absence.",
+      "additionalProperties": {
+        "$ref": "#/definitions/api_index_entry"
+      }
     },
     "findings": {
       "type": "array",
@@ -29,17 +85,32 @@
       "description": "Present only alongside `present: true`. An empty array is non-conforming - silence is the absent shape, not an empty payload (4.1).",
       "items": {
         "type": "object",
-        "required": ["task", "level", "summary", "source"],
+        "required": [
+          "task",
+          "level",
+          "summary",
+          "source"
+        ],
         "additionalProperties": false,
         "properties": {
           "task": {
             "type": "string",
-            "enum": ["3.1", "3.2", "3.3", "3.4", "3.5", "3.6"],
+            "enum": [
+              "3.1",
+              "3.2",
+              "3.3",
+              "3.4",
+              "3.5",
+              "3.6"
+            ],
             "description": "The Consumption Map section that produced the finding, as the bare section number. Closed set: a caller routing on it needs one, and a task number is the only identifier the map guarantees is stable. Not free text."
           },
           "level": {
             "type": "string",
-            "enum": ["must", "should"],
+            "enum": [
+              "must",
+              "should"
+            ],
             "description": "The conformance vocabulary, NOT the check-severity vocabulary (LOW/MINOR/MEDIUM/HIGH/CRITICAL), because the question a caller asks here is `may I proceed`, not `how bad is this`. ASSIGNED BY THE CONSUMER from the Consumer Conformance profile and NEVER read from shipped metadata (4.3) - a package that could set its own finding's level would be grading its own exam, and one that could raise an unrelated finding to `must` would be blocking a competitor. That constraint is behavioral and cannot be expressed in JSON Schema; it is enforced by MIRI-CONSUMER-051 and the E3 golden, not here."
           },
           "summary": {
@@ -67,23 +138,413 @@
   },
   "allOf": [
     {
-      "description": "3.3: a response MUST NOT carry `present: true` with no `findings` key.",
+      "description": "\u00a74.3 \u2014 a failure carries a structured error.",
       "if": {
-        "properties": { "present": { "const": true } },
-        "required": ["present"]
-      },
-      "then": { "required": ["findings"] }
-    },
-    {
-      "description": "3.3: a response MUST NOT carry `findings` alongside `present: false`. 4.1: silence carries a reason.",
-      "if": {
-        "properties": { "present": { "const": false } },
-        "required": ["present"]
+        "properties": {
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "ok"
+        ]
       },
       "then": {
-        "not": { "required": ["findings"] },
-        "required": ["reason"]
+        "required": [
+          "error"
+        ]
+      }
+    },
+    {
+      "description": "\u00a74.2/\u00a74.3 \u2014 a served answer never carries an error object. Absence is not error.",
+      "if": {
+        "properties": {
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "error"
+          ]
+        }
+      }
+    },
+    {
+      "description": "\u00a74.2 \u2014 an absent response carries a human-readable reason and NO payload key.",
+      "if": {
+        "properties": {
+          "present": {
+            "const": false
+          }
+        },
+        "required": [
+          "present"
+        ]
+      },
+      "then": {
+        "required": [
+          "reason"
+        ],
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "document"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "entries"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "packages"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "description": "\u00a73.5.1 \u2014 a cap is meaningless without the truncation flag it governs, and vice versa.",
+      "if": {
+        "required": [
+          "cap"
+        ]
+      },
+      "then": {
+        "required": [
+          "truncated"
+        ]
+      }
+    },
+    {
+      "description": "\u00a73.5.1 \u2014 a continuation token only makes sense on a truncated answer.",
+      "if": {
+        "required": [
+          "next_cursor"
+        ]
+      },
+      "then": {
+        "properties": {
+          "truncated": {
+            "const": true
+          }
+        },
+        "required": [
+          "truncated"
+        ]
+      }
+    },
+    {
+      "$comment": "Discovery Contract 4.1 \u2014 `reason` MUST be omitted whenever `ok` is false. A failure explains itself through error.code alone; free text on the response a consumer scrutinises least is the injection channel 4.2 closes for absent responses.",
+      "if": {
+        "properties": {
+          "ok": {
+            "const": false
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "reason"
+          ]
+        }
+      }
+    },
+    {
+      "$comment": "Discovery Contract 4.1 \u2014 `purl` MUST be omitted on INVALID_INPUT and INVALID_CURSOR. Those errors are raised before the named package is looked up, so any purl would be invented rather than derived.",
+      "if": {
+        "properties": {
+          "error": {
+            "properties": {
+              "code": {
+                "enum": [
+                  "INVALID_INPUT",
+                  "INVALID_CURSOR"
+                ]
+              }
+            },
+            "required": [
+              "code"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "purl"
+          ]
+        }
+      }
+    },
+    {
+      "$comment": "Discovery Contract 3.5.1 \u2014 `graph` MUST NOT emit `next_cursor`. Its answer is a walk whose shape depends on where the previous walk stopped, so continuation is undefined for it.",
+      "if": {
+        "required": [
+          "graph"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "next_cursor"
+          ]
+        }
+      }
+    },
+    {
+      "$comment": "Discovery Contract 4.1 \u2014 `present` MUST be omitted from `list`, whose answer is an environment scan rather than a claim about one subject.",
+      "if": {
+        "required": [
+          "packages"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "present"
+          ]
+        }
+      }
+    },
+    {
+      "description": "3.3 - present:true means there is something to report, so `findings` must be there.",
+      "if": {
+        "properties": {
+          "present": {
+            "const": true
+          }
+        },
+        "required": [
+          "present"
+        ]
+      },
+      "then": {
+        "required": [
+          "findings"
+        ]
+      }
+    },
+    {
+      "description": "3.3/4.1 - silence is the absent shape: no findings, and a reason. An empty array is not silence.",
+      "if": {
+        "properties": {
+          "present": {
+            "const": false
+          }
+        },
+        "required": [
+          "present"
+        ]
+      },
+      "then": {
+        "not": {
+          "required": [
+            "findings"
+          ]
+        },
+        "required": [
+          "reason"
+        ]
+      }
+    },
+    {
+      "description": "3.3 - the converse direction, which an earlier version left open: a response carrying `findings` must assert presence. {'ok':true,'findings':[...]} with no `present` key made a caller branching on ok/present take neither branch.",
+      "if": {
+        "required": [
+          "findings"
+        ]
+      },
+      "then": {
+        "properties": {
+          "present": {
+            "const": true
+          }
+        },
+        "required": [
+          "present"
+        ]
+      }
+    },
+    {
+      "description": "4.4 - output must not carry a shape a host reads as control. The rule is stated on shape because intent is not observable: a binding emitting a host's deny-key has blocked the action whether or not it meant to. These are Claude Code's; a binding for another host adds its own.",
+      "not": {
+        "anyOf": [
+          {
+            "required": [
+              "hookSpecificOutput"
+            ]
+          },
+          {
+            "required": [
+              "decision"
+            ]
+          },
+          {
+            "required": [
+              "continue"
+            ]
+          },
+          {
+            "required": [
+              "stopReason"
+            ]
+          },
+          {
+            "required": [
+              "systemMessage"
+            ]
+          },
+          {
+            "required": [
+              "additionalContext"
+            ]
+          },
+          {
+            "required": [
+              "suppressOutput"
+            ]
+          },
+          {
+            "required": [
+              "permissionDecision"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "description": "3.3/4.1 - a SUCCESSFUL trigger response always states whether it found something. The envelope leaves `present` optional because some operations have no presence question; a trigger always does. Without this, {'schema_version':'1','ok':true} validates - a non-answer more complete than the empty findings array the contract explicitly forbids, and a worse evasion of MIRI-CONSUMER-050 for being invisible.",
+      "if": {
+        "properties": {
+          "ok": {
+            "const": true
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "then": {
+        "required": [
+          "present"
+        ]
       }
     }
-  ]
+  ],
+  "definitions": {
+    "error": {
+      "type": "object",
+      "description": "The \u00a74.3 error object, reusing the CLI \u00a72.6 shape.",
+      "required": [
+        "code",
+        "retryable"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "code": {
+          "type": "string",
+          "description": "The machine error code. A closed set: codes are added, never repurposed or renamed.",
+          "enum": [
+            "PACKAGE_NOT_INSTALLED",
+            "UNAUTHENTICATED",
+            "AMBIGUOUS_PACKAGE",
+            "DOCUMENT_NOT_SERVABLE",
+            "NOT_DISCOVERABLE",
+            "METADATA_UNREADABLE",
+            "INVALID_INPUT",
+            "INVALID_CURSOR"
+          ]
+        },
+        "retryable": {
+          "type": "boolean",
+          "description": "True only for transient failures where the identical call may later succeed. Every code in the current set is false; the field exists so a consumer routes on the flag rather than on the code list."
+        }
+      }
+    },
+    "package_row": {
+      "type": "object",
+      "description": "One `list` row (\u00a73.1). Carries provenance per entry, since one response spans many packages and a consumer applies trust per namespace.",
+      "required": [
+        "package",
+        "distribution_name",
+        "version",
+        "purl",
+        "documents"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "package": {
+          "type": "string",
+          "description": "Top-level import name."
+        },
+        "distribution_name": {
+          "type": "string",
+          "description": "Installed distribution name. Spelled in full to avoid collision with the CLI `identity.distribution` enum (open-source/private), which is a different property with a confusingly similar name."
+        },
+        "version": {
+          "type": "string",
+          "description": "Installed version."
+        },
+        "purl": {
+          "type": "string",
+          "description": "Resolved package URL for this row."
+        },
+        "documents": {
+          "type": "array",
+          "description": "The agent-metadata documents present \u2014 the input domain for `document` (\u00a73.2).",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "api_index_entry": {
+      "type": "object",
+      "description": "One `api-index` routing entry (\u00a73.5).",
+      "required": [
+        "type",
+        "purpose"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The component kind as the producer declared it."
+        },
+        "purpose": {
+          "type": "string",
+          "description": "One-line statement of what the component is for."
+        },
+        "signature": {
+          "type": "string",
+          "description": "OPTIONAL. Present only where the producer's api_index supplies it \u2014 the canonical producer schema does not guarantee it, so a surface MUST NOT synthesize one and a consumer MUST NOT assume it."
+        },
+        "file": {
+          "type": "string",
+          "description": "OPTIONAL, on the same terms as `signature`. A pointer into the installed source, not a permission: it is publisher-authored and would be opened with the consumer's own privileges."
+        }
+      }
+    }
+  }
 }

@@ -1,18 +1,23 @@
 {
-  "trace": "E2 — the worked example of 4.6, end to end",
+  "trace": "E2 \u2014 the worked example of 4.6, end to end",
   "clause": "Agent Integration Contract 4.6; Consumption Map 3.5",
-  "checks": ["MIRI-CONSUMER-032"],
-  "note": "The chain the contract claims composes: a trigger names a TASK, the task's read-order names OPERATIONS, the operations are served by the SURFACE. Nothing here is new machinery — that is the point of the example. `lifecycle` and `document` are two of the eight operations, called exactly as any other consumer calls them. A binding is a caller, not a new kind of surface.",
+  "checks": [
+    "MIRI-CONSUMER-032"
+  ],
+  "note": "The chain the contract claims composes: a trigger names a TASK, the task's read-order names OPERATIONS, the operations are served by the SURFACE. Nothing here is new machinery \u2014 that is the point of the example. `lifecycle` and `document` are two of the eight operations, called exactly as any other consumer calls them. A binding is a caller, not a new kind of surface.",
   "event": {
     "schema_version": "1",
     "kind": "dependency.add",
-    "phase": "before",
-    "subject": { "package": "greet-adversarial", "package_kind": "distribution" }
+    "phase": "after",
+    "subject": {
+      "package": "greet-adversarial",
+      "package_kind": "distribution"
+    }
   },
   "read_order": [
-    "1. lifecycle  → identity, support.status, advisory_sources, update_check",
-    "2. document   → migration-guide.json, where support.status is deprecated",
-    "3. (C) the consumer's own SSRF guard on any URL it resolves — never the surface's"
+    "1. lifecycle  \u2192 identity, support.status, advisory_sources, update_check",
+    "2. document   \u2192 migration-guide.json, where support.status is deprecated",
+    "3. (C) the consumer's own SSRF guard on any URL it resolves \u2014 never the surface's"
   ],
   "expected_response": {
     "schema_version": "1",
@@ -30,10 +35,11 @@
     ]
   },
   "assertions": {
-    "level_is_must_because": "MIRI-CONSUMER-032 — a namespace-divergent replacement is the replacement-redirect attack (Lifecycle and Security Metadata 9.3). The level comes from the Consumer Conformance profile, never from the served document.",
+    "level_is_must_because": "MIRI-CONSUMER-032 \u2014 a namespace-divergent replacement is the replacement-redirect attack (Lifecycle and Security Metadata 9.3). The level comes from the Consumer Conformance profile, never from the served document.",
     "quote_is_attributed": "`quote` holds publisher bytes and must be rendered as attributed data, never adopted as the consumer's own assertion (MIRI-CONSUMER-020, MIRI-CONSUMER-022).",
-    "namespace_comparison": "PyPI has no namespace, so the comparison is on PEP 503 normalized distribution names — `greet-adversarial` vs `attacker-successor`. A substring test is not sufficient and was the original defect in MIRI-CONSUMER-032.",
+    "namespace_comparison": "PyPI has no namespace, so the comparison is on PEP 503 normalized distribution names \u2014 `greet-adversarial` vs `attacker-successor`. A substring test is not sufficient and was the original defect in MIRI-CONSUMER-032.",
     "must_not": "Auto-migrate onto the declared replacement. MIRI-CONSUMER-032 requires human confirmation; a consumer that rewrites call sites here performs the supply-chain attack itself."
   },
-  "why_this_case": "It is the trace every other one is measured against: the only one where the full read-order is exercised and a must-level finding is the correct answer."
+  "why_this_case": "It is the trace every other one is measured against: the only one where the full read-order is exercised and a must-level finding is the correct answer.",
+  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite."
 }

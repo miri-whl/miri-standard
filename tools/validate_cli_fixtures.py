@@ -131,16 +131,47 @@ def main():
               f"{lc.get('deprecated_since')} -> {lc.get('removed_in')}")
 
     # MIRI-CLI-036: the deprecation announced in 1.1.0 appears in that release's changelog entry.
-    log = parses(run("miri-1.1.0", "changelog", "--since", "1.0.0", "--json")[1])
-    entries = {r["version"]: r for r in log["releases"]}
+    # Defensive: a non-conforming CLI under test may return anything at all. A validator that raises a
+    # traceback instead of naming the failed invariant is useless to the implementer it exists to serve —
+    # it reports that the harness broke, not that their tool is wrong.
+    log = parses(run("miri-1.1.0", "changelog", "--since", "1.0.0", "--json")[1]) or {}
+    check("MIRI-CLI-029 exercised: `changelog --since` returns a releases array",
+          isinstance(log.get("releases"), list), f"got {type(log.get('releases')).__name__}")
+    entries = {r.get("version"): r for r in log.get("releases", []) if isinstance(r, dict)}
     newly_deprecated = {n for n, e in cs.items() if (e.get("lifecycle") or {}).get("deprecated_since") == "1.1.0"}
-    listed = set(entries.get("1.1.0", {}).get("deprecated", []))
+    # CLI Spec 5.2 surfaces are RECORDS, not bare strings. An earlier version of this assertion read them
+    # as strings, which only worked because greetctl emitted the wrong shape — the validator had been
+    # written against the implementation instead of the spec, so it could not see the implementation's bug.
+    def surface_names(rel, key):
+        return {r["surface"] if isinstance(r, dict) else r for r in rel.get(key, [])}
+
+    listed = surface_names(entries.get("1.1.0", {}), "deprecated")
     check("MIRI-CLI-036 exercised: 1.1.0's deprecations appear in changelog --since 1.0.0",
           newly_deprecated and newly_deprecated <= listed,
           f"declared={sorted(newly_deprecated)} changelog={sorted(listed)}")
     check("MIRI-CLI-030 exercised: the changelog names the removed surface",
-          removed <= set(entries.get("1.1.0", {}).get("removed", [])),
-          f"removed={sorted(removed)} changelog={entries.get('1.1.0', {}).get('removed')}")
+          removed <= surface_names(entries.get("1.1.0", {}), "removed"),
+          f"removed={sorted(removed)} changelog={sorted(surface_names(entries.get('1.1.0', {}), 'removed'))}")
+
+    # MIRI-CLI-030 clause 3: all five normative 5.2 categories must have representation in the shape.
+    rel = entries.get("1.1.0", {})
+    missing = [k for k in ("added", "deprecated", "removed", "schema_version_change", "exit_code_changes")
+               if k not in rel]
+    check("MIRI-CLI-030 exercised: all five 5.2 categories present in the output shape",
+          not missing, f"missing {missing}")
+
+    # MIRI-CLI-013: an unparseable typed argument is a structured error, never silent success.
+    rc, out, _ = run("miri-1.1.0", "--json", "changelog", "--since", "NOT-A-VERSION")
+    err = (parses(out) or {}).get("error", {})
+    check("MIRI-CLI-013 exercised: unparseable --since is a structured error, not coerced success",
+          rc != 0 and err.get("code") and err.get("retryable") is False,
+          f"rc={rc} code={err.get('code')}")
+
+    # MIRI-CLI-025: the spec's field names are `current` and `latest`.
+    cu = parses(run("miri-1.1.0", "--json", "check-update")[1]) or {}
+    check("MIRI-CLI-025 exercised: check-update carries the specified field names",
+          {"current", "latest", "update_available", "urgency"} <= set(cu),
+          f"got {sorted(cu)}")
 
     # MIRI-CLI-033: invoking the removed surface teaches, and names a replacement that exists.
     rc, out, _ = run("miri-1.1.0", "--json", "greet", "--shout", "World")

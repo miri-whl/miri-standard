@@ -34,19 +34,19 @@ targets:
 specs:
   - source: standards/consumption/discovery-contract.md
     title: Discovery Contract
-    status: 0.3-draft
+    status: 0.3.1-draft
     lede: How a package's metadata reaches an agent at the moment it decides what to call.
   - source: standards/consumption/consumption-map.md
     title: Consumption Map
-    status: 0.3-draft
+    status: 0.5.0-draft
     lede: What to read, per task, in what order — and what not to do with it.
   - source: standards/consumption/consumer-conformance.md
     title: Consumer Conformance
-    status: 0.3-draft
+    status: 0.5.0-draft
     lede: What a conformant consumer is, and how it is verified by being driven rather than inspected.
   - source: standards/consumption/surface-conformance.md
     title: Surface Conformance
-    status: 0.3-draft
+    status: 0.3.1-draft
     lede: What a conformant metadata-query surface is — the obligations a consumer cannot be held to.
   - source: standards/python/production-map.md
     slug: production-map
@@ -61,7 +61,7 @@ specs:
 
   - source: standards/consumption/agent-integration-contract.md
     title: Agent Integration Contract
-    status: 0.4.0-draft
+    status: 0.5.0-draft
     lede: The Consumption Map says what to read and in what order. This says when the reading starts.
 
 # Sidebar navigation. href is site-relative; external links are absolute; planned rows

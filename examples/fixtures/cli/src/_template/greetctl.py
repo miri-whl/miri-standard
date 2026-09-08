@@ -13,6 +13,7 @@ is what makes any observed difference metadata-attributable rather than code-att
 import json
 import os
 import pathlib
+import re
 import signal
 import sys
 
@@ -29,6 +30,21 @@ DESCRIBE = _load("describe.json")
 FIXTURE = _load("fixture.json")
 BARE = bool(FIXTURE.get("bare"))
 VERSION = FIXTURE.get("version", "0.0.0")
+
+
+
+def _verkey(pair):
+    """Order versions numerically. `"1.10.0" > "1.9.0"` is False under string comparison."""
+    v = pair[0] if isinstance(pair, tuple) else pair
+    return tuple(int(x) if x.isdigit() else 0 for x in str(v).split("."))
+
+
+def _surface_record(name, entry):
+    """CLI Spec 5.2: a changelog surface is a record, not a bare string."""
+    lc = (find_surface(name) or {}).get("lifecycle") or {}
+    return {"surface": name,
+            "removed_in": lc.get("removed_in") or entry.get("removed_in"),
+            "replacement": lc.get("replacement")}
 
 
 def out_json(payload, code=0):
@@ -136,9 +152,9 @@ def cmd_check_update(offline):
     banner()
     if offline:
         return out_json({"ok": True, "update_available": None, "urgency": "none",
-                         "current_version": VERSION, "advisories": []})
+                         "current": VERSION, "advisories": []})
     return out_json({"ok": True, "update_available": False, "urgency": "none",
-                     "current_version": VERSION, "latest_version": VERSION, "advisories": []})
+                     "current": VERSION, "latest": VERSION, "advisories": []})
 
 
 def cmd_changelog(since):
@@ -149,10 +165,21 @@ def cmd_changelog(since):
     if not since:
         return fail("MISSING_ARGUMENT", "changelog requires --since <version>",
                     suggestions=["greetctl changelog --since 1.0.0 --json"])
+    # MIRI-CLI-013: an unparseable version is a structured error. CLI Spec 2.6 names the anti-pattern
+    # directly — "a tool that silently coerces an unparseable `--since` into 'everything' satisfies every
+    # clause about the shape of its errors by never producing one." That sentence exists because 013 was
+    # found vacuous, and an adversarial panel caught this fixture committing it in its conforming arm.
+    if not re.match(r"^\d+(\.\d+)*([a-z0-9.\-+]*)$", since):
+        return fail("VALIDATION", f"--since expects a version, got {since!r}",
+                    retryable=False, suggestions=sorted(FIXTURE.get("changelog", {})) or ["1.0.0"])
     log = FIXTURE.get("changelog", {})
-    releases = [{"version": v, "added": sorted(e.get("added", [])),
-                 "deprecated": sorted(e.get("deprecated", [])), "removed": sorted(e.get("removed", []))}
-                for v, e in sorted(log.items()) if v > since]
+    releases = [{"version": v,
+                 "added": sorted(e.get("added", [])),
+                 "deprecated": [_surface_record(x, e) for x in sorted(e.get("deprecated", []))],
+                 "removed": [_surface_record(x, e) for x in sorted(e.get("removed", []))],
+                 "schema_version_change": e.get("schema_version_change"),
+                 "exit_code_changes": sorted(e.get("exit_code_changes", []))}
+                for v, e in sorted(log.items(), key=_verkey) if _verkey((v, None)) > _verkey((since, None))]
     return out_json({"ok": True, "since": since, "releases": releases})
 
 

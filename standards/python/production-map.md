@@ -84,9 +84,14 @@ release that may not exist (§3).
 
 **Settled:** `usage-patterns.json`, `api-graph.json`.
 
-Both describe the surface Stage 2 declared, and **neither is depended upon by any other document** — no check
-couples them to one. They are last in dependency order and may be generated in either order, or in parallel. An
-author blocked here is not blocked on anything else.
+Both describe the surface Stage 2 declared. They are last in dependency order and may be generated in either
+order, or in parallel, and no *metadata document* is generated from either.
+
+They are not, however, unread. `MIRI-PY-039` fires when a prompt template "references a metadata file the wheel
+does not ship (e.g. cites `api-graph.json` when none is present)", and `MIRI-PY-036` checks the discovery
+functions against the whole of `agent-metadata/`. An author who ships a template or a discovery function naming a
+Stage 4 document, and then does not generate it, fails both. An earlier draft claimed "neither is depended upon by
+any other document — no check couples them to one"; a single counterexample kills a universal, and there are two.
 
 ## 3. What Cannot Be Verified Yet
 
@@ -102,7 +107,8 @@ score 100 on a suite that includes them and should not appear to.**
 Four further checks require `execution` (`MIRI-PY-015`, `035`, `036`, `040`) and four require `network`
 (`MIRI-PY-005`, `009`, `026`, `027`). Those are capability gates rather than ordering constraints — they do not
 change what an author builds first — but an author choosing when to run a linter should know that a sandbox with
-neither capability evaluates thirty of the forty checks.
+neither capability evaluates thirty-two of the forty
+checks — and on a first release, where the two `previous-release` checks are also forfeited, thirty.
 
 ## 4. The Provisional Document
 
