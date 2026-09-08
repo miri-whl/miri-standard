@@ -378,6 +378,67 @@ def main() -> int:
     else:
         check("discovery-envelope-v1.json present", False)
 
+    # 4g. The event-trace goldens (E-series). Unlike the A-series these are event/envelope PAIRS,
+    #     authored from the Agent Integration Contract rather than captured from any implementation —
+    #     which is what keeps a binding's author from also being the author of its acceptance criteria.
+    #     A golden that does not itself validate is worse than no golden: it hands an implementer a
+    #     target that the schema will reject.
+    event_schema_path = REPO / "schemas/agent-event-v1.json"
+    find_schema_path = REPO / "schemas/agent-findings-v1.json"
+    traces = sorted(EXPECTED.glob("E*.json"))
+    check("event-trace goldens present", len(traces) >= 6, f"{len(traces)} found")
+    if event_schema_path.exists() and find_schema_path.exists():
+        EV = jsonschema.Draft7Validator(json.loads(event_schema_path.read_text()))
+        FV = jsonschema.Draft7Validator(json.loads(find_schema_path.read_text()))
+        kinds_covered, tasks_covered = set(), set()
+        for g in traces:
+            d = json.loads(g.read_text())
+            missing = [k for k in ("trace", "clause", "note", "why_this_case") if k not in d]
+            check(f"trace {g.stem}: complete", not missing, f"missing {missing}" if missing else "")
+
+            # Collect every event and every response the trace declares, in any of its shapes.
+            events = [d["event"]] if "event" in d else []
+            responses = [d["expected_response"]] if "expected_response" in d else []
+            for arm in d.get("arms", []):
+                responses.append(arm["expected_response"])
+                if "event_template" in d:
+                    events.append({**d["event_template"],
+                                   "subject": {**d["event_template"]["subject"],
+                                               "package": arm["subject_package"]}})
+            for ev in events:
+                errs = list(EV.iter_errors(ev))
+                check(f"trace {g.stem}: event validates against agent-event-v1", not errs,
+                      errs[0].message[:90] if errs else "")
+                kinds_covered.add(ev["kind"])
+            for rs in responses:
+                errs = list(FV.iter_errors(rs))
+                check(f"trace {g.stem}: response validates against agent-findings-v1", not errs,
+                      errs[0].message[:90] if errs else "")
+                for f in rs.get("findings", []):
+                    tasks_covered.add(f["task"])
+
+        # The four kinds the Claude Code binding maps (6.1). package.first_reference and
+        # integration.begin are deliberately unsupported and must NOT appear in any event.
+        supported = {"dependency.add", "dependency.version_change", "runtime.error", "test.author"}
+        check("traces cover every kind the binding maps", supported <= kinds_covered,
+              f"missing {sorted(supported - kinds_covered)}")
+        check("no trace emits a kind the binding declares unsupported",
+              not (kinds_covered - supported), f"found {sorted(kinds_covered - supported)}")
+
+        # The discriminating pair of 4.3: one arm must require findings and the other the absent
+        # shape. If both arms expected the same shape the case would be passed by a consumer that
+        # never fires, which is precisely the weakness A13 has alone.
+        e3 = next((json.loads(g.read_text()) for g in traces if g.stem.startswith("E3")), None)
+        if e3:
+            shapes = {a["expected_response"].get("present") for a in e3.get("arms", [])}
+            check("E3 arms discriminate: one requires findings, one requires absence",
+                  shapes == {True, False}, f"present values {shapes}")
+        else:
+            check("E3 publisher-independent trigger pair present", False)
+    else:
+        check("agent-event-v1 and agent-findings-v1 present", False,
+              f"event={event_schema_path.exists()} findings={find_schema_path.exists()}")
+
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a
     #    check that does not exist, and every non-pending check must have a case behind it.

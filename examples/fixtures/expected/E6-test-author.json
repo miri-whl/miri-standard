@@ -1,0 +1,33 @@
+{
+  "trace": "E6 — writing a test routes to the testing task",
+  "clause": "Agent Integration Contract 4.6; Consumption Map 3.6",
+  "checks": ["MIRI-CONSUMER-041", "MIRI-CONSUMER-020"],
+  "note": "This trace drives the CONFORMING arm, not the adversarial one, because the obligation here is to USE what a package declares rather than to resist what it claims. It exercises the affirmative path of MIRI-CONSUMER-041, which until 0.5.0 was satisfiable only by abstention: no producer check requires test-patterns.json, so a consumer could be driven against a conforming wheel that shipped none and the only conforming behavior — present no double — was also what an inert consumer did.",
+  "event": {
+    "schema_version": "1",
+    "kind": "test.author",
+    "phase": "before",
+    "subject": { "package": "greet_miri", "package_kind": "import" }
+  },
+  "expected_response": {
+    "schema_version": "1",
+    "ok": true,
+    "present": true,
+    "findings": [
+      {
+        "task": "3.6",
+        "level": "should",
+        "purl": "pkg:pypi/greet-miri@1.0.0",
+        "summary": "the package declares a test double; use it rather than inventing a mock",
+        "source": "test-patterns.json",
+        "quote": "FakeGreeter"
+      }
+    ]
+  },
+  "assertions": {
+    "level_is_should_because": "The Consumer Conformance profile scores MIRI-CONSUMER-041 at SHOULD. A consumer writing its own mock has not violated a MUST; it has ignored something the package went to the trouble of declaring.",
+    "conditional": "MIRI-CONSUMER-041 is CONDITIONAL as of 0.5.0: scored where a double is declared, excluded from both numerator and denominator otherwise. Not-applicable is not a pass.",
+    "the_absent_counterpart": "Driving this same event against the `bare` arm MUST yield the E1 absent shape, and MUST NOT be scored as a pass for 041 — the check is excluded there, not satisfied."
+  },
+  "why_this_case": "It is the only trace whose subject is the conforming arm, and the only one that tests whether a consumer USES metadata rather than whether it resists it. A suite made entirely of adversarial traces cannot tell a careful consumer from an inert one."
+}

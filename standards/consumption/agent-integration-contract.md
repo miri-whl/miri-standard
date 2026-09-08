@@ -183,6 +183,15 @@ payload key.
 `findings` is a new payload key, which the envelope schema permits: its root is deliberately open so that a new
 operation or channel can add one without a schema change forbidding it.
 
+The shape is schema-enforced by [`agent-findings-v1.json`](../../schemas/agent-findings-v1.json), which closes
+`task` to the six map sections and `level` to `must`/`should`, and enforces the payload/absence coupling above in
+both directions. Two consequences are worth stating because they are the reason the schema exists rather than a
+prose restatement of it. An empty `findings` array is **rejected**, so a binding cannot satisfy §4.1 by emitting one.
+And a publisher's `priority: "critical"` cannot reach `level` even if a consumer passed it through unexamined — it
+is not in the enum, so the response would simply be invalid. What the schema cannot enforce is that `level` was
+*derived* from the profile rather than copied from a document that happened to say `must`; that is behavioral, and
+is what `MIRI-CONSUMER-051` and the `E3` golden are for.
+
 ## 4. Obligations
 
 ### 4.1 Silence Is the Existing Absence Shape
@@ -430,3 +439,29 @@ Because an event is a request and a response is an envelope, a conforming bindin
 all**: feed it an event, read the envelope. The goldens are therefore event/envelope pairs authored from this
 specification rather than captured from any implementation — which is what keeps a binding's author from also being
 the author of its acceptance criteria.
+
+They are the `E*` files in [`examples/fixtures/expected/`](../../examples/fixtures/expected/), and every event and
+every response in them is validated against `agent-event-v1` and `agent-findings-v1` by `make validate-fixtures`. A
+golden that does not itself validate is worse than no golden, because it hands an implementer a target the schema
+will reject.
+
+| Trace | Clause | What it pins |
+|---|---|---|
+| `E1` | §4.1 | Silence is the absent shape — and at the host layer, no output at all |
+| `E2` | §4.6 | The worked example end to end: trigger → task → operations → finding |
+| `E3` | §4.3 | The same event against both arms; the trigger does not move |
+| `E4` | [Map §3.3](consumption-map.md) | The redirect reached through `migration-guide.json` rather than `lifecycle.json` |
+| `E5` | [Map §3.4](consumption-map.md) | The only `after`-phase trigger, against a document that tries to instruct |
+| `E6` | [Map §3.6](consumption-map.md) | The one trace whose subject is the **conforming** arm |
+| `E7` | §4.2, §4.4 | The host-boundary rules an envelope alone cannot express |
+| `E8` | §5 item 3, §6.2 | The kinds this binding omits rather than approximates |
+
+`E6` is the one to notice when reading the set: every other trace drives the adversarial arm and asks whether the
+consumer *resists* what the metadata claims. `E6` drives the conforming arm and asks whether it *uses* what the
+metadata declares. A suite made entirely of adversarial traces cannot tell a careful consumer from an inert one —
+which is the same defect `MIRI-CONSUMER-041` itself carried until 0.5.0.
+
+`E3` is what makes the trigger-forcing case discriminating. `A13` alone asserts only that output does not echo the
+bid, which a consumer that never fires satisfies trivially. Requiring a **positive** envelope on the arm carrying
+the bid and the **absent** shape on the control closes that: a consumer that never fires fails the first, one that
+always fires fails the second, and one that reads the bid fails on count, on level, or on the regex.

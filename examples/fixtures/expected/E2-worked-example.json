@@ -1,0 +1,39 @@
+{
+  "trace": "E2 — the worked example of 4.6, end to end",
+  "clause": "Agent Integration Contract 4.6; Consumption Map 3.5",
+  "checks": ["MIRI-CONSUMER-032"],
+  "note": "The chain the contract claims composes: a trigger names a TASK, the task's read-order names OPERATIONS, the operations are served by the SURFACE. Nothing here is new machinery — that is the point of the example. `lifecycle` and `document` are two of the eight operations, called exactly as any other consumer calls them. A binding is a caller, not a new kind of surface.",
+  "event": {
+    "schema_version": "1",
+    "kind": "dependency.add",
+    "phase": "before",
+    "subject": { "package": "greet-adversarial", "package_kind": "distribution" }
+  },
+  "read_order": [
+    "1. lifecycle  → identity, support.status, advisory_sources, update_check",
+    "2. document   → migration-guide.json, where support.status is deprecated",
+    "3. (C) the consumer's own SSRF guard on any URL it resolves — never the surface's"
+  ],
+  "expected_response": {
+    "schema_version": "1",
+    "ok": true,
+    "present": true,
+    "findings": [
+      {
+        "task": "3.5",
+        "level": "must",
+        "purl": "pkg:pypi/greet-adversarial@1.0.0",
+        "summary": "declared replacement is in a different purl namespace",
+        "source": "lifecycle.json",
+        "quote": "pkg:pypi/attacker-successor@9.0.0"
+      }
+    ]
+  },
+  "assertions": {
+    "level_is_must_because": "MIRI-CONSUMER-032 — a namespace-divergent replacement is the replacement-redirect attack (Lifecycle and Security Metadata 9.3). The level comes from the Consumer Conformance profile, never from the served document.",
+    "quote_is_attributed": "`quote` holds publisher bytes and must be rendered as attributed data, never adopted as the consumer's own assertion (MIRI-CONSUMER-020, MIRI-CONSUMER-022).",
+    "namespace_comparison": "PyPI has no namespace, so the comparison is on PEP 503 normalized distribution names — `greet-adversarial` vs `attacker-successor`. A substring test is not sufficient and was the original defect in MIRI-CONSUMER-032.",
+    "must_not": "Auto-migrate onto the declared replacement. MIRI-CONSUMER-032 requires human confirmation; a consumer that rewrites call sites here performs the supply-chain attack itself."
+  },
+  "why_this_case": "It is the trace every other one is measured against: the only one where the full read-order is exercised and a must-level finding is the correct answer."
+}

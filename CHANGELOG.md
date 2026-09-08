@@ -51,6 +51,32 @@ the number.
   binary. An author looking for the check that enforces item 6 has not missed one. One observable shadow of it *is*
   decidable and currently unchecked, and is recorded there rather than left to be discovered.
 
+- **[`agent-findings-v1.json`](schemas/agent-findings-v1.json) and the event-trace goldens** — the Agent
+  Integration Contract defined the response as the envelope plus a `findings` key, and nothing pinned it down. No
+  schema for the response, no rule mapping check IDs to `findings[].level`, and no goldens — which left the first
+  binding implementing against prose and blocked on acceptance criteria it could not write for itself.
+
+  The schema enforces the coupling §3.3 states normatively, in both directions: `present: true` requires
+  `findings`, `present: false` forbids it and requires a `reason`, and **an empty `findings` array is rejected** —
+  so a binding cannot satisfy the silence obligation by emitting one. `task` is closed to the six map sections;
+  `level` is closed to `must`/`should`, the conformance vocabulary rather than the check-severity one, so a
+  publisher's `priority: "critical"` cannot reach it even if a consumer passed it through unexamined. What the
+  schema cannot enforce — that `level` was *derived* from the profile rather than copied — is said plainly in the
+  schema rather than implied to be covered.
+
+  Eight goldens, `E1`–`E8`, authored from the specification rather than captured from an implementation, which is
+  what keeps a binding's author from also being the author of its acceptance criteria. Every event validates
+  against `agent-event-v1` and every response against `agent-findings-v1` under `make validate-fixtures`; the gate
+  is mutation-tested.
+
+  Two are worth naming. `E6` is the only trace driving the **conforming** arm: every other asks whether a consumer
+  resists what metadata claims, and `E6` asks whether it uses what metadata declares — a suite made entirely of
+  adversarial traces cannot tell a careful consumer from an inert one, which is the defect `MIRI-CONSUMER-041`
+  itself carried. `E3` makes the trigger-forcing case discriminating: `A13` alone asserts only that output does not
+  echo the bid, which a consumer that never fires satisfies trivially, so `E3` requires a **positive** envelope on
+  the arm carrying the bid and the **absent** shape on the control. A consumer that never fires fails the first;
+  one that always fires fails the second; one that reads the bid fails on count, on level, or on the regex.
+
 - **[CLI conformance fixtures](examples/fixtures/cli/README.md)** — `greetctl`, four arms, and the first executable
   thing a CLI linter can be driven against. Every fixture in the repository was a Python wheel, so
   `make validate-fixtures` could not touch a CLI. The three vacuous-pass defects found in `MIRI-CLI-013`, `034` and
@@ -72,6 +98,10 @@ the number.
 Four defects found by the miri-py team building the first binding, plus one process failure of ours that let two of
 them ship, one vacuous check they found implementing `test.author`, and one latent bug in the site generator that
 adding the second Production Map exposed.
+
+- **The schemas index listed 7 of 13 schemas.** `cli-describe-v1`, `discovery-envelope-v1`, `agent-event-v1`,
+  `scoring-v1` and `lint-report-v1` were never added to `schemas/README.md`, so five schemas the specs depend on
+  were discoverable only by listing the directory. All thirteen are now indexed, and the index is verified complete.
 
 - **The site generator silently overwrote pages whose sources shared a basename.** Output names were derived from
   the source filename alone, so `standards/python/production-map.md` and `standards/cli/production-map.md` both

@@ -38,6 +38,45 @@ consistency and enable automated validation of agent metadata.
   - Required fields: `miri_lifecycle_version`, `generated_at`, `identity`, `advisory_sources`, `update_check`, `support`
   - Validates open source and private distribution declarations; see [Lifecycle and Security Metadata](../standards/python/lifecycle-security-metadata.md)
 
+### CLI Schemas
+
+- **[cli-describe-v1.json](cli-describe-v1.json)** - Schema for a CLI's `--describe` introspection document
+  - Required fields: `schema_version`, `identity`, `support`, `advisory_sources`, `commands`
+  - Closes `additionalProperties` at the root, and defines the per-surface `lifecycle` block that carries
+    `deprecated_since` / `removed_in` / `replacement`
+  - See [CLI Lifecycle Specification](../standards/cli/cli-lifecycle-specification.md) and the executable
+    [`greetctl` fixtures](../examples/fixtures/cli/README.md)
+
+### Consumption and Integration Schemas
+
+- **[discovery-envelope-v1.json](discovery-envelope-v1.json)** - The surface-owned response envelope
+  - Publisher bytes nest under a payload key, so `ok` and `present` cannot be forged
+  - The root is deliberately **open**, so a new operation or channel may add a payload key without a schema
+    change forbidding it
+  - Round-tripped in both directions by `tools/validate_envelope_schema.py` (`make envelope`)
+
+- **[agent-event-v1.json](agent-event-v1.json)** - The event a host sends a trigger
+  - Required fields: `schema_version`, `kind`, `phase`, `subject`
+  - Closes `additionalProperties` — the **opposite** of the envelope's open root — so a host cannot smuggle a
+    file path or a diff into an event. `kind` is a closed set of six.
+  - `subject.package_kind` distinguishes `import` from `distribution` names; an import-only shape rejects
+    `python-dateutil`, `ruamel.yaml` and the project's own `greet-adversarial`
+
+- **[agent-findings-v1.json](agent-findings-v1.json)** - The response a trigger returns
+  - The envelope with one payload key, `findings`; not a new response format
+  - Enforces the payload/absence coupling normatively: `present: true` requires `findings`, `present: false`
+    forbids it and requires a `reason`, and an empty `findings` array is rejected because silence is the absent
+    shape rather than an empty payload
+  - `findings[].task` is closed to the six Consumption Map sections; `findings[].level` is closed to
+    `must`/`should` — the conformance vocabulary, **not** the check-severity one — so a publisher's
+    `priority: "critical"` cannot reach it even by accident
+  - Exercised by the `E*` event-trace goldens in [`examples/fixtures/expected/`](../examples/fixtures/expected/)
+
+### Reporting Schemas
+
+- **[scoring-v1.json](scoring-v1.json)** - Conformance score reports
+- **[lint-report-v1.json](lint-report-v1.json)** - Linter output, including forfeited checks and their fixed reasons
+
 ## Usage
 
 ### Validation with Python
