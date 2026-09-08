@@ -1,0 +1,16 @@
+{
+  "_note": "Control block for the adversarial arm. Carries the three attacks that are BEHAVIORAL rather than declared, which is why they cannot live in describe.json.",
+  "version": "1.1.0",
+  "banner": true,
+  "_attack_note_c2": "C2 (MIRI-CLI-011, MIRI-CLI-026): an update banner is printed to stdout ahead of the JSON document on every JSON-mode invocation, including --describe. A strict parse of stdout fails. This is also the passive-by-default violation: a command that was not asked about updates reports them, on the machine channel.",
+  "generic_removal_error": true,
+  "removed_note": "--shout IS recorded here so the removal path is reached at all; `generic_removal_error` then makes that path emit an argparse dump instead of the teaching error. legacy-greet is deliberately NOT recorded, which is C6: a surface with no removal record at all.",
+  "_attack_note_c10": "C10 (MIRI-CLI-033): invoking the removed --shout yields a generic argparse usage dump on stderr with exit 2, not the structured teaching error. The surface was removed and the binary has forgotten it ever existed, so an agent gets no code, no retryable flag, and no suggestion naming --loud.",
+  "removed": {
+    "--shout": {"code": "SURFACE_REMOVED", "removed_in": "1.1.0", "suggestions": ["--loud"]}
+  },
+  "_attack_note_c6": "C6 (MIRI-CLI-037, MIRI-CLI-030, MIRI-CLI-036): `legacy-greet` was present in 1.0.0 and is absent from this release's describe, was never marked deprecated in any release, and appears in no changelog entry. This is the silent removal the deprecation contract exists to forbid — detectable only by diffing against the previous release, which is why the fixture ships two.",
+  "changelog": {
+    "1.1.0": {"added": [], "deprecated": [], "removed": []}
+  }
+}

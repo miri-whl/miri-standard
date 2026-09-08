@@ -31,10 +31,52 @@ the number.
   It is explicitly not a conformance surface. No check scores an author on following it, because the checklist grades
   the artifact and not the process.
 
+- **[CLI Production Map](standards/cli/production-map.md)** — the same document for the largest target in the
+  standard. `MIRI-CLI` carries forty-three checks, more than any other suite, and had no ordered model at all.
+
+  Six stages, every ordering derived from a check: `--version` is settled first because `MIRI-CLI-017` compares
+  `identity.version` against what the binary actually prints; the JSON envelope precedes `--describe` because
+  `MIRI-CLI-010` fires when the two disagree, and `--describe` is one of the payloads it governs; the deprecation
+  blocks are last because `MIRI-CLI-038` resolves every replacement against the current `--describe` *and*
+  `MIRI-CLI-036` requires every deprecation to appear in `changelog --since` — the only surface depending on every
+  other one, which is the same reason `migration-guide.json` is last on the wheel side.
+
+  §3 records that **five CLI checks require a previous release**, carrying fourteen of the hundred weight, against
+  two on the wheel side. A CLI's deprecation contract is a claim about what the binary used to do, and one release
+  contains no evidence of it.
+
+  §4 names the one conformance requirement that is normative and **ungraded**: CLI Lifecycle Specification §9 item 6
+  requires `--help` and `--describe` to derive from one schema-as-data source, and no check can verify it — two
+  hand-maintained outputs that agree are indistinguishable from two derived ones when all a linter may do is run the
+  binary. An author looking for the check that enforces item 6 has not missed one. One observable shadow of it *is*
+  decidable and currently unchecked, and is recorded there rather than left to be discovered.
+
+- **[CLI conformance fixtures](examples/fixtures/cli/README.md)** — `greetctl`, four arms, and the first executable
+  thing a CLI linter can be driven against. Every fixture in the repository was a Python wheel, so
+  `make validate-fixtures` could not touch a CLI. The three vacuous-pass defects found in `MIRI-CLI-013`, `034` and
+  `022` were all found by hand across four review rounds, because no fixture could find them.
+
+  Unlike the wheel fixtures it ships a **release history** — `miri-1.0.0` and `miri-1.1.0` — because the five
+  previous-release checks cannot be exercised without one. `--shout` is deprecated in 1.0.0 and removed in 1.1.0, so
+  invoking it against the current release yields the structured teaching error of `MIRI-CLI-033` naming a
+  replacement that resolves; `legacy-greet` is deprecated in 1.1.0 and that deprecation reaches
+  `changelog --since 1.0.0`, which is what `MIRI-CLI-036` requires and nothing could previously test.
+
+  One implementation file, copied byte-identically into all four arms, so any observed difference is
+  metadata-attributable. Eleven attacks (C1–C11), each asserted live by `tools/validate_cli_fixtures.py` and
+  mutation-tested: disarming any one of them fails the validator. Wired into `make check` via
+  `make validate-cli-fixtures`.
+
 ### Fixed
 
 Four defects found by the miri-py team building the first binding, plus one process failure of ours that let two of
-them ship, and one vacuous check they found implementing `test.author`.
+them ship, one vacuous check they found implementing `test.author`, and one latent bug in the site generator that
+adding the second Production Map exposed.
+
+- **The site generator silently overwrote pages whose sources shared a basename.** Output names were derived from
+  the source filename alone, so `standards/python/production-map.md` and `standards/cli/production-map.md` both
+  rendered to `production-map.html` and one page vanished from the site with no error. Specs may now set a `slug:`,
+  and a collision is a hard failure naming both sources rather than a silent loss.
 
 - **Two fixes described as committed were not in the release.** They were committed to a branch that was never
   pushed, so a search of every remote branch correctly found nothing. The work existed on one machine and was

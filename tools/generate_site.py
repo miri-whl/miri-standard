@@ -11,6 +11,7 @@ Usage: python3 tools/generate_site.py [--out site]
 Requires: pyyaml, jinja2
 """
 import argparse
+import collections
 import hashlib
 import html
 import pathlib
@@ -272,7 +273,17 @@ def main():
     # check pages, so the specifications themselves — the actual deliverable — existed
     # on the site as outbound GitHub links and nothing else.
     specs = site.get("specs", [])
-    rendered = {sp["source"]: pathlib.Path(sp["source"]).name.replace(".md", ".html") for sp in specs}
+    # Output names default to the source basename, which two suites can collide on: both the Python and
+    # the CLI suite ship a production-map.md. An entry may set `slug:` to disambiguate. Collisions are a
+    # hard error rather than a silent overwrite — the losing page would simply vanish from the site.
+    rendered = {sp["source"]: (sp["slug"] + ".html") if sp.get("slug")
+                else pathlib.Path(sp["source"]).name.replace(".md", ".html") for sp in specs}
+    collisions = collections.Counter(rendered.values())
+    dupes = {name: [s for s, r in rendered.items() if r == name]
+             for name, n in collisions.items() if n > 1}
+    if dupes:
+        raise SystemExit("site.yaml: two specs render to the same page — add a `slug:` to one of them:\n" +
+                         "\n".join(f"  {name} <- {sources}" for name, sources in dupes.items()))
     for sp in specs:
         src = REPO / sp["source"]
         md = rewrite_links(src.read_text(), src.resolve(), rendered, site["github"])

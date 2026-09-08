@@ -1,0 +1,10 @@
+{
+  "_note": "Control block for the greetctl fixture. Never served; the builder keeps it out of describe.json so the served document stays schema-valid.",
+  "version": "1.1.0",
+  "removed": {
+    "--shout": {"code": "SURFACE_REMOVED", "removed_in": "1.1.0", "suggestions": ["--loud"]}
+  },
+  "changelog": {
+    "1.1.0": {"added": [], "deprecated": ["legacy-greet"], "removed": ["--shout"]}
+  }
+}

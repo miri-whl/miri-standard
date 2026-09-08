@@ -91,3 +91,6 @@ secrets.yaml
 site/
 .generated/
 .claude/settings.local.json
+
+# Generated CLI fixture arms (rebuilt by examples/fixtures/cli/build_cli_fixtures.py)
+examples/fixtures/cli/build/

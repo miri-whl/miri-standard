@@ -111,6 +111,9 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
   evaluated on a first release. Every ordering is derived from an existing check rather than asserted.
 - **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - CLI self-identification,
   advisory sources, update checks, and deprecation metadata
+- **[CLI Production Map](cli/production-map.md)** - the CLI counterpart: what an author settles before what, why the
+  deprecation contract is last, and why five checks cannot be evaluated on a first release. Every ordering is derived
+  from an existing check rather than asserted.
 - **[Discovery Contract (Consumption)](consumption/discovery-contract.md)** - How an agent obtains a package's Miri
   metadata at decision time — a transport-agnostic metadata-query contract with MCP as the first binding
 - **[Consumption Map (Consumption)](consumption/consumption-map.md)** - What an agent reads per task and in what order,

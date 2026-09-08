@@ -1,0 +1,71 @@
+{
+  "schema_version": "1",
+  "identity": {
+    "purl": "pkg:pypi/greetctl@1.1.0",
+    "version": "1.1.0",
+    "distribution": "open-source",
+    "source_repository": "https://github.com/miri-whl/miri-standard"
+  },
+  "support": {
+    "status": "active",
+    "supported_versions": [">=1.0,<2.0"],
+    "security_policy": "https://example.invalid/security"
+  },
+  "advisory_sources": [
+    {
+      "type": "osv",
+      "ecosystem": "PyPI",
+      "url": "https://api.osv.dev/v1/query",
+      "authoritative": true
+    }
+  ],
+  "advisory_coverage": "authoritative",
+  "update_check": {
+    "type": "pypi-json",
+    "url": "https://pypi.org/pypi/greetctl/json"
+  },
+  "commands": [
+    {
+      "name": "greet",
+      "description": "Print a greeting",
+      "mutating": false,
+      "destructive": false,
+      "flags": [
+        {"name": "--formal", "description": "Use a formal register", "mutating": false, "destructive": false},
+        {"name": "--loud", "description": "Upper-case the greeting", "mutating": false, "destructive": false}
+      ]
+    },
+    {
+      "name": "legacy-greet",
+      "description": "Print a greeting (original spelling)",
+      "mutating": false,
+      "destructive": false,
+      "flags": [],
+      "lifecycle": {
+        "status": "deprecated",
+        "deprecated_since": "1.1.0",
+        "removed_in": "2.0.0",
+        "replacement": "greet",
+        "migration": "Use `greetctl greet`; the output is byte-identical."
+      }
+    },
+    {
+      "name": "config",
+      "description": "Manage configuration",
+      "mutating": true,
+      "destructive": false,
+      "subcommands": [
+        {"name": "set", "description": "Set a configuration key", "mutating": true, "destructive": false}
+      ]
+    },
+    {
+      "name": "cache",
+      "description": "Manage the local cache",
+      "mutating": true,
+      "destructive": false,
+      "subcommands": [
+        {"name": "purge", "description": "Irrecoverably delete all cached data", "mutating": true, "destructive": true}
+      ]
+    }
+  ]
+}

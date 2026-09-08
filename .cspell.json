@@ -11,6 +11,7 @@
     "schemas/*.json"
   ],
   "words": [
+    "greetctl",
     "aceto",
     "agentfirstcli",
     "apidiff",

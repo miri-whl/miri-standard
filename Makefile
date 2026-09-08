@@ -40,6 +40,12 @@ fixtures: ## Build the consumption fixtures (bare/miri/adversarial) and verify i
 validate-fixtures: fixtures ## Verify the fixture invariants (conforming twin valid; adversarial attacks live)
 	@python3 tools/validate_fixtures.py
 
+cli-fixtures: ## Build the greetctl CLI fixture arms (bare/1.0.0/1.1.0/adversarial) and verify one implementation
+	@python3 examples/fixtures/cli/build_cli_fixtures.py
+
+validate-cli-fixtures: cli-fixtures ## Verify the CLI fixture invariants (release history exercised; C1-C11 live)
+	@python3 tools/validate_cli_fixtures.py
+
 diagrams: ## Render any new/changed ```mermaid fence to a committed SVG (needs npx)
 	python3 tools/render_diagrams.py
 
@@ -63,7 +69,9 @@ clean: ## Remove generated site output
 	rm -rf .generated site
 
 lint: ## Lint Markdown (CI: markdownlint-cli2)
-	npx markdownlint-cli2 "**/*.md" "#node_modules"
+	# Pinned to the version markdownlint-cli2-action@v16 bundles. Unpinned, npx resolves to a newer
+	# release whose added rules (MD060) fail files CI accepts, so `make check` went red on untouched files.
+	npx -y markdownlint-cli2@0.13 "**/*.md" "#node_modules" "#.generated"
 
 spell: ## Spell-check Markdown (CI: cspell)
 	npx cspell --config .cspell.json --no-progress "**/*.md"
@@ -72,4 +80,4 @@ links: ## Check Markdown links (CI: markdown-link-check)
 	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
 		-exec npx markdown-link-check -q -c .markdown-link-check.json {} \;
 
-check: validate validate-sample validate-fixtures lint spell ## Run everything CI runs locally (except link check and the miri score gate)
+check: validate validate-sample validate-fixtures validate-cli-fixtures lint spell ## Run everything CI runs locally (except link check and the miri score gate)

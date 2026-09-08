@@ -49,9 +49,15 @@ specs:
     status: 0.3-draft
     lede: What a conformant metadata-query surface is — the obligations a consumer cannot be held to.
   - source: standards/python/production-map.md
-    title: Production Map
+    slug: production-map
+    title: Production Map (Python)
     status: 0.5.0-draft
-    lede: The Consumption Map says what a consumer reads and in what order. This says what an author builds, and in what order.
+    lede: The Consumption Map says what a consumer reads and in what order. This says what a wheel author builds, and in what order.
+  - source: standards/cli/production-map.md
+    slug: cli-production-map
+    title: Production Map (CLI)
+    status: 0.5.0-draft
+    lede: What a CLI author settles first, what depends on what, and what a first release cannot be scored on.
 
   - source: standards/consumption/agent-integration-contract.md
     title: Agent Integration Contract
@@ -77,6 +83,7 @@ nav:
   - label: CLI
     items:
       - { label: Check definitions, href: checks/cli/index.html }
+      - { label: Production map, href: cli-production-map.html }
       - { label: "Linter checklist ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/cli/linter-checklist.md" }
       - { label: Introspection schema, planned: true }
   - label: Consumption
