@@ -1,6 +1,6 @@
 # Miri Standard: Consumption Map (Consumption)
 
-*Specification Version: 0.4.1-draft*
+*Specification Version: 0.5.0-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -558,6 +558,21 @@ the agent *whom to ask*; it never answers *on their behalf*.
 including which failures it treats as expected. Prefer extending its idiom over inventing a parallel one.
 
 ## 4. Interpretation Rules
+
+- **Every task establishes the lifecycle facts, whatever its read-order says.** Before a consumer acts on the
+  result of any task, it MUST have established the package's `support.status`, its `support.replacement` where one
+  is declared, and whether that replacement crosses a purl namespace — the facts in `lifecycle.json`. A task whose
+  numbered read-order does not already fetch them acquires a `lifecycle` step implicitly, at the front.
+
+  This is stated as a rule rather than added to each read-order because it was twice discovered as a missing step
+  and would have been discovered a third time. §3.3 omitted it, which made the producer standard's
+  highest-severity attack reachable through correct adherence to the upgrade task; §3.1, §3.2, §3.4 and §3.6 omit
+  it still. The pattern is the finding: a task author writes the read-order for the question the task asks, and
+  "is this package deprecated, and is its successor someone else's" is a question that qualifies every answer
+  without being any single task's subject.
+
+  A consumer that has already established these facts in the same session need not re-fetch them; the obligation
+  is to *have* them, not to issue a request per task.
 
 Three rules govern how a consumer reads what it receives. The first two mirror producer-side Generation Invariants
 ([Agent Metadata §5.4](../python/miri-agent-metadata-specification.md)) that today live only in the reference

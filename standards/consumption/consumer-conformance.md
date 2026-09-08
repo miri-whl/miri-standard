@@ -1,6 +1,6 @@
 # Miri Standard: Consumer Conformance (Consumption)
 
-*Specification Version: 0.4.0-draft*
+*Specification Version: 0.5.0-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -274,7 +274,7 @@ Whether the consumer computes trust at call time or reads it off a shipped file.
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
 | MIRI-CONSUMER-040 | M | Surfaces a `correctness`/`security` antipattern before emitting matching code | 2 | `miri` |
-| MIRI-CONSUMER-041 | M | Never presents a synthesized mock as the package's supported test double | 1 | `miri` |
+| MIRI-CONSUMER-041 | M | Never presents a synthesized mock as the package's supported test double | 1 | `miri` (declared double) |
 | MIRI-CONSUMER-042 | S | Never presents a whole-document retrieval as though a derived view had been used | 1 | `miri` |
 
 ### F. Integration Channel (6 points)
@@ -305,6 +305,13 @@ All seventeen have an executable case: `050` and `051` are driven against the `b
 A13 pairing respectively; `011` is driven against the `dynamic` outlier (A9) and `032` against the
 replacement redirect (A8), both added after this profile was first written. The suite is fully scorable — a report
 that cannot drive a case still forfeits it (§3), but no check is not scorable by construction.
+
+`MIRI-CONSUMER-041` is **conditional**, and the reason is worth stating because it is the fourth instance of one
+defect class. No producer check requires any package to ship `test-patterns.json`, so a consumer could be driven
+against a conforming wheel that ships none — or, as this project's own reference fixture did until 0.4.1, one that
+ships it with an empty `supported_test_doubles`. In either state the only way to satisfy the check is to present no
+double, which is also what an inert consumer does. It could not tell a careful consumer from one that never looked.
+It now scores only where a double is declared, and is excluded from both numerator and denominator otherwise.
 
 Two cases carry a **paired control**, and the pairing is the substance of the check rather than a nicety. A8 pairs
 the hostile redirect with a same-namespace migration in the `miri` twin: a consumer that refuses both has not

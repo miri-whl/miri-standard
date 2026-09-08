@@ -106,6 +106,9 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
   wheels 0–100
 - **[Python Artifact Lifecycle](python/artifact-lifecycle.md)** - Stages from build to archival with the nested
   interface lifecycle
+- **[Production Map](python/production-map.md)** - the producer counterpart to the Consumption Map: the dependency
+  order among the metadata documents, which must exist before which can be verified, and which checks cannot be
+  evaluated on a first release. Every ordering is derived from an existing check rather than asserted.
 - **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - CLI self-identification,
   advisory sources, update checks, and deprecation metadata
 - **[Discovery Contract (Consumption)](consumption/discovery-contract.md)** - How an agent obtains a package's Miri

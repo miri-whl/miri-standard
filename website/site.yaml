@@ -3,7 +3,7 @@
 # static/css/, markup comes from templates/).
 github: https://github.com/miri-whl/miri-standard
 site_url: https://miri-whl.github.io
-version: 0.4.1
+version: 0.5.0
 status_badge: Incubation
 
 targets:
@@ -48,6 +48,11 @@ specs:
     title: Surface Conformance
     status: 0.3-draft
     lede: What a conformant metadata-query surface is — the obligations a consumer cannot be held to.
+  - source: standards/python/production-map.md
+    title: Production Map
+    status: 0.5.0-draft
+    lede: The Consumption Map says what a consumer reads and in what order. This says what an author builds, and in what order.
+
   - source: standards/consumption/agent-integration-contract.md
     title: Agent Integration Contract
     status: 0.4.0-draft
@@ -66,6 +71,7 @@ nav:
   - label: Python
     items:
       - { label: Check definitions, href: checks/python/index.html }
+      - { label: Production map, href: production-map.html }
       - { label: "Linter checklist ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/python/linter-checklist.md" }
       - { label: Agent metadata schema, planned: true }
   - label: CLI

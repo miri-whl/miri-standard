@@ -1,6 +1,6 @@
 # Agent Integration Contract
 
-*Specification Version: 0.4.1-draft*
+*Specification Version: 0.5.0-draft*
 *Status: Draft*
 *Created: 2026*
 

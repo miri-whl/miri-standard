@@ -7,12 +7,34 @@ breaking change, a **minor** version a backward-compatible addition, and a **pat
 clarifications only. That policy is a contract with implementers, and it is worth keeping strictly: a reader
 should be able to see `0.3.1` and know it contains no additions without having to check.
 
-## 0.4.1 — 2026-09-07
+## 0.5.0 — 2026-09-08
 
-A **patch**: it corrects. Four defects, all found by the miri-py team building the first binding against 0.4.0, and
-one process failure of ours that let two of them ship.
+A **minor** version. It began as 0.4.1 — four fixes from the first binding — and became 0.5.0 when it gained the
+Production Map, which is an addition. The number followed the content rather than the content being trimmed to fit
+the number.
+
+### Added
+
+- **[Production Map](standards/python/production-map.md)** — the producer counterpart to the Consumption Map. The
+  consumer side had an ordered model; the producer side had a checklist and no statement of what an author does
+  first. Reported by a team implementing both halves: *"the consumer side was straightforward because the Map told
+  us the order; the author side we had to invent an order for, and nothing checks whether we invented a good one."*
+
+  Five stages, and **every ordering is derived from an existing check** rather than asserted — the version must be
+  settled first because `MIRI-PY-019` and `MIRI-PY-012` check documents against `METADATA`; the manifest precedes the
+  migration guide because `MIRI-PY-031` requires replacements to name interfaces in the *new* manifest; the guide is
+  last because it depends on all three. A stage with no check behind it would be advice.
+
+  It also states what a checklist cannot: **two checks require a previous release and are not evaluable on a first
+  one**, so a first release is scored over what could be evaluated and cannot honestly show 100.
+
+  It is explicitly not a conformance surface. No check scores an author on following it, because the checklist grades
+  the artifact and not the process.
 
 ### Fixed
+
+Four defects found by the miri-py team building the first binding, plus one process failure of ours that let two of
+them ship, and one vacuous check they found implementing `test.author`.
 
 - **Two fixes described as committed were not in the release.** They were committed to a branch that was never
   pushed, so a search of every remote branch correctly found nothing. The work existed on one machine and was
@@ -42,6 +64,27 @@ one process failure of ours that let two of them ship.
   context tax §4.1 exists to prevent, reached by obeying its letter. The contract answer and what a host emits are
   now explicitly two layers: the absent envelope is what a golden asserts against, and a Claude Code adapter emits
   nothing.
+
+- **`MIRI-CONSUMER-041` was satisfiable only by abstention.** No producer check requires any package to ship
+  `test-patterns.json`, so a consumer could be driven against a conforming wheel that ships none — or, as this
+  project's own reference fixture did, one that ships it with an empty `supported_test_doubles`. In either state the
+  only conforming behavior is to present no double, which is also what an inert consumer does. The check could not
+  tell a careful consumer from one that never looked.
+
+  It is now **conditional**: scored where a double is declared, excluded from both numerator and denominator
+  otherwise. The `miri` fixture declares `FakeGreeter`, which gives the affirmative path something to exercise.
+  `MIRI-CONSUMER-020`'s test-pattern clause is scoped the same way; its other clauses are independent, so that check
+  stays scorable for every package.
+
+  **This is the fourth instance of one defect class this month**, after `MIRI-CLI-013`, `034` and `022`: a check that
+  tests the *form* of a behavior without testing that the behavior *occurs*. Found by the miri-py team implementing
+  `test.author` and discovering no fixture could exercise either MUST's affirmative path.
+
+- **Four tasks could act without knowing a package was deprecated.** §3.3's missing `lifecycle` step turned out to be
+  an instance rather than a one-off — §3.1, §3.2, §3.4 and §3.6 omit it too. Rather than patch four read-orders,
+  §4 gains a normative rule: **every task establishes the lifecycle facts**, whatever its read-order says. A task
+  author writes the read-order for the question the task asks, and "is this package deprecated, and is its successor
+  someone else's" qualifies every answer without being any single task's subject.
 
 ### Specified
 
