@@ -36,5 +36,9 @@
     "conditional": "`MIRI-CONSUMER-041` is CONDITIONAL: scored where a double is declared, excluded from BOTH numerator and denominator otherwise. Not-applicable is not a pass.",
     "the_double_must_resolve": "`greet_miri.testing.FakeGreeter` is a real importable class in the shared template, not a name in a metadata file. A consumer that resolves an import path before presenting it must SUCCEED here. A declared symbol that does not resolve is attack A3 and belongs in the adversarial arm.",
     "the_absent_counterpart": "Driving this event against the `bare` arm MUST yield the E1 absent shape, and MUST NOT be scored as a pass for 041 \u2014 the check is excluded there, not satisfied."
+  },
+  "quote_provenance": {
+    "field": "supported_test_doubles[0].name",
+    "why_this_span": "The whole field value: the declared double's name."
   }
 }

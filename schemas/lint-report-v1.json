@@ -45,11 +45,16 @@
     "generated_at": {"type": "string", "format": "date-time"},
     "scores": {
       "type": "object",
-      "description": "The two-score model: a Conformance score and a Health score (see scoring-v1.json)",
+      "description": "The two-score model: a Conformance score and a Health score (see scoring-v1.json). A conformance score MUST be reported with its effective denominator and the excluded/forfeited counts; the number alone is not interpretable, because 80 out of 100 and 80 out of 58 are different claims.",
+      "required": ["conformance", "effective_denominator", "excluded", "forfeited"],
       "properties": {
         "conformance": {"type": "number"},
+        "effective_denominator": {"type": "integer", "minimum": 0, "maximum": 100, "description": "Sum of the weights of the checks that APPLIED and could be evaluated — the denominator the conformance score was computed over. Both producer checklists make carrying this a MUST. It was previously impossible to report, since `scores` had no field for it."},
+        "excluded": {"type": "integer", "minimum": 0, "description": "Count of checks excluded because their condition did not apply. Not-applicable is not a pass: these left both sides of the ratio. A statement of SCOPE — nothing about them is unknown."},
+        "forfeited": {"type": "integer", "minimum": 0, "description": "Count of checks the linter could not evaluate for lack of a declared capability (`network`, `previous-release`, `execution`). Arithmetically identical to an exclusion; epistemically not. A statement of IGNORANCE — the obligation applied and went unchecked, so the artifact may be violating it."},
+        "undetermined": {"type": "integer", "minimum": 0, "description": "Count of MUST checks that were forfeited and therefore leave conformance undetermined. Distinct from `forfeited`, which counts every forfeit at any level: a forfeited SHOULD costs coverage but not conformance."},
         "health": {"type": "number"},
-        "grade": {"type": "string", "enum": ["gold", "silver", "bronze", "non-conforming"]},
+        "grade": {"type": "string", "enum": ["gold", "silver", "bronze", "non-conforming", "undetermined"], "description": "Grade band, or `undetermined` where a MUST check was FORFEITED — the obligation applied and went unassessed, so the artifact is neither known to conform nor known to fail. `undetermined` is NOT non-conformance. An EXCLUDED MUST never produces it: that obligation did not exist for this artifact."},
         "profile": {"type": "string", "enum": ["core", "full"]}
       },
       "additionalProperties": true
@@ -58,6 +63,11 @@
       "type": "array",
       "description": "One entry per check evaluated",
       "items": {
+        "allOf": [{
+          "description": "A skipped check MUST name its reason from the closed set. Without this a linter could skip every hard check and report nothing about why, which is indistinguishable from having evaluated them.",
+          "if": {"properties": {"status": {"const": "skipped"}}, "required": ["status"]},
+          "then": {"required": ["skip_reason"]}
+        }],
         "type": "object",
         "required": ["id", "status"],
         "properties": {

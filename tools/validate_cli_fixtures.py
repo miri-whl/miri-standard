@@ -26,7 +26,10 @@ failures = []
 
 
 def check(label, ok, detail=""):
-    print(f"  {'PASS' if ok else 'FAIL'}  {label}{(' — ' + detail) if detail else ''}")
+    # `detail` is written at most call sites as the FAILURE explanation, so printing it on success
+    # produced lines reading `PASS ... 'X' not found`. A gate whose passing output states the failure
+    # is unreadable, and it hid that some assertions were passing for the wrong reason.
+    print(f"  {'PASS' if ok else 'FAIL'}  {label}{(' — ' + detail) if (detail and not ok) else ''}")
     if not ok:
         failures.append(label)
 

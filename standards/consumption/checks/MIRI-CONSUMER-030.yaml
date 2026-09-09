@@ -5,7 +5,7 @@ status: active
 added_in: 0.3-draft
 level: MUST
 category: Trust and Verdicts
-weight: 7
+weight: 6
 conditional: false
 severity:
   default: CRITICAL

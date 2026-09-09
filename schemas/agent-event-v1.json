@@ -17,12 +17,13 @@
       "enum": [
         "dependency.add",
         "dependency.version_change",
+        "package.replaced",
         "package.first_reference",
         "integration.begin",
         "runtime.error",
         "test.author"
       ],
-      "description": "The observable moment, from the closed set in Agent Integration Contract §3.1. Closed for the same reason the servable set and the error codes are closed: two bindings that disagree about what an event is do not interoperate."
+      "description": "The observable moment, from the closed set in Agent Integration Contract §3.1. Closed for the same reason the servable set and the error codes are closed: two bindings that disagree about what an event is do not interoperate. `package.replaced` fires when an installed artifact is replaced without its version changing — the case a purl cannot distinguish, because a purl identifies a name and a version and not a byte stream (Lifecycle and Security Metadata §9.6)."
     },
     "phase": {
       "type": "string",

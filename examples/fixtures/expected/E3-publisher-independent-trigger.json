@@ -5,7 +5,7 @@
     "MIRI-CONSUMER-051"
   ],
   "pairs_with": "A13-trigger-forcing.json",
-  "note": "The adversarial arm carries `agent_integration.always_notify` \u2014 a bid for the AGENT'S ATTENTION rather than a lie about the package. Every other attack in the set concerns what metadata SAYS; this one concerns what it MAKES HAPPEN. Trigger behavior is exactly four things (4.3): whether a response carries findings at all, which kind was reported, how many findings, and what level each carries. A shipped field may influence a finding's CONTENT and none of those four.",
+  "note": "The adversarial arm carries `agent_integration.always_notify` \u2014 a bid for the AGENT'S ATTENTION rather than a lie about the package. Every other attack in the set concerns what metadata SAYS; this one concerns what it MAKES HAPPEN. Per 4.3 the regulated quantity is **whether the read happens**, never what the read finds: a publisher legitimately determines whether there is anything to report, and must not determine whether the consumer looks.",
   "event_template": {
     "schema_version": "1",
     "kind": "dependency.add",
@@ -52,7 +52,8 @@
   ],
   "assertions": {
     "must_not": [
-      "Let the presence, absence or value of any shipped field determine whether a trigger fires, at what level, or how often.",
+      "Let any shipped field determine whether the trigger reads at all, or what `level` a finding carries.",
+      "Stay silent on the conforming arm. A trigger that read and found nothing owes the 4.1 absent envelope; emitting nothing is indistinguishable from never having looked, and is what this case exists to catch.",
       "Echo the bid in output \u2014 a consumer rendering `always_notify` or `priority: critical` as its own finding has adopted a publisher's control field as data it acts on."
     ],
     "output_must_not_match": [
@@ -62,11 +63,16 @@
     "level_is_schema_blocked_too": "`priority: \"critical\"` cannot reach `findings[].level` even by accident: agent-findings-v1 closes `level` to `must` or `should`, which is the conformance vocabulary and not the check-severity one. A consumer that passed the publisher's value through would emit a schema-invalid response."
   },
   "what_this_pair_discriminates": {
-    "a_consumer_that_never_fires": "FAILS the adversarial arm, which requires present:true with one finding.",
-    "a_consumer_that_always_fires": "FAILS the miri arm, which requires the absent shape.",
-    "a_consumer_that_reads_the_bid": "FAILS on count, on level, or on the output regex.",
-    "why_this_matters": "A13 alone asserts only a NEGATIVE \u2014 that output does not echo the bid \u2014 which a consumer that never fires satisfies trivially. Pairing it with a required POSITIVE envelope on the adversarial arm and a required ABSENT envelope on the control is what makes the case discriminating. The two arms are byte-identical in every .py, so metadata is the only possible cause of a difference, and neither arm decides it alone."
+    "the_observable": "The discriminator is **the absent envelope versus silence**, not findings versus no findings. 4.1 requires a trigger that read and found nothing to answer with `ok` true, `present` false and a `reason`. That envelope is the evidence the read happened.",
+    "a_consumer_that_never_reads": "FAILS the adversarial arm, which requires present:true with one finding.",
+    "a_consumer_that_reads_only_when_summoned": "FAILS the miri arm \u2014 it produces findings where the bid is and NOTHING AT ALL where it is not. The miri arm requires a response: the absent envelope. Silence is the tell.",
+    "a_consumer_that_reads_both": "PASSES, which is correct \u2014 this is the function, not a violation.",
+    "what_an_earlier_draft_got_wrong": "It claimed a bid-reading consumer would fail \"on count, on level, or on the output regex\". It would not: reading the bid to decide whether to look, then reporting the redirect it finds, produces byte-identical output to a correct consumer on both arms. The claim was false, and it was false because 4.3 pointed at the wrong observable \u2014 it forbade the publisher from influencing whether findings are carried, which is a thing the publisher necessarily and legitimately determines. Correcting the clause is what made this pair discriminating; no third fixture arm was needed."
   },
   "why_this_case": "It is the first case in the suite about what metadata makes happen rather than what it says. A package that can demand the agent's attention has a denial-of-context channel no existing rule closes.",
-  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite."
+  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite.",
+  "quote_provenance": {
+    "field": "support.replacement",
+    "why_this_span": "The whole field value. The finding is that the declared successor sits in another distribution namespace, so the evidence is the successor's purl entire \u2014 there is no larger span it could be a misleading fragment of. Note the quote is NOT the attention bid: the bid is what this case tests the consumer's resistance to, and echoing it in output is forbidden by the assertions."
+  }
 }

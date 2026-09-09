@@ -73,9 +73,9 @@ the number.
   resists what metadata claims, and `E6` asks whether it uses what metadata declares — a suite made entirely of
   adversarial traces cannot tell a careful consumer from an inert one, which is the defect `MIRI-CONSUMER-041`
   itself carried. `E3` makes the trigger-forcing case discriminating: `A13` alone asserts only that output does not
-  echo the bid, which a consumer that never fires satisfies trivially, so `E3` requires a **positive** envelope on
-  the arm carrying the bid and the **absent** shape on the control. A consumer that never fires fails the first;
-  one that always fires fails the second; one that reads the bid fails on count, on level, or on the regex.
+  echo the bid, which a consumer that never reads satisfies trivially, so `E3` requires a *response* on both arms:
+  findings where the bid is, and §4.1's absent envelope where it is not. The discriminator is **absent envelope
+  versus silence** — a consumer that reads only when summoned produces nothing at all on the control arm.
 
 - **[CLI conformance fixtures](examples/fixtures/cli/README.md)** — `greetctl`, four arms, and the first executable
   thing a CLI linter can be driven against. Every fixture in the repository was a Python wheel, so

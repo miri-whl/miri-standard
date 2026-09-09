@@ -8,7 +8,9 @@
 
 The explicit, numbered list of every check a Miri-conformance linter runs against a Python wheel, with the standard each
 check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-040`); the
-weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the weights of its passing checks.
+weights sum to exactly **100**, so a wheel's Miri score is the sum of the weights of its passing checks over the weights
+of the checks that **applied** — see the Scoring Model below, which is not simply a total out
+of 100 when checks are excluded or forfeited.
 
 ## Scoring Model
 
@@ -28,9 +30,35 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
   a real CLI, where 20 of 100 points were awarded for never having deprecated anything.
 - **First releases are not penalized.** The previous-release checks (MIRI-PY-030, 034) are *conditional*: a first
   release has no prior release to diff against, so they are not applicable and leave the denominator — a first
-  release is scored on what it can be scored on, and can still reach Gold. A check forfeits (also reported, also out
-  of the denominator) when the condition *does* apply but the linter lacks the capability to assess it — a capability
-  gap, not a failure.
+  release is scored on what it can be scored on, and can still reach Gold. Note the precedence rule above: this holds
+  where the linter can **establish** that no prior release exists. Where it merely cannot reach one, it cannot
+  distinguish a first release from an unreachable predecessor, and those checks are *forfeited* rather than excluded.
+  The score is identical either way; the difference is that the forfeit leaves conformance undetermined for those
+  checks, which is the honest report of not knowing.
+- **Excluded and forfeited are the same arithmetic and different claims.** Both leave the numerator and the
+  denominator, so neither moves the score. They differ in what they assert about *knowledge*. An **exclusion** says
+  the obligation does not exist for this artifact — a statement of scope, and nothing is unknown. A **forfeit** says
+  the obligation exists and went unchecked — a statement of ignorance, and the artifact may be violating it. A report
+  MUST carry the two counts **separately**: 90 of 90 with ten excluded is fully known, and 90 of 90 with ten forfeited
+  has ten points nobody looked at. Collapsing them would discard the only part of the distinction a reader needs.
+- **A forfeited MUST leaves conformance `undetermined` for that check; an excluded MUST does not.** An excluded MUST
+  was never an obligation here, so it neither caps the score nor withholds conformance. A forfeited MUST *was* an
+  obligation and was not assessed, so a linter MUST report conformance as **undetermined** rather than as met. This is
+  the rule the consumption profiles already state, made explicit here because the producer targets did not.
+  `undetermined` is **not** non-conformance: an artifact whose only unmet MUSTs were forfeited is not known to fail,
+  and its score is still reported with its denominator. The 74 cap applies to a MUST that **failed**, never to one
+  excluded or forfeited.
+- **Where a check is both conditional and capability-gated, evaluate the condition first.** Ten checks carry a
+  `conditional` flag *and* a `requirements` entry, and the order decides which they become:
+  1. The condition **provably does not apply** → **excluded**. The capability is irrelevant.
+  2. The condition **provably applies** and the capability is absent → **forfeited**.
+  3. **Whether the condition applies cannot itself be decided** → **forfeited**, because a condition that cannot be
+    settled is
+     ignorance rather than scope.
+- **There is no coverage floor, deliberately.** A small denominator usually means a *simpler* artifact rather than a
+  worse one, and withholding a grade for having less surface would penalize simplicity. A score is made interpretable
+  by its denominator traveling with it, not by a minimum. A linter MUST NOT impose a floor of its own: one linter with
+  a floor and one without produce incomparable grades, which defeats the purpose of scoring at all.
 - **Gold additionally requires provenance**: a public-index wheel reaches Gold only if MIRI-PY-005 (PEP 740
   attestations) passes — provenance is the anchor for every trust decision the metadata supports (Lifecycle §9.5). A
   wheel otherwise scoring ≥90 without attestations is capped at Silver.

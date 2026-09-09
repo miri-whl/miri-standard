@@ -74,21 +74,51 @@ more things for two implementations to diverge on.
 
 ### 3.1 Triggers
 
-Six triggers, one per map task, each named for the **observable action** rather than the intention behind it. An
-intention is not observable and cannot be a trigger.
+Seven triggers, each named for the **observable action** rather than the intention behind it. An intention is not
+observable and cannot be a trigger.
+
+Six of them are one-per-map-task. `package.replaced` is the exception and routes to two tasks, because a replaced
+artifact raises two independent questions — *what is the surface now* and *may it still be trusted* — and answering
+one does not answer the other.
 
 | Trigger (`kind`) | Fires when | Map task | Level |
 |---|---|---|---|
 | `dependency.add` | a dependency is about to be added | [§3.5](consumption-map.md) security and trust | SHOULD † |
 | `dependency.version_change` | a dependency's version is about to change | [§3.3](consumption-map.md) upgrading | REQUIRED |
+| `package.replaced` | an installed artifact is replaced **without its version changing** | [§3.1](consumption-map.md) first use *and* [§3.5](consumption-map.md) security and trust | SHOULD |
 | `package.first_reference` | a package not yet used in this session is first referenced | [§3.1](consumption-map.md) first use | SHOULD |
 | `integration.begin` | new code is about to be written against a package | [§3.2](consumption-map.md) scaffolding | SHOULD |
 | `runtime.error` | an error naming an installed package is observed | [§3.4](consumption-map.md) diagnosing | SHOULD |
 | `test.author` | a test touching a package is about to be written | [§3.6](consumption-map.md) tests | SHOULD |
 
-The set is **closed**. A binding MUST NOT invent a seventh kind, for the same reason the servable set and the error
+**`package.replaced` reads both of its tasks, and the order matters.** Take [Map §3.1](consumption-map.md) first —
+`list`, then `patterns`, then the surface — because the question *what is here now* has to be answered before any
+judgment about it means anything. Then [Map §3.5](consumption-map.md), because the artifact is new bytes and the
+previous verdict was about the old ones.
+
+That second half is a prohibition, not just a read: **a consumer MUST NOT carry a trust determination across a
+`package.replaced` event.** "This package was checked and is fine" is a claim about bytes and does not survive the
+bytes changing, and `identity.purl` will not have moved
+([Lifecycle and Security Metadata §9.6](../python/lifecycle-security-metadata.md)).
+
+Two things this trigger is **not**. It is not a verification: where no attestation is present the standard binds
+nothing about an artifact's contents, so re-reading a hostile artifact yields fresher hostile metadata and a consumer
+MUST NOT present the re-read as a check having passed. And it is not a diff — the event says the artifact was
+replaced, never what changed. A consumer that read the surface earlier in the session holds that comparison itself;
+the contract stays stateless and does not pretend to remember.
+
+The frequency is the design constraint. A maintainer developing a wheel locally reinstalls at the same version many
+times an hour, because bumping a version on every edit is not a thing anyone does. So this trigger fires constantly
+and must be **silent by default** — §4.1's absent envelope for every replacement that changed nothing a consumer had
+cached. Firing is host-observed and unconditional; whether there are `findings` is metadata-determined (§4.3). Without
+that separation this kind would be a context tax and a user would disable it, which is the failure §4.1 describes as
+reachable through its own remedy.
+
+The set is **closed**. A binding MUST NOT invent an eighth kind, for the same reason the servable set and the error
 codes are closed: an open vocabulary is one every binding extends differently, and two bindings that disagree about
-what an event *is* do not interoperate.
+what an event *is* do not interoperate. Extending it is a change to this document and to the `kind` enum in
+[`agent-event-v1.json`](../../schemas/agent-event-v1.json), which is vendored downstream — not something a binding
+does locally.
 
 † **`dependency.add` was REQUIRED in 0.4.0 and is not any more, because it cannot do its job yet.** At the moment
 a dependency is added it is not installed, so it ships nothing a local surface can read: no `agent-metadata/`, no
@@ -203,6 +233,12 @@ are behavioral. `MIRI-CONSUMER-051` and the `E3` golden cover the first; `make v
 `source`, `quote` and `level` against ground truth for every golden; the rest are unenforced today and are listed
 here so a reader does not assume otherwise.
 
+One limit of that golden gate is worth naming in the same spirit. It verifies a `quote` is a span of the field the
+golden names, which catches a quote drawn from the wrong document or the wrong field. It cannot decide whether the
+span is the *right* span: a benign prefix of an injected string is a genuine span of the same field and would pass
+while carrying none of the evidence its finding claims. That is a reviewer's judgment, recorded as each golden's
+required `why_this_span`, and not something the gate checks.
+
 ## 4. Obligations
 
 ### 4.1 Silence Is the Existing Absence Shape
@@ -261,10 +297,32 @@ claim about whether the host's action ran, which is observed at the host boundar
 No field in any shipped document may determine whether, when, or how loudly a trigger fires. A binding MUST derive
 **trigger behavior** solely from the observable event and its own configuration.
 
-*Trigger behavior* is the decidable part, and is exactly four things: **whether** an event produces a response
-carrying `findings` at all; **which** `kind` was reported; **how many** findings were raised; and **what `level`**
-each carries. Nothing else. The *content* of a finding — its `summary`, its `quote`, the purl it names — is derived
-from the metadata by design, and is governed separately below.
+*Trigger behavior* is the decidable part, and it is **whether the read happens** — never what the read finds. A
+trigger fires because the host observed a change: a requirement was added, a version specifier moved. That
+observation belongs to the host, and no shipped field participates in it. What the trigger reports once it has
+fired is derived from the metadata, because that is the entire function.
+
+So three things a publisher MUST NOT influence: **whether** the trigger reads at all; **which** `kind` was
+reported; and **what `level`** each finding carries.
+
+And two it necessarily does influence, legitimately: **whether** the response carries `findings`, and **how many**.
+A package declaring a namespace-divergent successor produces a finding; a clean package produces none; a package
+with two problems produces two.
+
+An earlier version of this section listed those last two among the forbidden set. That made the rule
+**unsatisfiable**: every finding is derived from a shipped field, so a consumer obeying it literally could never
+report anything, and `MIRI-CONSUMER-051` fired on the behavior the `E3` golden mandates. The error was treating the
+*outcome of the read* as though it were the *decision to read*. It is recorded rather than quietly corrected
+because the two are easy to conflate and the conflation is invisible until someone tries to implement both.
+
+**The evidence that a trigger fired is the absent envelope.** §4.1 already requires a trigger that reads and finds
+nothing to answer with `ok: true`, `present: false` and a `reason` rather than staying silent — and that is what
+makes this clause observable. Drive a consumer against a package carrying an attention bid and against a clean one:
+both must produce a *response*. One that produces findings for the first and **nothing at all** for the second did
+not read the second; it was summoned. **Silence is the violation, not the absence of findings.**
+
+The *content* of a finding — its `summary`, its `quote`, the purl it names — is derived from the metadata by
+design, and is governed separately below.
 
 **Publisher influence over content is permitted; over `level` it is not.** A finding's prose comes from the served
 document — that is the whole point of reporting it — but a shipped field MUST NOT determine a finding's `level`,
@@ -373,6 +431,7 @@ lifecycle events in `settings.json`, receiving JSON on stdin.
 |---|---|---|
 | `dependency.add` | `PreToolUse`, matcher `Edit\|Write` | the target is a **dependency manifest** (below) and the proposed content adds a requirement absent from the current file |
 | `dependency.version_change` | `PreToolUse`, matcher `Edit\|Write` | same target, and a requirement's version specifier differs |
+| `package.replaced` | `PostToolUse`, matcher `Bash` | the command installed a distribution that was already installed, and the version afterwards equals the version before |
 | `runtime.error` | `PostToolUse`, matcher `Bash` | command output contains a traceback naming an installed package |
 | `test.author` | `PreToolUse`, matcher `Edit\|Write` | the target path matches the project's test discovery configuration |
 
@@ -435,7 +494,8 @@ mechanism that survives that removal.
 No new check family. The obligations in §4 restate existing `MIRI-CONSUMER` requirements for a new channel, and are
 scored through that family — with two exceptions, which had no analogue in the consumer family before this document and
 are
-the two it adds — `MIRI-CONSUMER-050` and `MIRI-CONSUMER-051`, bringing the family to seventeen:
+the two it adds — `MIRI-CONSUMER-050` and `MIRI-CONSUMER-051`, bringing the family to seventeen — and `MIRI-CONSUMER-052`
+with the `package.replaced` trigger, bringing it to eighteen:
 
 - **Silence by default** (§4.1) — drive the binding with a `dependency.add` event naming the `bare` fixture, which
   ships no `agent-metadata/` at all, and assert the absent shape with no `findings` key.
@@ -472,7 +532,13 @@ consumer *resists* what the metadata claims. `E6` drives the conforming arm and 
 metadata declares. A suite made entirely of adversarial traces cannot tell a careful consumer from an inert one —
 which is the same defect `MIRI-CONSUMER-041` itself carried until 0.5.0.
 
-`E3` is what makes the trigger-forcing case discriminating. `A13` alone asserts only that output does not echo the
-bid, which a consumer that never fires satisfies trivially. Requiring a **positive** envelope on the arm carrying
-the bid and the **absent** shape on the control closes that: a consumer that never fires fails the first, one that
-always fires fails the second, and one that reads the bid fails on count, on level, or on the regex.
+`E3` is what makes the trigger-forcing case discriminating, and the discriminator is **the absent envelope versus
+silence** rather than findings versus no findings. `A13` alone asserts only that output does not echo the bid, which
+a consumer that never reads satisfies trivially. `E3` requires a *response* on both arms: findings where the bid is,
+and §4.1's absent envelope where it is not. A consumer that never reads fails the first; one that reads only when
+summoned produces nothing at all on the second, and silence is the tell.
+
+An earlier draft claimed a bid-reading consumer "fails on count, on level, or on the regex". It would not — reading
+the bid to decide whether to look, then reporting what it finds, is byte-identical to correct behavior on both arms.
+That claim was false because §4.3 named the wrong observable, and correcting the clause is what made this pair
+discriminating.

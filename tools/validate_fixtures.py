@@ -38,8 +38,30 @@ def _validates(jsonschema, doc, schema_path) -> bool:
         return False
 
 
+
+def _field_value(doc, path):
+    """Resolve a dotted/indexed path like `patterns[0].description` against a parsed document."""
+    cur = doc
+    for part in path.split("."):
+        m = re.match(r"^([^\[]+)((?:\[\d+\])*)$", part)
+        if not m:
+            return None
+        key, idx = m.group(1), m.group(2)
+        if not isinstance(cur, dict) or key not in cur:
+            return None
+        cur = cur[key]
+        for n in re.findall(r"\[(\d+)\]", idx):
+            if not isinstance(cur, list) or int(n) >= len(cur):
+                return None
+            cur = cur[int(n)]
+    return cur
+
+
 def check(label: str, ok: bool, detail: str = "") -> None:
-    print(f"  {'PASS' if ok else 'FAIL'}  {label}{(' — ' + detail) if detail else ''}")
+    # `detail` is written at most call sites as the FAILURE explanation, so printing it on success
+    # produced lines reading `PASS ... 'X' not found`. A gate whose passing output states the failure
+    # is unreadable, and it hid that some assertions were passing for the wrong reason.
+    print(f"  {'PASS' if ok else 'FAIL'}  {label}{(' — ' + detail) if (detail and not ok) else ''}")
     if not ok:
         failures.append(label)
 
@@ -472,9 +494,28 @@ def main() -> int:
                         doc = FIX / f"metadata/{arm}/{f['source']}"
                         check(f"trace {g.stem}: source {f['source']} exists in the {arm} arm", doc.exists())
                         if doc.exists() and f.get("quote"):
-                            check(f"trace {g.stem}: quote appears in {f['source']}",
-                                  f["quote"] in doc.read_text(),
-                                  f"{f['quote'][:56]!r} not found")
+                            # Presence anywhere in the document was too weak: it was satisfied by the benign
+                            # prefix that preceded the injection, which is the exact E5 defect this rule was
+                            # written for. Naming the FIELD catches a quote from the wrong document or the
+                            # wrong field.
+                            #
+                            # WHAT THIS STILL CANNOT DECIDE: whether the span is the RIGHT span within the
+                            # named field. "Greet a name." is a genuine span of patterns[0].description and
+                            # would pass here, while carrying none of the directive text its finding is
+                            # about. That judgment is not mechanically decidable, so `why_this_span` is a
+                            # required human-readable justification and a reviewer's obligation - not a
+                            # thing this gate checks. Said plainly because the previous version of this
+                            # comment implied a coverage it did not have.
+                            prov = d.get("quote_provenance") or {}
+                            check(f"trace {g.stem}: declares quote_provenance for its quote",
+                                  bool(prov.get("field")) and bool(prov.get("why_this_span")),
+                                  "a finding carrying a quote must say which field it came from and why "
+                                  "that span is the evidence")
+                            val = _field_value(json.loads(doc.read_text()), prov.get("field", ""))
+                            check(f"trace {g.stem}: quote is a span of {prov.get('field')}",
+                                  val is not None and f["quote"] in str(val),
+                                  f"{f['quote'][:48]!r} not in {prov.get('field')}"
+                                  if val is not None else f"field {prov.get('field')!r} not found")
 
         # The discriminating pair of 4.3: one arm must require findings and the other the absent
         # shape. If both arms expected the same shape the case would be passed by a consumer that

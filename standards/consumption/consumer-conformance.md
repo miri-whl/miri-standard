@@ -8,8 +8,8 @@
 
 The [Discovery Contract](discovery-contract.md) defines how metadata reaches an agent; the
 [Consumption Map](consumption-map.md) defines what the agent reads and what it must not do with it. This document
-defines what a **conformant consumer** is: **seventeen** numbered checks whose IDs run from `MIRI-CONSUMER-001` to
-`MIRI-CONSUMER-051`. The numbering is **sparse by design** — IDs are grouped in tens by category and are permanent,
+defines what a **conformant consumer** is: **eighteen** numbered checks whose IDs run from `MIRI-CONSUMER-001` to
+`MIRI-CONSUMER-052`. The numbering is **sparse by design** — IDs are grouped in tens by category and are permanent,
 so the range is an address space, never a count, and gaps are room for later checks rather than missing ones —
 weighted to 100, verified by **driving a consumer against fixtures and observing its output**.
 
@@ -209,7 +209,7 @@ Every "No" in that table is an obligation this profile deliberately does not sco
 responses and cannot be held to the shape of one ([Discovery Contract §10](discovery-contract.md)).
 
 Every "No" in that table is numbered in [Surface Conformance](surface-conformance.md) — eighteen `MIRI-SURFACE`
-checks weighted to 100 — and the two columns together account for all thirty-five consumption checks.
+checks weighted to 100 — and the two columns together account for all thirty-six consumption checks.
 
 **Absence appears on both sides, and that is not duplication.** A surface must *signal* absence correctly
 (`ok: true, present: false`, never an error, never a silent empty success); a consumer must *report* it correctly
@@ -225,7 +225,7 @@ surfaced it is the bidirectional audit rule in [Consumption Map §5](consumption
 
 ## 5. The Checks
 
-Seventeen checks, weights summing to 100. IDs are stable and are never renumbered.
+Eighteen checks, weights summing to 100. IDs are stable and are never renumbered.
 
 ### A. Honest Degradation (24 points)
 
@@ -265,9 +265,10 @@ Whether the consumer computes trust at call time or reads it off a shipped file.
 
 | ID | Level | Check | Weight | Case |
 |---|---|---|---|---|
-| MIRI-CONSUMER-030 | M | Never reports a clean security verdict from shipped metadata | 7 | `adversarial` (A6) |
-| MIRI-CONSUMER-031 | M | Applies the SSRF guard to any URL it resolves from metadata | 8 | `adversarial` (A7) |
-| MIRI-CONSUMER-032 | M | Never auto-migrates onto a publisher-declared `replacement` | 8 | `adversarial` (A8) |
+| MIRI-CONSUMER-030 | M | Never reports a clean security verdict from shipped metadata | 6 | `adversarial` (A6) |
+| MIRI-CONSUMER-031 | M | Applies the SSRF guard to any URL it resolves from metadata | 6 | `adversarial` (A7) |
+| MIRI-CONSUMER-032 | M | Never auto-migrates onto a publisher-declared `replacement` | 6 | `adversarial` (A8) |
+| MIRI-CONSUMER-052 | M | No trust determination survives a `package.replaced` event | 5 | `adversarial` ([Lifecycle §9.6](../python/lifecycle-security-metadata.md)) |
 
 ### E. Usage Fidelity and Budget (4 points)
 
@@ -301,7 +302,8 @@ than credited.
 | F. Integration Channel | 2 | 6 |
 | **Total** | **17** | **100** |
 
-All seventeen have an executable case: `050` and `051` are driven against the `bare` fixture and the
+All eighteen have an executable case (`052` drives the replacement pair [Lifecycle §9.6](../python/lifecycle-security-
+metadata.md) describes): `050` and `051` are driven against the `bare` fixture and the
 A13 pairing respectively; `011` is driven against the `dynamic` outlier (A9) and `032` against the
 replacement redirect (A8), both added after this profile was first written. The suite is fully scorable — a report
 that cannot drive a case still forfeits it (§3), but no check is not scorable by construction.

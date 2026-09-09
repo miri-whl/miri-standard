@@ -6,7 +6,7 @@ Versions 0.1 and 0.2 specified what an artifact **ships**. From 0.3 the standard
 
 That is the whole of it. A package could score Gold and help no agent, because nothing in the standard said how the
 metadata was supposed to reach a decision, what to read for a given task, or what it means to consume it correctly.
-The consumption suite closes that loop with four documents, a fixture set, and thirty-five numbered checks.
+The consumption suite closes that loop with four documents, a fixture set, and thirty-six numbered checks.
 
 ## The documents
 
@@ -19,7 +19,7 @@ the contract itself.
 upgrading a dependency, diagnosing a runtime failure, answering a security question, and writing tests. Each carries
 a read-order, prohibitions, and informative heuristics, and the three are deliberately graded differently.
 
-**Consumer Conformance** — what a conformant consumer *is*: seventeen `MIRI-CONSUMER` checks weighted to 100.
+**Consumer Conformance** — what a conformant consumer *is*: eighteen `MIRI-CONSUMER` checks weighted to 100.
 
 ## The idea that shaped everything
 

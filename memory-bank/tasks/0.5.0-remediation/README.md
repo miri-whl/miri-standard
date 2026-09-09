@@ -121,3 +121,47 @@ remediation is called complete.
    every score involving a conditional check.
 2. **P0-3 phase.** Either the four goldens move to `phase: after`, or the suite states that arms are pre-installed.
    The contract's §3.1 footnote and §6.1's `PreToolUse` mapping currently disagree about whether `before` can work.
+
+## The `conditional` sweep (round 2, blast-radius panel)
+
+Round 1's fix changed `check-v1.json` and `MIRI-CLI-024` and stopped. Six further sites still asserted the reverted
+rule; the register itself had framed P0-1 as _"affects every conditional check on every target"_ and then changed one
+check on one target. Swept 2026-09-08:
+
+| Site | Why it mattered |
+| --- | --- |
+| `.claude/skills/check-authoring/SKILL.md` | CLAUDE.md mandates loading it before writing any check, so the defect regenerated on the next one written |
+| `schemas/scoring-v1.json` | The schema whose only job is this arithmetic; described the repudiated additive model and had no denominator concept at all |
+| `standards/python/checks/MIRI-PY-005.yaml` | A check's own text, in the machine-readable source of truth |
+| `standards/python/linter-checklist.md` Purpose | Contradicted its own Scoring Model eight lines below |
+| `standards/cli/linter-checklist.md` Purpose | Same |
+| `standards/cli/linter-checklist.md` MIRI-CLI-024 row | The derived rendering of the one check that had been fixed |
+| `standards/feedback/miri-standard-response-check-requirements.md` | **Our** normative answer to miri-py said "full weight"; corrected inline rather than silently |
+
+Two inbound proposals (`check-requirements-proposal.md`, `miri-py-scoring-model-proposal.md`) carry the old reading
+and were **annotated as superseded, text preserved** — they are a record of what was proposed and when, and rewriting
+them would falsify it.
+
+`lint-report-v1.json` gained what the checklists already made mandatory and it could not express:
+`effective_denominator`,
+`excluded`, `forfeited`, all required alongside a conformance score, plus a rule that a skipped outcome MUST name its
+reason. Both verified to reject the shapes they exist to forbid.
+
+## Structural questions the sweep exposed and did NOT resolve
+
+These need a decision, not an edit, and are recorded so they are not rediscovered a third time:
+
+- **What an excluded or forfeited MUST does to conformance is unspecified for the producer targets.** The consumption
+  profiles call a forfeited MUST `undetermined`; the word appears nowhere in `standards/python/` or `standards/cli/`.
+  The 74-point cap is defined for a MUST that FAILED. An excluded MUST left the denominator and was never evaluated —
+  it plainly should not cap, but nothing says so.
+- **There is no coverage floor.** Once exclusions and forfeits compound, a python-wheel can be scored over 58 of 100
+  weight and a CLI over 72, and nothing forbids awarding Gold on that base. `scoring-v1.json` now has a
+  `minimum_coverage` field so an implementation can set one and say that it did; the standard sets none.
+  The checklists' own argument for abandoning auto-pass was that two scores of 75 could not be compared. Exclusion
+  moves that incomparability from the numerator to the denominator rather than removing it.
+- **Conditionals and forfeits are now arithmetically identical, and ten checks carry both flags** (five MIRI-CLI, five
+  MIRI-PY) with no precedence rule. The stated difference is one sentence per checklist. A conditional's predicate is
+  English in `fires_when` while a forfeit has a fixed machine-readable reason, and that asymmetry is unacknowledged.
+- **`lint-report-v1.json` cannot represent the consumption profiles**: its `target` enum is `python-wheel`/`cli` and
+  its outcome-id pattern excludes `CONSUMER`/`SURFACE`, so those profiles' own denominator MUSTs are unreportable.

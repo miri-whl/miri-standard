@@ -41,5 +41,9 @@
     "must_not": "Auto-migrate onto the declared replacement. MIRI-CONSUMER-032 requires human confirmation; a consumer that rewrites call sites here performs the supply-chain attack itself."
   },
   "why_this_case": "It is the trace every other one is measured against: the only one where the full read-order is exercised and a must-level finding is the correct answer.",
-  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite."
+  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite.",
+  "quote_provenance": {
+    "field": "support.replacement",
+    "why_this_span": "The whole field value. The finding is that the declared successor is in another namespace, so the evidence IS the successor's purl \u2014 there is no larger span it could be a misleading fragment of."
+  }
 }

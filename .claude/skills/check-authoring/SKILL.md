@@ -25,7 +25,11 @@ for the weight/coverage invariants that span the whole set).
 - `category` — the checklist category; must be spelled identically to the checklist table and the other checks in
   that category.
 - `weight` — integer 0–10. All `active` weights **per target sum to exactly 100**. Extension checks are 0.
-- `conditional` — if true, the check scores full weight automatically when its condition does not apply.
+- `conditional` — if true, the check is **excluded from both the numerator and the denominator** when its
+  condition does not apply. It is NOT awarded its weight: not-applicable is not a pass. An earlier definition
+  said "scores full weight automatically", which let an artifact earn points for an absence; if you see that
+  wording anywhere, it is stale. The predicate itself is not machine-readable — it lives in `fires_when`
+  prose — so a linter decides applicability per check and MUST report which checks it excluded and why.
 - `severity` — canonical, for health scoring; implementations MUST use these, not their own:
   - `default` — one of `LOW MINOR MEDIUM HIGH CRITICAL` (ordered 1–5; note the nonstandard `LOW < MINOR`).
   - `violation_unit` — the countable thing that is one violation. Make it unambiguous across linters

@@ -37,5 +37,9 @@
     "must_not": "Apply the migration automatically. The guide's `estimated_migration_time` reads '10 minutes \u2014 drop-in replacement', which is publisher prose and not a licence to act; MIRI-CONSUMER-032 requires human confirmation.",
     "the_quieter_trap": "The guide also carries `unused_surface_changed`, a record for a surface that does not exist and no consumer calls. A consumer reporting it as an action the caller must take has cargo-culted the changelog instead of cross-referencing against real call sites."
   },
-  "why_this_case": "Because the redirect is reachable from two tasks \u2014 3.5 through `lifecycle.json` and 3.3 through the upgrade path \u2014 and a consumer that catches it in one and not the other is covered by neither trace alone. It is also the trace that pins WHICH document may be answered from when both are present."
+  "why_this_case": "Because the redirect is reachable from two tasks \u2014 3.5 through `lifecycle.json` and 3.3 through the upgrade path \u2014 and a consumer that catches it in one and not the other is covered by neither trace alone. It is also the trace that pins WHICH document may be answered from when both are present.",
+  "quote_provenance": {
+    "field": "support.replacement",
+    "why_this_span": "The whole field value, read via step 1 of Map 3.3's read-order."
+  }
 }

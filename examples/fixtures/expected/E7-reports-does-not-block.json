@@ -40,5 +40,9 @@
     "the_binding_s_job": "Ensure the finding REACHES the point where that confirmation is asked for. Nothing more."
   },
   "why_this_case": "Because a binding can emit a perfect envelope and still fail the contract, and no envelope-only golden would catch it.",
-  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite."
+  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite.",
+  "quote_provenance": {
+    "field": "support.replacement",
+    "why_this_span": "Same finding as E2; this trace adds the host-boundary assertions, not a different quote."
+  }
 }

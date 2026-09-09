@@ -406,6 +406,50 @@ drift, not tampering. The only field that ties an artifact to an independent ide
 (MIRI-PY-005), verified by the index against a Trusted Publisher. Provenance verification is therefore the foundation
 every other trust decision in this section builds on.
 
+### 9.6 The Artifact Can Change Under a Stable Identity
+
+A purl identifies a **name and a version**, not a byte stream. Two different artifacts can carry the same
+`identity.purl`, and nothing in this standard detects it. Uninstall a distribution and install different bytes at the
+same version: `purl` is unchanged, `sdk_version` is unchanged, every field a consumer would compare is unchanged.
+
+§9.1's adversary is "a package that was trustworthy when adopted and became malicious later", and the delivery
+mechanisms it names are all *publication* events — a takeover, a malicious release, a typosquat. This is the same
+adversary arriving by a route that publishes nothing. It matters separately because the consumer-side defenses differ:
+a new version is something a consumer can notice, and a replacement at the same version is not.
+
+**Miri raises the value of this attack rather than lowering it, and §9.4 says why**: structured, authoritative-looking
+metadata invites a consumer to lower its guard, so a poisoned `api_index`, `usage-patterns.json` or
+`support.replacement` buys an attacker more than a poisoned README would. An agent that has been taught to read this
+metadata and act on it is a better target than one that has not. That is a cost of the standard existing, and it is
+paid whether or not this section is written — writing it down is the only part that is optional.
+
+**The exposure is greatest where §9.5's foundation is absent.** §9.5 names PEP 740 attestation (`MIRI-PY-005`) as the
+only field tying an artifact to an independent identity, and therefore as the foundation every other trust decision
+builds on. `MIRI-PY-005` is conditional and requires network access: a locally built, locally installed wheel has no
+attestation, correctly, because no index attested it. So the foundation is unavailable in exactly the workflow where
+same-version replacement is routine — local development, where a maintainer rebuilds and reinstalls many times an
+hour and cannot bump a version on every edit. A hostile artifact dropped into that path is expected to carry no
+provenance, so its absence raises no alarm.
+
+Therefore:
+
+- A consumer MUST NOT treat `identity.purl` as identifying an artifact's contents. It identifies a name and a version;
+  a match means those agree, and nothing more.
+- A consumer MUST NOT carry a trust determination across a replacement. "This package was checked and is fine" is a
+  statement about bytes, not about a purl, and it does not survive the bytes changing.
+- A consumer that caches served metadata MUST either key that cache on something that changes when the artifact does,
+  or re-read on notice that the artifact was replaced. The Agent Integration Contract's `package.replaced` trigger is
+  that notice.
+- Where no attestation is present, the standard binds **nothing** about the artifact's contents. A consumer MUST NOT
+  present a re-read as a verification.
+
+**What re-reading does and does not buy.** Noticing a replacement makes the existing checks run again — the
+`api_index` that can lie, the narrative files that can inject, the `replacement` that can redirect are all evaluated
+against the new bytes rather than the old verdict. That closes a **staleness** hole and it is worth having. It does
+not make an unattested artifact trustworthy: re-reading a hostile wheel yields fresher hostile metadata. The
+**trust** hole in the local-install path stays open, because provenance genuinely is not available there, and the
+honest move is to name it rather than let a freshness mechanism be mistaken for a verification one.
+
 ## References
 
 - Background: [CLI Update and Vulnerability Signaling](../cli/update-and-vulnerability-signaling.md)

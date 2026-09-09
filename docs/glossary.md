@@ -99,9 +99,15 @@ and therefore what a consumer must possess to perform it.
 
 **Trigger** ([Agent Integration §3.1](../standards/consumption/agent-integration-contract.md)) — *when* a task becomes
 actionable. The third column of a table that already had *what* (task) and
-*how* (vehicle), and the one this standard was missing until 0.4. Six of them, named for observable actions:
-`dependency.add`, `dependency.version_change`, `package.first_reference`, `integration.begin`, `runtime.error`,
-`test.author`.
+*how* (vehicle), and the one this standard was missing until 0.4. Seven of them, named for observable actions:
+`dependency.add`, `dependency.version_change`, `package.replaced`, `package.first_reference`, `integration.begin`,
+`runtime.error`, `test.author`.
+
+`package.replaced` is the odd one and worth reading twice: it fires when an installed artifact is replaced **without
+its version changing**, which is the case a purl cannot see — a purl identifies a name and a version, never a byte
+stream ([Lifecycle and Security Metadata §9.6](../standards/python/lifecycle-security-metadata.md)). It is the only
+trigger routing to two tasks, because a replaced artifact raises two questions that do not answer each other: what
+the surface is now, and whether it may still be trusted.
 
 **Event** — the message a host sends when a trigger fires. Governed by
 [`agent-event-v1.json`](../schemas/agent-event-v1.json), whose root is **closed** so a host cannot smuggle a file
@@ -132,7 +138,7 @@ answer. A closed set of four, and the distinctions matter:
 **Check** — one numbered, mechanically decidable requirement, governed by
 [`check-v1.json`](../schemas/check-v1.json). Its authoritative form is a YAML file under
 `standards/<target>/checks/`; the tables in the profiles are a derived rendering. IDs are **never renumbered**, and
-the numbering is **sparse** — `MIRI-CONSUMER` runs 001–051 across seventeen checks, so an ID range is an address
+the numbering is **sparse** — `MIRI-CONSUMER` runs 001–052 across eighteen checks, so an ID range is an address
 space and never a count.
 
 **`fires_when`** ([`check-v1.json`](../schemas/check-v1.json)) — the operative content of a check: the concrete

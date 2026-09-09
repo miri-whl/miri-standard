@@ -51,6 +51,11 @@ Semantics:
 1. A linter operating without a listed capability MUST skip the check with the corresponding reason — and MUST NOT
    skip a check whose requirements it satisfies. Skips remain *forfeited and reported* per the checklist's existing
    rule (conditional-not-applicable is unrelated and keeps full weight).
+
+   > **Superseded, 0.6.0.** The "full weight" reading above reflected `check-v1.json`'s
+   > description at the time of writing. That description was wrong and is corrected: a conditional
+   > check whose condition does not apply is excluded from both numerator and denominator. This
+   > document is left as written, because it is a record of what was proposed and when.
 2. Reason mapping is fixed: `network` → `network_unavailable`; `previous-release` → `previous_release_unavailable`;
    `execution` → `execution_disabled`. These are exactly the `skip_reason` values already serialized by the
    `lint-report-v1.json` draft — the field completes a loop the report format exposes.

@@ -42,8 +42,23 @@ Your §3 table is adopted as proposed. On the two flagged items:
   deliberately not live reachability, for exactly the offline-determinism reason your proposal is built on. Live
   probing of declared endpoints is a health-side concern for an extension check (`MIRI-PYX-`), if anyone wants it.
 - **`MIRI-PY-009` is `network`, with your fallback adopted as normative**: an offline linter treats an absent
-  migration guide as condition-not-applicable (full weight). The asymmetry is intentional — offline, a missing file
-  cannot be distinguished from a first release, and conformance must not depend on a guess.
+  migration guide as condition-not-applicable. The asymmetry is intentional — offline, a missing file cannot be
+  distinguished from a first release, and conformance must not depend on a guess.
+
+  **Correction, 0.6.0.** This bullet originally said condition-not-applicable meant *"full weight"*. It does not, and
+  it did not then: `check-v1.json` and both producer checklists now agree that a check whose condition does not apply
+  is **excluded from both the numerator and the denominator**, never awarded its weight. The schema's own description
+  said "full weight" until 0.6.0, which is where the wording here came from — so this is a correction to our answer,
+  not a change of position. For `MIRI-PY-009` the practical effect is that an offline linter's score is computed over a
+  denominator three points smaller, rather than over 100 with three points granted.
+
+  **Second correction, same release.** Offline, `MIRI-PY-009` is a **forfeit**, not an exclusion. Both leave the
+  denominator so the score is identical, but the precedence rule now in both producer checklists says that where
+  *whether the condition applies* cannot itself be settled, the check is forfeited — and offline a missing migration
+  guide genuinely cannot be distinguished from a first release, which is the reason this bullet gave in the first
+  place. The consequence is that an offline lint reports conformance for that check as `undetermined` rather than met.
+  That is stricter than the answer we first gave you, and we think it is the honest one: "we could not tell" is not the
+  same claim as "the obligation did not apply".
 
 ## 3. CLI Values
 
