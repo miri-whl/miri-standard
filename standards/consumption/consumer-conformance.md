@@ -300,11 +300,11 @@ than credited.
 | D. Trust and Verdicts | 3 | 24 |
 | E. Usage Fidelity and Budget | 3 | 4 |
 | F. Integration Channel | 2 | 6 |
-| **Total** | **17** | **100** |
+| **Total** | **18** | **100** |
 
-All eighteen have an executable case (`052` drives the replacement pair [Lifecycle §9.6](../python/lifecycle-security-
-metadata.md) describes): `050` and `051` are driven against the `bare` fixture and the
-A13 pairing respectively; `011` is driven against the `dynamic` outlier (A9) and `032` against the
+All eighteen have an executable case (`052` drives the replacement pair described in
+[Lifecycle §9.6](../python/lifecycle-security-metadata.md)): `050` and `051` are driven against the `bare` fixture
+and the A13 pairing respectively; `011` is driven against the `dynamic` outlier (A9) and `032` against the
 replacement redirect (A8), both added after this profile was first written. The suite is fully scorable — a report
 that cannot drive a case still forfeits it (§3), but no check is not scorable by construction.
 

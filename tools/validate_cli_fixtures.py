@@ -142,11 +142,23 @@ def main():
           isinstance(log.get("releases"), list), f"got {type(log.get('releases')).__name__}")
     entries = {r.get("version"): r for r in log.get("releases", []) if isinstance(r, dict)}
     newly_deprecated = {n for n, e in cs.items() if (e.get("lifecycle") or {}).get("deprecated_since") == "1.1.0"}
-    # CLI Spec 5.2 surfaces are RECORDS, not bare strings. An earlier version of this assertion read them
-    # as strings, which only worked because greetctl emitted the wrong shape — the validator had been
-    # written against the implementation instead of the spec, so it could not see the implementation's bug.
+    # CLI Spec 5.2 is specific about which fields are which shape: `added` and `removed` are STRING arrays
+    # of surface names; only `deprecated` is an array of {surface, removed_in, replacement} records. An
+    # earlier version of this helper accepted EITHER shape for any of them, which is how it failed to notice
+    # that a fix had turned `removed` into records and broken a field that had been correct.
     def surface_names(rel, key):
-        return {r["surface"] if isinstance(r, dict) else r for r in rel.get(key, [])}
+        vals = rel.get(key, [])
+        if key == "deprecated":
+            return {r["surface"] for r in vals if isinstance(r, dict)}
+        return {v for v in vals if isinstance(v, str)}
+
+    rel0 = entries.get("1.1.0", {})
+    check("MIRI-CLI-029 exercised: 5.2 `added`/`removed` are string arrays of surface names",
+          all(isinstance(v, str) for k in ("added", "removed") for v in rel0.get(k, [])),
+          f"added={rel0.get('added')} removed={rel0.get('removed')}")
+    check("MIRI-CLI-029 exercised: 5.2 `deprecated` is an array of {surface, removed_in, replacement}",
+          all(isinstance(v, dict) and "surface" in v for v in rel0.get("deprecated", [])),
+          f"deprecated={rel0.get('deprecated')}")
 
     listed = surface_names(entries.get("1.1.0", {}), "deprecated")
     check("MIRI-CLI-036 exercised: 1.1.0's deprecations appear in changelog --since 1.0.0",
@@ -164,11 +176,23 @@ def main():
           not missing, f"missing {missing}")
 
     # MIRI-CLI-013: an unparseable typed argument is a structured error, never silent success.
-    rc, out, _ = run("miri-1.1.0", "--json", "changelog", "--since", "NOT-A-VERSION")
-    err = (parses(out) or {}).get("error", {})
-    check("MIRI-CLI-013 exercised: unparseable --since is a structured error, not coerced success",
-          rc != 0 and err.get("code") and err.get("retryable") is False,
-          f"rc={rc} code={err.get('code')}")
+    # Testing ONE known-bad input tests the implementation's regex, not CLI Spec 2.6's rule — the first
+    # version of this assertion passed while `1.notaversion`, `1.x.y`, `1...` and `1.0.0-junk` were all
+    # silently coerced to "everything". The valid cases are asserted too: a validator that only rejects
+    # is satisfied by a command that rejects everything.
+    bad_versions = ["NOT-A-VERSION", "banana", "1.notaversion", "1.x.y", "1...", "1.0.0-junk", "", "-1"]
+    coerced = []
+    for v in bad_versions:
+        rc, out, _ = run("miri-1.1.0", "--json", "changelog", "--since", v)
+        err = (parses(out) or {}).get("error", {})
+        if rc == 0 or not err.get("code") or err.get("retryable") is not False:
+            coerced.append(v)
+    check("MIRI-CLI-013 exercised: every unparseable --since is a structured error, not coerced success",
+          not coerced, f"silently accepted {coerced}")
+    accepted = [v for v in ("1.0.0", "1.10.0", "2.0.0rc1", "0.1")
+                if not (parses(run("miri-1.1.0", "--json", "changelog", "--since", v)[1]) or {}).get("ok")]
+    check("MIRI-CLI-013 exercised: valid versions are still accepted",
+          not accepted, f"wrongly rejected {accepted}")
 
     # MIRI-CLI-025: the spec's field names are `current` and `latest`.
     cu = parses(run("miri-1.1.0", "--json", "check-update")[1]) or {}
@@ -276,6 +300,12 @@ def main():
         unknown = [c for c in d.get("checks", []) if c not in known]
         check(f"golden {g.stem}: cites real checks", not unknown, f"unknown {unknown}" if unknown else "")
         la = d.get("linter_assertion", {})
+        # A golden with checks but no evidence locator cannot be attributed, and grading silently degrades
+        # to the check-ID set comparison an adversarial panel defeated six ways.
+        if d.get("checks"):
+            ev = la.get("must_report_on", {}).get("evidence")
+            check(f"golden {g.stem}: declares evidence a finding must point at",
+                  bool(ev), "" if ev else "no evidence locator — grading would fall back to ID matching")
         paired = la.get("must_report_on", {}).get("arm") != la.get("must_not_report_on", {}).get("arm")
         check(f"golden {g.stem}: pairs an attack arm against a control arm", paired,
               "" if paired else "both arms are the same — the case cannot discriminate")

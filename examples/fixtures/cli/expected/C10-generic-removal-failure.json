@@ -11,7 +11,11 @@
       "arm": "adversarial-1.1.0",
       "checks": [
         "MIRI-CLI-033"
-      ]
+      ],
+      "evidence": [
+        "--shout"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. Reporting the right check ID for the wrong reason is not detection \u2014 and without this, a linter that dumps every check ID on the arm named `adversarial` scores full marks having read nothing."
     },
     "must_not_report_on": {
       "arm": "miri-1.1.0",
@@ -20,7 +24,9 @@
       ],
       "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
     },
-    "evidence": "`greet --shout` yields an argparse usage dump on stderr with exit 2. The same invocation against miri-1.1.0 yields SURFACE_REMOVED with retryable:false and suggestions naming --loud."
+    "evidence": "`greet --shout` yields an argparse usage dump on stderr with exit 2. The same invocation against miri-1.1.0 yields SURFACE_REMOVED with retryable:false and suggestions naming --loud.",
+    "may_be_skipped_with": "previous_release_unavailable",
+    "skip_note": "This attack is only detectable by diffing against the previous release. A linter without that capability MUST skip and report the skip with this exact reason \u2014 never pass silently. No other golden in this set may be skipped for any reason."
   },
   "paired_control": {
     "arm": "miri-1.1.0",

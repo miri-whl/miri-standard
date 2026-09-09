@@ -398,6 +398,37 @@ def check_findings_inherits_envelope():
         bad("agent-findings-v1.json", "does not carry the envelope's allOf rules verbatim as its prefix")
 
 
+def check_checklist_coherence():
+    """Both producer checklists claim "coherence between the two (IDs, levels, weights, and the 100-point
+    sum) is verified mechanically". The only mechanism was .githooks/pre-commit, which is opt-in, was never
+    enabled in a fresh clone, and had two bugs that meant it had never run to completion. A claim whose
+    mechanism nobody runs is the defect this repo exists to name, so the check lives here too, where CI
+    reaches it.
+    """
+    ROW = re.compile(r"^\|\s*(MIRI-(?:PY|CLI)-\d+)\s*\|\s*([MS])\s*\|.+?\|.+?\|.+?\|\s*(\d+)\s*\|\s*$", re.M)
+    for target, cl in (("python", "standards/python/linter-checklist.md"),
+                       ("cli", "standards/cli/linter-checklist.md")):
+        text = (REPO / cl).read_text()
+        table = {m.group(1): (m.group(2), int(m.group(3))) for m in ROW.finditer(text)}
+        total = sum(w for _, w in table.values())
+        if total != 100:
+            bad(cl, f"checklist rows sum to {total}, expected 100")
+        defs = {}
+        for f in sorted((REPO / f"standards/{target}/checks").glob("*.yaml")):
+            d = yaml.safe_load(f.read_text())
+            if d.get("status") == "active":
+                defs[d["id"]] = d
+        for cid, (lvl, w) in sorted(table.items()):
+            if cid not in defs:
+                bad(cl, f"{cid} has a checklist row but no active check definition")
+            elif defs[cid]["level"][0] != lvl or defs[cid]["weight"] != w:
+                bad(cl, f"{cid}: checklist says {lvl}/{w}, definition says "
+                        f"{defs[cid]['level'][0]}/{defs[cid]['weight']}")
+        for cid in sorted(defs):
+            if cid not in table:
+                bad(cl, f"{cid} has a check definition but no checklist row")
+
+
 def main():
     for p in SPECS:
         text = p.read_text()
@@ -415,6 +446,7 @@ def main():
     check_glossary()
     check_schema_index()
     check_findings_inherits_envelope()
+    check_checklist_coherence()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")

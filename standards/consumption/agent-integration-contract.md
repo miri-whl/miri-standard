@@ -148,13 +148,15 @@ requiring two is close to zero.
 {
   "schema_version": "1",
   "kind": "dependency.add",
-  "phase": "before",
-  "subject": { "package": "requests", "version": ">=2.31" }
+  "phase": "after",
+  "subject": { "package": "requests", "package_kind": "distribution", "version": "2.31.0" }
 }
 ```
 
 - **`phase`** is `before` or `after`, describing whether the action that produced the event has landed.
-  `runtime.error` is necessarily `after`. Every kind other than `runtime.error` and `dependency.add` is `before`.
+  `runtime.error`, `dependency.add` and `package.replaced` are necessarily `after` — the first because the error has
+  happened, the other two because the artifact must be installed for there to be anything to read. Every other kind
+  is `before`.
 
   **`dependency.add` is the exception, and it was found by building the thing.** The taxonomy originally claimed
   the trigger point was "before the dependency exists — the only moment before it does". That is unsatisfiable: a
@@ -361,8 +363,9 @@ example is that there is none.
 `dependency.add` for `greet_adversarial`, whose task is [§3.5 security and trust](consumption-map.md):
 
 ```text
-host observes an edit adding a requirement
-  └─ event  { kind: "dependency.add", phase: "before", subject: { package: "greet_adversarial" } }
+host observes an install of a distribution not previously present
+  └─ event  { kind: "dependency.add", phase: "after",
+              subject: { package: "greet-adversarial", package_kind: "distribution" } }
       └─ task 3.5 of the Consumption Map, read in order:
           1. lifecycle          → identity, support.status, advisory_sources, update_check
           2. document           → migration-guide.json, where support.status is deprecated
@@ -429,15 +432,27 @@ lifecycle events in `settings.json`, receiving JSON on stdin.
 
 | Contract `kind` | Claude Code event | How the binding recognizes it |
 |---|---|---|
-| `dependency.add` | `PreToolUse`, matcher `Edit\|Write` | the target is a **dependency manifest** (below) and the proposed content adds a requirement absent from the current file |
+| `dependency.add` | `PostToolUse`, matcher `Bash` | the command installed a distribution not previously installed |
 | `dependency.version_change` | `PreToolUse`, matcher `Edit\|Write` | same target, and a requirement's version specifier differs |
 | `package.replaced` | `PostToolUse`, matcher `Bash` | the command installed a distribution that was already installed, and the version afterwards equals the version before |
 | `runtime.error` | `PostToolUse`, matcher `Bash` | command output contains a traceback naming an installed package |
 | `test.author` | `PreToolUse`, matcher `Edit\|Write` | the target path matches the project's test discovery configuration |
 
-A manifest carries **distribution** names, so this binding emits `subject.package_kind: "distribution"` and the
-name exactly as written. It does not attempt a distribution-to-import join, because the mapping lives in the
-installed distribution's own metadata and `dependency.add` fires for a package that is not installed. The consumer
+**`dependency.add` fires after the install, not on the manifest edit**, and §3.1's footnote is why: at the moment a
+requirement is added the distribution is not installed, so it ships nothing a local surface can read and the trigger
+correctly finds nothing every time. An earlier version of this table mapped it to `PreToolUse` on the edit tools and
+defended that as "the only moment at which a dependency change is observable *and* has not yet happened" — which is
+true, and is exactly the moment at which there is nothing to read. The goldens were corrected to `phase: after` before
+this table was, so for one release the binding could not produce a conforming event for the kind four of the eight
+event-trace goldens are built on.
+
+`dependency.version_change` keeps `PreToolUse` on the edit tools, and the asymmetry is deliberate: the OLD version is
+installed, so there is metadata to read before the change lands — which is the only case where acting before is both
+possible and useful.
+
+A manifest carries **distribution** names, so for `dependency.version_change` this binding emits
+`subject.package_kind: "distribution"` and the name exactly as written. It does not attempt a
+distribution-to-import join, because the mapping lives in the installed distribution's own metadata. The consumer
 performs the join where it can and reports honestly where it cannot.
 
 A **dependency manifest** is a file this binding recognizes as declaring the project's dependencies. For Python that
@@ -446,9 +461,9 @@ this *binding's*, not the contract's — another host or ecosystem will have a d
 publish its list rather than leaving it to be inferred, because a manifest the binding does not recognize is a
 `dependency.add` that silently never fires.
 
-The REQUIRED kind and the `dependency.add` SHOULD are both carried by `PreToolUse` on the edit tools, which is the only
-moment in this host at which a
-dependency change is observable **and** has not yet happened.
+The REQUIRED kind is carried by `PreToolUse` on the edit tools, which is the only moment in this host at which a
+version change is observable **and** has not yet happened — and, because the old version is installed, the only one
+where something can be read before it does.
 
 ### 6.2 Kinds This Binding Does Not Support
 

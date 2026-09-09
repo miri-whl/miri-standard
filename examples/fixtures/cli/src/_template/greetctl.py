@@ -34,9 +34,18 @@ VERSION = FIXTURE.get("version", "0.0.0")
 
 
 def _verkey(pair):
-    """Order versions numerically. `"1.10.0" > "1.9.0"` is False under string comparison."""
-    v = pair[0] if isinstance(pair, tuple) else pair
-    return tuple(int(x) if x.isdigit() else 0 for x in str(v).split("."))
+    """Order versions numerically. `"1.10.0" > "1.9.0"` is False under string comparison.
+
+    A pre-release sorts BELOW the release it precedes: mapping every non-numeric segment to 0 made
+    `2.0.0rc1` equal to `2.0.0`, so `--since 2.0.0rc1` silently excluded 2.0.0.
+    """
+    v = str(pair[0] if isinstance(pair, tuple) else pair)
+    m = re.match(r"^(\d+(?:\.\d+)*)(?:(a|b|rc)(\d+))?", v)
+    if not m:
+        return (0,), 1, 0
+    nums = tuple(int(x) for x in m.group(1).split("."))
+    # release (no pre-release marker) sorts after any pre-release of the same numbers
+    return nums, (0 if m.group(2) else 1), int(m.group(3) or 0)
 
 
 def _surface_record(name, entry):
@@ -169,14 +178,18 @@ def cmd_changelog(since):
     # directly — "a tool that silently coerces an unparseable `--since` into 'everything' satisfies every
     # clause about the shape of its errors by never producing one." That sentence exists because 013 was
     # found vacuous, and an adversarial panel caught this fixture committing it in its conforming arm.
-    if not re.match(r"^\d+(\.\d+)*([a-z0-9.\-+]*)$", since):
+    # PEP 440-shaped public version. An earlier pattern was ^\d+(\.\d+)*([a-z0-9.\-+]*)$ — digit-led
+    # anything — so `1.notaversion`, `1.x.y`, `1...` and `1.0.0-junk` all passed and `_verkey` then mapped
+    # their non-numeric segments to 0, reproducing exactly the silent coercion CLI Spec 2.6 forbids. The
+    # gate that was supposed to catch this tested the regex's own known-bad input instead of the rule.
+    if not re.match(r"^\d+(\.\d+)*((a|b|rc)\d+)?(\.post\d+)?(\.dev\d+)?$", since):
         return fail("VALIDATION", f"--since expects a version, got {since!r}",
                     retryable=False, suggestions=sorted(FIXTURE.get("changelog", {})) or ["1.0.0"])
     log = FIXTURE.get("changelog", {})
     releases = [{"version": v,
                  "added": sorted(e.get("added", [])),
                  "deprecated": [_surface_record(x, e) for x in sorted(e.get("deprecated", []))],
-                 "removed": [_surface_record(x, e) for x in sorted(e.get("removed", []))],
+                 "removed": sorted(e.get("removed", [])),
                  "schema_version_change": e.get("schema_version_change"),
                  "exit_code_changes": sorted(e.get("exit_code_changes", []))}
                 for v, e in sorted(log.items(), key=_verkey) if _verkey((v, None)) > _verkey((since, None))]

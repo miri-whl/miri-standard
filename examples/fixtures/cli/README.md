@@ -26,15 +26,38 @@ Each is a *pair*: the check must fire on `adversarial-1.1.0` and must **not** fi
 `greetctl.py` is byte-identical. That pairing is what makes the suite discriminating — the attack arm catches a
 linter that reports nothing, the control arm catches one that reports everything, and neither decides a case alone.
 
+Grading requires **attribution**: a finding satisfies a golden only if it names the right check *and* points
+at the evidence that golden declares. Reporting the right ID for the wrong reason is not detection. C3 and C4
+cite the same check (`MIRI-CLI-022`) via different clauses and carry different evidence, so one report cannot
+satisfy both — without that, the `clause` field would be prose no code reads.
+
 ```bash
-make score-cli-linter                              # prove the harness rejects both degenerate linters
+make score-cli-linter                              # prove the harness rejects every linter that games it
 python3 tools/score_cli_linter.py --report r.json  # grade a real linter
 ```
 
-Until this release the directory was empty while the wheel side shipped 24 goldens, so nothing stated what a
-linter must report and an inert linter scored exactly like a correct one. `make score-cli-linter` is the standing
-proof that is no longer true: it grades an inert linter, a screaming one, and a correct one, and fails unless the
-first two are rejected and the third accepted.
+Report format, per arm — both arms are required:
+
+```json
+{
+  "adversarial-1.1.0": {
+    "findings": [{"check": "MIRI-CLI-017", "evidence": "identity.version"}],
+    "skipped":  {"MIRI-CLI-037": "previous_release_unavailable"}
+  },
+  "miri-1.1.0": {"findings": [], "skipped": {}}
+}
+```
+
+Only `C6` and `C10` may be skipped, only with `previous_release_unavailable`, and only if the same check is
+skipped on **both** arms — capability belongs to the linter and its environment, not to the artifact under
+test, so a check evaluable on one arm is evaluable on the other.
+
+Until 0.6.0 this directory was empty, so nothing stated what a linter must report and an inert linter scored
+exactly like a correct one. The first harness closed that and was then defeated six ways by an adversarial
+panel — most simply by emitting every golden's check ID under the key `adversarial-1.1.0` and nothing under the
+other, scoring full marks having never opened a fixture. `make score-cli-linter` now grades seven ways of
+gaming it — inert, shotgun, screaming, skip-everything, missing control arm, bare-ID form, and permuted
+evidence — and fails unless every one is rejected and an honest report accepted.
 
 `C11` cites no check on purpose. No `MIRI-CLI` check fires on an `agent_integration` bid — the obligation binds a
 *binding* under Agent Integration Contract §4.3 and is scored by `MIRI-CONSUMER-051`. The golden exists to state

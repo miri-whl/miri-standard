@@ -11,7 +11,11 @@
       "arm": "adversarial-1.1.0",
       "checks": [
         "MIRI-CLI-022"
-      ]
+      ],
+      "evidence": [
+        "advisory_sources[0].ecosystem"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. Reporting the right check ID for the wrong reason is not detection \u2014 and without this, a linter that dumps every check ID on the arm named `adversarial` scores full marks having read nothing."
     },
     "must_not_report_on": {
       "arm": "miri-1.1.0",
