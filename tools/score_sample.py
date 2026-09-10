@@ -26,6 +26,36 @@ import tempfile
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 SAMPLE = REPO / "examples/sample-sdk"
+SCHEMA = REPO / "schemas/lint-report-v1.json"
+
+
+def report_advisory(report, label):
+    """Validate `miri score --json` against lint-report-v1.json, warning rather than failing.
+
+    Advisory on purpose. 0.5.0 newly made `effective_denominator`, `excluded` and `forfeited`
+    required, and miri-py has not shipped 0.5.0 support yet, so gating here would fail CI on
+    work that is legitimately still in flight downstream. Warning still surfaces the drift the
+    moment it appears, which is what was missing: the gate consumed this report for releases
+    without ever checking it against the schema the standard publishes. Promote to a hard gate
+    once miri-py emits a 0.5.0-shaped report.
+    """
+    try:
+        import jsonschema
+    except ImportError:
+        return
+    try:
+        schema = json.loads(SCHEMA.read_text())
+    except OSError:
+        return
+    errs = sorted(jsonschema.Draft7Validator(schema).iter_errors(report), key=lambda e: list(e.path))
+    if not errs:
+        print(f"sample-sdk [{label}]: report validates against lint-report-v1.json")
+        return
+    print(f"::warning::sample-sdk [{label}]: report does not validate against lint-report-v1.json "
+          f"({len(errs)} error(s)); the conformance gate below is unaffected.")
+    for e in errs[:5]:
+        loc = "/".join(str(x) for x in e.path) or "(root)"
+        print(f"  - {loc}: {e.message[:160]}")
 
 
 def main():
@@ -64,8 +94,21 @@ def main():
             except json.JSONDecodeError:
                 print(f"sample-sdk [{label}]: `miri score` errored (exit {p.returncode})\n{p.stderr[-800:]}")
                 return None
+            report_advisory(r, label)
             s = r["scores"]
-            conforming = s.get("is_conforming", False)
+            # Derived from schema-defined fields only. This gate previously read `is_conforming`, which
+            # no schema defines and no spec mentions — it survived on `additionalProperties: true`, so the
+            # one place in the repo where a gate failure visibly bites depended on a vendor field that
+            # could be renamed without anything here noticing. `lint-report-v1.json` already couples the
+            # verdict to its sources: a non-empty `must_failures` forces `grade: non-conforming` and caps
+            # `conformance` at 74. So the verdict is derivable, and per this repo's own rule — declare
+            # sources, not verdicts — a stored `is_conforming` is a computed state that can disagree with
+            # what produced it. Verified against the two real CI reports: static (must_failures=[],
+            # grade=silver) and --execute (must_failures=[036,040], grade=non-conforming) reproduce the
+            # vendor field's True/False exactly. A missing `grade` is treated as undetermined, not as a
+            # pass, so absence cannot buy conformance.
+            conforming = not r.get("must_failures") and s.get("grade") not in (
+                None, "non-conforming", "undetermined")
             print(f"sample-sdk [{label}]: conformance={s['conformance']} health={s.get('health')} "
                   f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
                   f"MUST_failures={r.get('must_failures')}")

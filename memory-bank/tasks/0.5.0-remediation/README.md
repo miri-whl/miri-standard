@@ -187,17 +187,39 @@ had never been reviewed rather than at documents two rounds had already walked.
 | Three execution-gated MUSTs are not conditional, so the default posture reports `undetermined` for every artifact and nothing said so | Stated in the Scoring Model and pre-empted in the migration block |
 | The 8/58 and 2/57 figures were derivable from no artifact | Replaced with profile-stated, derived denominators: 57 and 75 |
 
-### Not fixed, recorded
+### Recorded, then closed before the release
 
-- `tools/score_sample.py` reads `is_conforming`, which no schema defines — it survives on
-  `additionalProperties: true`, and it is the only place in the repo where a gate failure would visibly bite.
-- `weight: 0` is documented as colliding with "extension check", and the corpus contains **no** X-namespace
-  checks — so the collision the discriminator was introduced for has zero instances today.
-- `MIRI-CONSUMER-052` voids a determination about replacement legitimacy, which lives in Map §3.3 — a task
-  neither of its two read-orders reaches.
-- Per-check revision history. `added_in` records birth; nothing records revision, so a downstream cannot tell
-  which of the 119 definitions changed this release. Whether `changed_in` is normative or editorial is a
-  governance decision, deliberately not made as a side effect of the schema bump.
+All four were carried as "not fixed, recorded" and then closed. One turned out to be a different defect than
+the note described.
+
+- **`is_conforming`** — the gate no longer reads it. `tools/score_sample.py` derives the verdict from
+  schema-defined fields instead: `not must_failures and grade not in (None, non-conforming, undetermined)`.
+  `lint-report-v1.json` already couples a non-empty `must_failures` to `grade: non-conforming` and the 74 cap,
+  so the verdict was derivable and a stored one is a computed state that can disagree with its own source —
+  the rule this repo applies everywhere else. Checked against both real CI reports: static (`must_failures: []`,
+  `silver`) and `--execute` (`must_failures: [036, 040]`, `non-conforming`) reproduce the vendor field's
+  True/False exactly, and a missing `grade` now reads as undetermined rather than as a pass. The report is also
+  validated against `lint-report-v1.json` on each run — advisory, not gating, because 0.5.0 newly required
+  `effective_denominator`/`excluded`/`forfeited` and miri-py has not shipped 0.5.0 support, so gating would fail
+  CI on work legitimately in flight downstream. Promote it once they emit a 0.5.0-shaped report.
+- **`weight: 0`** — the wording claimed a present collision. `check-v2.json` now says the X namespaces are
+  _reserved_ by the id pattern and the collision is anticipatory, so the discriminator exists to stop the first
+  extension check from silently reinterpreting the three weight-0 gates that do exist.
+- **`MIRI-CONSUMER-052`** — the recorded note misdiagnosed this. Map §4's first interpretation rule already
+  re-establishes the lifecycle facts on _any_ task, so routing to §3.5 does reach the determination; the actual
+  defect was §4's closing sentence, which let a consumer that already held those facts "in the same session"
+  skip re-fetching them. On a replacement the consumer does hold them — for the old bytes — so the exemption
+  licensed precisely the reuse `052` forbids. The exemption is now keyed on the bytes read rather than the
+  session. Adding §3.3 to the trigger's routing would have been wrong: no version changed, so there is no
+  migration to cross-reference.
+- **Per-check revision history** — decided **editorial**; recorded in `schemas/README.md`. Git is the revision
+  record and `checks_commit_sha` makes it addressable, so "what changed between two reports" is a diff. A
+  hand-maintained `changed_in` fails the same way `semantics_version` did in this release: one global fact copied
+  into 119 files becomes 119 statements that can each go stale. If it is ever needed inside the definitions, the
+  field must be one that cannot go stale by omission — a CI-verified content hash, not a human-updated marker.
+- **Tag format** — decided bare `0.5.0`, no `v` prefix; recorded in `CONTRIBUTING.md`. Lower stakes than assumed:
+  `checks_commit_sha` rejects tags outright and miri-py's `sync_checks.py` pins a `PINNED_SHA`, so nothing
+  machine-readable depends on the tag. Matching `standard_version` exactly makes a report's version a usable ref.
 
 ## Coverage, measured
 

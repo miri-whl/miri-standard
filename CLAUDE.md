@@ -127,8 +127,12 @@ or a decision is made, and `progress.md` when something ships or a new risk appe
 memory bank**, review every file. Track discrete workstreams as files under `memory-bank/tasks/` (start from
 `memory-bank/tasks/task-template.md`) and move finished ones to `memory-bank/archive/`. This is a public repo — keep
 these files free of internal-only notes, private paths, and anything off-message from the project's public posture.
-`memory-bank/` and `.claude/` are excluded from the doc linters (`.markdownlintignore`, `.cspell.json`), so keep
-their cross-references as plain backticked paths, not markdown links.
+`memory-bank/` and `.claude/` are excluded from **cspell** only (`.cspell.json` `ignorePaths`). They ARE linted by
+markdownlint and ARE link-checked, so their prose has to satisfy both — write cross-references as plain
+backticked paths rather than markdown links, and match the repo's emphasis style (`_word_`, MD049). Note
+`.markdownlintignore` does **not** exclude them despite its contents: that file is a markdownlint-cli **v1**
+feature and this repo runs cli2, which only honours `#`-prefixed negated globs. Do not add a path there
+expecting it to take effect.
 
 ### Skills
 

@@ -574,6 +574,16 @@ including which failures it treats as expected. Prefer extending its idiom over 
   A consumer that has already established these facts in the same session need not re-fetch them; the obligation
   is to *have* them, not to issue a request per task.
 
+  **That allowance does not survive a replacement.** These facts are read from the artifact's own
+  `lifecycle.json`, so they are claims about bytes, and a `package.replaced` notice
+  ([Agent Integration Contract §3.1](agent-integration-contract.md)) means the bytes changed while
+  `identity.purl` did not move. A consumer still holding these facts from before the replacement does not
+  have them — it has the previous artifact's — so the exemption is keyed on the bytes read rather than on the
+  session, and `MIRI-CONSUMER-052` voids the determination they supported. This is also the one
+  interpretation rule no routed read-order can supply: `package.replaced` routes to §3.1 and §3.5, while
+  whether a declared successor crosses a purl namespace is established in §3.3 — which a same-version
+  replacement must not be routed to, because no version changed and there is no migration to cross-reference.
+
 Three rules govern how a consumer reads what it receives. The first two mirror producer-side Generation Invariants
 ([Agent Metadata §5.4](../python/miri-agent-metadata-specification.md)) that today live only in the reference
 generator's code — the "an author who builds strictly to the documents writes dead code" gap, one level down.

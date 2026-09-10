@@ -77,6 +77,8 @@ clean: ## Remove generated site output
 lint: ## Lint Markdown (CI: markdownlint-cli2)
 	# Pinned to the version markdownlint-cli2-action@v16 bundles. Unpinned, npx resolves to a newer
 	# release whose added rules (MD060) fail files CI accepts, so `make check` went red on untouched files.
+	# Exclusions must be `#`-prefixed globs here: `.markdownlintignore` is a markdownlint-cli v1 file and
+	# cli2 does not read it, so its `memory-bank/**` and `.claude/**` entries are inert — both are linted.
 	npx -y markdownlint-cli2@0.13 "**/*.md" "#node_modules" "#.generated"
 
 spell: ## Spell-check Markdown (CI: cspell)
