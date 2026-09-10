@@ -11,16 +11,20 @@ The branch name is deliberate and should not be tidied. The work began as 0.4.1 
 and became a minor release when it gained the Production Maps, which are additions. The version followed the content
 rather than the content being trimmed to fit the version; renaming the branch afterwards would be churn.
 
-**Six adversarial panels reviewed 0.5.0 on 2026-09-08 and it did not survive them.** Roughly forty defects, every one
-confirmed by direct verification, zero false positives. Scores: goldens 26, schema 34, vacuous-pass 34, CLI fixtures
-34, derivation 55, coherence 58. The register and the first remediation pass live in `memory-
-bank/tasks/0.5.0-remediation/`. **0.5.0 must not merge until the residue there is closed** — most urgently the CLI
-fixtures, which still ship no goldens and therefore grade nothing.
+**Three review rounds have run against 0.5.0. Fifteen reviewers, roughly sixty confirmed defects, zero false
+positives.** Rounds one and two were six lenses each over the whole changeset (scores 26-58, then 31-51). Round
+three was three lenses over only what rounds one and two had not seen, and found more than round two did — the
+narrow scope is why. Everything blocking is closed; the register in
+`memory-bank/tasks/0.5.0-remediation/` carries the full disposition.
 
-The root cause is worth carrying forward, because it survived my own review twice during the fix pass: assertions get
-written against the artifact the author just wrote, not against a behavior an implementation must produce. Its
-signature is one-directional verification — every claim made gets checked, and nothing gets checked against what was
-not claimed.
+**0.5.0 is complete and unpushed.** Fourteen commits, zero tags, `main` still at 0.4.0. The reference-linter side is
+blocked on the tag and has said so; nothing on their list starts before it.
+
+The habit worth carrying forward, because it survived my own review three times: _assertions get written against the
+artifact the author just wrote, not against a behavior an implementation must produce_. Its signature is
+one-directional verification — every claim made gets checked, nothing gets checked against what was not claimed. It
+produced the inert gate mechanism, the undriveable `MIRI-CONSUMER-052`, and a semantics change no machine could
+detect, all in work I had reported as done.
 
 **The core loop is structurally complete.** Every actor has a specification, a weighted check family, an ordered map,
 executable fixtures, and goldens — though the CLI fixtures grade nothing until `expected/` is populated:

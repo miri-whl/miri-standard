@@ -1,6 +1,6 @@
 # Progress
 
-_Last updated: 2026-09-08._
+_Last updated: 2026-09-10._
 
 ## What exists
 
@@ -8,7 +8,9 @@ _Last updated: 2026-09-08._
   governed by `schemas/check-v1.json`, with weights summing to 100 per target.
 - **Specs**: Python wheel extensions, agent metadata, lifecycle/security metadata, artifact lifecycle, and CLI
   lifecycle/signaling documents under `standards/`.
-- **Schemas**: thirteen draft-07 schemas, all indexed in `schemas/README.md` — one per metadata file, the
+- **Schemas**: fourteen draft-07 schemas, all indexed in `schemas/README.md` — including `check-v2.json`,
+  current, and `check-v1.json`, retained frozen because it describes pre-0.5.0 scoring semantics and a
+  consumer pinned there is old rather than wrong — one per metadata file, the
   check-definition format, the CLI `--describe` document, the surface envelope, the agent event, the trigger
   response, and the two report formats.
 - **Consumption suite** (`standards/consumption/`): Discovery Contract, Consumption Map, Consumer Conformance,

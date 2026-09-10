@@ -165,3 +165,52 @@ These need a decision, not an edit, and are recorded so they are not rediscovere
   English in `fires_when` while a forfeit has a fixed machine-readable reason, and that asymmetry is unacknowledged.
 - **`lint-report-v1.json` cannot represent the consumption profiles**: its `target` enum is `python-wheel`/`cli` and
   its outcome-id pattern excludes `CONSUMER`/`SURFACE`, so those profiles' own denominator MUSTs are unreportable.
+
+## Round three — narrow scope, three lenses (2026-09-10)
+
+Scoped to the diff since round two and told what rounds one and two had covered. Scores: gate mechanism 34,
+security claims 34, implementer-reading-the-release 52. Every critical verified before acting; no false positives.
+
+The narrow scope paid: three reviewers found more than round two's six, because they were pointed at material that
+had never been reviewed rather than at documents two rounds had already walked.
+
+| Finding | Disposition |
+| --- | --- |
+| The gate mechanism was inert — a failed gate validated alongside `grade: gold`, and `scoring-v1` did not know gates existed | `must_failures` required and coupled to grade + the 74 cap; the 0/0 trap named in `scoring-v1`; the gate invariant moved into `check-v2` where vendors see it |
+| `MIRI-CONSUMER-052` could not be driven, and as a MUST it made every consumer verdict `undetermined` | `replaced` fixture arm sharing `miri`'s purl; golden `A14`; Case cell `(A14)`; `052` now conditional |
+| Its Case cell evaded the coverage gate by citing a spec section, which the gate's `(A` substring test could not see | Gate now fails any Case cell citing a specification section. A first, broader attempt false-positived on three behaviorally-driven checks and was narrowed |
+| The breaking change was machine-undetectable — `conditional` reversed meaning with byte-identical validating content | `check-v2.json`, with `$schema` required per definition so a mismatched corpus and schema fail both ways. Proved itself immediately: `make validate` and the pre-commit hook both broke on the stale pointer |
+| "A purl identifies a name and a version, **never** a byte stream" — refuted by the `checksum` qualifier in the spec the check cites | Corrected, and the qualifier addressed rather than ignored |
+| §6.1's recognizer missed `pip uninstall && pip install` — the sequence §9.6 describes — and fired on no-op installs | Keyed on the session rather than the single command |
+| Category headings and both summary tables carried the pre-gate weighting, summing to 100 | Regenerated from YAML; `check_category_totals()` added so they cannot drift again |
+| The BREAKING section was the only part of the entry with no links, no named schema, and no migration path | "To upgrade" block, five ordered steps, and an explicit statement of what will not fail loudly |
+| Three execution-gated MUSTs are not conditional, so the default posture reports `undetermined` for every artifact and nothing said so | Stated in the Scoring Model and pre-empted in the migration block |
+| The 8/58 and 2/57 figures were derivable from no artifact | Replaced with profile-stated, derived denominators: 57 and 75 |
+
+### Not fixed, recorded
+
+- `tools/score_sample.py` reads `is_conforming`, which no schema defines — it survives on
+  `additionalProperties: true`, and it is the only place in the repo where a gate failure would visibly bite.
+- `weight: 0` is documented as colliding with "extension check", and the corpus contains **no** X-namespace
+  checks — so the collision the discriminator was introduced for has zero instances today.
+- `MIRI-CONSUMER-052` voids a determination about replacement legitimacy, which lives in Map §3.3 — a task
+  neither of its two read-orders reaches.
+- Per-check revision history. `added_in` records birth; nothing records revision, so a downstream cannot tell
+  which of the 119 definitions changed this release. Whether `changed_in` is normative or editorial is a
+  governance decision, deliberately not made as a side effect of the schema bump.
+
+## Coverage, measured
+
+The number that matters most for what comes after 0.5.0, and it is worse than "the P-series is missing":
+
+| Family | Checks untested | Weight untested |
+| --- | --- | --- |
+| `MIRI-PY` | 40 of 40 | 100 of 100 |
+| `MIRI-CLI` | 30 of 43 | 68 of 100 |
+| `MIRI-SURFACE` | 9 of 18 | 48 of 100 |
+| `MIRI-CONSUMER` | 3 of 18 | 15 of 100 |
+
+**361 of 400 weight has no test material.** The consumer family is genuinely covered; the CLI harness grades 11
+checks of 43, which is less than its existence suggests; the founding suite is at zero. That is the next project,
+and the caveat to carry into it is that the attribution harness took two attempts and its self-test still derives
+"correct" from the goldens — replicating it four times would replicate that limit four times.

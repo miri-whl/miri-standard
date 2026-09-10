@@ -69,8 +69,14 @@ of 100 when checks are excluded or forfeited.
   It matters more after renormalization, not less, and that is the part worth stating because both sides of the
   discussion initially had it backwards. Scoring over *applicable* weight shrinks the denominator, and a constant
   numerator over a smaller denominator is a **larger** share: the Baseline's constant contribution went from
-  8/100 (8%) to roughly 8/58 (14%) for a typical offline run. Renormalizing alone would have nearly doubled the
-  fraction of a conformance score that carries nothing. Gating brings it to about 2/57 (4%).
+  8/100 (8%) to 8/57 (14%) for a wheel scored with no capabilities and nothing to deprecate. Renormalizing alone
+  would have nearly doubled the fraction of a conformance score that carries nothing. Gating brings it to 2/57
+  (3.5%).
+
+  Those denominators are profile-specific and worth stating rather than quoting, because a reader who computes a
+  different one has not made an error. Summing the weights that remain after exclusions and forfeits: **57** for a
+  wheel with no capabilities available and no deprecation history, **75** for one where every condition applies but
+  no capability is available. Both are derived from the check definitions; neither is a property of the standard.
 
   `MIRI-PY-004` and `005` stay scored. They are SHOULDs — declarative build config and publish attestations — and
   `005` is the only check in the category whose result varies, so removing it would discard the category's only
@@ -86,6 +92,22 @@ of 100 when checks are excluded or forfeited.
   verify, which is a worse distortion than the one being fixed — and every weight in the checklist already behaves
   this way. Noted because a reader comparing an offline number against a documented total should know why they
   differ.
+
+- **In the default posture, conformance is `undetermined` — and that is the correct answer, not a bug.**
+  `MIRI-PY-015`, `036` and `040` are MUST-level and require `execution`, and none of them is conditional: the
+  obligation always applies, so there is no exclusion path. A linter run without execution forfeits three MUSTs,
+  and a forfeited MUST leaves conformance undetermined. Every artifact scored that way therefore reports
+  `undetermined` rather than a grade.
+
+  This is stated because it will otherwise be read as a defect. A team implementing the rules correctly sees
+  `undetermined` on every wheel, concludes their scorer is broken, and "fixes" it by suppressing forfeits in
+  grading — which restores exactly the incomparability the scoring model exists to prevent. The honest reading is
+  the plain one: a wheel's runtime behavior cannot be verified without running it, so a static-only run does not
+  know whether the artifact conforms. It reports the score it could compute, its denominator, and that the verdict
+  is undetermined.
+
+  To obtain a conformance verdict, run with `execution` available. To obtain a comparable one, run with `network`
+  and `previous-release` too. What a linter must not do is report a verdict it did not establish.
 
 - **There is no coverage floor, deliberately.** A small denominator usually means a *simpler* artifact rather than a
   worse one, and withholding a grade for having less surface would penalize simplicity. A score is made interpretable

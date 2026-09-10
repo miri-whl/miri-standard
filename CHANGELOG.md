@@ -78,6 +78,12 @@ which meant a reader had to diff against 0.4.0 to reconstruct their own upgrade.
 5. **Decide about already-published scores.** Every conformance number computed under 0.4.0 semantics is wrong
    under these. The standard does not tell you whether to retract or restate them; it tells you they changed.
 
+**What you will see that looks wrong and is not.** `MIRI-PY-015`, `036` and `040` are MUST-level, require
+`execution`, and are not conditional — so a run without execution forfeits three MUSTs and every artifact reports
+`grade: undetermined` rather than a band. That is the correct answer: a wheel's runtime behavior cannot be verified
+without running it. Do not "fix" it by suppressing forfeits in grading; run with `execution` available, or accept
+that a static-only run reports a score and no verdict.
+
 **What will not fail loudly if you skip it.** The three newly required `scores` fields catch a linter that did not
 update its *serializer*. Nothing in any schema relates `scores.excluded` to the `outcomes` that were excluded, so
 a linter that adds the fields and does not change its *arithmetic* validates clean and reports wrong numbers.
