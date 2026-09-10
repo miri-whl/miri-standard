@@ -6,7 +6,7 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Agent Metadata Core
-weight: 4
+weight: 6
 conditional: false
 severity:
   default: HIGH

@@ -93,6 +93,31 @@ the number.
   mutation-tested: disarming any one of them fails the validator. Wired into `make check` via
   `make validate-cli-fixtures`.
 
+### Changed
+
+- **BREAKING — `conditional` semantics reversed, and three checks now gate rather than score.** Both change
+  every conformance score, and both affect anything vendoring `schemas/check-v1.json`.
+
+  `conditional: true` previously meant a check *"scores its full weight automatically when the condition does
+  not apply"*. It now means the check is **excluded from both the numerator and the denominator**. Not-applicable
+  is not a pass: awarding weight for an absence let an artifact collect points for having nothing to declare.
+  Twenty-four checks across three targets are affected, and a linter that implemented the old reading produces
+  different numbers for every artifact after re-syncing.
+
+  `MIRI-PY-001`, `002` and `003` gain `scoring: gate` and weight 0. They remain MUSTs and still make an artifact
+  non-conforming when they fail; they are no longer measured. Six points moved to `MIRI-PY-007` and `008`
+  (+2 each) and `014` and `015` (+1 each). `check-v1.json` gains the `scoring` field, because weight 0 already
+  meant "extension check" and one value cannot mean two things.
+
+  Reported by the miri-py team from scoring five unrelated wheels that returned an identical 8/10 in the
+  Packaging Baseline. The interaction is the part worth knowing: renormalizing shrinks the denominator, so a
+  constant numerator becomes a **larger** share — the Baseline went from 8% of a fixed 100 to about 14% of a
+  typical applicable 58. Shipping the renormalization alone would have nearly doubled the fraction of a score
+  carrying no information. Both sides of the discussion had that backwards at first. Gating brings it to ~4%.
+
+  Reports MUST now carry `effective_denominator`, `excluded` and `forfeited` beside a conformance score, and a
+  forfeited MUST yields the new `undetermined` grade rather than a claim of conformance.
+
 ### Fixed
 
 Four defects found by the miri-py team building the first binding, plus one process failure of ours that let two of

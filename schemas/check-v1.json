@@ -74,11 +74,17 @@
       "type": "string",
       "description": "Checklist category the check belongs to"
     },
+    "scoring": {
+      "type": "string",
+      "enum": ["scored", "gate"],
+      "default": "scored",
+      "description": "How this check participates in the conformance score. `scored` (the default) contributes its weight to the numerator when it passes and to the denominator when it applies. `gate` contributes to NEITHER: it carries weight 0, and failing it makes the artifact non-conforming - which is already what a failing MUST does through the 74 cap. Gating exists for checks that are preconditions rather than measurements: MIRI-PY-001 to 003 are properties an index enforces at upload, so every correctly built wheel earns them and they carry no information about how legible the artifact is to an agent. Raised by the miri-py team after five unrelated wheels returned an identical 8/10 in that category. Note `gate` is why weight 0 needs a discriminator: it already meant `extension check` for the X namespaces, and one value cannot mean two things."
+    },
     "weight": {
       "type": "integer",
       "minimum": 0,
       "maximum": 10,
-      "description": "Conformance-score weight; all active weights per target sum to exactly 100. Extension (X-namespace) checks carry weight 0."
+      "description": "Conformance-score weight; all active weights per target sum to exactly 100. Weight 0 means the check does not contribute to the score, and `scoring` says why: an extension (X-namespace) check is health-only, a `gate` check is a precondition whose failure makes the artifact non-conforming without being measured."
     },
     "conditional": {
       "type": "boolean",

@@ -55,6 +55,30 @@ of 100 when checks are excluded or forfeited.
   3. **Whether the condition applies cannot itself be decided** → **forfeited**, because a condition that cannot be
     settled is
      ignorance rather than scope.
+- **Three checks gate rather than score.** `MIRI-PY-001` (wheel structure), `002` (core metadata) and `003`
+  (version scheme) carry `scoring: gate` and weight 0. They remain MUSTs and an artifact failing any of them is
+  non-conforming, exactly as before; what changed is that they are no longer *measured*. A precondition is not a
+  measurement.
+
+  The reason is empirical. These are properties an index enforces at upload, so every correctly built wheel earns
+  all three, and the Packaging Baseline could not distinguish a Miri-ready wheel from any other — five unrelated
+  wheels scored against the checklist returned an identical 8/10. Ten points of a hundred carried no information
+  about the thing the standard exists to measure.
+
+  It matters more after renormalization, not less, and that is the part worth stating because both sides of the
+  discussion initially had it backwards. Scoring over *applicable* weight shrinks the denominator, and a constant
+  numerator over a smaller denominator is a **larger** share: the Baseline's constant contribution went from
+  8/100 (8%) to roughly 8/58 (14%) for a typical offline run. Renormalizing alone would have nearly doubled the
+  fraction of a conformance score that carries nothing. Gating brings it to about 2/57 (4%).
+
+  `MIRI-PY-004` and `005` stay scored. They are SHOULDs — declarative build config and publish attestations — and
+  `005` is the only check in the category whose result varies, so removing it would discard the category's only
+  signal.
+
+  The six freed points went to the checks whose *contents* the standard cares about most: `007` and `008`
+  (+2 each, the two content-bearing metadata documents) and `014` and `015` (+1 each, the two MUSTs that examples
+  exist and run).
+
 - **There is no coverage floor, deliberately.** A small denominator usually means a *simpler* artifact rather than a
   worse one, and withholding a grade for having less surface would penalize simplicity. A score is made interpretable
   by its denominator traveling with it, not by a minimum. A linter MUST NOT impose a floor of its own: one linter with
@@ -87,9 +111,9 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/) | 2 |
-| MIRI-PY-002 | M | Core metadata valid | `METADATA` parses as Core Metadata 2.x; name normalized | [PEP 566](https://peps.python.org/pep-0566/) / [PEP 503](https://peps.python.org/pep-0503/) | 2 |
-| MIRI-PY-003 | M | Version scheme valid | Version parses under the canonical scheme | [PEP 440](https://peps.python.org/pep-0440/) | 2 |
+| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/) | 0 |
+| MIRI-PY-002 | M | Core metadata valid | `METADATA` parses as Core Metadata 2.x; name normalized | [PEP 566](https://peps.python.org/pep-0566/) / [PEP 503](https://peps.python.org/pep-0503/) | 0 |
+| MIRI-PY-003 | M | Version scheme valid | Version parses under the canonical scheme | [PEP 440](https://peps.python.org/pep-0440/) | 0 |
 | MIRI-PY-004 | S | Declarative build config | `pyproject.toml` with `[project]` table drives the build | [PEP 621](https://peps.python.org/pep-0621/) / [PEP 517](https://peps.python.org/pep-0517/) | 2 |
 | MIRI-PY-005 | S | Publish attestations | Release carries index-hosted attestations (provenance) (*conditional*: public-index releases only)| [PEP 740](https://peps.python.org/pep-0740/) | 2 |
 
@@ -98,8 +122,8 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
 | MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-python-wheel-extensions.md) | 2 |
-| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 4 |
-| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 3 |
+| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 6 |
+| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 5 |
 | MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
 | MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](miri-agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
 | MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](miri-agent-metadata-specification.md) | 2 |
@@ -110,8 +134,8 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 3 |
-| MIRI-PY-015 | M | Examples runnable | Every example compiles; runs in a clean virtual environment (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 3 |
+| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 4 |
+| MIRI-PY-015 | M | Examples runnable | Every example compiles; runs in a clean virtual environment (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 4 |
 | MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-python-wheel-extensions.md) | 2 |
 | MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 2 |
 

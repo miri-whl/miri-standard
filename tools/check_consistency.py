@@ -429,6 +429,29 @@ def check_checklist_coherence():
                 bad(cl, f"{cid} has a check definition but no checklist row")
 
 
+def check_gate_coherence():
+    """`scoring: gate` and `weight: 0` must agree, in both directions.
+
+    Weight 0 now means two different things - an extension check, or a gate - and `scoring` is the only
+    discriminator. If a gate carried a non-zero weight it would be counted and gated; if a scored check
+    carried weight 0 it would be silently free. Neither is visible without this.
+    """
+    for f in sorted(pathlib.Path(REPO / "standards").glob("*/checks/*.yaml")):
+        d = yaml.safe_load(f.read_text())
+        if d.get("status") != "active":
+            continue
+        cid, w, sc = d["id"], d["weight"], d.get("scoring", "scored")
+        is_ext = "X-" in cid or any(cid.startswith(f"MIRI-{p}X-") for p in ("PY", "CLI", "CONSUMER", "SURFACE"))
+        if sc == "gate" and w != 0:
+            bad(f.name, f"{cid} is scoring: gate but carries weight {w}; a gate contributes to neither side")
+        if sc != "gate" and w == 0 and not is_ext:
+            bad(f.name, f"{cid} carries weight 0 but is not a gate or an extension check; it would be "
+                        f"silently unscored")
+        if sc == "gate" and d["level"] != "MUST":
+            bad(f.name, f"{cid} is scoring: gate but level {d['level']}; a gate makes an artifact "
+                        f"non-conforming, which only a MUST can do")
+
+
 def main():
     for p in SPECS:
         text = p.read_text()
@@ -447,6 +470,7 @@ def main():
     check_schema_index()
     check_findings_inherits_envelope()
     check_checklist_coherence()
+    check_gate_coherence()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")
