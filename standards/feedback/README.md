@@ -38,6 +38,11 @@ Decisions worked through so far, each as a proposal plus the response that settl
   `requirements` field for check skip semantics.
 - `upstream-artifact-publishing-feedback.md` — a note arguing for publishing the check definitions as a versioned
   artifact.
+- `vacuous-conformance-proposal.md` / `miri-standard-response-vacuous-conformance.md` /
+  `vacuous-conformance-answer.md` / `miri-standard-answer-vacuous-conformance.md` — sections that cannot
+  discriminate: empty content arrays passing shape-only checks, and the weighting of the Packaging Baseline.
+  Four documents rather than two, because the exchange ran a second round: the proposal was found to contain an
+  error of its own, and the answer corrected an inference the response had not yet challenged.
 
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.
