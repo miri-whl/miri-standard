@@ -7,13 +7,74 @@ breaking change, a **minor** version a backward-compatible addition, and a **pat
 clarifications only. That policy is a contract with implementers, and it is worth keeping strictly: a reader
 should be able to see `0.3.1` and know it contains no additions without having to check.
 
-## 0.5.0 — 2026-09-08
+While the major version is 0 the standard is in initial development, so a **minor** bump may carry a breaking
+change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
+its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-A **minor** version. It began as 0.4.1 — four fixes from the first binding — and became 0.5.0 when it gained the
-Production Map, which is an addition. The number followed the content rather than the content being trimmed to fit
-the number.
+## 0.5.0 — 2026-09-10
+
+**BREAKING.** The first release to earn that label. Two changes alter every conformance score and both
+affect anything vendoring `schemas/check-v1.json`: `conditional` reverses meaning, and three checks move out
+of the score entirely. See **Changed** below for what breaks and what to do about it.
+
+It began as 0.4.1 — four fixes from the first binding — and grew through the Production Maps, an executable
+CLI fixture suite, six adversarial review panels, and an implementation report that arrived while the panel
+findings were being closed. All of it ships as one release because none of it was ever published: the last
+tag-equivalent is 0.4.0 on `main`, which is what the reference linter pinned.
+
+### Changed
+
+- **BREAKING — `conditional` semantics reversed, and three checks now gate rather than score.** Both change
+  every conformance score, and both affect anything vendoring `schemas/check-v1.json`.
+
+  `conditional: true` previously meant a check *"scores its full weight automatically when the condition does
+  not apply"*. It now means the check is **excluded from both the numerator and the denominator**. Not-applicable
+  is not a pass: awarding weight for an absence let an artifact collect points for having nothing to declare.
+  Twenty-four checks across three targets are affected, and a linter that implemented the old reading produces
+  different numbers for every artifact after re-syncing.
+
+  `MIRI-PY-001`, `002` and `003` gain `scoring: gate` and weight 0. They remain MUSTs and still make an artifact
+  non-conforming when they fail; they are no longer measured. Six points moved to `MIRI-PY-007` and `008`
+  (+2 each) and `014` and `015` (+1 each). `check-v1.json` gains the `scoring` field, because weight 0 already
+  meant "extension check" and one value cannot mean two things.
+
+  Reported by the miri-py team from scoring five unrelated wheels that returned an identical 8/10 in the
+  Packaging Baseline. The interaction is the part worth knowing: renormalizing shrinks the denominator, so a
+  constant numerator becomes a **larger** share — the Baseline went from 8% of a fixed 100 to about 14% of a
+  typical applicable 58. Shipping the renormalization alone would have nearly doubled the fraction of a score
+  carrying no information. Both sides of the discussion had that backwards at first. Gating brings it to ~4%.
+
+  Reports MUST now carry `effective_denominator`, `excluded` and `forfeited` beside a conformance score, and a
+  forfeited MUST yields the new `undetermined` grade rather than a claim of conformance.
 
 ### Added
+
+- **`package.replaced` — a seventh trigger kind**, with [Lifecycle and Security Metadata
+  §9.6](standards/python/lifecycle-security-metadata.md) and `MIRI-CONSUMER-052` behind it.
+
+  A purl identifies a name and a version, not a byte stream. Uninstall a distribution and install different bytes
+  at the same version and nothing a consumer would compare has moved. §9.1's adversary — a package trustworthy
+  when adopted and malicious later — already covered this, but every delivery mechanism it named was a
+  *publication* event; this one publishes nothing.
+
+  Raised from a maintainer's own workflow: developing a wheel means reinstalling at the same version many times an
+  hour, because nobody bumps a version on every edit. That makes it a cache-invalidation problem *and* a trust
+  problem, and the trust half is the one the standard owed an answer to. §9.4 already says structured metadata is
+  more dangerous than plain documentation because it invites a consumer to lower its guard — which means Miri
+  raises the value of this attack. That is a cost of the standard existing, and writing it down is the only
+  optional part.
+
+  The exposure is worst where §9.5's foundation is absent: PEP 740 attestation is the only field tying an artifact
+  to an independent identity, `MIRI-PY-005` is network-gated and conditional, and a locally built wheel carries
+  none — correctly. `MIRI-CONSUMER-052` carries the prohibition that falls out: **no trust determination survives a
+  replacement**. Stated as plainly, the trigger is *not* a verification — where no attestation exists, re-reading a
+  hostile artifact yields fresher hostile metadata.
+
+- **CLI conformance goldens and a scoring harness.** `examples/fixtures/cli/expected/C1`–`C11` state which check a
+  linter must report, on which arm, and — after the harness was rebuilt — pointing at which evidence.
+  `make score-cli-linter` rejects seven ways of gaming it.
+
+- **`scoring: gate`** in `check-v1.json`, and the invariant coupling it to weight 0 and MUST level.
 
 - **[Production Map](standards/python/production-map.md)** — the producer counterpart to the Consumption Map. The
   consumer side had an ordered model; the producer side had a checklist and no statement of what an author does
@@ -93,32 +154,29 @@ the number.
   mutation-tested: disarming any one of them fails the validator. Wired into `make check` via
   `make validate-cli-fixtures`.
 
-### Changed
-
-- **BREAKING — `conditional` semantics reversed, and three checks now gate rather than score.** Both change
-  every conformance score, and both affect anything vendoring `schemas/check-v1.json`.
-
-  `conditional: true` previously meant a check *"scores its full weight automatically when the condition does
-  not apply"*. It now means the check is **excluded from both the numerator and the denominator**. Not-applicable
-  is not a pass: awarding weight for an absence let an artifact collect points for having nothing to declare.
-  Twenty-four checks across three targets are affected, and a linter that implemented the old reading produces
-  different numbers for every artifact after re-syncing.
-
-  `MIRI-PY-001`, `002` and `003` gain `scoring: gate` and weight 0. They remain MUSTs and still make an artifact
-  non-conforming when they fail; they are no longer measured. Six points moved to `MIRI-PY-007` and `008`
-  (+2 each) and `014` and `015` (+1 each). `check-v1.json` gains the `scoring` field, because weight 0 already
-  meant "extension check" and one value cannot mean two things.
-
-  Reported by the miri-py team from scoring five unrelated wheels that returned an identical 8/10 in the
-  Packaging Baseline. The interaction is the part worth knowing: renormalizing shrinks the denominator, so a
-  constant numerator becomes a **larger** share — the Baseline went from 8% of a fixed 100 to about 14% of a
-  typical applicable 58. Shipping the renormalization alone would have nearly doubled the fraction of a score
-  carrying no information. Both sides of the discussion had that backwards at first. Gating brings it to ~4%.
-
-  Reports MUST now carry `effective_denominator`, `excluded` and `forfeited` beside a conformance score, and a
-  forfeited MUST yields the new `undetermined` grade rather than a claim of conformance.
-
 ### Fixed
+
+- **§4.3 of the Agent Integration Contract was unsatisfiable.** It defined trigger behavior as four things a
+  publisher may not influence, two of which — *whether* findings are carried and *how many* — are necessarily
+  determined by the metadata, since every finding derives from a shipped field. `MIRI-CONSUMER-051` fired on the
+  behavior the `E3` golden mandates: pass the golden, fail the check. The regulated quantity is whether the **read
+  happens**, never what the read finds, and the evidence that a trigger fired is §4.1's absent envelope. That also
+  dissolved a finding tracked separately as needing a third fixture arm — `E3` could not discriminate because the
+  rule pointed at the wrong observable, not because the fixture was short.
+
+- **`MIRI-PY-008` and `MIRI-PY-007` admitted empty content arrays.** Reported by the miri-py team from scoring five
+  real wheels; verifying the report found the second instance, in the check the report assumed was safe. Fifth
+  instance of one defect class, and the first found by running checks against real artifacts rather than reading
+  them. See `standards/feedback/`.
+
+- **Four gates that had never run, or ran wrong.** `.githooks/pre-commit` — the file `CLAUDE.md` tells a fresh
+  clone to enable first — had a `NameError` and a row regex that read 32 of 40 rows, and had never completed. The
+  `--since` validator was defeated by its own regex. `changelog --since` emitted records where CLI Spec §5.2 wants
+  string arrays. §6.1 mapped `dependency.add` to a moment the contract's own footnote says has nothing to read.
+
+- **The CLI linter harness graded a set of strings.** Six independent cheats reached a perfect score, one of them
+  by emitting every golden's check ID under the hostile arm's name having opened no fixture. Grading now requires
+  attribution: the right check *and* the evidence that golden declares.
 
 Four defects found by the miri-py team building the first binding, plus one process failure of ours that let two of
 them ship, one vacuous check they found implementing `test.author`, and one latent bug in the site generator that

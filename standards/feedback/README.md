@@ -43,6 +43,8 @@ Decisions worked through so far, each as a proposal plus the response that settl
   discriminate: empty content arrays passing shape-only checks, and the weighting of the Packaging Baseline.
   Four documents rather than two, because the exchange ran a second round: the proposal was found to contain an
   error of its own, and the answer corrected an inference the response had not yet challenged.
+  `vacuous-conformance-answer-2.md` closes it: the pin format after a tag, and a prediction placed on
+  record before the measurement that will test it.
 
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.

@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://miri-whl.github.io/schemas/scoring-v1.json",
   "title": "Miri Scoring Configuration",
-  "description": "Declares how a linter computes the two scores in a lint report: the ratio-based Conformance score (MUST-gated) and the severity-graded Health score. The Conformance model is a RATIO, not a bare total: a check whose condition does not apply, or which a linter forfeits for lack of a declared capability, leaves BOTH the numerator and the denominator. An earlier wording here called it 'the additive model: sum of passing check weights (0-100)', which contradicted both producer checklists and check-v1.json's definition of `conditional` — a stale description that survived the 0.6.0 semantics correction because nothing reads this file. Draft: reconcile with the reference linter before pinning constraints.",
+  "description": "Declares how a linter computes the two scores in a lint report: the ratio-based Conformance score (MUST-gated) and the severity-graded Health score. The Conformance model is a RATIO, not a bare total: a check whose condition does not apply, or which a linter forfeits for lack of a declared capability, leaves BOTH the numerator and the denominator. An earlier wording here called it 'the additive model: sum of passing check weights (0-100)', which contradicted both producer checklists and check-v1.json's definition of `conditional` — a stale description that survived the 0.5.0 semantics correction because nothing reads this file. Draft: reconcile with the reference linter before pinning constraints.",
   "type": "object",
   "required": ["schema_version", "conformance", "health"],
   "properties": {

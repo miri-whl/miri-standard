@@ -151,6 +151,15 @@ Specifications use semantic versioning:
 - **Minor Version**: Backward-compatible additions
 - **Patch Version**: Bug fixes and clarifications
 
+**While the major version is 0**, the standard is in initial development and a **minor** bump may carry a breaking
+change — [Semantic Versioning §4](https://semver.org/#spec-item-4). Where it does, the CHANGELOG entry says so in
+its first line and names what breaks, because "check the changelog" is not a substitute for a version number that
+means something. From 1.0.0 onward a breaking change takes a major bump without exception.
+
+This clause was added at 0.5.0, which reversed the meaning of `conditional` and moved three checks out of the
+score. Both change every conformance score and both affect anything vendoring `check-v1.json`. Without the clause
+the release would have contradicted the policy in the same file that states it.
+
 ## Development Process
 
 1. **Proposal**: New specifications start as proposals in the [proposals/](../proposals/) directory

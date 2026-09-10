@@ -27,7 +27,8 @@
       "description": "Provenance of the check corpus scored against, so a report is never a naked score",
       "properties": {
         "checklist_version": {"type": "string"},
-        "checks_commit_sha": {"type": "string"},
+        "checks_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$", "description": "The commit the check definitions were read from, as a full 40-character sha. NOT a tag: a tag is a movable label and a sha is not, and the point of this field is that a reader can fetch the exact definitions a score was computed against. A tag moved after the fact would silently change what a published report points at. The human-legible release name goes in `standard_version`. Pattern requested by the miri-py team, whose argument was that a field named `commit_sha` permitting a tag is the same defect class this exchange was about - a name saying one thing and a value being another - and that a schema permitting a tag will eventually be given one."},
+        "standard_version": {"type": "string", "description": "The MIRI release the report was scored against - the human-legible half of the pin, e.g. \"0.5.0\". Read from the standard's website/site.yaml at the pinned commit. A report previously named its checklist stamp and never the release, so a reader could not tell which version of the standard produced a score. Declared here rather than left as one implementation's extension: two linters inventing the same field under different names is the interoperability failure the wire schemas exist to prevent."},
         "content_sha256": {"type": "string"},
         "docs_base_url": {"type": "string", "format": "uri"}
       },

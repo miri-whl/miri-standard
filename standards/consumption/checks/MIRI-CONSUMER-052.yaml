@@ -3,7 +3,7 @@ id: MIRI-CONSUMER-052
 name: No trust determination survives a `package.replaced` event
 target: consumer
 status: active
-added_in: 0.6.0-draft
+added_in: 0.5.0-draft
 level: MUST
 category: Trust and Verdicts
 weight: 5

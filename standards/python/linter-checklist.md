@@ -79,6 +79,13 @@ of 100 when checks are excluded or forfeited.
   (+2 each, the two content-bearing metadata documents) and `014` and `015` (+1 each, the two MUSTs that examples
   exist and run).
 
+  One of those recipients, `015`, requires `execution`, so in the default offline posture its extra point leaves
+  the denominator with it and the redistribution is worth 5 rather than 6. That is deliberate. Steering weight away
+  from capability-gated checks would systematically under-weight exactly the obligations that need a capability to
+  verify, which is a worse distortion than the one being fixed — and every weight in the checklist already behaves
+  this way. Noted because a reader comparing an offline number against a documented total should know why they
+  differ.
+
 - **There is no coverage floor, deliberately.** A small denominator usually means a *simpler* artifact rather than a
   worse one, and withholding a grade for having less surface would penalize simplicity. A score is made interpretable
   by its denominator traveling with it, not by a minimum. A linter MUST NOT impose a floor of its own: one linter with
