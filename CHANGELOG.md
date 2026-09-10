@@ -14,7 +14,7 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
 ## 0.5.0 — 2026-09-10
 
 **BREAKING.** The first release to earn that label. Two changes alter every conformance score and both
-affect anything vendoring `schemas/check-v1.json`: `conditional` reverses meaning, and three checks move out
+affect anything vendoring the check schema: `conditional` reverses meaning, and three checks move out
 of the score entirely. See **Changed** below for what breaks and what to do about it.
 
 It began as 0.4.1 — four fixes from the first binding — and grew through the Production Maps, an executable
@@ -25,7 +25,8 @@ tag-equivalent is 0.4.0 on `main`, which is what the reference linter pinned.
 ### Changed
 
 - **BREAKING — `conditional` semantics reversed, and three checks now gate rather than score.** Both change
-  every conformance score, and both affect anything vendoring `schemas/check-v1.json`.
+  every conformance score, and both affect anything vendoring the check schema — now
+  [`check-v2.json`](schemas/check-v2.json), bumped for exactly this reason.
 
   `conditional: true` previously meant a check *"scores its full weight automatically when the condition does
   not apply"*. It now means the check is **excluded from both the numerator and the denominator**. Not-applicable
@@ -35,7 +36,7 @@ tag-equivalent is 0.4.0 on `main`, which is what the reference linter pinned.
 
   `MIRI-PY-001`, `002` and `003` gain `scoring: gate` and weight 0. They remain MUSTs and still make an artifact
   non-conforming when they fail; they are no longer measured. Six points moved to `MIRI-PY-007` and `008`
-  (+2 each) and `014` and `015` (+1 each). `check-v1.json` gains the `scoring` field, because weight 0 already
+  (+2 each) and `014` and `015` (+1 each). `check-v2.json` gains the `scoring` field, because weight 0 already
   meant "extension check" and one value cannot mean two things.
 
   Reported by the miri-py team from scoring five unrelated wheels that returned an identical 8/10 in the
@@ -46,6 +47,41 @@ tag-equivalent is 0.4.0 on `main`, which is what the reference linter pinned.
 
   Reports MUST now carry `effective_denominator`, `excluded` and `forfeited` beside a conformance score, and a
   forfeited MUST yields the new `undetermined` grade rather than a claim of conformance.
+
+#### To upgrade
+
+The algorithm is **not** in this entry. It is in
+[`standards/python/linter-checklist.md`](standards/python/linter-checklist.md) and its
+[CLI twin](standards/cli/linter-checklist.md), under **Scoring Model** — excluded vs forfeited, the precedence
+rule for checks that are both conditional and capability-gated, `undetermined`, and the no-coverage-floor
+prohibition. Read those, not this. An earlier version of this section named the changes and linked to nothing,
+which meant a reader had to diff against 0.4.0 to reconstruct their own upgrade.
+
+1. **Re-pin.** [`checks_commit_sha`](schemas/lint-report-v1.json) now requires a full 40-character lowercase sha.
+   A short sha or a tag is a hard validation failure — if you pin `cc5d0a4` today, your reports stop validating.
+   The release name goes in the new `checklist.standard_version` instead.
+2. **Re-point at [`check-v2.json`](schemas/check-v2.json), and re-sync the corpus.** The check schema is now
+   versioned, because `conditional` reversed meaning without one byte of validating *content* changing — a schema
+   is an interpretation contract and this one's contract changed. Every definition declares
+   `$schema: …/check-v2.json`, and v2 requires it, so a v2 corpus **fails** against a vendored v1 and a v1 corpus
+   **fails** against v2. The pairing that used to validate and score wrongly now breaks on both sides.
+   [`check-v1.json`](schemas/check-v1.json) is retained frozen and still describes 0.4.0 semantics: a consumer
+   pinned there is old, not wrong, and stays internally consistent.
+3. **Change the scorer**, in this order: exclusion leaves both sides of the ratio; the precedence rule decides
+   which of exclusion or forfeit applies to the ten dual-flagged checks (five python-wheel, five CLI); a forfeited
+   MUST yields `undetermined`; `scoring: gate` checks are in neither sum and a failing one is non-conformance,
+   which is representable **only** through `must_failures`.
+4. **Change the report.** [`lint-report-v1.json`](schemas/lint-report-v1.json) now requires
+   `scores.effective_denominator`, `scores.excluded`, `scores.forfeited` and `must_failures`; `must_failures`
+   being non-empty forces `grade: non-conforming` and caps `conformance` at 74; a `skipped` outcome must name its
+   `skip_reason`; `grade` gained `undetermined`; `conformance` is bounded 0–100.
+5. **Decide about already-published scores.** Every conformance number computed under 0.4.0 semantics is wrong
+   under these. The standard does not tell you whether to retract or restate them; it tells you they changed.
+
+**What will not fail loudly if you skip it.** The three newly required `scores` fields catch a linter that did not
+update its *serializer*. Nothing in any schema relates `scores.excluded` to the `outcomes` that were excluded, so
+a linter that adds the fields and does not change its *arithmetic* validates clean and reports wrong numbers.
+`semantics_version` is the guard against that; it is a tripwire, not a proof.
 
 ### Added
 
@@ -74,7 +110,9 @@ tag-equivalent is 0.4.0 on `main`, which is what the reference linter pinned.
   linter must report, on which arm, and — after the harness was rebuilt — pointing at which evidence.
   `make score-cli-linter` rejects seven ways of gaming it.
 
-- **`scoring: gate`** in `check-v1.json`, and the invariant coupling it to weight 0 and MUST level.
+- **`scoring: gate`** in [`check-v2.json`](schemas/check-v2.json), and the invariant coupling it to
+  weight 0 and MUST level — enforced in the schema itself, not only in a repo-local script vendors
+  do not run.
 
 - **[Production Map](standards/python/production-map.md)** — the producer counterpart to the Consumption Map. The
   consumer side had an ordered model; the producer side had a checklist and no statement of what an author does

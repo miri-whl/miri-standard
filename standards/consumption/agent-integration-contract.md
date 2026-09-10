@@ -434,9 +434,18 @@ lifecycle events in `settings.json`, receiving JSON on stdin.
 |---|---|---|
 | `dependency.add` | `PostToolUse`, matcher `Bash` | the command installed a distribution not previously installed |
 | `dependency.version_change` | `PreToolUse`, matcher `Edit\|Write` | same target, and a requirement's version specifier differs |
-| `package.replaced` | `PostToolUse`, matcher `Bash` | the command installed a distribution that was already installed, and the version afterwards equals the version before |
+| `package.replaced` | `PostToolUse`, matcher `Bash` | after the command, a distribution the session has already seen is installed at a version the session has already seen — whether or not it was installed at the moment the command ran |
 | `runtime.error` | `PostToolUse`, matcher `Bash` | command output contains a traceback naming an installed package |
 | `test.author` | `PreToolUse`, matcher `Edit\|Write` | the target path matches the project's test discovery configuration |
+
+**`package.replaced`'s recognizer keys on the session, not on the single command.** An earlier wording was "the
+command installed a distribution that was **already installed**" — which misses the sequence
+[§9.6](../python/lifecycle-security-metadata.md) actually describes, `pip uninstall greet && pip install ./greet.whl`
+as two calls, because at install time the distribution is not installed. It also fired on `pip install requests`
+against an already-satisfied requirement, where nothing was replaced at all. Both are the failure §6.2 forbids in
+general terms: a binding must not map a trigger to a moment that fires at materially different times than §3.1
+specifies. Keying on what the session has previously seen at that purl catches the uninstall-then-install pair and
+does not fire on a no-op install.
 
 **`dependency.add` fires after the install, not on the manifest edit**, and §3.1's footnote is why: at the moment a
 requirement is added the distribution is not installed, so it ships nothing a local surface can read and the trigger
@@ -507,19 +516,26 @@ mechanism that survives that removal.
 ## 7. Conformance
 
 No new check family. The obligations in §4 restate existing `MIRI-CONSUMER` requirements for a new channel, and are
-scored through that family — with two exceptions, which had no analogue in the consumer family before this document and
-are
-the two it adds — `MIRI-CONSUMER-050` and `MIRI-CONSUMER-051`, bringing the family to seventeen — and `MIRI-CONSUMER-052`
-with the `package.replaced` trigger, bringing it to eighteen:
+scored through that family — with **three** exceptions, which had no analogue in the consumer family before this
+document and are the three it adds, bringing the family to eighteen:
 
-- **Silence by default** (§4.1) — drive the binding with a `dependency.add` event naming the `bare` fixture, which
-  ships no `agent-metadata/` at all, and assert the absent shape with no `findings` key.
-- **Publisher-independent triggers** (§4.3) — drive the same event against `adversarial` and against `miri`, and
-  assert the *trigger* behavior is identical. Every `.py` is byte-identical across the fixture variants, so any
-  difference is metadata-attributable by construction.
+- **Silence by default** (§4.1, `MIRI-CONSUMER-050`) — drive the binding with a `dependency.add` event naming the
+  `bare` fixture, which ships no `agent-metadata/` at all, and assert the absent shape with no `findings` key.
+- **Publisher-independent triggers** (§4.3, `MIRI-CONSUMER-051`) — drive the same event against `adversarial` and
+  against `miri`, and assert the *trigger* behavior is identical. Every `.py` is byte-identical across the fixture
+  variants, so any difference is metadata-attributable by construction.
+- **No trust determination survives a replacement** ([Lifecycle and Security Metadata
+  §9.6](../python/lifecycle-security-metadata.md), `MIRI-CONSUMER-052`) — drive a `package.replaced` event
+  across the `miri`/`replaced` pair, two artifacts at one purl, and assert the consumer re-derives rather than
+  answering from the determination it made about the previous bytes. Golden `A14`.
 
-Both are drivable with the existing fixture set. The second needs one new adversarial element: a document carrying a
-field that attempts to force or amplify a trigger. That is a new attack case, not a new check family.
+All three are drivable with the fixture set. The second needed one new adversarial element — a document carrying a
+field that attempts to force or amplify a trigger — and the third needed the `replaced` arm, which is the only
+pairing in the set that deliberately shares another arm's purl. New attack cases, not a new check family.
+
+An earlier version of this paragraph said "two exceptions" and then named three, and gave the third no bullet — so
+§7 never said how to drive it. It was also, at that point, not drivable: `052` shipped as a MUST with no fixture,
+which under the profile's forfeit rule meant no consumer could be reported conforming by anyone.
 
 Because an event is a request and a response is an envelope, a conforming binding is testable **with no host at
 all**: feed it an event, read the envelope. The goldens are therefore event/envelope pairs authored from this

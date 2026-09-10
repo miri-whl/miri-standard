@@ -1,0 +1,34 @@
+{
+  "$schema": "https://miri-whl.github.io/schemas/lifecycle-v1.json",
+  "miri_lifecycle_version": "0.1",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "identity": {
+    "purl": "pkg:pypi/greet-miri@1.0.0",
+    "distribution": "open-source",
+    "registry": "https://pypi.org/simple/",
+    "source_repository": "https://github.com/miri-whl/miri-standard"
+  },
+  "advisory_sources": [
+    {
+      "type": "osv",
+      "ecosystem": "PyPI",
+      "url": "https://api.osv.dev/v1/query",
+      "authoritative": true
+    }
+  ],
+  "update_check": {
+    "type": "pypi-json",
+    "url": "https://pypi.org/pypi/greet-miri/json"
+  },
+  "support": {
+    "status": "deprecated",
+    "supported_versions": [
+      ">=1.0,<2.0"
+    ],
+    "eol_date": "2026-06-01",
+    "replacement": "pkg:pypi/attacker-successor@9.0.0",
+    "security_policy": "https://github.com/miri-whl/miri-standard/blob/main/SECURITY.md"
+  },
+  "vex": null,
+  "_attack_note_a14": "A14: this arm carries the SAME `identity.purl` as the `miri` arm - pkg:pypi/greet-miri@1.0.0 - and different bytes. A purl identifies a name and a version; two artifacts can share one. Nothing a consumer would compare has moved: same purl, same version, same document names. A consumer that cached a trust determination against the `miri` arm and did not re-derive it on notice of replacement is answering about bytes that are no longer installed (MIRI-CONSUMER-052; Lifecycle and Security Metadata 9.6). The divergence below is deliberately in a document a consumer READS rather than in identity, because identity is exactly what does not change."
+}

@@ -276,7 +276,7 @@ def check_glossary():
 
       1. Every closed vocabulary it quotes matches its authoritative source. Trigger kinds come from
          agent-event-v1.json, error codes and payload keys from discovery-envelope-v1.json, vehicle
-         labels from the Consumption Map, severity from check-v1.json.
+         labels from the Consumption Map, severity from check-v2.json.
       2. Every defined term carries a link to where it is normatively defined, so a reader who needs
          the rule rather than the explanation can reach it in one click.
       3. No term is defined that the standard does not use, and the terms the standard defines in
@@ -452,6 +452,34 @@ def check_gate_coherence():
                         f"non-conforming, which only a MUST can do")
 
 
+def check_category_totals():
+    """Category headings and summary tables must match the YAML they summarize.
+
+    Every one of these drifted in 0.5.0 and nothing noticed: the python checklist carried
+    `(10 points)`, `(20 points)`, `(10 points)` against actual 4/24/12, and the consumer profile's
+    summary claimed 24 points for four categories that hold 22, 22, 23 and 23, with a Checks column
+    summing to 17 under a stated total of 18. They survived because the wrong rows still totalled 100,
+    which is the worst shape a stale table can take - internally consistent, arithmetically plausible,
+    and describing the previous model.
+    """
+    import collections
+    for doc, prefix, checkdir in (
+        ("standards/python/linter-checklist.md", "MIRI-PY", "standards/python/checks"),
+        ("standards/cli/linter-checklist.md", "MIRI-CLI", "standards/cli/checks"),
+        ("standards/consumption/consumer-conformance.md", "MIRI-CONSUMER", "standards/consumption/checks"),
+    ):
+        w = collections.Counter()
+        for f in (REPO / checkdir).glob("*.yaml"):
+            d = yaml.safe_load(f.read_text())
+            if d.get("status") == "active" and d["id"].startswith(prefix + "-"):
+                w[d["category"]] += d["weight"]
+        text = (REPO / doc).read_text()
+        for m in re.finditer(r"^### [A-F]\. (.+?) \((\d+) points\)", text, re.M):
+            cat, claimed = m.group(1).strip(), int(m.group(2))
+            if cat in w and w[cat] != claimed:
+                bad(doc, f"heading '{cat}' claims {claimed} points; its checks total {w[cat]}")
+
+
 def main():
     for p in SPECS:
         text = p.read_text()
@@ -471,6 +499,7 @@ def main():
     check_findings_inherits_envelope()
     check_checklist_coherence()
     check_gate_coherence()
+    check_category_totals()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")

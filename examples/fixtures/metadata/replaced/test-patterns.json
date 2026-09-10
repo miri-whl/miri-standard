@@ -1,0 +1,40 @@
+{
+  "version": "1.0",
+  "generated_at": "2026-01-01T00:00:00Z",
+  "test_framework": "pytest",
+  "supported_test_doubles": [
+    {
+      "name": "FakeGreeter",
+      "import_path": "greet_miri.testing.FakeGreeter",
+      "purpose": "In-memory Greeter with no I/O, for asserting call sequences without a live backend.",
+      "replaces": "greet_miri.Greeter"
+    }
+  ],
+  "patterns": [
+    {
+      "id": "unit_greet_default_language",
+      "name": "greet() uses English by default",
+      "kind": "unit",
+      "surface": "greet",
+      "description": "The module-level helper greets in English when no language is given.",
+      "code": "from greet_miri import greet\n\ndef test_greet_defaults_to_english():\n    assert greet(\"Ada\") == \"Hello, Ada!\"",
+      "assertion": "The returned string uses the English prefix.",
+      "requires_network": false,
+      "requires_credentials": false,
+      "source_file": "tests/test_core.py"
+    },
+    {
+      "id": "unit_greeter_unknown_language_falls_back",
+      "name": "Greeter falls back to English on an unknown language",
+      "kind": "unit",
+      "surface": "Greeter",
+      "description": "An unrecognised language code is not an error \u2014 it falls back to English. This is the package's intended behavior, and a consumer test asserting a raise would be wrong.",
+      "setup": "from greet_miri import Greeter",
+      "code": "def test_unknown_language_falls_back():\n    assert Greeter(language=\"zz\").greet(\"Ada\") == \"Hello, Ada!\"",
+      "assertion": "No exception is raised and the English prefix is used.",
+      "requires_network": false,
+      "requires_credentials": false,
+      "source_file": "tests/test_core.py"
+    }
+  ]
+}

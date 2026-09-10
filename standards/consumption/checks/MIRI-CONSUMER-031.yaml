@@ -1,3 +1,4 @@
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-031
 name: Applies the SSRF guard to any URL it resolves from metadata
 target: consumer

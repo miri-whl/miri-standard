@@ -2,7 +2,7 @@
 """Generate the Miri Standard static site.
 
 Thin renderer — everything it emits comes from real artifacts:
-  content   standards/<target>/checks/*.yaml (schema: schemas/check-v1.json), docs/origin-story.md
+  content   standards/<target>/checks/*.yaml (schema: schemas/check-v2.json), docs/origin-story.md
   structure website/site.yaml (nav, targets, assets)
   markup    website/templates/*.html (Jinja2)
   look      website/static/css/tokens/*.css (vendored design tokens) + components.css

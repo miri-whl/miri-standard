@@ -1,4 +1,5 @@
 # MIRI-CONSUMER-052 — generated with the Consumer Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-052
 name: No trust determination survives a `package.replaced` event
 target: consumer
@@ -7,7 +8,12 @@ added_in: 0.5.0-draft
 level: MUST
 category: Trust and Verdicts
 weight: 5
-conditional: false
+conditional: true
+# Driving this requires a `package.replaced` event, which only an integration binding produces. Set false
+# on introduction, which made it a MUST that could not be driven — and under the profile's forfeit rule a
+# forfeited MUST leaves conformance UNDETERMINED, so the check took the whole profile down rather than
+# measuring anything. Conditional means a consumer with no binding excludes it from both sides, exactly as
+# MIRI-CONSUMER-050 and 051 already do.
 severity:
   default: CRITICAL
   violation_unit: each trust determination reused after the artifact it concerned was replaced
@@ -17,7 +23,8 @@ long_description: This check verifies the consumer treats a trust determination 
   about that artifact - that its advisory sources were queried, that its replacement was judged legitimate, that its
   patterns carried no directive text - is void, and the reads that produced it must be performed again against the new
   bytes before the consumer acts on them.
-rationale: A purl identifies a name and a version, never a byte stream, so two different artifacts can carry the same
+rationale: A purl as this standard requires it identifies a name and a version rather than a byte stream, so two
+  different artifacts can carry the same
   `identity.purl` and nothing in the standard detects it. Uninstalling a distribution and installing different bytes at
   the same version moves no field a consumer would compare. The adversary is the one Lifecycle and Security Metadata 9.1
   already names - a package trustworthy when adopted and malicious later - arriving by a route that publishes nothing,

@@ -172,7 +172,8 @@ Emerging prior art:
   stages — General Availability, End-of-Sales, End-of-Life, End-of-Security-Support.
   Core Schema 1.0 entered
   [public review](http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/)
-  in July 2026; ratification is expected in 2027. Miri's `support.status` values map onto it deliberately: `active` ≈ GA,
+  in July 2026; ratification is expected in 2027. Miri's `support.status` values map onto it deliberately: `active` ≈
+  GA,
   `maintenance` ≈ the window where only security support remains (pre-EoSSec), `eol` ≈ EoL/EoSSec passed. Organizations
   MAY additionally publish OpenEoX statements; a future version of this specification will add a pointer field to them
   once OpenEoX 1.0 is ratified, rather than pre-standardizing against a draft.
@@ -408,8 +409,18 @@ every other trust decision in this section builds on.
 
 ### 9.6 The Artifact Can Change Under a Stable Identity
 
-A purl identifies a **name and a version**, not a byte stream. Two different artifacts can carry the same
-`identity.purl`, and nothing in this standard detects it. Uninstall a distribution and install different bytes at the
+A purl as this standard requires it identifies a **name and a version**, not a byte stream. Two different
+artifacts can carry the same `identity.purl`, and nothing in this standard detects it.
+
+That is a property of a choice, not of purl. The [purl specification](https://github.com/package-url/purl-spec)
+defines a `checksum` qualifier — `pkg:pypi/greet@1.0.0?checksum=sha256:…` — and `lifecycle-v1.json`'s pattern
+already accepts it. The standard neither requires nor reads it, so the detection half of this problem has a
+standardized, already-cited, no-new-format answer that has simply not been taken up. Requiring it is not free: a
+checksum must be computed by something the consumer trusts, and a publisher-declared checksum of publisher-supplied
+bytes is self-certification of exactly the kind §9.2 warns against. But an artifact could carry one, a registry
+could attest it, and a consumer could compare — and this section should not be read as claiming the problem is
+undetectable in principle when what is true is that this standard does not currently detect it. Uninstall a
+distribution and install different bytes at the
 same version: `purl` is unchanged, `sdk_version` is unchanged, every field a consumer would compare is unchanged.
 
 §9.1's adversary is "a package that was trustworthy when adopted and became malicious later", and the delivery

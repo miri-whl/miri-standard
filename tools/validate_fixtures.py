@@ -549,6 +549,8 @@ def main() -> int:
         check(f"golden {g.stem}: cites real checks", not unknown,
               f"unknown check id(s) {unknown}" if unknown else "")
         cited.update(d.get("checks", []))
+    for g in sorted(EXPECTED.glob("E*.json")):          # E-series cite consumer checks as well, and a
+        cited.update(json.loads(g.read_text()).get("checks", []))   # rule that ignored them under-counted
         # regexes must compile, or the assertion silently never fires
         bad_re = []
         for pat in d.get("consumer_assertion", {}).get("output_must_not_match", []):
@@ -565,6 +567,21 @@ def main() -> int:
                  if "fixture pending" not in case and "(A" in case and cid not in cited]
     check("profile checks with a named attack case have a golden", not uncovered,
           f"uncovered: {uncovered}" if uncovered else "")
+
+    # The rule above keys on the string "(A", so MIRI-CONSUMER-052 shipped a Case cell reading
+    # `adversarial` ([Lifecycle §9.6](...)) — naming the golden-backed arm while pointing at a PROSE
+    # SECTION — and was invisible to it. A spec section is not an executable case. 052 was a MUST, so
+    # under the profile's forfeit rule the whole profile could no longer issue a conformance verdict.
+    #
+    # Note this rule is narrower than the first attempt at it, which failed on `001`, `002` and `042`:
+    # naming a fixture arm is NOT a claim of golden-backing, because those checks are driven behaviorally
+    # and observed rather than matched against an attack case. What 052 did wrong was cite a document.
+    spec_as_case = [f"{cid}: Case cell cites a specification section ({case.strip()}); a spec section is "
+                    f"prose, not an executable case"
+                    for cid, case in rows
+                    if "fixture pending" not in case and re.search(r"§\d|\.md\)", case)]
+    check("no profile Case cell cites a specification section instead of a case",
+          not spec_as_case, "; ".join(spec_as_case))
 
     print()
     if failures:

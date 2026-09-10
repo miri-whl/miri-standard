@@ -36,7 +36,7 @@ jobs:
         run: |
           python3 - <<'EOF'
           import json, pathlib, yaml, jsonschema
-          schema = json.load(open('schemas/check-v1.json'))
+          schema = json.load(open('schemas/check-v2.json'))
           jsonschema.Draft7Validator.check_schema(schema)
           n = 0
           for f in pathlib.Path('standards').glob('*/checks/*.yaml'):

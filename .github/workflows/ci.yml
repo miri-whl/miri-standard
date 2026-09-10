@@ -76,7 +76,7 @@ jobs:
         python-version: '3.12'
     - name: Install validation deps
       run: pip install pyyaml jsonschema
-    - name: Validate check YAMLs against check-v1.json
+    - name: Validate check YAMLs against check-v2.json
       run: make validate
     - name: Validate sample-sdk metadata against schemas
       run: make validate-sample

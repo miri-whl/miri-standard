@@ -48,7 +48,8 @@ of 100 when checks are excluded or forfeited.
   `undetermined` is **not** non-conformance: an artifact whose only unmet MUSTs were forfeited is not known to fail,
   and its score is still reported with its denominator. The 74 cap applies to a MUST that **failed**, never to one
   excluded or forfeited.
-- **Where a check is both conditional and capability-gated, evaluate the condition first.** Ten checks carry a
+- **Where a check is both conditional and capability-gated, evaluate the condition first.** Five python-wheel checks
+  carry a
   `conditional` flag *and* a `requirements` entry, and the order decides which they become:
   1. The condition **provably does not apply** → **excluded**. The capability is irrelevant.
   2. The condition **provably applies** and the capability is absent → **forfeited**.
@@ -114,7 +115,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 ## The Checks
 
-### A. Packaging Baseline (10 points)
+### A. Packaging Baseline (4 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
@@ -124,7 +125,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-PY-004 | S | Declarative build config | `pyproject.toml` with `[project]` table drives the build | [PEP 621](https://peps.python.org/pep-0621/) / [PEP 517](https://peps.python.org/pep-0517/) | 2 |
 | MIRI-PY-005 | S | Publish attestations | Release carries index-hosted attestations (provenance) (*conditional*: public-index releases only)| [PEP 740](https://peps.python.org/pep-0740/) | 2 |
 
-### B. Agent Metadata Core (20 points)
+### B. Agent Metadata Core (24 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
@@ -137,7 +138,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
 | MIRI-PY-013 | M | JSON hygiene | All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments) | RFC 8259 | 2 |
 
-### C. Examples (10 points)
+### C. Examples (12 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
@@ -202,7 +203,7 @@ The standard's vocabulary: each *requirement* in a spec is verified by a *check*
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
 Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
-(`checks/MIRI-PY-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
+(`checks/MIRI-PY-NNN.yaml`), validated against [check-v2.json](../../schemas/check-v2.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —

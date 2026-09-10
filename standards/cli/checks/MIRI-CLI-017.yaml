@@ -1,4 +1,5 @@
 # MIRI-CLI-017 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CLI-017
 name: Version coherence
 target: cli

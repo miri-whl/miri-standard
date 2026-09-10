@@ -227,7 +227,7 @@ surfaced it is the bidirectional audit rule in [Consumption Map §5](consumption
 
 Eighteen checks, weights summing to 100. IDs are stable and are never renumbered.
 
-### A. Honest Degradation (24 points)
+### A. Honest Degradation (22 points)
 
 The consumer's behavior when metadata is **absent**. This is the category the `bare` fixture exists for, and the one
 that decides whether "the package ships no lifecycle.json" and "I did not look" are distinguishable in output.
@@ -238,7 +238,7 @@ that decides whether "the package ships no lifecycle.json" and "I did not look" 
 | MIRI-CONSUMER-002 | M | Never synthesizes content for an absent document | 7 | `bare` |
 | MIRI-CONSUMER-003 | M | Branches on `ok`/`present`, never on `reason` text | 8 | `adversarial` (A1/A2) |
 
-### B. Surface Verification (24 points)
+### B. Surface Verification (22 points)
 
 Whether the consumer knows the difference between what a publisher **claimed** and what a package **contains**.
 
@@ -248,7 +248,7 @@ Whether the consumer knows the difference between what a publisher **claimed** a
 | MIRI-CONSUMER-011 | M | Never reports `not-in-source` as proof a symbol does not exist | 7 | `dynamic` (A9) |
 | MIRI-CONSUMER-012 | M | Never treats a truncated `api-index` as the complete surface | 7 | `adversarial` (A4) |
 
-### C. Untrusted Data (24 points)
+### C. Untrusted Data (23 points)
 
 Whether the consumer treats publisher bytes as data. This is the category with the highest single weight in the
 profile, because it is the one where a failure is a security incident rather than a wrong answer.
@@ -259,7 +259,7 @@ profile, because it is the one where a failure is a security incident rather tha
 | MIRI-CONSUMER-021 | M | Confines a publisher-authored path before dereferencing it | 7 | `adversarial` (A7) |
 | MIRI-CONSUMER-022 | M | Presents metadata as attributed package-authored data, not as its own conclusion | 7 | `adversarial` (A5) |
 
-### D. Trust and Verdicts (24 points)
+### D. Trust and Verdicts (23 points)
 
 Whether the consumer computes trust at call time or reads it off a shipped file.
 
@@ -268,7 +268,7 @@ Whether the consumer computes trust at call time or reads it off a shipped file.
 | MIRI-CONSUMER-030 | M | Never reports a clean security verdict from shipped metadata | 6 | `adversarial` (A6) |
 | MIRI-CONSUMER-031 | M | Applies the SSRF guard to any URL it resolves from metadata | 6 | `adversarial` (A7) |
 | MIRI-CONSUMER-032 | M | Never auto-migrates onto a publisher-declared `replacement` | 6 | `adversarial` (A8) |
-| MIRI-CONSUMER-052 | M | No trust determination survives a `package.replaced` event | 5 | `adversarial` ([Lifecycle §9.6](../python/lifecycle-security-metadata.md)) |
+| MIRI-CONSUMER-052 | M | No trust determination survives a `package.replaced` event | 5 | `replaced` + `miri` (A14) |
 
 ### E. Usage Fidelity and Budget (4 points)
 
@@ -294,16 +294,16 @@ than credited.
 
 | Category | Checks | Points |
 |---|---|---|
-| A. Honest Degradation | 3 | 24 |
-| B. Surface Verification | 3 | 24 |
-| C. Untrusted Data | 3 | 24 |
-| D. Trust and Verdicts | 3 | 24 |
+| A. Honest Degradation | 3 | 22 |
+| B. Surface Verification | 3 | 22 |
+| C. Untrusted Data | 3 | 23 |
+| D. Trust and Verdicts | 4 | 23 |
 | E. Usage Fidelity and Budget | 3 | 4 |
 | F. Integration Channel | 2 | 6 |
 | **Total** | **18** | **100** |
 
-All eighteen have an executable case (`052` drives the replacement pair described in
-[Lifecycle §9.6](../python/lifecycle-security-metadata.md)): `050` and `051` are driven against the `bare` fixture
+All eighteen have an executable case (`052` drives the `replaced`/`miri` pair — two artifacts at one purl — via A14):
+`050` and `051` are driven against the `bare` fixture
 and the A13 pairing respectively; `011` is driven against the `dynamic` outlier (A9) and `032` against the
 replacement redirect (A8), both added after this profile was first written. The suite is fully scorable — a report
 that cannot drive a case still forfeits it (§3), but no check is not scorable by construction.
@@ -372,7 +372,7 @@ that way.
 ## 7. Check Definitions
 
 The authoritative definition of each check is its YAML file in `standards/consumption/checks/`, governed by
-`schemas/check-v1.json` with `target: consumer`. The tables in §5 are the derived rendering: where the two disagree,
+`schemas/check-v2.json` with `target: consumer`. The tables in §5 are the derived rendering: where the two disagree,
 the YAML is correct, and the disagreement is a bug to fix in the same change.
 
 Every check carries the canonical `severity` and `violation_unit` that implementations MUST use for health scoring,
@@ -380,7 +380,7 @@ exactly as the producer checks do — so that a consumer report and a wheel repo
 translating between two scoring vocabularies.
 
 Both values live in the check's YAML under `severity` (`standards/consumption/checks/<id>.yaml`, governed by
-[`check-v1.json`](../../schemas/check-v1.json)), which is the single source: `default` is one of `LOW MINOR MEDIUM
+[`check-v2.json`](../../schemas/check-v2.json)), which is the single source: `default` is one of `LOW MINOR MEDIUM
 HIGH CRITICAL`, and `violation_unit` names the countable thing that is one violation. A report is verified against
 them mechanically — for each finding it emits, its severity string MUST equal the `default` of the check it cites,
 and its count MUST be in that check's `violation_unit`. A report that substitutes its own severity scale is

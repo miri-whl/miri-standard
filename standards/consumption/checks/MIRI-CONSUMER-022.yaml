@@ -1,4 +1,5 @@
 # MIRI-CONSUMER-022 — generated with the Consumer Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-022
 name: Presents metadata as attributed package-authored data, not as its own conclusion
 target: consumer

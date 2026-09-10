@@ -1,4 +1,5 @@
 # MIRI-PY-002 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-002
 name: Core metadata valid
 target: python-wheel

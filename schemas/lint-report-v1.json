@@ -4,7 +4,7 @@
   "title": "Miri Lint Report",
   "description": "The machine-readable report a Miri-conformance linter emits for one artifact. Draft: reconcile with the reference linter's output before pinning field constraints. The top-level version field is `schema_version` (per MIRI-CLI-010), never a per-format alias.",
   "type": "object",
-  "required": ["schema_version", "target", "artifact", "checklist", "linter", "generated_at", "scores", "outcomes"],
+  "required": ["schema_version", "target", "artifact", "checklist", "linter", "generated_at", "scores", "outcomes", "must_failures"],
   "properties": {
     "schema_version": {
       "type": "string",
@@ -26,7 +26,7 @@
       "required": ["checklist_version", "checks_commit_sha"],
       "description": "Provenance of the check corpus scored against, so a report is never a naked score",
       "properties": {
-        "checklist_version": {"type": "string"},
+        "checklist_version": {"type": "string", "description": "The checklist stamp the definitions carry - the Specification Version header of the linter-checklist for this target, e.g. 0.2-draft. Distinct from standard_version, which is the RELEASE. The two move independently: 0.4.0 and 0.5.0 both carry stamp 0.2-draft while having inverted scoring semantics, so this field alone cannot tell two reports apart and checks_commit_sha is the discriminator that can."},
         "checks_commit_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$", "description": "The commit the check definitions were read from, as a full 40-character sha. NOT a tag: a tag is a movable label and a sha is not, and the point of this field is that a reader can fetch the exact definitions a score was computed against. A tag moved after the fact would silently change what a published report points at. The human-legible release name goes in `standard_version`. Pattern requested by the miri-py team, whose argument was that a field named `commit_sha` permitting a tag is the same defect class this exchange was about - a name saying one thing and a value being another - and that a schema permitting a tag will eventually be given one."},
         "standard_version": {"type": "string", "description": "The MIRI release the report was scored against - the human-legible half of the pin, e.g. \"0.5.0\". Read from the standard's website/site.yaml at the pinned commit. A report previously named its checklist stamp and never the release, so a reader could not tell which version of the standard produced a score. Declared here rather than left as one implementation's extension: two linters inventing the same field under different names is the interoperability failure the wire schemas exist to prevent."},
         "content_sha256": {"type": "string"},
@@ -49,7 +49,7 @@
       "description": "The two-score model: a Conformance score and a Health score (see scoring-v1.json). A conformance score MUST be reported with its effective denominator and the excluded/forfeited counts; the number alone is not interpretable, because 80 out of 100 and 80 out of 58 are different claims.",
       "required": ["conformance", "effective_denominator", "excluded", "forfeited"],
       "properties": {
-        "conformance": {"type": "number"},
+        "conformance": {"type": "number", "minimum": 0, "maximum": 100, "description": "Percentage of applicable weight earned. Bounded, because it was previously unbounded and a score of 480 over a denominator of 20 validated."},
         "effective_denominator": {"type": "integer", "minimum": 0, "maximum": 100, "description": "Sum of the weights of the checks that APPLIED and could be evaluated — the denominator the conformance score was computed over. Both producer checklists make carrying this a MUST. Checks with `scoring: gate` are never part of it: they carry weight 0 and are preconditions rather than measurements, so they appear in `outcomes` and gate conformance without entering either side of the ratio. It was previously impossible to report, since `scores` had no field for it."},
         "excluded": {"type": "integer", "minimum": 0, "description": "Count of checks excluded because their condition did not apply. Not-applicable is not a pass: these left both sides of the ratio. A statement of SCOPE — nothing about them is unknown."},
         "forfeited": {"type": "integer", "minimum": 0, "description": "Count of checks the linter could not evaluate for lack of a declared capability (`network`, `previous-release`, `execution`). Arithmetically identical to an exclusion; epistemically not. A statement of IGNORANCE — the obligation applied and went unchecked, so the artifact may be violating it."},
@@ -85,8 +85,20 @@
     "must_failures": {
       "type": "array",
       "items": {"type": "string", "pattern": "^MIRI-(PY|CLI)-\\d{3}$"},
-      "description": "IDs of failing MUST checks; non-empty means non-conforming"
+      "description": "IDs of failing MUST checks. Non-empty means the artifact is NON-CONFORMING, and the root allOf rules enforce that rather than asserting it: a report could previously carry a failed MUST here and declare grade gold with conformance 100, and validate. Required rather than optional, because omitting the field was the other way to hide a failure. An empty array is correct when nothing failed."
     }
   },
+  "allOf": [
+    {
+      "description": "A failing MUST makes an artifact non-conforming. The grade must say so and the score must respect the 74 cap. This is the rule `scoring: gate` delegates its entire effect to - a gate carries weight 0, so a failing one leaves no arithmetic trace and `must_failures` is its only representation - and until now nothing enforced it.",
+      "if": {"properties": {"must_failures": {"minItems": 1}}, "required": ["must_failures"]},
+      "then": {"properties": {"scores": {"properties": {"grade": {"const": "non-conforming"}, "conformance": {"maximum": 74}}}}}
+    },
+    {
+      "description": "A non-conforming grade must name what failed.",
+      "if": {"properties": {"scores": {"properties": {"grade": {"const": "non-conforming"}}, "required": ["grade"]}}, "required": ["scores"]},
+      "then": {"required": ["must_failures"]}
+    }
+  ],
   "additionalProperties": true
 }

@@ -157,7 +157,7 @@ its first line and names what breaks, because "check the changelog" is not a sub
 means something. From 1.0.0 onward a breaking change takes a major bump without exception.
 
 This clause was added at 0.5.0, which reversed the meaning of `conditional` and moved three checks out of the
-score. Both change every conformance score and both affect anything vendoring `check-v1.json`. Without the clause
+score. Both change every conformance score and both affect anything vendoring `check-v2.json`. Without the clause
 the release would have contradicted the policy in the same file that states it.
 
 ## Development Process

@@ -1,3 +1,4 @@
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CLI-034
 name: Warnings on stderr
 target: cli

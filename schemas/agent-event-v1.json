@@ -28,7 +28,7 @@
     "phase": {
       "type": "string",
       "enum": ["before", "after"],
-      "description": "Whether the action that produced the event has landed. `runtime.error` is necessarily `after`. `dependency.add` is `after` for a local surface: a package that is not yet installed ships nothing readable, so the earliest moment 3.5 can be performed is after the install and before any code is written against it — still before the decision that is expensive to reverse, since an install is undone with an uninstall and a codebase written against a package is not. `before` remains legal so a registry-side surface is not forbidden in advance. Every other kind is `before`."
+      "description": "Whether the action that produced the event has landed. `runtime.error` is necessarily `after`. `dependency.add` and `package.replaced` are `after` too - the artifact must be installed for there to be anything to read. Every other kind is `before`."
     },
     "subject": {
       "type": "object",

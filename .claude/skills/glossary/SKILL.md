@@ -24,7 +24,7 @@ as derived from the normative documents, never as a second place where meaning i
 `make consistency` runs `check_glossary()` in `tools/check_consistency.py`. It **fails the build** on:
 
 1. **A closed vocabulary that disagrees with its source.** Trigger kinds come from `agent-event-v1.json`, vehicle
-   labels from the Consumption Map's own table, severity from `check-v1.json`. The glossary quotes; it does not
+   labels from the Consumption Map's own table, severity from `check-v2.json`. The glossary quotes; it does not
    decide.
 2. **A defined term with no link** to where it is normatively defined. Every `**Term** —` entry must reach its
    home in one click, because a reader who needs the rule rather than the explanation should not have to search.

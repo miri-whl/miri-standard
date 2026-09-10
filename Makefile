@@ -14,10 +14,10 @@ help: ## Show this help
 deps: ## Install Python dependencies for the site generator
 	pip install pyyaml jsonschema jinja2
 
-validate: ## Validate check YAMLs against schemas/check-v1.json (as CI does)
+validate: ## Validate check YAMLs against schemas/check-v2.json (as CI does)
 	@python3 -c "\
 	import json, pathlib, yaml, jsonschema; \
-	schema = json.load(open('schemas/check-v1.json')); \
+	schema = json.load(open('schemas/check-v2.json')); \
 	jsonschema.Draft7Validator.check_schema(schema); \
 	files = sorted(pathlib.Path('standards').glob('*/checks/*.yaml')); \
 	[jsonschema.validate(yaml.safe_load(f.read_text()), schema) for f in files]; \

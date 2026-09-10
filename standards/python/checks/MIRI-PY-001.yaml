@@ -1,4 +1,5 @@
 # MIRI-PY-001 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-001
 name: Wheel structure valid
 target: python-wheel

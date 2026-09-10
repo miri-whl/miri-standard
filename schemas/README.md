@@ -29,7 +29,15 @@ consistency and enable automated validation of agent metadata.
   - Required fields: `version`, `nodes`, `edges`
   - Validates graph structure and workflow definitions
 
-- **[check-v1.json](check-v1.json)** - Schema for the per-check check definitions in `standards/<target>/checks/`
+- **[check-v2.json](check-v2.json)** - Schema for the per-check check definitions in `standards/<target>/checks/`
+  - **Current.** Requires each definition to declare `$schema` pointing at this file, which is what makes a
+    semantics change loud: a v2 definition carries a key v1's closed `additionalProperties` rejects, and a v1
+    definition omits a key v2 requires, so a mismatched corpus-and-schema pairing fails in both directions
+- **[check-v1.json](check-v1.json)** - **Superseded at 0.5.0, retained frozen.** Describes pre-0.5.0 scoring
+  semantics, under which `conditional: true` meant a check scored its full weight automatically when its condition
+  did not apply. That reading was replaced by exclusion from both numerator and denominator — a change of *meaning*
+  with no change of *shape*, which is precisely why it needed a new schema rather than an edited one. A consumer
+  pinned here is old, not wrong, and stays internally consistent. Do not add fields
   - Canonical check metadata: level, weight, severity, violation unit, example, fix, references
   - The severity vocabulary (LOW/MINOR/MEDIUM/HIGH/CRITICAL, 1-5) is normative for health scoring
 
@@ -75,7 +83,15 @@ consistency and enable automated validation of agent metadata.
 ### Reporting Schemas
 
 - **[scoring-v1.json](scoring-v1.json)** - Conformance score reports
-- **[lint-report-v1.json](lint-report-v1.json)** - Linter output, including forfeited checks and their fixed reasons
+- **[lint-report-v1.json](lint-report-v1.json)** - Linter output. As of 0.5.0 a report MUST carry
+  `scores.effective_denominator`, `scores.excluded`, `scores.forfeited` and `must_failures` beside a conformance
+  score, because the number alone is not interpretable once checks leave the ratio
+  - `must_failures` non-empty forces `grade: non-conforming` and caps `conformance` at 74. That coupling is what a
+    `scoring: gate` check depends on entirely: a gate carries weight 0, so a failing one leaves no arithmetic trace
+    and this field is its only representation
+  - `checks_commit_sha` is a full 40-character sha, never a tag — a tag is movable and a published score must point
+    at definitions that are not. The release name goes in `standard_version`
+  - A `skipped` outcome MUST name its `skip_reason` from the closed set
 
 ## Usage
 

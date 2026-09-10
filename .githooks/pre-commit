@@ -46,7 +46,7 @@ for target, cl in [('python', 'standards/python/linter-checklist.md'), ('cli', '
     if total != 100:
         print(f"{cl}: weights sum {total}, expected 100"); fail = True
     if deep:
-        schema = json.load(open('schemas/check-v1.json'))
+        schema = json.load(open('schemas/check-v2.json'))
         checks = {}
         for f in sorted(pathlib.Path(f'standards/{target}/checks').glob('*.yaml')):
             d = yaml.safe_load(f.read_text())

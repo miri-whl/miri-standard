@@ -1,4 +1,5 @@
 # MIRI-CONSUMER-032 — generated with the Consumer Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-032
 name: Never auto-migrates onto a publisher-declared `replacement`
 target: consumer

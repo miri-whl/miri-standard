@@ -1,3 +1,4 @@
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-SURFACE-002
 name: Nests the payload; never merges publisher bytes into the envelope
 target: surface

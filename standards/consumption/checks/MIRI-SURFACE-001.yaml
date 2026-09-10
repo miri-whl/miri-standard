@@ -1,4 +1,5 @@
 # MIRI-SURFACE-001 — generated with the Surface Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-SURFACE-001
 name: Stamps `schema_version` on every response
 target: surface

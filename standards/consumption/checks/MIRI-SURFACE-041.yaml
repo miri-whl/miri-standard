@@ -1,4 +1,5 @@
 # MIRI-SURFACE-041 — generated with the Surface Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-SURFACE-041
 name: Emits one row per import package; errors rather than picking among ambiguous one
 target: surface

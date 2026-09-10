@@ -1,3 +1,4 @@
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-051
 name: Trigger behavior is independent of what the publisher ships
 target: consumer

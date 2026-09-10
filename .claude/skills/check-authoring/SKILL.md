@@ -7,7 +7,7 @@ description: "Use when adding, editing, withdrawing, or reviewing a MIRI check d
 
 Each file in `standards/python/checks/` and `standards/cli/checks/` is one canonical check: the
 machine-readable source of truth a linter implements by ID. The generated site and the linter both consume these
-files, so a mistake here propagates to every downstream tool. The governing schema is `schemas/check-v1.json`
+files, so a mistake here propagates to every downstream tool. The governing schema is `schemas/check-v2.json`
 (JSON Schema draft-07) — read it before authoring, and validate against it after (see the `schema-governance` skill
 for the weight/coverage invariants that span the whole set).
 
@@ -68,7 +68,7 @@ for the weight/coverage invariants that span the whole set).
 
 ## Workflow for a change
 
-1. Read `schemas/check-v1.json` and two or three sibling checks in the same category for tone and field patterns.
+1. Read `schemas/check-v2.json` and two or three sibling checks in the same category for tone and field patterns.
 2. Write or edit the YAML. Keep `id` stable; pick the next free number for a new check.
 3. Validate the single file against the schema, then run the whole-set invariants (weights sum to 100, IDs
    contiguous, categories consistent) — the `schema-governance` skill has the exact commands.

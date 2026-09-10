@@ -1,4 +1,5 @@
 # MIRI-SURFACE-020 — generated with the Surface Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-SURFACE-020
 name: Serves only the closed servable set; refuses anything else
 target: surface

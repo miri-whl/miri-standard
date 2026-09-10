@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://miri-whl.github.io/schemas/check-v1.json",
-  "title": "Miri Standard Check Definition",
-  "description": "Schema for the per-check definition files in standards/<target>/checks/ - the canonical, machine-readable source of truth for every check, consumed by linter implementations",
+  "title": "Miri Standard Check Definition (v1 - SUPERSEDED)",
+  "description": "SUPERSEDED by check-v2.json at 0.5.0. Retained unchanged because a consumer pinned here is internally consistent rather than wrong: it describes PRE-0.5.0 scoring semantics, under which `conditional: true` meant a check scored its full weight automatically when its condition did not apply. That reading was replaced by exclusion from both numerator and denominator - the not-applicable-is-not-a-pass rule - which is a change of MEANING with no change of SHAPE, and therefore a new schema rather than an edited one. Do not add fields here; new work validates against check-v2.json. --- Schema for the per-check definition files in standards/<target>/checks/ - the canonical, machine-readable source of truth for every check, consumed by linter implementations",
   "type": "object",
   "required": [
     "id",

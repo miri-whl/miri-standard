@@ -24,14 +24,14 @@ about keeping those sources internally consistent and making the schema *actuall
    The same must hold summing the `weight:` fields across the `active` YAML files for each target. If you withdraw a
    check, redistribute its weight in the same change — never leave the sum below 100.
 
-2. **Every check YAML validates against `schemas/check-v1.json`**, and the schema itself is a valid draft-07
+2. **Every check YAML validates against `schemas/check-v2.json`**, and the schema itself is a valid draft-07
    schema:
 
    ```bash
    python3 -m venv /tmp/v && /tmp/v/bin/pip -q install jsonschema pyyaml
    /tmp/v/bin/python -c "
    import json, pathlib, yaml, jsonschema
-   schema = json.load(open('schemas/check-v1.json'))
+   schema = json.load(open('schemas/check-v2.json'))
    jsonschema.Draft7Validator.check_schema(schema)
    n = 0
    for f in pathlib.Path('standards').glob('*/checks/*.yaml'):
@@ -83,6 +83,6 @@ nothing. Rules when touching it:
 ## Cross-repo consistency
 
 Linters vendor these definitions. If a downstream tool (e.g. miri-py) pins a commit and content-hash of
-`standards/*/checks/`, then adding a required field to `check-v1.json` breaks that vendored mirror until it re-syncs.
+`standards/*/checks/`, then adding a required field to `check-v2.json` breaks that vendored mirror until it re-syncs.
 When you add or tighten a schema field, note it as a downstream-affecting change so the vendored copies can be
 regenerated — a silently drifted mirror enforces rules it has never seen.
