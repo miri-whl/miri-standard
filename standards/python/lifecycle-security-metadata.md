@@ -177,8 +177,9 @@ Emerging prior art:
   `maintenance` ≈ the window where only security support remains (pre-EoSSec), `eol` ≈ EoL/EoSSec passed. Organizations
   MAY additionally publish OpenEoX statements; a future version of this specification will add a pointer field to them
   once OpenEoX 1.0 is ratified, rather than pre-standardizing against a draft.
-- **OWASP CLE** (Common Lifecycle Enumeration) is the complementary effort for naming lifecycle states across vendors;
-  see [how the two compose](https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox).
+- **OWASP CLE** (Common Lifecycle Enumeration) is the complementary effort: an open standard for component
+  aliasing, lifecycle changes such as end-of-life and end-of-support, and provenance chaining over time — see
+  [the CLE project](https://owasp.org/www-project-common-lifecycle-enumeration/).
 
 Consumers therefore handle EOL at three levels, each with its own mechanism: the **package itself** via `support` (read
 locally, no network); **direct dependencies** via their own `lifecycle.json`/`support` blocks; **bundled components**
@@ -478,5 +479,5 @@ honest move is to name it rather than let a freshness mechanism be mistaken for 
 - PEP 792 — Project status markers in the index APIs — <https://peps.python.org/pep-0792/>
 - OpenVEX — <https://github.com/openvex/spec>
 - OpenEoX TC (OASIS) — <https://www.oasis-open.org/tc-openeox/> · Core Schema 1.0 CSD01 — <http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/>
-- OWASP CLE and OpenEoX — <https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox>
+- OWASP CLE (Common Lifecycle Enumeration) — <https://owasp.org/www-project-common-lifecycle-enumeration/>
 - endoflife.date — <https://endoflife.date/>

@@ -80,10 +80,19 @@ lint: ## Lint Markdown (CI: markdownlint-cli2)
 	npx -y markdownlint-cli2@0.13 "**/*.md" "#node_modules" "#.generated"
 
 spell: ## Spell-check Markdown (CI: cspell)
-	npx cspell --config .cspell.json --no-progress "**/*.md"
+	# Pinned for the same reason as `lint`. Note pinning cspell does NOT pin its dictionaries: a real
+	# English word can sit in the locally-resolved en_US trie and be absent from the one cspell-action
+	# bundles, which passes here and fails CI (this happened with `evaluable`). The version-independent
+	# fix for such a word is to add it to `.cspell.json` words, not to rely on either dictionary.
+	npx -y cspell@8 --config .cspell.json --no-progress "**/*.md"
 
 links: ## Check Markdown links (CI: markdown-link-check)
-	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
-		-exec npx markdown-link-check -q -c .markdown-link-check.json {} \;
+	# xargs, not `-exec`: `find -exec` reports find's exit status, so this target printed dead links
+	# and still exited 0. xargs exits 123 when any invocation fails, which is what makes `check` red.
+	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' -print0 \
+		| xargs -0 -n1 npx -y markdown-link-check -q -c .markdown-link-check.json
+	# -q prints nothing for a clean file, so a passing run is otherwise silent and reads as "did nothing".
+	@echo "links: $$(find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
+		| wc -l | tr -d ' ') file(s), no dead links"
 
-check: validate validate-sample validate-fixtures validate-cli-fixtures findings-schema score-cli-linter lint spell ## Run everything CI runs locally (except link check and the miri score gate)
+check: validate validate-sample validate-fixtures validate-cli-fixtures findings-schema score-cli-linter lint spell links ## Run everything CI runs locally (except the miri score gate)
