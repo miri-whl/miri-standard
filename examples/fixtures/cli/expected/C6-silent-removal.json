@@ -1,0 +1,39 @@
+{
+  "attack": "C6 \u2014 a surface removed with no deprecation and no changelog entry",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-CLI-037",
+    "MIRI-CLI-030"
+  ],
+  "clause": "037 clause 1; 030 clause 1",
+  "note": "The silent removal the deprecation contract exists to forbid. Detectable ONLY by diffing against the previous release, which is why this fixture ships two.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [
+        "MIRI-CLI-037",
+        "MIRI-CLI-030"
+      ],
+      "evidence": [
+        "legacy-greet"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. Reporting the right check ID for the wrong reason is not detection \u2014 and without this, a linter that dumps every check ID on the arm named `adversarial` scores full marks having read nothing."
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [
+        "MIRI-CLI-037",
+        "MIRI-CLI-030"
+      ],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "`legacy-greet` is present in miri-1.0.0's --describe, absent from this arm's, was never marked lifecycle.status deprecated in any release, and appears in no changelog entry.",
+    "may_be_skipped_with": "previous_release_unavailable",
+    "skip_note": "This attack is only detectable by diffing against the previous release. A linter without that capability MUST skip and report the skip with this exact reason \u2014 never pass silently. No other golden in this set may be skipped for any reason."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "Requires the previous-release capability. A linter without it MUST skip and report the skip with previous_release_unavailable \u2014 never pass. Both outcomes conform; silently passing does not."
+}

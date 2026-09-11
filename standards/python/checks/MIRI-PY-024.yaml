@@ -1,4 +1,5 @@
 # MIRI-PY-024 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-024
 name: SBOM when bundling
 target: python-wheel

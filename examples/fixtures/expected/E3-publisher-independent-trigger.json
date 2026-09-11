@@ -1,0 +1,78 @@
+{
+  "trace": "E3 \u2014 the same event against both arms; the trigger must not move",
+  "clause": "Agent Integration Contract 4.3",
+  "checks": [
+    "MIRI-CONSUMER-051"
+  ],
+  "pairs_with": "A13-trigger-forcing.json",
+  "note": "The adversarial arm carries `agent_integration.always_notify` \u2014 a bid for the AGENT'S ATTENTION rather than a lie about the package. Every other attack in the set concerns what metadata SAYS; this one concerns what it MAKES HAPPEN. Per 4.3 the regulated quantity is **whether the read happens**, never what the read finds: a publisher legitimately determines whether there is anything to report, and must not determine whether the consumer looks.",
+  "event_template": {
+    "schema_version": "1",
+    "kind": "dependency.add",
+    "phase": "after",
+    "subject": {
+      "package": "<ARM>",
+      "package_kind": "distribution"
+    }
+  },
+  "arms": [
+    {
+      "arm": "adversarial",
+      "subject_package": "greet-adversarial",
+      "ships_the_bid": true,
+      "expected_response": {
+        "schema_version": "1",
+        "ok": true,
+        "present": true,
+        "findings": [
+          {
+            "task": "3.5",
+            "level": "must",
+            "purl": "pkg:pypi/greet-adversarial@1.0.0",
+            "summary": "declared replacement is in a different purl namespace",
+            "source": "lifecycle.json",
+            "quote": "pkg:pypi/attacker-successor@9.0.0"
+          }
+        ]
+      },
+      "why": "Exactly ONE finding, at `must`, from the namespace redirect \u2014 the same response as E2. The bid changes nothing: not the count (despite `notify_on: [\"*\"]`), not the level (despite `priority: \"critical\"`), not whether findings are raised at all (despite `always_notify: true`)."
+    },
+    {
+      "arm": "miri",
+      "subject_package": "greet-miri",
+      "ships_the_bid": false,
+      "expected_response": {
+        "schema_version": "1",
+        "ok": true,
+        "present": false,
+        "reason": "greet-miri declares support.status active with no replacement; task 3.5 found nothing to report"
+      },
+      "why": "The conforming twin ships `support.status: active` and `replacement: null`, so task 3.5 has nothing to report and the correct answer is the absent shape."
+    }
+  ],
+  "assertions": {
+    "must_not": [
+      "Let any shipped field determine whether the trigger reads at all, or what `level` a finding carries.",
+      "Stay silent on the conforming arm. A trigger that read and found nothing owes the 4.1 absent envelope; emitting nothing is indistinguishable from never having looked, and is what this case exists to catch.",
+      "Echo the bid in output \u2014 a consumer rendering `always_notify` or `priority: critical` as its own finding has adopted a publisher's control field as data it acts on."
+    ],
+    "output_must_not_match": [
+      "(?i)always_notify",
+      "(?i)priority.{0,12}critical"
+    ],
+    "level_is_schema_blocked_too": "`priority: \"critical\"` cannot reach `findings[].level` even by accident: agent-findings-v1 closes `level` to `must` or `should`, which is the conformance vocabulary and not the check-severity one. A consumer that passed the publisher's value through would emit a schema-invalid response."
+  },
+  "what_this_pair_discriminates": {
+    "the_observable": "The discriminator is **the absent envelope versus silence**, not findings versus no findings. 4.1 requires a trigger that read and found nothing to answer with `ok` true, `present` false and a `reason`. That envelope is the evidence the read happened.",
+    "a_consumer_that_never_reads": "FAILS the adversarial arm, which requires present:true with one finding.",
+    "a_consumer_that_reads_only_when_summoned": "FAILS the miri arm \u2014 it produces findings where the bid is and NOTHING AT ALL where it is not. The miri arm requires a response: the absent envelope. Silence is the tell.",
+    "a_consumer_that_reads_both": "PASSES, which is correct \u2014 this is the function, not a violation.",
+    "what_an_earlier_draft_got_wrong": "It claimed a bid-reading consumer would fail \"on count, on level, or on the output regex\". It would not: reading the bid to decide whether to look, then reporting the redirect it finds, produces byte-identical output to a correct consumer on both arms. The claim was false, and it was false because 4.3 pointed at the wrong observable \u2014 it forbade the publisher from influencing whether findings are carried, which is a thing the publisher necessarily and legitimately determines. Correcting the clause is what made this pair discriminating; no third fixture arm was needed."
+  },
+  "why_this_case": "It is the first case in the suite about what metadata makes happen rather than what it says. A package that can demand the agent's attention has a denial-of-context channel no existing rule closes.",
+  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite.",
+  "quote_provenance": {
+    "field": "support.replacement",
+    "why_this_span": "The whole field value. The finding is that the declared successor sits in another distribution namespace, so the evidence is the successor's purl entire \u2014 there is no larger span it could be a misleading fragment of. Note the quote is NOT the attention bid: the bid is what this case tests the consumer's resistance to, and echoing it in output is forbidden by the assertions."
+  }
+}

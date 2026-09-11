@@ -60,6 +60,13 @@ METADATA_VARIANTS = {
                 "a schema-valid lifecycle.json claiming to be pkg:pypi/requests (MIRI-SURFACE-040)"),
     "symlinked": ("greet-symlinked", "greet_symlinked", METADATA / "symlinked",
                   "a whitelisted document name that is a symlink out of the package (MIRI-SURFACE-021)"),
+    # A14: the ONLY arm that deliberately shares another arm's purl. `miri` and `replaced` are two
+    # artifacts at pkg:pypi/greet-miri@1.0.0 with different bytes, which is what a same-version
+    # reinstall produces and what no other pairing in this set can express - every other variant is a
+    # distinct distribution. Without it MIRI-CONSUMER-052 has no drivable case, and because 052 is a
+    # MUST, a profile run would forfeit it and report conformance undetermined for every consumer.
+    "replaced": ("greet-miri", "greet_miri_replaced", METADATA / "replaced",
+                 "a second artifact at the SAME purl as `miri` with different bytes (MIRI-CONSUMER-052)"),
 }
 
 # The multi-distribution case: TWO distributions that both provide the SAME import name. This is

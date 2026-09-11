@@ -83,6 +83,23 @@ This project follows a standards development process:
 - Feature branches: `feature/description` for new work
 - Release branches: `release/version` for preparing releases
 
+### Release Tags
+
+A release is tagged with its version and **no `v` prefix** — `0.5.0`, not `v0.5.0`.
+
+The tag exists for humans and for GitHub releases only. The machine-readable pin is `checks_commit_sha` in a lint
+report, which requires a full 40-character sha and explicitly rejects a tag, since a tag is a movable label and a
+published score has to keep pointing at the definitions it was computed against. That leaves the tag one job —
+being the release name a person recognizes — and that name already has a canonical spelling as `standard_version`
+(`0.5.0`), which is also how `CHANGELOG.md` heads its entries. Matching it exactly means a report's
+`standard_version` is usable as a git ref with no mapping step.
+
+Tag on `main` once the release PR has merged:
+
+```bash
+git tag -a 0.5.0 -m "Miri Standard 0.5.0" && git push origin 0.5.0
+```
+
 ## Submitting Changes
 
 ### Pull Request Process

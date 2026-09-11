@@ -1,4 +1,5 @@
 # MIRI-PY-011 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-011
 name: Build-time generation
 target: python-wheel

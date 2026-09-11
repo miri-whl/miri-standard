@@ -1,0 +1,24 @@
+{
+  "trace": "E8 — a kind the Claude Code binding omits rather than approximates",
+  "clause": "Agent Integration Contract 5 item 3, 6.2",
+  "checks": [],
+  "note": "This trace asserts an ABSENCE, and is the only one that does. A binding that silently omits a kind is indistinguishable from one where the kind never fired — the same 'cannot tell working from unused' failure the whole document exists to close, reproduced one level down.",
+  "kinds_this_binding_does_not_support": [
+    {
+      "kind": "package.first_reference",
+      "why": "Claude Code exposes no event for 'a symbol was referenced'. The nearest signal is an Edit whose content contains a new import, which fires on any edit that happens to add one and misses every reference to an already-imported package. That is a different event under this kind's name.",
+      "expected": "NO event of this kind is ever emitted by this binding, and the binding document says so."
+    },
+    {
+      "kind": "integration.begin",
+      "why": "The moment 'new code is about to be written against a package' has no observable boundary in this host. It is inferable from a sequence of edits, and inference is what 3.1 excludes.",
+      "expected": "NO event of this kind is ever emitted by this binding, and the binding document says so."
+    }
+  ],
+  "assertions": {
+    "must_not": "Map a trigger to an observable moment that fires at materially different times than 3.1 specifies. Reporting a different event under a contract kind's name is WORSE than omitting the kind, because a caller cannot tell the two apart — the omission is visible in the binding document and the approximation is not.",
+    "how_this_is_verified": "Not by an envelope. Drive the binding across a session that would trigger the nearest approximation — an Edit adding a new import, a sequence of edits against one package — and assert no event of either kind is emitted. Then confirm the binding document lists both under 'kinds not supported'.",
+    "graph_is_a_separate_matter": "`graph` appears in no REQUIRED trigger's read-order. A binding that never calls it is NOT deficient — it serves 3.2 scaffolding, whose trigger is SHOULD and which this binding does not implement. Absence of a call to `graph` is therefore not evidence of an incomplete binding, and a suite must not score it as one."
+  },
+  "why_this_case": "Every other trace asserts that something correct happens. This one asserts that something plausible does not, which is the only way an omission and an approximation can be told apart."
+}

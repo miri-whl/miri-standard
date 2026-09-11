@@ -1,4 +1,5 @@
 # MIRI-CONSUMER-011 — generated with the Consumer Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-011
 name: Never reports `not-in-source` as proof a symbol does not exist
 target: consumer

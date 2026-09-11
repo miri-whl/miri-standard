@@ -76,7 +76,7 @@ jobs:
         python-version: '3.12'
     - name: Install validation deps
       run: pip install pyyaml jsonschema
-    - name: Validate check YAMLs against check-v1.json
+    - name: Validate check YAMLs against check-v2.json
       run: make validate
     - name: Validate sample-sdk metadata against schemas
       run: make validate-sample
@@ -87,6 +87,12 @@ jobs:
     - name: Verify fixture invariants
       run: make validate-fixtures
 
+    # The CLI fixture suite gated nothing until now: it was wired into `make check`, and CI never calls
+    # `make check`. That is the same gap the comment above records closing for the wheel fixtures, in the
+    # release that introduced the CLI ones.
+    - name: Verify the CLI fixture invariants
+      run: make validate-cli-fixtures
+
     - name: Check specification consistency
       run: make consistency
 
@@ -95,6 +101,12 @@ jobs:
     # asserted in a document, so a schema edit that stops enforcing a rule fails here.
     - name: Validate the discovery envelope schema
       run: make envelope
+
+    - name: Validate the trigger-response schema in both directions
+      run: make findings-schema
+
+    - name: Prove the CLI golden harness discriminates
+      run: make score-cli-linter
 
     # The fourth normative-artifact pair: spec prose x check citations. Gates the mechanically
     # decidable half — does the cited document and section exist — and leaves the semantic half

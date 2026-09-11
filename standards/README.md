@@ -106,8 +106,14 @@ Cross-cutting, consumer-side standards: not what an artifact ships, but how an a
   wheels 0–100
 - **[Python Artifact Lifecycle](python/artifact-lifecycle.md)** - Stages from build to archival with the nested
   interface lifecycle
+- **[Production Map](python/production-map.md)** - the producer counterpart to the Consumption Map: the dependency
+  order among the metadata documents, which must exist before which can be verified, and which checks cannot be
+  evaluated on a first release. Every ordering is derived from an existing check rather than asserted.
 - **[CLI Lifecycle and Vulnerability Signaling](cli/cli-lifecycle-specification.md)** - CLI self-identification,
   advisory sources, update checks, and deprecation metadata
+- **[CLI Production Map](cli/production-map.md)** - the CLI counterpart: what an author settles before what, why the
+  deprecation contract is last, and why five checks cannot be evaluated on a first release. Every ordering is derived
+  from an existing check rather than asserted.
 - **[Discovery Contract (Consumption)](consumption/discovery-contract.md)** - How an agent obtains a package's Miri
   metadata at decision time — a transport-agnostic metadata-query contract with MCP as the first binding
 - **[Consumption Map (Consumption)](consumption/consumption-map.md)** - What an agent reads per task and in what order,
@@ -144,6 +150,15 @@ Specifications use semantic versioning:
 - **Major Version**: Breaking changes or significant new features
 - **Minor Version**: Backward-compatible additions
 - **Patch Version**: Bug fixes and clarifications
+
+**While the major version is 0**, the standard is in initial development and a **minor** bump may carry a breaking
+change — [Semantic Versioning §4](https://semver.org/#spec-item-4). Where it does, the CHANGELOG entry says so in
+its first line and names what breaks, because "check the changelog" is not a substitute for a version number that
+means something. From 1.0.0 onward a breaking change takes a major bump without exception.
+
+This clause was added at 0.5.0, which reversed the meaning of `conditional` and moved three checks out of the
+score. Both change every conformance score and both affect anything vendoring `check-v2.json`. Without the clause
+the release would have contradicted the policy in the same file that states it.
 
 ## Development Process
 

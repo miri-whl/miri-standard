@@ -1,4 +1,4 @@
-# MIRI-CONSUMER-041 — generated with the Consumer Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-041
 name: Never presents a synthesized mock as the package's supported test double
 target: consumer
@@ -7,21 +7,30 @@ added_in: 0.3-draft
 level: MUST
 category: Usage Fidelity and Budget
 weight: 1
-conditional: false
+conditional: true
 severity:
   default: MINOR
   violation_unit: each synthesized double presented as supported
 short_description: Never presents a synthesized mock as the package's supported test double
-long_description: This check verifies the consumer distinguishes doubles the package ships from ones the consumer
-  invented.
-rationale: A test built on a fake the package does not support drifts silently from the real behavior, and the drift
-  surfaces as a passing test over broken code. Only `supported_test_doubles` entries carry the author's fidelity
-  commitment.
+long_description: 'Consumer obligation from Consumption Map 3.6. CONDITIONAL, and the condition is the point:
+  no producer check requires any package to ship test-patterns.json, so a consumer can be driven against a conforming
+  wheel that ships none, or one that ships the document with an empty supported_test_doubles. In either state
+  the only way to satisfy this check is to present no double at all - which is also what a consumer must do when
+  there is nothing to present. The check could not distinguish a careful consumer from an inert one, and was passing
+  vacuously. Under the not-applicable-is-not-a-pass rule it is now excluded from both numerator and denominator
+  where the package declares no doubles, and scored only where there is a declared double to misrepresent.'
+rationale: A test built on a fake the package does not support drifts silently from the real behavior, and the
+  drift surfaces as a passing test over broken code. Only `supported_test_doubles` entries carry the author's
+  fidelity commitment.
 fires_when:
-- The consumer presents a mock absent from `supported_test_doubles` as the package's official test double
+- The package declares at least one entry in `supported_test_doubles` and the consumer presents a mock absent
+  from that list as the package's official double
+- The package declares doubles and the consumer presents its own synthesized mock without saying it is synthesized,
+  where a declared one exists for the same surface
 remediation:
-- Use only declared doubles when claiming support; label anything else as the consumer's own construction
-suggested_fix: Use only declared doubles when claiming support; label anything else as the consumer's own construction
+- Present a double from `supported_test_doubles` where one exists for the surface under test
+- Where none exists, say the mock is the consumer's own rather than the package's
+suggested_fix: Present a double from `supported_test_doubles` where one exists for the surface under test
 references:
 - title: Consumption Map §3.6
   url: consumption-map.md

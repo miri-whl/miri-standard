@@ -15,16 +15,25 @@ Checks, in the order they proved necessary:
   7. Check cross-refs    - every MIRI-* id named in prose has a definition file
 """
 import pathlib
+import json
 import re
+import yaml
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-SPECS = sorted((REPO / "standards/consumption").glob("*.md"))
+# The consumption suite, plus the documents that carry the same kind of load-bearing counts.
+# why-consumption.md shipped "thirty-three" for a 35-check suite because nothing scanned it, and
+# both production maps make numeric claims about check populations that nothing scanned either.
+SPECS = sorted((REPO / "standards/consumption").glob("*.md")) + [
+    REPO / "standards/python/production-map.md",
+    REPO / "standards/cli/production-map.md",
+    REPO / "docs/why-consumption.md",
+]
 CHECK_DIR = REPO / "standards/consumption/checks"
 WORDS = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
          "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14,
          "fifteen": 15, "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19,
-         "twenty": 20, "thirty-three": 33}
+         "twenty": 20, "thirty-three": 33, "thirty-five": 35, "thirty-four": 34}
 
 fails = []
 def bad(where, msg):
@@ -50,7 +59,11 @@ def check_counts(name, text):
     for snt in re.split(r"(?<=[.;])\s", strip_fences(text)):
         if not FAMILY.search(snt):
             continue
-        for m in re.finditer(r"\b(?:all|the current|among the)\s+\*?\*?(\w+)\*?\*?\b", snt, re.I):
+        for m in re.finditer(r"\b(?:all|the current|among the)\s+\*?\*?([\w-]+)\*?\*?\b", snt, re.I):
+            # "all N consumption checks" is a SUITE total (surface + consumer), owned by
+            # check_suite_totals. Counting it against one family reports a false conflict.
+            if re.search(r"consumption checks", snt, re.I):
+                continue
             word = m.group(1).lower()
             if word in WORDS and WORDS[word] != actual_n:
                 bad(name, f"says {word!r} in a sentence about {prefix_for}, which has {actual_n} checks")
@@ -63,11 +76,11 @@ def check_counts(name, text):
             bad(name, f"ID range ends at {pre}-{m.group(3)} but {pre}-{real:03d} exists")
     # The section-opener phrasing both profiles use. It names no family, so the sentence guard
     # above cannot see it — and it went stale for two rounds before a review caught it.
-    for m in re.finditer(r"\b(\w+) checks, weights summing to 100", text):
+    for m in re.finditer(r"\b([\w-]+) checks, weights summing to 100", text):
         word = m.group(1).lower()
         if word in WORDS and WORDS[word] != actual_n:
             bad(name, f"opener says {word!r}; {prefix_for} has {actual_n} checks")
-    for m in re.finditer(r"\*\*?(\w+)\*\*? (?:numbered )?checks\b", text):
+    for m in re.finditer(r"\*\*?([\w-]+)\*\*? (?:numbered )?checks\b", text):
         word = m.group(1).lower()
         if word not in WORDS:
             continue
@@ -77,7 +90,7 @@ def check_counts(name, text):
         if claimed != actual:
             bad(name, f"claims {claimed} checks; {prefix} has {actual}")
     # "these <n> labels" against the label table
-    for m in re.finditer(r"[Tt]hese \*\*?(\w+)\*\*? labels", text):
+    for m in re.finditer(r"[Tt]hese \*\*?([\w-]+)\*\*? labels", text):
         word = m.group(1).lower()
         if word not in WORDS:
             continue
@@ -85,7 +98,7 @@ def check_counts(name, text):
         if rows and WORDS[word] != rows:
             bad(name, f"claims {WORDS[word]} labels; the table has {rows} rows")
     # "<n> checks need" / "<n> checks carry" against the ids listed in the same sentence
-    for m in re.finditer(r"\*\*?(\w+)\*\*? checks (?:need|carry|require)([^.]*)\.", text):
+    for m in re.finditer(r"\*\*?([\w-]+)\*\*? checks (?:need|carry|require)([^.]*)\.", text):
         word = m.group(1).lower()
         if word not in WORDS:
             continue
@@ -263,7 +276,7 @@ def check_glossary():
 
       1. Every closed vocabulary it quotes matches its authoritative source. Trigger kinds come from
          agent-event-v1.json, error codes and payload keys from discovery-envelope-v1.json, vehicle
-         labels from the Consumption Map, severity from check-v1.json.
+         labels from the Consumption Map, severity from check-v2.json.
       2. Every defined term carries a link to where it is normatively defined, so a reader who needs
          the rule rather than the explanation can reach it in one click.
       3. No term is defined that the standard does not use, and the terms the standard defines in
@@ -314,7 +327,7 @@ def check_glossary():
             bad("glossary.md", f"term {term!r} has no link to where it is defined")
 
     # 3. counts the glossary states about the check families
-    for m in re.finditer(r"`(MIRI-(?:CONSUMER|SURFACE))` runs (\d+)[–-](\d+) across (\w+) checks", g):
+    for m in re.finditer(r"`(MIRI-(?:CONSUMER|SURFACE))` runs (\d+)[–-](\d+) across ([\w-]+) checks", g):
         pre, hi, word = m.group(1), int(m.group(3)), m.group(4).lower()
         real = [f.stem for f in (REPO / "standards/consumption/checks").glob(f"{pre}-*.yaml")]
         if word in WORDS and WORDS[word] != len(real):
@@ -322,6 +335,149 @@ def check_glossary():
         top = max(int(i.rsplit("-", 1)[1]) for i in real)
         if hi != top:
             bad("glossary.md", f"{pre} range ends at {hi:03d}; highest is {top:03d}")
+
+
+def check_schema_index():
+    """Every schema in schemas/ must appear in schemas/README.md, and vice versa.
+
+    Five schemas shipped unindexed for two releases, discoverable only by listing the directory. 0.5.0
+    fixed the index by hand and called it "verified complete" — which nothing verified. That is the
+    unenforced-claim defect this repo exists to name, committed in the sentence claiming to close it.
+    This is the enforcement, so the next schema added cannot drop out silently.
+    """
+    idx = (REPO / "schemas/README.md").read_text()
+    listed = set(re.findall(r"\[([a-z0-9-]+-v\d+\.json)\]", idx))
+    on_disk = {f.name for f in (REPO / "schemas").glob("*.json")}
+    for missing in sorted(on_disk - listed):
+        bad("schemas/README.md", f"{missing} exists but is not indexed")
+    for phantom in sorted(listed - on_disk):
+        bad("schemas/README.md", f"indexes {phantom}, which does not exist")
+
+
+def check_suite_totals(name, text):
+    """Catch a stale count of the whole consumption suite.
+
+    `why-consumption.md` shipped "thirty-three numbered checks" for a 35-check suite, and
+    `consumer-conformance.md` said "all thirty-three consumption checks" inside a sentence that had just
+    said 18 and 17. The existing count rule could not see either: it requires emphasis markers, and its
+    capture group excluded the hyphen in "thirty-three". Both bugs had to be fixed for the guard to fire,
+    and the guard was added for exactly this defect.
+    """
+    total = sum(1 for f in (REPO / "standards/consumption/checks").glob("MIRI-*.yaml")
+                if yaml.safe_load(f.read_text())["status"] == "active")
+    for m in re.finditer(r"(?:all |and )([\w-]+) (?:numbered |consumption )checks\b", text, re.I):
+        word = m.group(1).lower()
+        if word in WORDS and WORDS[word] != total:
+            bad(name, f"says {word} ({WORDS[word]}) consumption checks; there are {total}")
+
+
+def check_findings_inherits_envelope():
+    """agent-findings-v1 claims to BE discovery-envelope-v1 plus one payload key. Enforce the claim.
+
+    An earlier version re-typed a subset of the envelope's rules by hand while the prose asserted
+    inheritance; eleven documents the envelope rejected validated against it, including the schema_version
+    format whose absence the envelope's own description records as having already made two implementations
+    diverge. The rules are now copied, and this fails if a copy drifts.
+    """
+    env = json.loads((REPO / "schemas/discovery-envelope-v1.json").read_text())
+    fnd = json.loads((REPO / "schemas/agent-findings-v1.json").read_text())
+
+    for key in ("required", "additionalProperties", "definitions"):
+        if env.get(key) != fnd.get(key):
+            bad("agent-findings-v1.json", f"{key} differs from discovery-envelope-v1")
+
+    for name, spec in env.get("properties", {}).items():
+        if name not in fnd.get("properties", {}):
+            bad("agent-findings-v1.json", f"drops the envelope property `{name}`")
+        elif fnd["properties"][name] != spec:
+            bad("agent-findings-v1.json", f"property `{name}` diverges from the envelope")
+
+    env_rules = env.get("allOf", [])
+    fnd_rules = fnd.get("allOf", [])
+    if fnd_rules[:len(env_rules)] != env_rules:
+        bad("agent-findings-v1.json", "does not carry the envelope's allOf rules verbatim as its prefix")
+
+
+def check_checklist_coherence():
+    """Both producer checklists claim "coherence between the two (IDs, levels, weights, and the 100-point
+    sum) is verified mechanically". The only mechanism was .githooks/pre-commit, which is opt-in, was never
+    enabled in a fresh clone, and had two bugs that meant it had never run to completion. A claim whose
+    mechanism nobody runs is the defect this repo exists to name, so the check lives here too, where CI
+    reaches it.
+    """
+    ROW = re.compile(r"^\|\s*(MIRI-(?:PY|CLI)-\d+)\s*\|\s*([MS])\s*\|.+?\|.+?\|.+?\|\s*(\d+)\s*\|\s*$", re.M)
+    for target, cl in (("python", "standards/python/linter-checklist.md"),
+                       ("cli", "standards/cli/linter-checklist.md")):
+        text = (REPO / cl).read_text()
+        table = {m.group(1): (m.group(2), int(m.group(3))) for m in ROW.finditer(text)}
+        total = sum(w for _, w in table.values())
+        if total != 100:
+            bad(cl, f"checklist rows sum to {total}, expected 100")
+        defs = {}
+        for f in sorted((REPO / f"standards/{target}/checks").glob("*.yaml")):
+            d = yaml.safe_load(f.read_text())
+            if d.get("status") == "active":
+                defs[d["id"]] = d
+        for cid, (lvl, w) in sorted(table.items()):
+            if cid not in defs:
+                bad(cl, f"{cid} has a checklist row but no active check definition")
+            elif defs[cid]["level"][0] != lvl or defs[cid]["weight"] != w:
+                bad(cl, f"{cid}: checklist says {lvl}/{w}, definition says "
+                        f"{defs[cid]['level'][0]}/{defs[cid]['weight']}")
+        for cid in sorted(defs):
+            if cid not in table:
+                bad(cl, f"{cid} has a check definition but no checklist row")
+
+
+def check_gate_coherence():
+    """`scoring: gate` and `weight: 0` must agree, in both directions.
+
+    Weight 0 now means two different things - an extension check, or a gate - and `scoring` is the only
+    discriminator. If a gate carried a non-zero weight it would be counted and gated; if a scored check
+    carried weight 0 it would be silently free. Neither is visible without this.
+    """
+    for f in sorted(pathlib.Path(REPO / "standards").glob("*/checks/*.yaml")):
+        d = yaml.safe_load(f.read_text())
+        if d.get("status") != "active":
+            continue
+        cid, w, sc = d["id"], d["weight"], d.get("scoring", "scored")
+        is_ext = "X-" in cid or any(cid.startswith(f"MIRI-{p}X-") for p in ("PY", "CLI", "CONSUMER", "SURFACE"))
+        if sc == "gate" and w != 0:
+            bad(f.name, f"{cid} is scoring: gate but carries weight {w}; a gate contributes to neither side")
+        if sc != "gate" and w == 0 and not is_ext:
+            bad(f.name, f"{cid} carries weight 0 but is not a gate or an extension check; it would be "
+                        f"silently unscored")
+        if sc == "gate" and d["level"] != "MUST":
+            bad(f.name, f"{cid} is scoring: gate but level {d['level']}; a gate makes an artifact "
+                        f"non-conforming, which only a MUST can do")
+
+
+def check_category_totals():
+    """Category headings and summary tables must match the YAML they summarize.
+
+    Every one of these drifted in 0.5.0 and nothing noticed: the python checklist carried
+    `(10 points)`, `(20 points)`, `(10 points)` against actual 4/24/12, and the consumer profile's
+    summary claimed 24 points for four categories that hold 22, 22, 23 and 23, with a Checks column
+    summing to 17 under a stated total of 18. They survived because the wrong rows still totalled 100,
+    which is the worst shape a stale table can take - internally consistent, arithmetically plausible,
+    and describing the previous model.
+    """
+    import collections
+    for doc, prefix, checkdir in (
+        ("standards/python/linter-checklist.md", "MIRI-PY", "standards/python/checks"),
+        ("standards/cli/linter-checklist.md", "MIRI-CLI", "standards/cli/checks"),
+        ("standards/consumption/consumer-conformance.md", "MIRI-CONSUMER", "standards/consumption/checks"),
+    ):
+        w = collections.Counter()
+        for f in (REPO / checkdir).glob("*.yaml"):
+            d = yaml.safe_load(f.read_text())
+            if d.get("status") == "active" and d["id"].startswith(prefix + "-"):
+                w[d["category"]] += d["weight"]
+        text = (REPO / doc).read_text()
+        for m in re.finditer(r"^### [A-F]\. (.+?) \((\d+) points\)", text, re.M):
+            cat, claimed = m.group(1).strip(), int(m.group(2))
+            if cat in w and w[cat] != claimed:
+                bad(doc, f"heading '{cat}' claims {claimed} points; its checks total {w[cat]}")
 
 
 def main():
@@ -335,9 +491,15 @@ def main():
         check_tables(name, text)
         check_stray_markers(name, text)
         check_check_refs(name, text)
+        check_suite_totals(name, text)
     check_check_urls()
     check_fields_against_schemas()
     check_glossary()
+    check_schema_index()
+    check_findings_inherits_envelope()
+    check_checklist_coherence()
+    check_gate_coherence()
+    check_category_totals()
 
     if fails:
         print(f"{len(fails)} consistency failure(s):\n")

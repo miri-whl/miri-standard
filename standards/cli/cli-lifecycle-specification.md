@@ -508,7 +508,7 @@ A conformance test suite is a planned deliverable alongside the introspection sc
 - Go embedded buildinfo / govulncheck — <https://go.dev/blog/govulncheck>
 - CycloneDX — <https://cyclonedx.org/> · SPDX — <https://spdx.dev/>
 - OpenEoX TC (OASIS) — <https://www.oasis-open.org/tc-openeox/> · Core Schema 1.0 CSD01 — <http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/>
-- OWASP CLE and OpenEoX — <https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox>
+- OWASP CLE (Common Lifecycle Enumeration) — <https://owasp.org/www-project-common-lifecycle-enumeration/>
 - endoflife.date — <https://endoflife.date/>
 - OpenVEX — <https://github.com/openvex/spec>
 - RFC 9745 — The Deprecation HTTP Response Header Field — <https://www.rfc-editor.org/info/rfc9745/>

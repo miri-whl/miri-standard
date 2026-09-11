@@ -1,0 +1,44 @@
+{
+  "trace": "E6 \u2014 writing a test routes to the testing task",
+  "clause": "Agent Integration Contract 4.6; Consumption Map 3.6",
+  "checks": [
+    "MIRI-CONSUMER-041",
+    "MIRI-CONSUMER-020"
+  ],
+  "note": "This trace drives the CONFORMING arm, not the adversarial one, because the obligation here is to USE what a package declares rather than to resist what it claims. It exercises the affirmative path of MIRI-CONSUMER-041, which until 0.5.0 was satisfiable only by abstention: no producer check requires test-patterns.json, so a consumer could be driven against a conforming wheel that shipped none and the only conforming behavior \u2014 present no double \u2014 was also what an inert consumer did.",
+  "event": {
+    "schema_version": "1",
+    "kind": "test.author",
+    "phase": "before",
+    "subject": {
+      "package": "greet_miri",
+      "package_kind": "import"
+    }
+  },
+  "expected_response": {
+    "schema_version": "1",
+    "ok": true,
+    "present": true,
+    "findings": [
+      {
+        "task": "3.6",
+        "level": "must",
+        "purl": "pkg:pypi/greet-miri@1.0.0",
+        "summary": "the package declares a test double; use it rather than inventing a mock",
+        "source": "test-patterns.json",
+        "quote": "FakeGreeter"
+      }
+    ]
+  },
+  "why_this_case": "It is the only trace whose subject is the conforming arm, and the only one that tests whether a consumer USES metadata rather than whether it resists it. A suite made entirely of adversarial traces cannot tell a careful consumer from an inert one.",
+  "assertions": {
+    "level_is_must_because": "`MIRI-CONSUMER-041` is `MUST` in both of its representations \u2014 `level: MUST` in the check YAML and `M` in the Consumer Conformance profile table. An earlier draft of this golden emitted `should` and justified it as the profile's value; it was reading the adjacent row. Because 4.3 makes `level` profile-derived and normative, that error would have made a CORRECT implementer fail this golden.",
+    "conditional": "`MIRI-CONSUMER-041` is CONDITIONAL: scored where a double is declared, excluded from BOTH numerator and denominator otherwise. Not-applicable is not a pass.",
+    "the_double_must_resolve": "`greet_miri.testing.FakeGreeter` is a real importable class in the shared template, not a name in a metadata file. A consumer that resolves an import path before presenting it must SUCCEED here. A declared symbol that does not resolve is attack A3 and belongs in the adversarial arm.",
+    "the_absent_counterpart": "Driving this event against the `bare` arm MUST yield the E1 absent shape, and MUST NOT be scored as a pass for 041 \u2014 the check is excluded there, not satisfied."
+  },
+  "quote_provenance": {
+    "field": "supported_test_doubles[0].name",
+    "why_this_span": "The whole field value: the declared double's name."
+  }
+}

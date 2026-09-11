@@ -67,6 +67,7 @@
     },
     "api_index": {
       "type": "object",
+      "minProperties": 1,
       "patternProperties": {
         "^[A-Za-z_][A-Za-z0-9_]*$": {
           "$ref": "#/definitions/api_component"

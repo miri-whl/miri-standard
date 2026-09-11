@@ -1,4 +1,5 @@
 # MIRI-SURFACE-003 — generated with the Surface Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-SURFACE-003
 name: Emits only reserved keys at the top level
 target: surface

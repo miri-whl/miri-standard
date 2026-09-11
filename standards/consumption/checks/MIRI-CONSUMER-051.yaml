@@ -1,3 +1,4 @@
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-051
 name: Trigger behavior is independent of what the publisher ships
 target: consumer
@@ -21,14 +22,20 @@ rationale: 'Every item in the Agent Metadata threat model concerns what the meta
   it consumes the agent''s attention on demand, and no existing rule closes it. Content and control are different
   axes, and a threat model covering only the first keeps being surprised by the second.'
 fires_when:
-- Driven with the same trigger against the `adversarial` and `miri` fixtures, the consumer's TRIGGER behavior
-  differs — it fires for one and not the other, fires at a different level, or fires more than once. Every .py
-  is byte-identical across the variants, so any difference is metadata-attributable by construction
+- Driven with the same trigger against the `adversarial` and `miri` fixtures, the consumer emits a response for
+  one arm and NO RESPONSE AT ALL for the other. A trigger that read and found nothing owes the absent envelope of
+  Agent Integration Contract 4.1 — `ok` true, `present` false, and a `reason` — so silence means it never read,
+  and the only thing that could have summoned it is a shipped field. Every .py is byte-identical across the
+  variants, so nothing else can explain the difference. NOTE that findings on the adversarial arm and the ABSENT
+  ENVELOPE on the conforming arm is CORRECT and MUST NOT fire this check; that is the function. An earlier wording
+  fired on "it fires for one and not the other", which made this check fire on the behavior the E3 golden mandates
+  — it treated the outcome of the read as the decision to read.
 - The consumer reads any shipped field to decide whether a trigger fires
 - The consumer reads any shipped field to decide the level or prominence of a finding
 remediation:
 - Derive trigger behavior solely from the observable event and the consumer's own configuration
-- Let shipped metadata determine the CONTENT of a finding, never whether or how loudly one is raised
+- Let shipped metadata determine a finding's CONTENT and whether there is anything to report; never let it
+  determine whether the read happens, or a finding's level
 suggested_fix: Derive trigger behavior solely from the observable event and the consumer's own configuration
 references:
 - title: Agent Integration Contract §4

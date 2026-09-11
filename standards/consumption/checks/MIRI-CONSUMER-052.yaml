@@ -1,0 +1,76 @@
+# MIRI-CONSUMER-052 — generated with the Consumer Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
+id: MIRI-CONSUMER-052
+name: No trust determination survives a `package.replaced` event
+target: consumer
+status: active
+added_in: 0.5.0-draft
+level: MUST
+category: Trust and Verdicts
+weight: 5
+conditional: true
+# Driving this requires a `package.replaced` event, which only an integration binding produces. Set false
+# on introduction, which made it a MUST that could not be driven — and under the profile's forfeit rule a
+# forfeited MUST leaves conformance UNDETERMINED, so the check took the whole profile down rather than
+# measuring anything. Conditional means a consumer with no binding excludes it from both sides, exactly as
+# MIRI-CONSUMER-050 and 051 already do.
+severity:
+  default: CRITICAL
+  violation_unit: each trust determination reused after the artifact it concerned was replaced
+short_description: Never carries a trust determination across a replacement of the artifact
+long_description: This check verifies the consumer treats a trust determination as a statement about BYTES rather than
+  about a purl. On notice that an installed artifact was replaced without its version changing, any previous verdict
+  about that artifact - that its advisory sources were queried, that its replacement was judged legitimate, that its
+  patterns carried no directive text - is void, and the reads that produced it must be performed again against the new
+  bytes before the consumer acts on them.
+rationale: A purl as this standard requires it identifies a name and a version rather than a byte stream, so two
+  different artifacts can carry the same
+  `identity.purl` and nothing in the standard detects it. Uninstalling a distribution and installing different bytes at
+  the same version moves no field a consumer would compare. The adversary is the one Lifecycle and Security Metadata 9.1
+  already names - a package trustworthy when adopted and malicious later - arriving by a route that publishes nothing,
+  and 9.4 explains why the payoff is larger here than in plain documentation - structured, authoritative-looking metadata
+  invites a consumer to lower its guard, so an agent taught to read and act on it is a better target than one that was
+  not. The exposure is worst where 9.5's foundation is absent. PEP 740 attestation is the only field tying an artifact
+  to an independent identity, it is network-gated and conditional, and a locally built wheel carries none - which is
+  also the workflow where same-version replacement is routine, because a maintainer rebuilding cannot bump a version on
+  every edit. A consumer caching a verdict keyed on purl is caching on a key that does not identify what it read.
+fires_when:
+- The consumer is driven with a `package.replaced` event for a package it previously read, and reports a security,
+  advisory, replacement or antipattern conclusion drawn from the earlier read rather than re-reading
+- The consumer caches served metadata keyed on `identity.purl` alone, with no re-read on replacement notice, so the
+  cache cannot distinguish two builds of one version
+- The consumer presents a re-read as a verification where the artifact carries no attestation. Re-reading yields
+  fresher metadata, never verified metadata, and saying otherwise converts a freshness mechanism into a false check
+- The consumer treats a matching `identity.purl` as evidence that the artifact is unchanged
+remediation:
+- Scope every trust determination to the bytes it was made about, not to the purl
+- On a `package.replaced` event, void the determinations for that package and re-run the reads that produced them -
+  Consumption Map 3.1 for the surface, then 3.5 for trust
+- Where metadata is cached, key the cache on something that changes when the artifact does, or re-read on notice
+- Report a re-read as a re-read. Where no attestation is present the standard binds nothing about the contents, and
+  the consumer must not imply that it does
+suggested_fix: Void and re-derive a package's trust determinations on notice that its artifact was replaced; never
+  treat a matching purl as evidence the bytes are unchanged.
+references:
+- title: Lifecycle and Security Metadata 9.6 - The Artifact Can Change Under a Stable Identity
+  url: ../python/lifecycle-security-metadata.md
+  type: spec
+- title: Agent Integration Contract 3.1 - the `package.replaced` trigger
+  url: agent-integration-contract.md
+  type: spec
+- title: Consumption Map 3.5 - security and trust
+  url: consumption-map.md
+  type: spec
+- title: purl specification
+  url: https://github.com/package-url/purl-spec
+  type: external
+examples:
+  violation: 'A consumer reads `greet@1.0.0`, queries its advisory sources, finds nothing, and records "greet@1.0.0:
+    clean". The wheel is rebuilt and reinstalled at 1.0.0 with a hostile `usage-patterns.json`. On the next question
+    about greet the consumer answers from the recorded verdict and never re-reads.'
+  compliant: 'The same consumer receives `package.replaced` for greet, discards its recorded verdict, re-runs Map 3.1
+    then 3.5 against the new bytes, and reports what it found now - noting, because greet carries no attestation, that
+    the read is a re-read and not a verification.'
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/consumption/checks/MIRI-CONSUMER-052.yaml
+  html: https://miri-whl.github.io/checks/consumer/MIRI-CONSUMER-052.html

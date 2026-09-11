@@ -29,6 +29,9 @@ packaging ecosystem and how the Miri Standard extends it to enable enhanced agen
   scoring weights summing to 100
 - **[Check Definitions](checks/)** - One YAML file per check: canonical severity, violation unit, example,
   fix, and references — the machine-readable source of truth for linters
+- **[Production Map](production-map.md)** *(Draft)* - The dependency order among the metadata documents: what an
+  author settles first, what depends on what, and which obligations cannot be evaluated on a first release. Every
+  ordering is derived from an existing check
 - **[Artifact Lifecycle](artifact-lifecycle.md)** - Every stage from build to EOL, the nested interface lifecycle, and
   the three-clocks model (diagrammed PDF available)
 

@@ -1,4 +1,5 @@
 # MIRI-PY-008 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-008
 name: usage-patterns.json valid
 target: python-wheel
@@ -6,7 +7,7 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Agent Metadata Core
-weight: 3
+weight: 5
 conditional: false
 severity:
   default: MEDIUM
@@ -24,6 +25,10 @@ fires_when:
 - '`agent-metadata/usage-patterns.json` is absent'
 - The top level lacks version, generated_at, or patterns
 - A pattern entry lacks any of id, name, description, complexity, category, or code
+- '`patterns` is present but an empty array. The two clauses below quantify over the pattern list, so an
+  empty one satisfies them vacuously — and usage-patterns.json is the document whose entire value is its
+  contents. The standard already says this for advisory sources (MIRI-PY-021, "absent, null, or an empty
+  array") and did not say it here. Raised by the miri-py team from scoring five real wheels.'
 - A `categories` or `learning_paths` entry lists a pattern id that no pattern defines
 remediation:
 - Regenerate usage-patterns.json at build time from curated sources (examples/, tests/) per Agent Metadata §5.1

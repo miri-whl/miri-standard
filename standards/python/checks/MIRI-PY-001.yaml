@@ -1,4 +1,5 @@
 # MIRI-PY-001 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-001
 name: Wheel structure valid
 target: python-wheel
@@ -6,7 +7,13 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Packaging Baseline
-weight: 2
+weight: 0
+scoring: gate
+# 001-003 are properties an index enforces at upload, so every correctly built wheel earns them and the
+# category cannot separate a Miri-ready wheel from any other. Raised by the miri-py team after five
+# unrelated wheels returned an identical 8/10. They remain MUSTs and still make an artifact
+# non-conforming when they fail; they are simply not measured, because a precondition is not a
+# measurement. The freed weight moved to 007/008 and 014/015.
 conditional: false
 severity:
   default: HIGH

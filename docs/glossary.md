@@ -99,9 +99,15 @@ and therefore what a consumer must possess to perform it.
 
 **Trigger** ([Agent Integration §3.1](../standards/consumption/agent-integration-contract.md)) — *when* a task becomes
 actionable. The third column of a table that already had *what* (task) and
-*how* (vehicle), and the one this standard was missing until 0.4. Six of them, named for observable actions:
-`dependency.add`, `dependency.version_change`, `package.first_reference`, `integration.begin`, `runtime.error`,
-`test.author`.
+*how* (vehicle), and the one this standard was missing until 0.4. Seven of them, named for observable actions:
+`dependency.add`, `dependency.version_change`, `package.replaced`, `package.first_reference`, `integration.begin`,
+`runtime.error`, `test.author`.
+
+`package.replaced` is the odd one and worth reading twice: it fires when an installed artifact is replaced **without
+its version changing**, which is the case a purl cannot see — a purl identifies a name and a version, never a byte
+stream ([Lifecycle and Security Metadata §9.6](../standards/python/lifecycle-security-metadata.md)). It is the only
+trigger routing to two tasks, because a replaced artifact raises two questions that do not answer each other: what
+the surface is now, and whether it may still be trusted.
 
 **Event** — the message a host sends when a trigger fires. Governed by
 [`agent-event-v1.json`](../schemas/agent-event-v1.json), whose root is **closed** so a host cannot smuggle a file
@@ -129,13 +135,35 @@ answer. A closed set of four, and the distinctions matter:
 
 ## Checking
 
+**Gate** ([Python checklist](../standards/python/linter-checklist.md); `scoring: gate` in
+[check-v2](../schemas/check-v2.json)) — a check that is a **precondition rather than a measurement**. It carries
+weight 0, enters neither side of the conformance ratio, and failing it makes the artifact non-conforming. Three
+exist: `MIRI-PY-001`, `002`, `003`, the wheel-structure and metadata checks an index enforces at upload, which every
+correctly built wheel passed and which therefore separated nothing. A gate can only be a `MUST` — its sole declared
+effect is non-conformance, which a SHOULD cannot cause, so a SHOULD gate would be inert.
+
+Note the trap the mechanism carries: weight 0 means a failing gate leaves **no arithmetic trace**, so a scorer that
+computes conformance from weights alone cannot see it. Its only representation is `must_failures` in
+[lint-report-v1](../schemas/lint-report-v1.json), where it is coupled to the grade and the 74 cap.
+
+**Effective denominator** ([Python checklist](../standards/python/linter-checklist.md)) — the sum of the weights of
+the checks that **applied and could be evaluated**, which is what a conformance score is a percentage of. It is at
+most 100 and routinely less. A report MUST carry it, because 80 out of 100 and 80 out of 58 are different claims and
+the number alone cannot distinguish them. There is deliberately **no floor**: a small denominator usually means a
+simpler artifact rather than a worse one.
+
+**Undetermined** ([lint-report-v1](../schemas/lint-report-v1.json) `grade`) — the grade when a **forfeited** MUST
+leaves conformance unknowable. Not non-conformance: the obligation applied and went unassessed, so the artifact is
+neither known to conform nor known to fail. An **excluded** MUST never produces it — that obligation did not exist
+for this artifact. See [[conditional]] and [[forfeited]] for the distinction that decides which.
+
 **Check** — one numbered, mechanically decidable requirement, governed by
-[`check-v1.json`](../schemas/check-v1.json). Its authoritative form is a YAML file under
+[`check-v2.json`](../schemas/check-v2.json). Its authoritative form is a YAML file under
 `standards/<target>/checks/`; the tables in the profiles are a derived rendering. IDs are **never renumbered**, and
-the numbering is **sparse** — `MIRI-CONSUMER` runs 001–051 across seventeen checks, so an ID range is an address
+the numbering is **sparse** — `MIRI-CONSUMER` runs 001–052 across eighteen checks, so an ID range is an address
 space and never a count.
 
-**`fires_when`** ([`check-v1.json`](../schemas/check-v1.json)) — the operative content of a check: the concrete
+**`fires_when`** ([`check-v2.json`](../schemas/check-v2.json)) — the operative content of a check: the concrete
 conditions under which a conforming linter raises
 it. Everything else in a check file is explanation; this is the part an implementer implements.
 

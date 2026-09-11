@@ -205,7 +205,7 @@ closes it.
 ## 6. Check Definitions
 
 The authoritative definition of each check is its YAML file in `standards/consumption/checks/`, governed by
-`schemas/check-v1.json` with `target: surface`. The tables in §4 are the derived rendering: where the two disagree,
+`schemas/check-v2.json` with `target: surface`. The tables in §4 are the derived rendering: where the two disagree,
 the YAML is correct.
 
 Surface and consumer checks share a directory because they share a suite and a contract; they are separated by

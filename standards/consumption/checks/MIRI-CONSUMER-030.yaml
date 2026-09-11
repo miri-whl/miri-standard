@@ -1,3 +1,4 @@
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-030
 name: Never reports a clean security verdict from shipped metadata
 target: consumer
@@ -5,7 +6,7 @@ status: active
 added_in: 0.3-draft
 level: MUST
 category: Trust and Verdicts
-weight: 7
+weight: 6
 conditional: false
 severity:
   default: CRITICAL

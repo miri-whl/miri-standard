@@ -1,3 +1,4 @@
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-040
 name: Surfaces a `correctness`/`security` antipattern before emitting matching code
 target: consumer

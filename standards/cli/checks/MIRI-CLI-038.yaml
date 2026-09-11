@@ -1,4 +1,5 @@
 # MIRI-CLI-038 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CLI-038
 name: Replacements resolve
 target: cli

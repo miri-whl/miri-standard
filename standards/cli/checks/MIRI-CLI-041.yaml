@@ -1,4 +1,5 @@
 # MIRI-CLI-041 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CLI-041
 name: Read/write visible
 target: cli

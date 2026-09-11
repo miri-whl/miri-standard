@@ -38,8 +38,30 @@ def _validates(jsonschema, doc, schema_path) -> bool:
         return False
 
 
+
+def _field_value(doc, path):
+    """Resolve a dotted/indexed path like `patterns[0].description` against a parsed document."""
+    cur = doc
+    for part in path.split("."):
+        m = re.match(r"^([^\[]+)((?:\[\d+\])*)$", part)
+        if not m:
+            return None
+        key, idx = m.group(1), m.group(2)
+        if not isinstance(cur, dict) or key not in cur:
+            return None
+        cur = cur[key]
+        for n in re.findall(r"\[(\d+)\]", idx):
+            if not isinstance(cur, list) or int(n) >= len(cur):
+                return None
+            cur = cur[int(n)]
+    return cur
+
+
 def check(label: str, ok: bool, detail: str = "") -> None:
-    print(f"  {'PASS' if ok else 'FAIL'}  {label}{(' — ' + detail) if detail else ''}")
+    # `detail` is written at most call sites as the FAILURE explanation, so printing it on success
+    # produced lines reading `PASS ... 'X' not found`. A gate whose passing output states the failure
+    # is unreadable, and it hid that some assertions were passing for the wrong reason.
+    print(f"  {'PASS' if ok else 'FAIL'}  {label}{(' — ' + detail) if (detail and not ok) else ''}")
     if not ok:
         failures.append(label)
 
@@ -378,6 +400,137 @@ def main() -> int:
     else:
         check("discovery-envelope-v1.json present", False)
 
+    # 4g. The event-trace goldens (E-series). Unlike the A-series these are event/envelope PAIRS,
+    #     authored from the Agent Integration Contract rather than captured from any implementation —
+    #     which is what keeps a binding's author from also being the author of its acceptance criteria.
+    #     A golden that does not itself validate is worse than no golden: it hands an implementer a
+    #     target that the schema will reject.
+    event_schema_path = REPO / "schemas/agent-event-v1.json"
+    find_schema_path = REPO / "schemas/agent-findings-v1.json"
+    traces = sorted(EXPECTED.glob("E*.json"))
+    check("event-trace goldens present", len(traces) >= 6, f"{len(traces)} found")
+    if event_schema_path.exists() and find_schema_path.exists():
+        EV = jsonschema.Draft7Validator(json.loads(event_schema_path.read_text()))
+        FV = jsonschema.Draft7Validator(json.loads(find_schema_path.read_text()))
+        kinds_covered, tasks_covered = set(), set()
+        for g in traces:
+            d = json.loads(g.read_text())
+            missing = [k for k in ("trace", "clause", "note", "why_this_case") if k not in d]
+            check(f"trace {g.stem}: complete", not missing, f"missing {missing}" if missing else "")
+
+            # Collect every event and every response the trace declares, in any of its shapes.
+            events = [d["event"]] if "event" in d else []
+            responses = [d["expected_response"]] if "expected_response" in d else []
+            for arm in d.get("arms", []):
+                responses.append(arm["expected_response"])
+                if "event_template" in d:
+                    events.append({**d["event_template"],
+                                   "subject": {**d["event_template"]["subject"],
+                                               "package": arm["subject_package"]}})
+            for ev in events:
+                errs = list(EV.iter_errors(ev))
+                check(f"trace {g.stem}: event validates against agent-event-v1", not errs,
+                      errs[0].message[:90] if errs else "")
+                kinds_covered.add(ev["kind"])
+            for rs in responses:
+                errs = list(FV.iter_errors(rs))
+                check(f"trace {g.stem}: response validates against agent-findings-v1", not errs,
+                      errs[0].message[:90] if errs else "")
+                for f in rs.get("findings", []):
+                    tasks_covered.add(f["task"])
+
+        # The four kinds the Claude Code binding maps (6.1). package.first_reference and
+        # integration.begin are deliberately unsupported and must NOT appear in any event.
+        supported = {"dependency.add", "dependency.version_change", "runtime.error", "test.author"}
+        check("traces cover every kind the binding maps", supported <= kinds_covered,
+              f"missing {sorted(supported - kinds_covered)}")
+        check("no trace emits a kind the binding declares unsupported",
+              not (kinds_covered - supported), f"found {sorted(kinds_covered - supported)}")
+
+        # Ground truth. Schema validity says a golden is well-formed, not that it is TRUE. These four
+        # assertions are what an adversarial panel found missing after E5 quoted a benign prefix under an
+        # injection finding, E6 graded a MUST at SHOULD, and E4 inferred a purl namespace from an import
+        # name. Each is cheap; each catches a defect that reached a downstream team's acceptance criteria.
+        ARM_FOR = {"greet-bare": "bare", "greet_bare": "bare",
+                   "greet-miri": "miri", "greet_miri": "miri",
+                   "greet-adversarial": "adversarial", "greet_adversarial": "adversarial"}
+        levels = {}
+        for cf in (REPO / "standards/consumption/checks").glob("MIRI-*.yaml"):
+            try:
+                import yaml as _y
+                levels[cf.stem] = _y.safe_load(cf.read_text())["level"].lower()
+            except Exception:
+                pass
+        for g in traces:
+            d = json.loads(g.read_text())
+
+            # (a) cited checks must exist — the A-series has guarded this since 0.3; the E-series did not.
+            unknown = [c for c in d.get("checks", []) if c not in levels]
+            check(f"trace {g.stem}: cites real checks", not unknown, f"unknown {unknown}" if unknown else "")
+
+            # (b) any regex an assertion carries must compile, or it silently never fires.
+            for pat in (d.get("assertions", {}) or {}).get("output_must_not_match", []):
+                try:
+                    re.compile(pat)
+                    check(f"trace {g.stem}: assertion regex compiles", True)
+                except re.error as e:
+                    check(f"trace {g.stem}: assertion regex compiles", False, f"{pat!r}: {e}")
+
+            responses = ([d["expected_response"]] if "expected_response" in d else []) + \
+                        [a["expected_response"] for a in d.get("arms", [])]
+            subjects = [d["event"]["subject"]["package"]] if "event" in d else \
+                       [a["subject_package"] for a in d.get("arms", [])]
+            for rs, subj in zip(responses, subjects + [None] * len(responses)):
+                for f in rs.get("findings", []):
+                    # (c) the level must match a cited check. E6 graded a MUST at SHOULD and wrote a
+                    #     justification for it; a correct implementer would have failed that golden.
+                    cited = [levels[c] for c in d.get("checks", []) if c in levels]
+                    check(f"trace {g.stem}: finding level '{f['level']}' matches a cited check",
+                          not cited or f["level"] in cited, f"cited levels {sorted(set(cited))}")
+
+                    # (d) the source must exist in the arm, and the quote must actually be in it.
+                    arm = ARM_FOR.get(subj or "")
+                    if arm and arm != "bare":
+                        doc = FIX / f"metadata/{arm}/{f['source']}"
+                        check(f"trace {g.stem}: source {f['source']} exists in the {arm} arm", doc.exists())
+                        if doc.exists() and f.get("quote"):
+                            # Presence anywhere in the document was too weak: it was satisfied by the benign
+                            # prefix that preceded the injection, which is the exact E5 defect this rule was
+                            # written for. Naming the FIELD catches a quote from the wrong document or the
+                            # wrong field.
+                            #
+                            # WHAT THIS STILL CANNOT DECIDE: whether the span is the RIGHT span within the
+                            # named field. "Greet a name." is a genuine span of patterns[0].description and
+                            # would pass here, while carrying none of the directive text its finding is
+                            # about. That judgment is not mechanically decidable, so `why_this_span` is a
+                            # required human-readable justification and a reviewer's obligation - not a
+                            # thing this gate checks. Said plainly because the previous version of this
+                            # comment implied a coverage it did not have.
+                            prov = d.get("quote_provenance") or {}
+                            check(f"trace {g.stem}: declares quote_provenance for its quote",
+                                  bool(prov.get("field")) and bool(prov.get("why_this_span")),
+                                  "a finding carrying a quote must say which field it came from and why "
+                                  "that span is the evidence")
+                            val = _field_value(json.loads(doc.read_text()), prov.get("field", ""))
+                            check(f"trace {g.stem}: quote is a span of {prov.get('field')}",
+                                  val is not None and f["quote"] in str(val),
+                                  f"{f['quote'][:48]!r} not in {prov.get('field')}"
+                                  if val is not None else f"field {prov.get('field')!r} not found")
+
+        # The discriminating pair of 4.3: one arm must require findings and the other the absent
+        # shape. If both arms expected the same shape the case would be passed by a consumer that
+        # never fires, which is precisely the weakness A13 has alone.
+        e3 = next((json.loads(g.read_text()) for g in traces if g.stem.startswith("E3")), None)
+        if e3:
+            shapes = {a["expected_response"].get("present") for a in e3.get("arms", [])}
+            check("E3 arms discriminate: one requires findings, one requires absence",
+                  shapes == {True, False}, f"present values {shapes}")
+        else:
+            check("E3 publisher-independent trigger pair present", False)
+    else:
+        check("agent-event-v1 and agent-findings-v1 present", False,
+              f"event={event_schema_path.exists()} findings={find_schema_path.exists()}")
+
     # 5. Golden expectations: attack inputs are worthless without stated expected outputs.
     #    These also close the loop against the conformance profile — a golden may not cite a
     #    check that does not exist, and every non-pending check must have a case behind it.
@@ -396,6 +549,8 @@ def main() -> int:
         check(f"golden {g.stem}: cites real checks", not unknown,
               f"unknown check id(s) {unknown}" if unknown else "")
         cited.update(d.get("checks", []))
+    for g in sorted(EXPECTED.glob("E*.json")):          # E-series cite consumer checks as well, and a
+        cited.update(json.loads(g.read_text()).get("checks", []))   # rule that ignored them under-counted
         # regexes must compile, or the assertion silently never fires
         bad_re = []
         for pat in d.get("consumer_assertion", {}).get("output_must_not_match", []):
@@ -412,6 +567,21 @@ def main() -> int:
                  if "fixture pending" not in case and "(A" in case and cid not in cited]
     check("profile checks with a named attack case have a golden", not uncovered,
           f"uncovered: {uncovered}" if uncovered else "")
+
+    # The rule above keys on the string "(A", so MIRI-CONSUMER-052 shipped a Case cell reading
+    # `adversarial` ([Lifecycle §9.6](...)) — naming the golden-backed arm while pointing at a PROSE
+    # SECTION — and was invisible to it. A spec section is not an executable case. 052 was a MUST, so
+    # under the profile's forfeit rule the whole profile could no longer issue a conformance verdict.
+    #
+    # Note this rule is narrower than the first attempt at it, which failed on `001`, `002` and `042`:
+    # naming a fixture arm is NOT a claim of golden-backing, because those checks are driven behaviorally
+    # and observed rather than matched against an attack case. What 052 did wrong was cite a document.
+    spec_as_case = [f"{cid}: Case cell cites a specification section ({case.strip()}); a spec section is "
+                    f"prose, not an executable case"
+                    for cid, case in rows
+                    if "fixture pending" not in case and re.search(r"§\d|\.md\)", case)]
+    check("no profile Case cell cites a specification section instead of a case",
+          not spec_as_case, "; ".join(spec_as_case))
 
     print()
     if failures:

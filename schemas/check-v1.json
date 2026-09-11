@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://miri-whl.github.io/schemas/check-v1.json",
-  "title": "Miri Standard Check Definition",
-  "description": "Schema for the per-check definition files in standards/<target>/checks/ - the canonical, machine-readable source of truth for every check, consumed by linter implementations",
+  "title": "Miri Standard Check Definition (v1 - SUPERSEDED)",
+  "description": "SUPERSEDED by check-v2.json at 0.5.0. Retained unchanged because a consumer pinned here is internally consistent rather than wrong: it describes PRE-0.5.0 scoring semantics, under which `conditional: true` meant a check scored its full weight automatically when its condition did not apply. That reading was replaced by exclusion from both numerator and denominator - the not-applicable-is-not-a-pass rule - which is a change of MEANING with no change of SHAPE, and therefore a new schema rather than an edited one. Do not add fields here; new work validates against check-v2.json. Every constraint and field description below is exactly as published at 0.4.0 - only this title and this description were added. That was briefly untrue and is worth recording: during 0.5.0 development `conditional` was rewritten HERE to the new exclusion semantics and the 0.5.0-only `scoring` property was added to this file, which left v1 describing v2 semantics under an old title. It made the v1-to-v2 diff illegible - and that diff is the release's own machine-detectable signal for the breaking change - so it also voided the stated reason for keeping v1. Both edits were reverted before release; verify with `git diff 0.4.0 -- schemas/check-v1.json`, which must show only this title and description. --- Schema for the per-check definition files in standards/<target>/checks/ - the canonical, machine-readable source of truth for every check, consumed by linter implementations",
   "type": "object",
   "required": [
     "id",

@@ -172,12 +172,14 @@ Emerging prior art:
   stages — General Availability, End-of-Sales, End-of-Life, End-of-Security-Support.
   Core Schema 1.0 entered
   [public review](http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/)
-  in July 2026; ratification is expected in 2027. Miri's `support.status` values map onto it deliberately: `active` ≈ GA,
+  in July 2026; ratification is expected in 2027. Miri's `support.status` values map onto it deliberately: `active` ≈
+  GA,
   `maintenance` ≈ the window where only security support remains (pre-EoSSec), `eol` ≈ EoL/EoSSec passed. Organizations
   MAY additionally publish OpenEoX statements; a future version of this specification will add a pointer field to them
   once OpenEoX 1.0 is ratified, rather than pre-standardizing against a draft.
-- **OWASP CLE** (Common Lifecycle Enumeration) is the complementary effort for naming lifecycle states across vendors;
-  see [how the two compose](https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox).
+- **OWASP CLE** (Common Lifecycle Enumeration) is the complementary effort: an open standard for component
+  aliasing, lifecycle changes such as end-of-life and end-of-support, and provenance chaining over time — see
+  [the CLE project](https://owasp.org/www-project-common-lifecycle-enumeration/).
 
 Consumers therefore handle EOL at three levels, each with its own mechanism: the **package itself** via `support` (read
 locally, no network); **direct dependencies** via their own `lifecycle.json`/`support` blocks; **bundled components**
@@ -406,6 +408,60 @@ drift, not tampering. The only field that ties an artifact to an independent ide
 (MIRI-PY-005), verified by the index against a Trusted Publisher. Provenance verification is therefore the foundation
 every other trust decision in this section builds on.
 
+### 9.6 The Artifact Can Change Under a Stable Identity
+
+A purl as this standard requires it identifies a **name and a version**, not a byte stream. Two different
+artifacts can carry the same `identity.purl`, and nothing in this standard detects it.
+
+That is a property of a choice, not of purl. The [purl specification](https://github.com/package-url/purl-spec)
+defines a `checksum` qualifier — `pkg:pypi/greet@1.0.0?checksum=sha256:…` — and `lifecycle-v1.json`'s pattern
+already accepts it. The standard neither requires nor reads it, so the detection half of this problem has a
+standardized, already-cited, no-new-format answer that has simply not been taken up. Requiring it is not free: a
+checksum must be computed by something the consumer trusts, and a publisher-declared checksum of publisher-supplied
+bytes is self-certification of exactly the kind §9.2 warns against. But an artifact could carry one, a registry
+could attest it, and a consumer could compare — and this section should not be read as claiming the problem is
+undetectable in principle when what is true is that this standard does not currently detect it. Uninstall a
+distribution and install different bytes at the
+same version: `purl` is unchanged, `sdk_version` is unchanged, every field a consumer would compare is unchanged.
+
+§9.1's adversary is "a package that was trustworthy when adopted and became malicious later", and the delivery
+mechanisms it names are all *publication* events — a takeover, a malicious release, a typosquat. This is the same
+adversary arriving by a route that publishes nothing. It matters separately because the consumer-side defenses differ:
+a new version is something a consumer can notice, and a replacement at the same version is not.
+
+**Miri raises the value of this attack rather than lowering it, and §9.4 says why**: structured, authoritative-looking
+metadata invites a consumer to lower its guard, so a poisoned `api_index`, `usage-patterns.json` or
+`support.replacement` buys an attacker more than a poisoned README would. An agent that has been taught to read this
+metadata and act on it is a better target than one that has not. That is a cost of the standard existing, and it is
+paid whether or not this section is written — writing it down is the only part that is optional.
+
+**The exposure is greatest where §9.5's foundation is absent.** §9.5 names PEP 740 attestation (`MIRI-PY-005`) as the
+only field tying an artifact to an independent identity, and therefore as the foundation every other trust decision
+builds on. `MIRI-PY-005` is conditional and requires network access: a locally built, locally installed wheel has no
+attestation, correctly, because no index attested it. So the foundation is unavailable in exactly the workflow where
+same-version replacement is routine — local development, where a maintainer rebuilds and reinstalls many times an
+hour and cannot bump a version on every edit. A hostile artifact dropped into that path is expected to carry no
+provenance, so its absence raises no alarm.
+
+Therefore:
+
+- A consumer MUST NOT treat `identity.purl` as identifying an artifact's contents. It identifies a name and a version;
+  a match means those agree, and nothing more.
+- A consumer MUST NOT carry a trust determination across a replacement. "This package was checked and is fine" is a
+  statement about bytes, not about a purl, and it does not survive the bytes changing.
+- A consumer that caches served metadata MUST either key that cache on something that changes when the artifact does,
+  or re-read on notice that the artifact was replaced. The Agent Integration Contract's `package.replaced` trigger is
+  that notice.
+- Where no attestation is present, the standard binds **nothing** about the artifact's contents. A consumer MUST NOT
+  present a re-read as a verification.
+
+**What re-reading does and does not buy.** Noticing a replacement makes the existing checks run again — the
+`api_index` that can lie, the narrative files that can inject, the `replacement` that can redirect are all evaluated
+against the new bytes rather than the old verdict. That closes a **staleness** hole and it is worth having. It does
+not make an unattested artifact trustworthy: re-reading a hostile wheel yields fresher hostile metadata. The
+**trust** hole in the local-install path stays open, because provenance genuinely is not available there, and the
+honest move is to name it rather than let a freshness mechanism be mistaken for a verification one.
+
 ## References
 
 - Background: [CLI Update and Vulnerability Signaling](../cli/update-and-vulnerability-signaling.md)
@@ -423,5 +479,5 @@ every other trust decision in this section builds on.
 - PEP 792 — Project status markers in the index APIs — <https://peps.python.org/pep-0792/>
 - OpenVEX — <https://github.com/openvex/spec>
 - OpenEoX TC (OASIS) — <https://www.oasis-open.org/tc-openeox/> · Core Schema 1.0 CSD01 — <http://www.oasis-open.org/2026/07/14/invitation-to-comment-on-openeox-core-schema-version-1-0-csd01/>
-- OWASP CLE and OpenEoX — <https://owasp.org/blog/2026/04/15/end-of-life-cle-and-openeox>
+- OWASP CLE (Common Lifecycle Enumeration) — <https://owasp.org/www-project-common-lifecycle-enumeration/>
 - endoflife.date — <https://endoflife.date/>

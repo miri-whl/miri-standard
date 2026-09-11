@@ -8,7 +8,9 @@
 
 The explicit, numbered list of every check a Miri-conformance linter runs against a Python wheel, with the standard each
 check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-040`); the
-weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the weights of its passing checks.
+weights sum to exactly **100**, so a wheel's Miri score is the sum of the weights of its passing checks over the weights
+of the checks that **applied** — see the Scoring Model below, which is not simply a total out
+of 100 when checks are excluded or forfeited.
 
 ## Scoring Model
 
@@ -28,9 +30,89 @@ weights sum to exactly **100**, so a wheel's Miri score is simply the sum of the
   a real CLI, where 20 of 100 points were awarded for never having deprecated anything.
 - **First releases are not penalized.** The previous-release checks (MIRI-PY-030, 034) are *conditional*: a first
   release has no prior release to diff against, so they are not applicable and leave the denominator — a first
-  release is scored on what it can be scored on, and can still reach Gold. A check forfeits (also reported, also out
-  of the denominator) when the condition *does* apply but the linter lacks the capability to assess it — a capability
-  gap, not a failure.
+  release is scored on what it can be scored on, and can still reach Gold. Note the precedence rule above: this holds
+  where the linter can **establish** that no prior release exists. Where it merely cannot reach one, it cannot
+  distinguish a first release from an unreachable predecessor, and those checks are *forfeited* rather than excluded.
+  The score is identical either way; the difference is that the forfeit leaves conformance undetermined for those
+  checks, which is the honest report of not knowing.
+- **Excluded and forfeited are the same arithmetic and different claims.** Both leave the numerator and the
+  denominator, so neither moves the score. They differ in what they assert about *knowledge*. An **exclusion** says
+  the obligation does not exist for this artifact — a statement of scope, and nothing is unknown. A **forfeit** says
+  the obligation exists and went unchecked — a statement of ignorance, and the artifact may be violating it. A report
+  MUST carry the two counts **separately**: 90 of 90 with ten excluded is fully known, and 90 of 90 with ten forfeited
+  has ten points nobody looked at. Collapsing them would discard the only part of the distinction a reader needs.
+- **A forfeited MUST leaves conformance `undetermined` for that check; an excluded MUST does not.** An excluded MUST
+  was never an obligation here, so it neither caps the score nor withholds conformance. A forfeited MUST *was* an
+  obligation and was not assessed, so a linter MUST report conformance as **undetermined** rather than as met. This is
+  the rule the consumption profiles already state, made explicit here because the producer targets did not.
+  `undetermined` is **not** non-conformance: an artifact whose only unmet MUSTs were forfeited is not known to fail,
+  and its score is still reported with its denominator. The 74 cap applies to a MUST that **failed**, never to one
+  excluded or forfeited.
+- **Where a check is both conditional and capability-gated, evaluate the condition first.** Five python-wheel checks
+  carry a
+  `conditional` flag *and* a `requirements` entry, and the order decides which they become:
+  1. The condition **provably does not apply** → **excluded**. The capability is irrelevant.
+  2. The condition **provably applies** and the capability is absent → **forfeited**.
+  3. **Whether the condition applies cannot itself be decided** → **forfeited**, because a condition that cannot be
+    settled is
+     ignorance rather than scope.
+- **Three checks gate rather than score.** `MIRI-PY-001` (wheel structure), `002` (core metadata) and `003`
+  (version scheme) carry `scoring: gate` and weight 0. They remain MUSTs and an artifact failing any of them is
+  non-conforming, exactly as before; what changed is that they are no longer *measured*. A precondition is not a
+  measurement.
+
+  The reason is empirical. These are properties an index enforces at upload, so every correctly built wheel earns
+  all three, and the Packaging Baseline could not distinguish a Miri-ready wheel from any other — five unrelated
+  wheels scored against the checklist returned an identical 8/10. Ten points of a hundred carried no information
+  about the thing the standard exists to measure.
+
+  It matters more after renormalization, not less, and that is the part worth stating because both sides of the
+  discussion initially had it backwards. Scoring over *applicable* weight shrinks the denominator, and a constant
+  numerator over a smaller denominator is a **larger** share: the Baseline's constant contribution went from
+  8/100 (8%) to 8/57 (14%) for a wheel scored with no capabilities and nothing to deprecate. Renormalizing alone
+  would have nearly doubled the fraction of a conformance score that carries nothing. Gating brings it to 2/57
+  (3.5%).
+
+  Those denominators are profile-specific and worth stating rather than quoting, because a reader who computes a
+  different one has not made an error. Summing the weights that remain after exclusions and forfeits: **57** for a
+  wheel with no capabilities available and no deprecation history, **75** for one where every condition applies but
+  no capability is available. Both are derived from the check definitions; neither is a property of the standard.
+
+  `MIRI-PY-004` and `005` stay scored. They are SHOULDs — declarative build config and publish attestations — and
+  `005` is the only check in the category whose result varies, so removing it would discard the category's only
+  signal.
+
+  The six freed points went to the checks whose *contents* the standard cares about most: `007` and `008`
+  (+2 each, the two content-bearing metadata documents) and `014` and `015` (+1 each, the two MUSTs that examples
+  exist and run).
+
+  One of those recipients, `015`, requires `execution`, so in the default offline posture its extra point leaves
+  the denominator with it and the redistribution is worth 5 rather than 6. That is deliberate. Steering weight away
+  from capability-gated checks would systematically under-weight exactly the obligations that need a capability to
+  verify, which is a worse distortion than the one being fixed — and every weight in the checklist already behaves
+  this way. Noted because a reader comparing an offline number against a documented total should know why they
+  differ.
+
+- **In the default posture, conformance is `undetermined` — and that is the correct answer, not a bug.**
+  `MIRI-PY-015`, `036` and `040` are MUST-level and require `execution`, and none of them is conditional: the
+  obligation always applies, so there is no exclusion path. A linter run without execution forfeits three MUSTs,
+  and a forfeited MUST leaves conformance undetermined. Every artifact scored that way therefore reports
+  `undetermined` rather than a grade.
+
+  This is stated because it will otherwise be read as a defect. A team implementing the rules correctly sees
+  `undetermined` on every wheel, concludes their scorer is broken, and "fixes" it by suppressing forfeits in
+  grading — which restores exactly the incomparability the scoring model exists to prevent. The honest reading is
+  the plain one: a wheel's runtime behavior cannot be verified without running it, so a static-only run does not
+  know whether the artifact conforms. It reports the score it could compute, its denominator, and that the verdict
+  is undetermined.
+
+  To obtain a conformance verdict, run with `execution` available. To obtain a comparable one, run with `network`
+  and `previous-release` too. What a linter must not do is report a verdict it did not establish.
+
+- **There is no coverage floor, deliberately.** A small denominator usually means a *simpler* artifact rather than a
+  worse one, and withholding a grade for having less surface would penalize simplicity. A score is made interpretable
+  by its denominator traveling with it, not by a minimum. A linter MUST NOT impose a floor of its own: one linter with
+  a floor and one without produce incomparable grades, which defeats the purpose of scoring at all.
 - **Gold additionally requires provenance**: a public-index wheel reaches Gold only if MIRI-PY-005 (PEP 740
   attestations) passes — provenance is the anchor for every trust decision the metadata supports (Lifecycle §9.5). A
   wheel otherwise scoring ≥90 without attestations is capped at Silver.
@@ -55,35 +137,35 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 ## The Checks
 
-### A. Packaging Baseline (10 points)
+### A. Packaging Baseline (4 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/) | 2 |
-| MIRI-PY-002 | M | Core metadata valid | `METADATA` parses as Core Metadata 2.x; name normalized | [PEP 566](https://peps.python.org/pep-0566/) / [PEP 503](https://peps.python.org/pep-0503/) | 2 |
-| MIRI-PY-003 | M | Version scheme valid | Version parses under the canonical scheme | [PEP 440](https://peps.python.org/pep-0440/) | 2 |
+| MIRI-PY-001 | M | Wheel structure valid | `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD | [PEP 427](https://peps.python.org/pep-0427/) / [Binary Distribution Format](https://packaging.python.org/en/latest/specifications/binary-distribution-format/) | 0 |
+| MIRI-PY-002 | M | Core metadata valid | `METADATA` parses as Core Metadata 2.x; name normalized | [PEP 566](https://peps.python.org/pep-0566/) / [PEP 503](https://peps.python.org/pep-0503/) | 0 |
+| MIRI-PY-003 | M | Version scheme valid | Version parses under the canonical scheme | [PEP 440](https://peps.python.org/pep-0440/) | 0 |
 | MIRI-PY-004 | S | Declarative build config | `pyproject.toml` with `[project]` table drives the build | [PEP 621](https://peps.python.org/pep-0621/) / [PEP 517](https://peps.python.org/pep-0517/) | 2 |
 | MIRI-PY-005 | S | Publish attestations | Release carries index-hosted attestations (provenance) (*conditional*: public-index releases only)| [PEP 740](https://peps.python.org/pep-0740/) | 2 |
 
-### B. Agent Metadata Core (20 points)
+### B. Agent Metadata Core (24 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
 | MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-python-wheel-extensions.md) | 2 |
-| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 4 |
-| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 3 |
+| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 6 |
+| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 5 |
 | MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
 | MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](miri-agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
 | MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](miri-agent-metadata-specification.md) | 2 |
 | MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
 | MIRI-PY-013 | M | JSON hygiene | All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments) | RFC 8259 | 2 |
 
-### C. Examples (10 points)
+### C. Examples (12 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 3 |
-| MIRI-PY-015 | M | Examples runnable | Every example compiles; runs in a clean virtual environment (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 3 |
+| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 4 |
+| MIRI-PY-015 | M | Examples runnable | Every example compiles; runs in a clean virtual environment (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 4 |
 | MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-python-wheel-extensions.md) | 2 |
 | MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 2 |
 
@@ -143,7 +225,7 @@ The standard's vocabulary: each *requirement* in a spec is verified by a *check*
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
 Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
-(`checks/MIRI-PY-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
+(`checks/MIRI-PY-NNN.yaml`), validated against [check-v2.json](../../schemas/check-v2.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —

@@ -1,4 +1,5 @@
 # MIRI-CONSUMER-042 — generated with the Consumer Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-CONSUMER-042
 name: Never presents a whole-document retrieval as a derived view
 target: consumer

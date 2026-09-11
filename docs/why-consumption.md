@@ -1,12 +1,14 @@
-# What's New in 0.3 — The Consumption Standard
+# Why the Standard Has a Consumption Half
 
-Versions 0.1 and 0.2 specified what an artifact **ships**. Version 0.3 specifies how an agent **consumes** it.
+Versions 0.1 and 0.2 specified what an artifact **ships**. From 0.3 the standard also specifies how an agent
+**consumes** it — and this page is the argument for why that half had to exist. Per-release detail lives in the
+[changelog](../CHANGELOG.md); the reasoning here does not change from one version to the next.
 
 That is the whole of it. A package could score Gold and help no agent, because nothing in the standard said how the
 metadata was supposed to reach a decision, what to read for a given task, or what it means to consume it correctly.
-0.3 closes that loop with three documents, a fixture set, and fifteen numbered checks.
+The consumption suite closes that loop with four documents, a fixture set, and thirty-six numbered checks.
 
-## The three documents
+## The documents
 
 **Discovery Contract** — how metadata reaches an agent at the moment it is deciding what to call. Eight read-only
 operations in three kinds: *retrieval* (`document`, with `lifecycle` and `migration-guide` shorthands), *derived
@@ -17,7 +19,7 @@ the contract itself.
 upgrading a dependency, diagnosing a runtime failure, answering a security question, and writing tests. Each carries
 a read-order, prohibitions, and informative heuristics, and the three are deliberately graded differently.
 
-**Consumer Conformance** — what a conformant consumer *is*: fifteen `MIRI-CONSUMER` checks weighted to 100.
+**Consumer Conformance** — what a conformant consumer *is*: eighteen `MIRI-CONSUMER` checks weighted to 100.
 
 ## The idea that shaped everything
 
@@ -74,7 +76,8 @@ A consumer that collapses either asymmetry is wrong in a specific, predictable w
 ## What this version does not claim
 
 Nothing here asserts that consuming this metadata improves agent outcomes. That is an empirical question with a
-pre-registered experiment attached, and the specification deliberately stays on the mechanism side of it. 0.3 makes
+pre-registered experiment attached, and the specification deliberately stays on the mechanism side of it. The
+specification makes
 the experiment *possible* — it could not run without a defined consumption contract — but it does not anticipate the
 result.
 

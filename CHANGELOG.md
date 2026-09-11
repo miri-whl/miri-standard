@@ -7,6 +7,321 @@ breaking change, a **minor** version a backward-compatible addition, and a **pat
 clarifications only. That policy is a contract with implementers, and it is worth keeping strictly: a reader
 should be able to see `0.3.1` and know it contains no additions without having to check.
 
+While the major version is 0 the standard is in initial development, so a **minor** bump may carry a breaking
+change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
+its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
+
+## 0.5.0 — 2026-09-10
+
+**BREAKING.** The first release to earn that label. Two changes alter every conformance score and both
+affect anything vendoring the check schema: `conditional` reverses meaning, and three checks move out
+of the score entirely. See **Changed** below for what breaks and what to do about it.
+
+It began as 0.4.1 — four fixes from the first binding — and grew through the Production Maps, an executable
+CLI fixture suite, six adversarial review panels, and an implementation report that arrived while the panel
+findings were being closed. All of it ships as one release because none of it was ever published: the last
+tag-equivalent is 0.4.0 on `main`, which is what the reference linter pinned.
+
+### Changed
+
+- **BREAKING — `conditional` semantics reversed, and three checks now gate rather than score.** Both change
+  every conformance score, and both affect anything vendoring the check schema — now
+  [`check-v2.json`](schemas/check-v2.json), bumped for exactly this reason.
+
+  `conditional: true` previously meant a check *"scores its full weight automatically when the condition does
+  not apply"*. It now means the check is **excluded from both the numerator and the denominator**. Not-applicable
+  is not a pass: awarding weight for an absence let an artifact collect points for having nothing to declare.
+  Twenty-four checks across three targets are affected, and a linter that implemented the old reading produces
+  different numbers for every artifact after re-syncing.
+
+  `MIRI-PY-001`, `002` and `003` gain `scoring: gate` and weight 0. They remain MUSTs and still make an artifact
+  non-conforming when they fail; they are no longer measured. Six points moved to `MIRI-PY-007` and `008`
+  (+2 each) and `014` and `015` (+1 each). `check-v2.json` gains the `scoring` field, because weight 0 already
+  meant "extension check" and one value cannot mean two things.
+
+  Reported by the miri-py team from scoring five unrelated wheels that returned an identical 8/10 in the
+  Packaging Baseline. The interaction is the part worth knowing: renormalizing shrinks the denominator, so a
+  constant numerator becomes a **larger** share — the Baseline went from 8% of a fixed 100 to about 14% of a
+  typical applicable 58. Shipping the renormalization alone would have nearly doubled the fraction of a score
+  carrying no information. Both sides of the discussion had that backwards at first. Gating brings it to ~4%.
+
+  Reports MUST now carry `effective_denominator`, `excluded` and `forfeited` beside a conformance score, and a
+  forfeited MUST yields the new `undetermined` grade rather than a claim of conformance.
+
+#### To upgrade
+
+The algorithm is **not** in this entry. It is in
+[`standards/python/linter-checklist.md`](standards/python/linter-checklist.md) and its
+[CLI twin](standards/cli/linter-checklist.md), under **Scoring Model** — excluded vs forfeited, the precedence
+rule for checks that are both conditional and capability-gated, `undetermined`, and the no-coverage-floor
+prohibition. Read those, not this. An earlier version of this section named the changes and linked to nothing,
+which meant a reader had to diff against 0.4.0 to reconstruct their own upgrade.
+
+1. **Re-pin.** [`checks_commit_sha`](schemas/lint-report-v1.json) now requires a full 40-character lowercase sha.
+   A short sha or a tag is a hard validation failure — if you pin `cc5d0a4` today, your reports stop validating.
+   The release name goes in the new `checklist.standard_version` instead.
+2. **Re-point at [`check-v2.json`](schemas/check-v2.json), and re-sync the corpus.** The check schema is now
+   versioned, because `conditional` reversed meaning without one byte of validating *content* changing — a schema
+   is an interpretation contract and this one's contract changed. Every definition declares
+   `$schema: …/check-v2.json`, and v2 requires it, so a v2 corpus **fails** against a vendored v1 and a v1 corpus
+   **fails** against v2. The pairing that used to validate and score wrongly now breaks on both sides.
+   [`check-v1.json`](schemas/check-v1.json) is retained frozen and still describes 0.4.0 semantics: a consumer
+   pinned there is old, not wrong, and stays internally consistent.
+3. **Change the scorer**, in this order: exclusion leaves both sides of the ratio; the precedence rule decides
+   which of exclusion or forfeit applies to the ten dual-flagged checks (five python-wheel, five CLI); a forfeited
+   MUST yields `undetermined`; `scoring: gate` checks are in neither sum and a failing one is non-conformance,
+   which is representable **only** through `must_failures`.
+4. **Change the report.** [`lint-report-v1.json`](schemas/lint-report-v1.json) now requires
+   `scores.effective_denominator`, `scores.excluded`, `scores.forfeited` and `must_failures`; `must_failures`
+   being non-empty forces `grade: non-conforming` and caps `conformance` at 74; a `skipped` outcome must name its
+   `skip_reason`; `grade` gained `undetermined`; `conformance` is bounded 0–100.
+5. **Decide about already-published scores.** Every conformance number computed under 0.4.0 semantics is wrong
+   under these. The standard does not tell you whether to retract or restate them; it tells you they changed.
+
+**What you will see that looks wrong and is not.** `MIRI-PY-015`, `036` and `040` are MUST-level, require
+`execution`, and are not conditional — so a run without execution forfeits three MUSTs and every artifact reports
+`grade: undetermined` rather than a band. That is the correct answer: a wheel's runtime behavior cannot be verified
+without running it. Do not "fix" it by suppressing forfeits in grading; run with `execution` available, or accept
+that a static-only run reports a score and no verdict.
+
+**What will not fail loudly if you skip it.** The three newly required `scores` fields catch a linter that did not
+update its *serializer*. Nothing in any schema relates `scores.excluded` to the `outcomes` that were excluded, so
+a linter that adds the fields and does not change its *arithmetic* validates clean and reports wrong numbers.
+The guard against that is the [`check-v2.json`](schemas/check-v2.json) bump itself, together with the `$schema`
+each definition now declares: a linter still applying v1 arithmetic is reading a corpus that says v2, and the
+mismatch fails in both directions. It is a tripwire, not a proof — nothing can prove your arithmetic changed.
+(An earlier draft of this entry named a `semantics_version` field here. That field was proposed and rejected
+during this release — a single global fact copied into 119 files becomes 119 statements that can each go
+stale — and the schema bump replaced it. It does not exist; do not look for it.)
+
+### Added
+
+- **`package.replaced` — a seventh trigger kind**, with [Lifecycle and Security Metadata
+  §9.6](standards/python/lifecycle-security-metadata.md) and `MIRI-CONSUMER-052` behind it.
+
+  A purl identifies a name and a version, not a byte stream. Uninstall a distribution and install different bytes
+  at the same version and nothing a consumer would compare has moved. §9.1's adversary — a package trustworthy
+  when adopted and malicious later — already covered this, but every delivery mechanism it named was a
+  *publication* event; this one publishes nothing.
+
+  Raised from a maintainer's own workflow: developing a wheel means reinstalling at the same version many times an
+  hour, because nobody bumps a version on every edit. That makes it a cache-invalidation problem *and* a trust
+  problem, and the trust half is the one the standard owed an answer to. §9.4 already says structured metadata is
+  more dangerous than plain documentation because it invites a consumer to lower its guard — which means Miri
+  raises the value of this attack. That is a cost of the standard existing, and writing it down is the only
+  optional part.
+
+  The exposure is worst where §9.5's foundation is absent: PEP 740 attestation is the only field tying an artifact
+  to an independent identity, `MIRI-PY-005` is network-gated and conditional, and a locally built wheel carries
+  none — correctly. `MIRI-CONSUMER-052` carries the prohibition that falls out: **no trust determination survives a
+  replacement**. Stated as plainly, the trigger is *not* a verification — where no attestation exists, re-reading a
+  hostile artifact yields fresher hostile metadata.
+
+- **CLI conformance goldens and a scoring harness.** `examples/fixtures/cli/expected/C1`–`C11` state which check a
+  linter must report, on which arm, and — after the harness was rebuilt — pointing at which evidence.
+  `make score-cli-linter` rejects seven ways of gaming it.
+
+- **`scoring: gate`** in [`check-v2.json`](schemas/check-v2.json), and the invariant coupling it to
+  weight 0 and MUST level — enforced in the schema itself, not only in a repo-local script vendors
+  do not run.
+
+- **[Production Map](standards/python/production-map.md)** — the producer counterpart to the Consumption Map. The
+  consumer side had an ordered model; the producer side had a checklist and no statement of what an author does
+  first. Reported by a team implementing both halves: *"the consumer side was straightforward because the Map told
+  us the order; the author side we had to invent an order for, and nothing checks whether we invented a good one."*
+
+  Five stages, and **every ordering is derived from an existing check** rather than asserted — the version must be
+  settled first because `MIRI-PY-019` and `MIRI-PY-012` check documents against `METADATA`; the manifest precedes the
+  migration guide because `MIRI-PY-031` requires replacements to name interfaces in the *new* manifest; the guide is
+  last because it depends on all three. A stage with no check behind it would be advice.
+
+  It also states what a checklist cannot: **two checks require a previous release and are not evaluable on a first
+  one**, so a first release is scored over what could be evaluated and cannot honestly show 100.
+
+  It is explicitly not a conformance surface. No check scores an author on following it, because the checklist grades
+  the artifact and not the process.
+
+- **[CLI Production Map](standards/cli/production-map.md)** — the same document for the largest target in the
+  standard. `MIRI-CLI` carries forty-three checks, more than any other suite, and had no ordered model at all.
+
+  Six stages, every ordering derived from a check: `--version` is settled first because `MIRI-CLI-017` compares
+  `identity.version` against what the binary actually prints; the JSON envelope precedes `--describe` because
+  `MIRI-CLI-010` fires when the two disagree, and `--describe` is one of the payloads it governs; the deprecation
+  blocks are last because `MIRI-CLI-038` resolves every replacement against the current `--describe` *and*
+  `MIRI-CLI-036` requires every deprecation to appear in `changelog --since` — the only surface depending on every
+  other one, which is the same reason `migration-guide.json` is last on the wheel side.
+
+  §3 records that **five CLI checks require a previous release**, carrying fourteen of the hundred weight, against
+  two on the wheel side. A CLI's deprecation contract is a claim about what the binary used to do, and one release
+  contains no evidence of it.
+
+  §4 names the one conformance requirement that is normative and **ungraded**: CLI Lifecycle Specification §9 item 6
+  requires `--help` and `--describe` to derive from one schema-as-data source, and no check can verify it — two
+  hand-maintained outputs that agree are indistinguishable from two derived ones when all a linter may do is run the
+  binary. An author looking for the check that enforces item 6 has not missed one. One observable shadow of it *is*
+  decidable and currently unchecked, and is recorded there rather than left to be discovered.
+
+- **[`agent-findings-v1.json`](schemas/agent-findings-v1.json) and the event-trace goldens** — the Agent
+  Integration Contract defined the response as the envelope plus a `findings` key, and nothing pinned it down. No
+  schema for the response, no rule mapping check IDs to `findings[].level`, and no goldens — which left the first
+  binding implementing against prose and blocked on acceptance criteria it could not write for itself.
+
+  The schema enforces the coupling §3.3 states normatively, in both directions: `present: true` requires
+  `findings`, `present: false` forbids it and requires a `reason`, and **an empty `findings` array is rejected** —
+  so a binding cannot satisfy the silence obligation by emitting one. `task` is closed to the six map sections;
+  `level` is closed to `must`/`should`, the conformance vocabulary rather than the check-severity one, so a
+  publisher's `priority: "critical"` cannot reach it even if a consumer passed it through unexamined. What the
+  schema cannot enforce — that `level` was *derived* from the profile rather than copied — is said plainly in the
+  schema rather than implied to be covered.
+
+  Eight goldens, `E1`–`E8`, authored from the specification rather than captured from an implementation, which is
+  what keeps a binding's author from also being the author of its acceptance criteria. Every event validates
+  against `agent-event-v1` and every response against `agent-findings-v1` under `make validate-fixtures`; the gate
+  is mutation-tested.
+
+  Two are worth naming. `E6` is the only trace driving the **conforming** arm: every other asks whether a consumer
+  resists what metadata claims, and `E6` asks whether it uses what metadata declares — a suite made entirely of
+  adversarial traces cannot tell a careful consumer from an inert one, which is the defect `MIRI-CONSUMER-041`
+  itself carried. `E3` makes the trigger-forcing case discriminating: `A13` alone asserts only that output does not
+  echo the bid, which a consumer that never reads satisfies trivially, so `E3` requires a *response* on both arms:
+  findings where the bid is, and §4.1's absent envelope where it is not. The discriminator is **absent envelope
+  versus silence** — a consumer that reads only when summoned produces nothing at all on the control arm.
+
+- **[CLI conformance fixtures](examples/fixtures/cli/README.md)** — `greetctl`, four arms, and the first executable
+  thing a CLI linter can be driven against. Every fixture in the repository was a Python wheel, so
+  `make validate-fixtures` could not touch a CLI. The three vacuous-pass defects found in `MIRI-CLI-013`, `034` and
+  `022` were all found by hand across four review rounds, because no fixture could find them.
+
+  Unlike the wheel fixtures it ships a **release history** — `miri-1.0.0` and `miri-1.1.0` — because the five
+  previous-release checks cannot be exercised without one. `--shout` is deprecated in 1.0.0 and removed in 1.1.0, so
+  invoking it against the current release yields the structured teaching error of `MIRI-CLI-033` naming a
+  replacement that resolves; `legacy-greet` is deprecated in 1.1.0 and that deprecation reaches
+  `changelog --since 1.0.0`, which is what `MIRI-CLI-036` requires and nothing could previously test.
+
+  One implementation file, copied byte-identically into all four arms, so any observed difference is
+  metadata-attributable. Eleven attacks (C1–C11), each asserted live by `tools/validate_cli_fixtures.py` and
+  mutation-tested: disarming any one of them fails the validator. Wired into `make check` via
+  `make validate-cli-fixtures`.
+
+### Fixed
+
+- **§4.3 of the Agent Integration Contract was unsatisfiable.** It defined trigger behavior as four things a
+  publisher may not influence, two of which — *whether* findings are carried and *how many* — are necessarily
+  determined by the metadata, since every finding derives from a shipped field. `MIRI-CONSUMER-051` fired on the
+  behavior the `E3` golden mandates: pass the golden, fail the check. The regulated quantity is whether the **read
+  happens**, never what the read finds, and the evidence that a trigger fired is §4.1's absent envelope. That also
+  dissolved a finding tracked separately as needing a third fixture arm — `E3` could not discriminate because the
+  rule pointed at the wrong observable, not because the fixture was short.
+
+- **`MIRI-PY-008` and `MIRI-PY-007` admitted empty content arrays.** Reported by the miri-py team from scoring five
+  real wheels; verifying the report found the second instance, in the check the report assumed was safe. Fifth
+  instance of one defect class, and the first found by running checks against real artifacts rather than reading
+  them. See `standards/feedback/`.
+
+- **Four gates that had never run, or ran wrong.** `.githooks/pre-commit` — the file `CLAUDE.md` tells a fresh
+  clone to enable first — had a `NameError` and a row regex that read 32 of 40 rows, and had never completed. The
+  `--since` validator was defeated by its own regex. `changelog --since` emitted records where CLI Spec §5.2 wants
+  string arrays. §6.1 mapped `dependency.add` to a moment the contract's own footnote says has nothing to read.
+
+- **The CLI linter harness graded a set of strings.** Six independent cheats reached a perfect score, one of them
+  by emitting every golden's check ID under the hostile arm's name having opened no fixture. Grading now requires
+  attribution: the right check *and* the evidence that golden declares.
+
+Four defects found by the miri-py team building the first binding, plus one process failure of ours that let two of
+them ship, one vacuous check they found implementing `test.author`, and one latent bug in the site generator that
+adding the second Production Map exposed.
+
+- **The schemas index listed 7 of 13 schemas.** `cli-describe-v1`, `discovery-envelope-v1`, `agent-event-v1`,
+  `scoring-v1` and `lint-report-v1` were never added to `schemas/README.md`, so five schemas the specs depend on
+  were discoverable only by listing the directory. All thirteen are now indexed, and `make consistency` now fails if a schema
+  lacks an index entry. An earlier draft called the index "verified complete" when nothing verified
+  it — the repo's own thesis violated in the sentence claiming to have closed it.
+
+- **The site generator silently overwrote pages whose sources shared a basename.** Output names were derived from
+  the source filename alone, so `standards/python/production-map.md` and `standards/cli/production-map.md` both
+  rendered to `production-map.html` and one page vanished from the site with no error. Specs may now set a `slug:`,
+  and a collision is a hard failure naming both sources rather than a silent loss.
+
+- **Two fixes described as committed were not in the release.** They were committed to a branch that was never
+  pushed, so a search of every remote branch correctly found nothing. The work existed on one machine and was
+  reported as done. Both are now in: §3.3's `lifecycle` step and the event schema's `phase` rule.
+
+- **Consumption Map §3.3 had no `lifecycle` step**, so a consumer following the upgrade task exactly could upgrade a
+  package that is deprecated and names a successor in a foreign purl namespace and never be told — the producer
+  standard's highest-severity documented attack, reachable through correct adherence. The namespace prohibition was
+  already in §3.3's must-not block with no read-step supplying its evidence. **A prohibition whose input the
+  read-order does not fetch is unenforceable.** 0.4.0 made this worse by making §3.3 REQUIRED.
+
+- **`agent-event-v1.json` could not express a real dependency.** `subject.package` required an import name, but a
+  manifest contains **distribution** names, and the mapping between them lives in the installed distribution's own
+  metadata — unavailable for a package that is not yet installed. `miri-py`, `python-dateutil`, `ruamel.yaml` and
+  our own `greet-adversarial` fixture were all rejected. `subject.package_kind` now says which kind of name is
+  carried, with PEP 503 grammar for the distribution case.
+
+- **`dependency.add` is demoted from REQUIRED to SHOULD.** At the moment a dependency is added it is not installed,
+  so it ships nothing a local surface can read and §3.5 has no subject. The trigger fired correctly and found
+  nothing, every time, for the case that motivated requiring it. Requiring a structurally silent kind buys a
+  conformance obligation and no safety. It becomes REQUIRED when a registry-side surface exists; the kind stays in
+  the vocabulary so that surface has somewhere to plug in. **`dependency.version_change` is now the only REQUIRED
+  trigger**, because it is the one where the change is both observable and checkable — the old version is installed.
+
+- **§4.1 required the behavior it forbids, in Claude Code.** A hook's stdout enters the agent's context, so an
+  adapter printing the absent envelope on every manifest edit announces *checked, nothing found* in JSON — the
+  context tax §4.1 exists to prevent, reached by obeying its letter. The contract answer and what a host emits are
+  now explicitly two layers: the absent envelope is what a golden asserts against, and a Claude Code adapter emits
+  nothing.
+
+- **`MIRI-CONSUMER-041` was satisfiable only by abstention.** No producer check requires any package to ship
+  `test-patterns.json`, so a consumer could be driven against a conforming wheel that ships none — or, as this
+  project's own reference fixture did, one that ships it with an empty `supported_test_doubles`. In either state the
+  only conforming behavior is to present no double, which is also what an inert consumer does. The check could not
+  tell a careful consumer from one that never looked.
+
+  It is now **conditional**: scored where a double is declared, excluded from both numerator and denominator
+  otherwise. The `miri` fixture declares `FakeGreeter`, which gives the affirmative path something to exercise.
+  `MIRI-CONSUMER-020`'s test-pattern clause is scoped the same way; its other clauses are independent, so that check
+  stays scorable for every package.
+
+  **This is the fourth instance of one defect class this month**, after `MIRI-CLI-013`, `034` and `022`: a check that
+  tests the *form* of a behavior without testing that the behavior *occurs*. Found by the miri-py team implementing
+  `test.author` and discovering no fixture could exercise either MUST's affirmative path.
+
+- **Four tasks could act without knowing a package was deprecated.** §3.3's missing `lifecycle` step turned out to be
+  an instance rather than a one-off — §3.1, §3.2, §3.4 and §3.6 omit it too. Rather than patch four read-orders,
+  §4 gains a normative rule: **every task establishes the lifecycle facts**, whatever its read-order says. A task
+  author writes the read-order for the question the task asks, and "is this package deprecated, and is its successor
+  someone else's" qualifies every answer without being any single task's subject.
+
+- **That rule's same-session exemption is keyed on bytes, not on the session.** As first written, a consumer that
+  had already established the lifecycle facts "in the same session" need not re-fetch them. On a `package.replaced`
+  notice the consumer *does* hold them — for the previous artifact's bytes — so the exemption licensed precisely
+  the reuse [`MIRI-CONSUMER-052`](standards/consumption/checks/MIRI-CONSUMER-052.yaml) forbids. **Consumer
+  implementers:** if you cache these facts per session, a replacement must invalidate that cache.
+
+- **The conformance gate no longer reads a field no schema defines.** `tools/score_sample.py` gated on
+  `is_conforming`, which appears in no schema and no specification and survived on `additionalProperties: true`.
+  It now derives the verdict from schema-defined fields — `must_failures` empty, and `grade` outside
+  `{non-conforming, undetermined}` — a coupling [`lint-report-v1.json`](schemas/lint-report-v1.json) already
+  enforces. It also validates each report against that schema, and **warns rather than fails**: 0.5.0 newly
+  requires `effective_denominator`, `excluded` and `forfeited`, so gating would fail a linter for 0.5.0 support
+  that is legitimately still in flight.
+
+### Specified
+
+- **Batching.** One observable action produces one event per package, with the binding coalescing *output* so a
+  caller sees one report about one decision. Settled from implementation data rather than by adding a plural
+  `subjects`, because a subject is what an event is about.
+
+- **Release tags carry no `v` prefix** — `0.5.0`, not `v0.5.0` ([CONTRIBUTING.md](CONTRIBUTING.md)). The tag is for
+  humans and GitHub releases only; the machine-readable pin is `checks_commit_sha`, which requires a 40-character
+  sha and rejects a tag outright. Matching `standard_version` exactly makes a report's version a usable git ref.
+
+- **Per-check revision history stays editorial** ([schemas/README.md](schemas/README.md)). `added_in` records birth
+  and nothing records revision, by decision: git is the revision record and `checks_commit_sha` makes it
+  addressable, so "what changed between two reports" is a diff rather than a claim. A hand-maintained `changed_in`
+  would fail the way `semantics_version` did — one global fact copied into 119 files becomes 119 statements that
+  can each go stale.
+
 ## 0.4.0 — 2026-09-06
 
 A **minor** version: it adds. The Agent Integration Contract is new, two consumer checks are added, and every
@@ -26,8 +341,9 @@ reader to discover.
   never read, and every score stayed green.
 
   Six **triggers**, one per Consumption Map task, naming the observable moment at which each becomes actionable. Two
-  are REQUIRED — a dependency being added, and a version changing — because both fire before an action that is
-  expensive to reverse.
+  were REQUIRED at 0.4.0 — a dependency being added, and a version changing. **0.5.0 demotes the first to SHOULD**
+  (this release, which began as 0.4.1);
+  see that entry for why.
 
   The vocabulary matters and *hook* is deliberately not part of it. A hook is a host's mechanism; the word appears
   elsewhere in this standard seven times, every one describing git or setuptools. The sentence that has to keep

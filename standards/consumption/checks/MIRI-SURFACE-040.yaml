@@ -1,4 +1,5 @@
 # MIRI-SURFACE-040 — generated with the Surface Conformance profile; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-SURFACE-040
 name: Derives `purl` from the installed distribution; never reads it from a document
 target: surface

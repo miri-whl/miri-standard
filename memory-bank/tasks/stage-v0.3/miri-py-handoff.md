@@ -197,9 +197,13 @@ they quantify over deprecations and are unfireable when there are none.
 genuine 19 to a reported 39. The old model made a score a function of project age rather than quality, so two scores
 of 75 were not comparable — which is the one thing a score exists to allow.
 
-**Expect the sample SDK's number to move.** The CI gate asserts `is_conforming`, not a value, so it will not break —
-but the reported figure will change and the 75/Silver we have cited is on the old model. `lint-report-v1.json` needs
-the `not_applicable` count and effective denominator as fields.
+**Expect the sample SDK's number to move.** The CI gate asserts conformance rather than a value, so it will not
+break when the figure changes — but the figure will change, and the 75/Silver we have cited is on the old model.
+As of 0.5.0 the gate derives that verdict from schema-defined fields only (`must_failures` empty, and `grade`
+outside `{non-conforming, undetermined}`); it previously read `is_conforming`, which no schema defines, so do not
+treat that field as part of the contract. `lint-report-v1.json` now **requires** `scores.effective_denominator`,
+`scores.excluded` and `scores.forfeited`, so a 0.5.0-shaped report must carry them — our gate validates each
+report against that schema and warns, rather than failing, until you ship 0.5.0 support.
 
 ### 3h-bis. Validation data for the new model — the sample SDK as it stands today
 

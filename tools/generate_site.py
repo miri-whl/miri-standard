@@ -2,7 +2,7 @@
 """Generate the Miri Standard static site.
 
 Thin renderer — everything it emits comes from real artifacts:
-  content   standards/<target>/checks/*.yaml (schema: schemas/check-v1.json), docs/origin-story.md
+  content   standards/<target>/checks/*.yaml (schema: schemas/check-v2.json), docs/origin-story.md
   structure website/site.yaml (nav, targets, assets)
   markup    website/templates/*.html (Jinja2)
   look      website/static/css/tokens/*.css (vendored design tokens) + components.css
@@ -11,6 +11,7 @@ Usage: python3 tools/generate_site.py [--out site]
 Requires: pyyaml, jinja2
 """
 import argparse
+import collections
 import hashlib
 import html
 import pathlib
@@ -272,7 +273,17 @@ def main():
     # check pages, so the specifications themselves — the actual deliverable — existed
     # on the site as outbound GitHub links and nothing else.
     specs = site.get("specs", [])
-    rendered = {sp["source"]: pathlib.Path(sp["source"]).name.replace(".md", ".html") for sp in specs}
+    # Output names default to the source basename, which two suites can collide on: both the Python and
+    # the CLI suite ship a production-map.md. An entry may set `slug:` to disambiguate. Collisions are a
+    # hard error rather than a silent overwrite — the losing page would simply vanish from the site.
+    rendered = {sp["source"]: (sp["slug"] + ".html") if sp.get("slug")
+                else pathlib.Path(sp["source"]).name.replace(".md", ".html") for sp in specs}
+    collisions = collections.Counter(rendered.values())
+    dupes = {name: [s for s, r in rendered.items() if r == name]
+             for name, n in collisions.items() if n > 1}
+    if dupes:
+        raise SystemExit("site.yaml: two specs render to the same page — add a `slug:` to one of them:\n" +
+                         "\n".join(f"  {name} <- {sources}" for name, sources in dupes.items()))
     for sp in specs:
         src = REPO / sp["source"]
         md = rewrite_links(src.read_text(), src.resolve(), rendered, site["github"])
@@ -288,14 +299,14 @@ def main():
             page_meta=[("Document", sp["source"]), ("Status", sp.get("status", "Draft"))],
             page_lede=sp.get("lede"), body=body, toc=toc))
 
-    wn = md_to_html((REPO / "docs/whats-new-0.3.md").read_text())
+    wn = md_to_html((REPO / "docs/why-consumption.md").read_text())
     # Drop the source H1: the page header supplies the title, so rendering both duplicates it.
     wn = re.sub(r"^\s*<h1>.*?</h1>", "", wn, count=1, flags=re.S)
-    (out / "whats-new.html").write_text(env.get_template("prose.html").render(
-        site=site, root="", active="whats-new.html",
-        page_title="What's new in 0.3",
-        page_heading="What's new in " + site["version"].split("-")[0],
-        page_meta=[("Document", "docs/whats-new-0.3.md"), ("Version", site["version"])],
+    (out / "why-consumption.html").write_text(env.get_template("prose.html").render(
+        site=site, root="", active="why-consumption.html",
+        page_title="Why consumption",
+        page_heading="Why the standard has a consumption half",
+        page_meta=[("Document", "docs/why-consumption.md")],
         page_lede="0.1 and 0.2 specified what an artifact ships. 0.3 specifies how an agent consumes it.",
         body=wn))
 
@@ -326,7 +337,7 @@ def main():
 
     n = sum(len(t["checks"]) for t in targets.values())
     print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + "
-          f"{len(specs)} spec pages + landing + origin + whats-new + changelog + glossary")
+          f"{len(specs)} spec pages + landing + origin + why-consumption + changelog + glossary")
 
 
 if __name__ == "__main__":

@@ -1,4 +1,5 @@
 # MIRI-PY-015 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-015
 name: Examples runnable
 target: python-wheel
@@ -6,7 +7,7 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Examples
-weight: 3
+weight: 4
 conditional: false
 requirements:
 - execution

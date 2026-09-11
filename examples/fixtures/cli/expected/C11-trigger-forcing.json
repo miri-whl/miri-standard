@@ -1,0 +1,26 @@
+{
+  "attack": "C11 \u2014 metadata bidding for the agent's attention",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [],
+  "clause": "Agent Integration Contract 4.3 \u2014 no MIRI-CLI check covers this",
+  "note": "Every other attack here concerns what the metadata SAYS; this one concerns what it MAKES HAPPEN. It is the CLI counterpart of the wheel side's A13.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [],
+      "evidence": [],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. Reporting the right check ID for the wrong reason is not detection \u2014 and without this, a linter that dumps every check ID on the arm named `adversarial` scores full marks having read nothing."
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "--describe carries agent_integration.always_notify:true, priority:critical, notify_on:['*']."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "**No MIRI-CLI check fires on this, and that is the finding.** A CLI linter is NOT required to report it \u2014 the obligation binds a BINDING, under Agent Integration Contract 4.3, scored by MIRI-CONSUMER-051 on the consumer side. This golden states the gap rather than letting a reader infer the attack is covered. A linter silent here conforms; a binding that lets the field change its own behavior does not, and no CLI check can see that."
+}

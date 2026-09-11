@@ -1,6 +1,6 @@
 # Miri Standard: Consumption Map (Consumption)
 
-*Specification Version: 0.4.0-draft*
+*Specification Version: 0.5.0-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -163,8 +163,12 @@ lives only in a binding document is a task the map has described without saying 
 | §3.2 scaffolding | new code is about to be written against a package | SHOULD |
 | §3.3 upgrading | a dependency's version is about to change | **REQUIRED** |
 | §3.4 diagnosing | an error naming an installed package is observed | SHOULD |
-| §3.5 security and trust | a dependency is about to be added | **REQUIRED** |
+| §3.5 security and trust | a dependency is about to be added | SHOULD † |
 | §3.6 tests | a test touching a package is about to be written | SHOULD |
+
+† `dependency.add` is SHOULD, not REQUIRED: at the moment a dependency is added it is not installed, so it ships
+nothing a local surface can read and this task has no subject. It becomes REQUIRED when a registry-side surface
+exists ([Agent Integration §3.1](agent-integration-contract.md)).
 
 **A consumer with no binding is unaffected.** The triggers say when a task *becomes actionable*, not that a consumer
 must watch for them; a consumer invoked directly by a person is triggered by the person, which is the case every
@@ -324,11 +328,26 @@ need it.
 
 **Read, in order:**
 
-1. **(S)** `migration-guide` — the structured `{surface, removed_in, replacement}` records and deprecation inventory
+1. **(S)** `lifecycle` — the **package-level** picture before any surface-level one: `support.status`,
+   `support.replacement`, `eol_date`. A package that is itself deprecated with a declared successor changes whether
+   to upgrade at all, and the answer is not in the migration guide.
+
+   This step was absent until an implementer found the gap by building against the task. `migration-guide` carries
+   deprecations of individual **surfaces** — `{surface, removed_in, replacement}` — while a package-level
+   redirect lives in `lifecycle.json` as `support.replacement`. The documented highest-severity attack
+   ([Lifecycle and Security Metadata §9.3](../python/lifecycle-security-metadata.md)) is exactly that: a compromised
+   release marking itself deprecated and naming a successor the original maintainer does not control. A consumer
+   following this task as previously written read the surface-level records, never the package-level ones, and was
+   never told — while the prohibition below, which forbids exactly that redirect, sat in the same section with no
+   read-step supplying the evidence it operates on. **A prohibition whose input the read-order does not fetch is
+   unenforceable**, which is the composition failure §1.1 exists to prevent, one layer subtler than the version that
+   routes a step at a document no operation serves.
+
+2. **(S)** `migration-guide` — the structured `{surface, removed_in, replacement}` records and deprecation inventory
    for the transition **into the installed version**. The surface answers only for what is installed
    ([Discovery Contract §6.2.1](discovery-contract.md)); a prospective "what breaks if I move to 1.5.0?" has no
    operation in 0.3 and MUST NOT be answered from the shipped file.
-2. **(C)** Cross-reference each record against the consumer codebase's **own call sites**. No Discovery Contract
+3. **(C)** Cross-reference each record against the consumer codebase's **own call sites**. No Discovery Contract
    operation is involved or needed: the vehicle is the calling project's own source, which the consumer necessarily
    has because it is the thing being migrated, read with whatever mechanism the consumer already uses to read the
    code it edits.
@@ -337,7 +356,7 @@ need it.
    search key: a consumer MUST treat it as a literal identifier, never compiling it as a regular expression, glob or
    query fragment, and MUST NOT let it select files outside the consumer's own project. A migration record naming a
    surface of `.*` should match one symbol or none, not every line in the codebase being migrated.
-3. **(S)** `list`, then `resolve` — confirm each `replacement` surface exists in the **installed** package before
+4. **(S)** `list`, then `resolve` — confirm each `replacement` surface exists in the **installed** package before
    emitting a call to it (§3.2). Two operations, because a `replacement` is a **purl** and `resolve` takes an
    **import name**, and nothing converts one to the other by string manipulation: a purl names a distribution, an
    import name names a package, and the two differ routinely (`pkg:pypi/scikit-learn` imports as `sklearn`). The
@@ -539,6 +558,31 @@ the agent *whom to ask*; it never answers *on their behalf*.
 including which failures it treats as expected. Prefer extending its idiom over inventing a parallel one.
 
 ## 4. Interpretation Rules
+
+- **Every task establishes the lifecycle facts, whatever its read-order says.** Before a consumer acts on the
+  result of any task, it MUST have established the package's `support.status`, its `support.replacement` where one
+  is declared, and whether that replacement crosses a purl namespace — the facts in `lifecycle.json`. A task whose
+  numbered read-order does not already fetch them acquires a `lifecycle` step implicitly, at the front.
+
+  This is stated as a rule rather than added to each read-order because it was twice discovered as a missing step
+  and would have been discovered a third time. §3.3 omitted it, which made the producer standard's
+  highest-severity attack reachable through correct adherence to the upgrade task; §3.1, §3.2, §3.4 and §3.6 omit
+  it still. The pattern is the finding: a task author writes the read-order for the question the task asks, and
+  "is this package deprecated, and is its successor someone else's" is a question that qualifies every answer
+  without being any single task's subject.
+
+  A consumer that has already established these facts in the same session need not re-fetch them; the obligation
+  is to *have* them, not to issue a request per task.
+
+  **That allowance does not survive a replacement.** These facts are read from the artifact's own
+  `lifecycle.json`, so they are claims about bytes, and a `package.replaced` notice
+  ([Agent Integration Contract §3.1](agent-integration-contract.md)) means the bytes changed while
+  `identity.purl` did not move. A consumer still holding these facts from before the replacement does not
+  have them — it has the previous artifact's — so the exemption is keyed on the bytes read rather than on the
+  session, and `MIRI-CONSUMER-052` voids the determination they supported. This is also the one
+  interpretation rule no routed read-order can supply: `package.replaced` routes to §3.1 and §3.5, while
+  whether a declared successor crosses a purl namespace is established in §3.3 — which a same-version
+  replacement must not be routed to, because no version changed and there is no migration to cross-reference.
 
 Three rules govern how a consumer reads what it receives. The first two mirror producer-side Generation Invariants
 ([Agent Metadata §5.4](../python/miri-agent-metadata-specification.md)) that today live only in the reference

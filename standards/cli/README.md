@@ -29,6 +29,9 @@ is unspecified.
   references and scoring weights summing to 100
 - **[Check Definitions](checks/)** *(Draft)* - One YAML file per check: canonical severity, violation unit,
   example, fix, and references — the machine-readable source of truth for linters
+- **[Production Map](production-map.md)** *(Draft)* - The dependency order among the surfaces: what a CLI author
+  settles first, what depends on what, and which obligations a first release cannot be scored on. Every ordering is
+  derived from an existing check
 - **[Artifact Lifecycle](artifact-lifecycle.md)** *(Draft)* - Every stage from release to withdrawal, the nested surface
   lifecycle, and the three-clocks model (diagrammed PDF available)
 - **[Introspection Schema](../../schemas/cli-describe-v1.json)** *(Draft)* - Normative JSON Schema for the `--describe`

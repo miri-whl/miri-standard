@@ -14,10 +14,10 @@ help: ## Show this help
 deps: ## Install Python dependencies for the site generator
 	pip install pyyaml jsonschema jinja2
 
-validate: ## Validate check YAMLs against schemas/check-v1.json (as CI does)
+validate: ## Validate check YAMLs against schemas/check-v2.json (as CI does)
 	@python3 -c "\
 	import json, pathlib, yaml, jsonschema; \
-	schema = json.load(open('schemas/check-v1.json')); \
+	schema = json.load(open('schemas/check-v2.json')); \
 	jsonschema.Draft7Validator.check_schema(schema); \
 	files = sorted(pathlib.Path('standards').glob('*/checks/*.yaml')); \
 	[jsonschema.validate(yaml.safe_load(f.read_text()), schema) for f in files]; \
@@ -40,6 +40,12 @@ fixtures: ## Build the consumption fixtures (bare/miri/adversarial) and verify i
 validate-fixtures: fixtures ## Verify the fixture invariants (conforming twin valid; adversarial attacks live)
 	@python3 tools/validate_fixtures.py
 
+cli-fixtures: ## Build the greetctl CLI fixture arms (bare/1.0.0/1.1.0/adversarial) and verify one implementation
+	@python3 examples/fixtures/cli/build_cli_fixtures.py
+
+validate-cli-fixtures: cli-fixtures ## Verify the CLI fixture invariants (release history exercised; C1-C11 live)
+	@python3 tools/validate_cli_fixtures.py
+
 diagrams: ## Render any new/changed ```mermaid fence to a committed SVG (needs npx)
 	python3 tools/render_diagrams.py
 
@@ -48,6 +54,12 @@ consistency: ## Catch count/reference/table drift the linters do not see
 
 envelope: ## Validate discovery-envelope-v1.json in both directions (accept + reject)
 	python3 tools/validate_envelope_schema.py
+
+findings-schema: ## Validate agent-findings-v1.json in both directions (accept + reject)
+	@python3 tools/validate_findings_schema.py
+
+score-cli-linter: ## Prove the CLI golden harness rejects an inert AND a screaming linter
+	@python3 tools/score_cli_linter.py --self-test
 
 references: ## Verify every check's spec citations resolve (--report for reconciliation)
 	python3 tools/check_references.py
@@ -63,13 +75,26 @@ clean: ## Remove generated site output
 	rm -rf .generated site
 
 lint: ## Lint Markdown (CI: markdownlint-cli2)
-	npx markdownlint-cli2 "**/*.md" "#node_modules"
+	# Pinned to the version markdownlint-cli2-action@v16 bundles. Unpinned, npx resolves to a newer
+	# release whose added rules (MD060) fail files CI accepts, so `make check` went red on untouched files.
+	# Exclusions must be `#`-prefixed globs here: `.markdownlintignore` is a markdownlint-cli v1 file and
+	# cli2 does not read it, so its `memory-bank/**` and `.claude/**` entries are inert — both are linted.
+	npx -y markdownlint-cli2@0.13 "**/*.md" "#node_modules" "#.generated"
 
 spell: ## Spell-check Markdown (CI: cspell)
-	npx cspell --config .cspell.json --no-progress "**/*.md"
+	# Pinned for the same reason as `lint`. Note pinning cspell does NOT pin its dictionaries: a real
+	# English word can sit in the locally-resolved en_US trie and be absent from the one cspell-action
+	# bundles, which passes here and fails CI (this happened with `evaluable`). The version-independent
+	# fix for such a word is to add it to `.cspell.json` words, not to rely on either dictionary.
+	npx -y cspell@8 --config .cspell.json --no-progress "**/*.md"
 
 links: ## Check Markdown links (CI: markdown-link-check)
-	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
-		-exec npx markdown-link-check -q -c .markdown-link-check.json {} \;
+	# xargs, not `-exec`: `find -exec` reports find's exit status, so this target printed dead links
+	# and still exited 0. xargs exits 123 when any invocation fails, which is what makes `check` red.
+	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' -print0 \
+		| xargs -0 -n1 npx -y markdown-link-check -q -c .markdown-link-check.json
+	# -q prints nothing for a clean file, so a passing run is otherwise silent and reads as "did nothing".
+	@echo "links: $$(find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
+		| wc -l | tr -d ' ') file(s), no dead links"
 
-check: validate validate-sample validate-fixtures lint spell ## Run everything CI runs locally (except link check and the miri score gate)
+check: validate validate-sample validate-fixtures validate-cli-fixtures findings-schema score-cli-linter lint spell links ## Run everything CI runs locally (except the miri score gate)

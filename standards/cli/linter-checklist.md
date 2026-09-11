@@ -8,7 +8,9 @@
 
 The explicit, numbered list of every check a Miri-conformance linter runs against a CLI, with the standard each check
 derives from and a scoring weight. Linter projects implement checks by number (`MIRI-CLI-001` … `MIRI-CLI-043`); the
-weights sum to exactly **100**, so a CLI's Miri score is the sum of the weights of its passing checks.
+weights sum to exactly **100**, so a CLI's Miri score is the sum of the weights of its passing checks over the weights
+of the checks that **applied** — see the Scoring Model below, which is not simply a total out
+of 100 when checks are excluded or forfeited.
 
 ## Scoring Model
 
@@ -29,6 +31,31 @@ Deprecation Coherence, awarded for never having deprecated anything, which lifte
 
 **Grade bands**: 90–100 **Gold** (agent-native) · 75–89 **Silver** (agent-ready) · 50–74 **Bronze** (partially legible)
 · <50 non-conforming.
+
+- **Excluded and forfeited are the same arithmetic and different claims.** Both leave the numerator and the
+  denominator, so neither moves the score. They differ in what they assert about *knowledge*. An **exclusion** says
+  the obligation does not exist for this artifact — a statement of scope, and nothing is unknown. A **forfeit** says
+  the obligation exists and went unchecked — a statement of ignorance, and the artifact may be violating it. A report
+  MUST carry the two counts **separately**: 90 of 90 with ten excluded is fully known, and 90 of 90 with ten forfeited
+  has ten points nobody looked at. Collapsing them would discard the only part of the distinction a reader needs.
+- **A forfeited MUST leaves conformance `undetermined` for that check; an excluded MUST does not.** An excluded MUST
+  was never an obligation here, so it neither caps the score nor withholds conformance. A forfeited MUST *was* an
+  obligation and was not assessed, so a linter MUST report conformance as **undetermined** rather than as met. This is
+  the rule the consumption profiles already state, made explicit here because the producer targets did not.
+  `undetermined` is **not** non-conformance: an artifact whose only unmet MUSTs were forfeited is not known to fail,
+  and its score is still reported with its denominator. The 74 cap applies to a MUST that **failed**, never to one
+  excluded or forfeited.
+- **Where a check is both conditional and capability-gated, evaluate the condition first.** Five CLI checks carry a
+  `conditional` flag *and* a `requirements` entry, and the order decides which they become:
+  1. The condition **provably does not apply** → **excluded**. The capability is irrelevant.
+  2. The condition **provably applies** and the capability is absent → **forfeited**.
+  3. **Whether the condition applies cannot itself be decided** → **forfeited**, because a condition that cannot be
+    settled is
+     ignorance rather than scope.
+- **There is no coverage floor, deliberately.** A small denominator usually means a *simpler* artifact rather than a
+  worse one, and withholding a grade for having less surface would penalize simplicity. A score is made interpretable
+  by its denominator traveling with it, not by a minimum. A linter MUST NOT impose a floor of its own: one linter with
+  a floor and one without produce incomparable grades, which defeats the purpose of scoring at all.
 
 ## Conformance Profiles
 
@@ -80,7 +107,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-CLI-021 | M | EOL coherence | `support.status` `deprecated`/`eol` ⇒ `replacement` present | [CLI Spec §3.2](cli-lifecycle-specification.md) | 2 |
 | MIRI-CLI-022 | M | Advisory sources | ≥1 valid entry in `advisory_sources` | [CLI Spec §4](cli-lifecycle-specification.md) / [OSV schema](https://ossf.github.io/osv-schema/) | 3 |
 | MIRI-CLI-023 | M | Private-source rule | `distribution: private` does not rely solely on public OSV | [CLI Spec §4](cli-lifecycle-specification.md) | 2 |
-| MIRI-CLI-024 | M | Composition legible | Standalone binary carries embedded module info or references a release SBOM (*conditional*: registry-distributed CLIs pass automatically) | [CLI Spec §3.1/§7.1](cli-lifecycle-specification.md) / [CycloneDX](https://cyclonedx.org/)/[SPDX](https://spdx.dev/) | 3 |
+| MIRI-CLI-024 | M | Composition legible | Standalone binary carries embedded module info or references a release SBOM (*conditional*: registry-distributed CLIs are out of scope, excluded rather than passed) | [CLI Spec §3.1/§7.1](cli-lifecycle-specification.md) / [CycloneDX](https://cyclonedx.org/)/[SPDX](https://spdx.dev/) | 3 |
 
 ### D. Update & Changelog (14 points)
 
@@ -134,7 +161,7 @@ The standard's vocabulary: each *requirement* in a spec is verified by a *check*
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
 Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
-(`checks/MIRI-CLI-NNN.yaml`), validated against [check-v1.json](../../schemas/check-v1.json). Each file carries the check's
+(`checks/MIRI-CLI-NNN.yaml`), validated against [check-v2.json](../../schemas/check-v2.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —

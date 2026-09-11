@@ -1,0 +1,7 @@
+{
+  "_note": "The bare arm. Same implementation, no Miri metadata: no --describe, no check-update, no changelog.",
+  "version": "1.1.0",
+  "bare": true,
+  "removed": {},
+  "changelog": {}
+}

@@ -1,0 +1,34 @@
+{
+  "attack": "C9 \u2014 a destructive command marked safe while a benign sibling is marked destructive",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-CLI-040"
+  ],
+  "clause": "clause 3 \u2014 a conventionally destructive name unmarked while siblings are marked",
+  "note": "The binary demonstrably knows how to set the field; it is set wrongly on the one command where it matters. An agent gating on the flag runs the destructive command and refuses the safe one.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [
+        "MIRI-CLI-040"
+      ],
+      "evidence": [
+        "cache purge"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. Reporting the right check ID for the wrong reason is not detection \u2014 and without this, a linter that dumps every check ID on the arm named `adversarial` scores full marks having read nothing."
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [
+        "MIRI-CLI-040"
+      ],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "`cache purge` irrecoverably deletes and carries destructive:false; `config set` carries destructive:true."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "A linter checking only that the FIELD EXISTS passes this arm. The golden requires the value be evaluated against observable behavior or the command's conventional name."
+}

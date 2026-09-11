@@ -1,4 +1,5 @@
 # MIRI-PY-007 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-007
 name: sdk-manifest.json valid
 target: python-wheel
@@ -6,7 +7,7 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Agent Metadata Core
-weight: 4
+weight: 6
 conditional: false
 severity:
   default: HIGH
@@ -25,6 +26,10 @@ fires_when:
 - The document fails validation against sdk-manifest-v1.json (any of sdk_version, generated_at, miri_version, quick_reference,
   api_index missing)
 - '`quick_reference` lacks primary_classes, key_methods, or common_imports'
+- '`api_index` is present but empty. The clause below quantifies over its entries, so an empty index
+  satisfies it vacuously and a manifest declaring no public surface passes. The miri-py proposal that
+  raised this class believed 007 already failed an empty index "on other grounds"; it does not, and
+  verifying that claim turned up a second instance rather than fewer.'
 - An `api_index` entry lacks `type` or `purpose`, or uses a `type` outside the schema's allowed values
 remediation:
 - Generate the manifest from source with the Miri build tooling (AST extraction per Agent Metadata §5.1); never write it

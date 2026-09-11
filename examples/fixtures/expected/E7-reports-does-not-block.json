@@ -1,0 +1,48 @@
+{
+  "trace": "E7 \u2014 a must-level finding, and the action still completes",
+  "clause": "Agent Integration Contract 4.2, 4.4",
+  "checks": [
+    "MIRI-CONSUMER-032"
+  ],
+  "note": "4.2 and 4.4 are the two clauses a binding cannot satisfy by producing the right JSON, because what they constrain is observed at the HOST boundary rather than in the envelope. They are stated on shape rather than on intent: a binding that emits a host's deny-key has blocked the action whether or not it meant to.",
+  "event": {
+    "schema_version": "1",
+    "kind": "dependency.add",
+    "phase": "after",
+    "subject": {
+      "package": "greet-adversarial",
+      "package_kind": "distribution"
+    }
+  },
+  "expected_response": {
+    "schema_version": "1",
+    "ok": true,
+    "present": true,
+    "findings": [
+      {
+        "task": "3.5",
+        "level": "must",
+        "purl": "pkg:pypi/greet-adversarial@1.0.0",
+        "summary": "declared replacement is in a different purl namespace",
+        "source": "lifecycle.json",
+        "quote": "pkg:pypi/attacker-successor@9.0.0"
+      }
+    ]
+  },
+  "host_boundary_assertions": {
+    "the_action_completes": "Drive the binding with this event \u2014 whose task yields a `must`-level finding \u2014 and the host action that produced it STILL RUNS. That is the whole observable test. 'Did not block' is not a claim about intent; it is a claim about whether the host's action ran.",
+    "exit_status": "The binding exits ZERO whatever it found. A non-zero exit is a control channel in every host that reads one.",
+    "no_control_key": "Output carries the 3.3 envelope and nothing else. No host-reserved key, no documented deny/stop field, no control sequence.",
+    "claude_code_specific": "`PreToolUse` in this host CAN deny the tool call. A conforming binding MUST NOT use that capability, and a reviewer should confirm the denial path is ABSENT rather than merely unused (6.3)."
+  },
+  "assertions": {
+    "must_level_is_not_a_veto": "A `must` finding means the caller may not proceed WITHOUT human confirmation \u2014 the obligation already binding the consumer under MIRI-CONSUMER-032. It is not a licence for the binding to interrupt a human, and would be unimplementable in the many hosts that expose no veto at all.",
+    "the_binding_s_job": "Ensure the finding REACHES the point where that confirmation is asked for. Nothing more."
+  },
+  "why_this_case": "Because a binding can emit a perfect envelope and still fail the contract, and no envelope-only golden would catch it.",
+  "phase_rationale": "`dependency.add` fires at `phase: after`. The contract's own \u00a73.1 footnote is explicit that at the moment a dependency is added it is not installed, so it ships nothing a local surface can read and the trigger \"correctly finds nothing every time\"; \u00a73.2 says a conforming binding therefore fires it AFTER the install. An earlier draft of these traces used `phase: before` and demanded findings sourced from `lifecycle.json`, which at that phase every operation answers with `PACKAGE_NOT_INSTALLED`. A golden that requires an envelope the binding structurally cannot produce costs an implementer days and teaches them to distrust the suite.",
+  "quote_provenance": {
+    "field": "support.replacement",
+    "why_this_span": "Same finding as E2; this trace adds the host-boundary assertions, not a different quote."
+  }
+}

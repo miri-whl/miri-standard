@@ -1,0 +1,34 @@
+{
+  "attack": "C3 \u2014 advisory sources that declare nothing covers the artifact",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-CLI-022"
+  ],
+  "clause": "clause 4 \u2014 no entry authoritative for the artifact itself",
+  "note": "Every field validates and nothing covers this tool. This clause is what stops 022 being satisfied by an array that declares in its own fields that nothing covers the artifact.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [
+        "MIRI-CLI-022"
+      ],
+      "evidence": [
+        "advisory_coverage"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. Reporting the right check ID for the wrong reason is not detection \u2014 and without this, a linter that dumps every check ID on the arm named `adversarial` scores full marks having read nothing."
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [
+        "MIRI-CLI-022"
+      ],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "The only reachable entry is authoritative:false, which per CLI Spec 4 covers the dependency tree and not the artifact, and advisory_coverage is absent rather than `none`."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "Distinct from C4 by CLAUSE, not by document: both fire MIRI-CLI-022 on the same advisory_sources block. A linter reporting 022 once has not shown it evaluates both clauses, so this golden asserts the clause."
+}

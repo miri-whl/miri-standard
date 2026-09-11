@@ -35,7 +35,10 @@ try:
     deep = True
 except ImportError:
     deep = False  # weights still checked; install pyyaml+jsonschema for full alert validation
-ROW = re.compile(r'^\| (MIRI-(?:PY|CLI)-\d+) \| ([MS]) \| .+? \| .+? \| .+? \| (\d+) \|$', re.M)
+# Cell separators are not reliably `| ` — several rows read `...)| ` with no space. The original
+# pattern required that space and so skipped 8 python and 9 CLI rows, reporting sums of 76 and 77 and
+# failing on a clean tree. With the NameError below, this hook had never run to completion.
+ROW = re.compile(r'^\|\s*(MIRI-(?:PY|CLI)-\d+)\s*\|\s*([MS])\s*\|.+?\|.+?\|.+?\|\s*(\d+)\s*\|\s*$', re.M)
 fail = False
 for target, cl in [('python', 'standards/python/linter-checklist.md'), ('cli', 'standards/cli/linter-checklist.md')]:
     table = {m.group(1): (m.group(2), int(m.group(3))) for m in ROW.finditer(open(cl).read())}
@@ -43,8 +46,8 @@ for target, cl in [('python', 'standards/python/linter-checklist.md'), ('cli', '
     if total != 100:
         print(f"{cl}: weights sum {total}, expected 100"); fail = True
     if deep:
-        schema = json.load(open('schemas/check-v1.json'))
-        alerts = {}
+        schema = json.load(open('schemas/check-v2.json'))
+        checks = {}
         for f in sorted(pathlib.Path(f'standards/{target}/checks').glob('*.yaml')):
             d = yaml.safe_load(f.read_text())
             try:
@@ -53,11 +56,11 @@ for target, cl in [('python', 'standards/python/linter-checklist.md'), ('cli', '
                 print(f"{f}: schema violation: {e.message}"); fail = True
             checks[d['id']] = d
         for cid, (lvl, w) in table.items():
-            if cid not in alerts:
+            if cid not in checks:
                 print(f"missing check file: {cid}"); fail = True
             elif checks[cid]['level'][0] != lvl or checks[cid]['weight'] != w:
                 print(f"{cid}: check-file/table level or weight mismatch"); fail = True
-        for cid in alerts:
+        for cid in checks:
             if cid not in table:
                 print(f"check file with no checklist row: {cid}"); fail = True
 if fail: sys.exit(1)

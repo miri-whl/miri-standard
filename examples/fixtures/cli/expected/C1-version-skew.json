@@ -1,0 +1,34 @@
+{
+  "attack": "C1 \u2014 version skew across the three places a version is stated",
+  "fixture": "adversarial-1.1.0 (paired against miri-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-CLI-017"
+  ],
+  "clause": "clauses 1 and 2",
+  "note": "Three sources of one fact, two of them wrong. A consumer that trusts identity.version queries advisories for a version that is not running, which is the whole reason those three are pinned together.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "adversarial-1.1.0",
+      "checks": [
+        "MIRI-CLI-017"
+      ],
+      "evidence": [
+        "identity.version"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. Reporting the right check ID for the wrong reason is not detection \u2014 and without this, a linter that dumps every check ID on the arm named `adversarial` scores full marks having read nothing."
+    },
+    "must_not_report_on": {
+      "arm": "miri-1.1.0",
+      "checks": [
+        "MIRI-CLI-017"
+      ],
+      "why": "The conforming arm does not carry this attack. A linter reporting the same check on both arms has detected nothing \u2014 it reports unconditionally, and would score identically against a fixture with no attacks at all."
+    },
+    "evidence": "`--version` prints 1.1.0; `--describe` identity.version says 1.0.0; identity.purl says @1.1.0."
+  },
+  "paired_control": {
+    "arm": "miri-1.1.0",
+    "why": "greetctl.py is byte-identical across all four arms \u2014 the builder fails if the digests diverge \u2014 so the arms differ only in the two JSON files beside it. A difference in what a linter reports is therefore attributable to metadata, not code. Neither arm decides the case alone: the attack arm catches a linter that reports nothing, the control arm catches one that reports everything."
+  },
+  "why_this_case_was_missing": "Nothing previously required a linter to cross-read the printed version against the document."
+}

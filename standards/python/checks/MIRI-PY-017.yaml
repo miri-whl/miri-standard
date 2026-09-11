@@ -1,4 +1,5 @@
 # MIRI-PY-017 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v2.json
 id: MIRI-PY-017
 name: Error handling shown
 target: python-wheel

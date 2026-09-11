@@ -7,7 +7,7 @@ description: "Use when adding, editing, withdrawing, or reviewing a MIRI check d
 
 Each file in `standards/python/checks/` and `standards/cli/checks/` is one canonical check: the
 machine-readable source of truth a linter implements by ID. The generated site and the linter both consume these
-files, so a mistake here propagates to every downstream tool. The governing schema is `schemas/check-v1.json`
+files, so a mistake here propagates to every downstream tool. The governing schema is `schemas/check-v2.json`
 (JSON Schema draft-07) — read it before authoring, and validate against it after (see the `schema-governance` skill
 for the weight/coverage invariants that span the whole set).
 
@@ -25,7 +25,11 @@ for the weight/coverage invariants that span the whole set).
 - `category` — the checklist category; must be spelled identically to the checklist table and the other checks in
   that category.
 - `weight` — integer 0–10. All `active` weights **per target sum to exactly 100**. Extension checks are 0.
-- `conditional` — if true, the check scores full weight automatically when its condition does not apply.
+- `conditional` — if true, the check is **excluded from both the numerator and the denominator** when its
+  condition does not apply. It is NOT awarded its weight: not-applicable is not a pass. An earlier definition
+  said "scores full weight automatically", which let an artifact earn points for an absence; if you see that
+  wording anywhere, it is stale. The predicate itself is not machine-readable — it lives in `fires_when`
+  prose — so a linter decides applicability per check and MUST report which checks it excluded and why.
 - `severity` — canonical, for health scoring; implementations MUST use these, not their own:
   - `default` — one of `LOW MINOR MEDIUM HIGH CRITICAL` (ordered 1–5; note the nonstandard `LOW < MINOR`).
   - `violation_unit` — the countable thing that is one violation. Make it unambiguous across linters
@@ -64,7 +68,7 @@ for the weight/coverage invariants that span the whole set).
 
 ## Workflow for a change
 
-1. Read `schemas/check-v1.json` and two or three sibling checks in the same category for tone and field patterns.
+1. Read `schemas/check-v2.json` and two or three sibling checks in the same category for tone and field patterns.
 2. Write or edit the YAML. Keep `id` stable; pick the next free number for a new check.
 3. Validate the single file against the schema, then run the whole-set invariants (weights sum to 100, IDs
    contiguous, categories consistent) — the `schema-governance` skill has the exact commands.
