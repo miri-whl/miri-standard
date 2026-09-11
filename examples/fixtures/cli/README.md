@@ -52,7 +52,7 @@ Only `C6` and `C10` may be skipped, only with `previous_release_unavailable`, an
 skipped on **both** arms — capability belongs to the linter and its environment, not to the artifact under
 test, so a check evaluable on one arm is evaluable on the other.
 
-Until 0.6.0 this directory was empty, so nothing stated what a linter must report and an inert linter scored
+Until 0.5.0 this directory was empty, so nothing stated what a linter must report and an inert linter scored
 exactly like a correct one. The first harness closed that and was then defeated six ways by an adversarial
 panel — most simply by emitting every golden's check ID under the key `adversarial-1.1.0` and nothing under the
 other, scoring full marks having never opened a fixture. `make score-cli-linter` now grades seven ways of

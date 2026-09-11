@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://miri-whl.github.io/schemas/check-v1.json",
   "title": "Miri Standard Check Definition (v1 - SUPERSEDED)",
-  "description": "SUPERSEDED by check-v2.json at 0.5.0. Retained unchanged because a consumer pinned here is internally consistent rather than wrong: it describes PRE-0.5.0 scoring semantics, under which `conditional: true` meant a check scored its full weight automatically when its condition did not apply. That reading was replaced by exclusion from both numerator and denominator - the not-applicable-is-not-a-pass rule - which is a change of MEANING with no change of SHAPE, and therefore a new schema rather than an edited one. Do not add fields here; new work validates against check-v2.json. --- Schema for the per-check definition files in standards/<target>/checks/ - the canonical, machine-readable source of truth for every check, consumed by linter implementations",
+  "description": "SUPERSEDED by check-v2.json at 0.5.0. Retained unchanged because a consumer pinned here is internally consistent rather than wrong: it describes PRE-0.5.0 scoring semantics, under which `conditional: true` meant a check scored its full weight automatically when its condition did not apply. That reading was replaced by exclusion from both numerator and denominator - the not-applicable-is-not-a-pass rule - which is a change of MEANING with no change of SHAPE, and therefore a new schema rather than an edited one. Do not add fields here; new work validates against check-v2.json. Every constraint and field description below is exactly as published at 0.4.0 - only this title and this description were added. That was briefly untrue and is worth recording: during 0.5.0 development `conditional` was rewritten HERE to the new exclusion semantics and the 0.5.0-only `scoring` property was added to this file, which left v1 describing v2 semantics under an old title. It made the v1-to-v2 diff illegible - and that diff is the release's own machine-detectable signal for the breaking change - so it also voided the stated reason for keeping v1. Both edits were reverted before release; verify with `git diff 0.4.0 -- schemas/check-v1.json`, which must show only this title and description. --- Schema for the per-check definition files in standards/<target>/checks/ - the canonical, machine-readable source of truth for every check, consumed by linter implementations",
   "type": "object",
   "required": [
     "id",
@@ -74,21 +74,15 @@
       "type": "string",
       "description": "Checklist category the check belongs to"
     },
-    "scoring": {
-      "type": "string",
-      "enum": ["scored", "gate"],
-      "default": "scored",
-      "description": "How this check participates in the conformance score. `scored` (the default) contributes its weight to the numerator when it passes and to the denominator when it applies. `gate` contributes to NEITHER: it carries weight 0, and failing it makes the artifact non-conforming - which is already what a failing MUST does through the 74 cap. Gating exists for checks that are preconditions rather than measurements: MIRI-PY-001 to 003 are properties an index enforces at upload, so every correctly built wheel earns them and they carry no information about how legible the artifact is to an agent. Raised by the miri-py team after five unrelated wheels returned an identical 8/10 in that category. Note `gate` is why weight 0 needs a discriminator: it already meant `extension check` for the X namespaces, and one value cannot mean two things."
-    },
     "weight": {
       "type": "integer",
       "minimum": 0,
       "maximum": 10,
-      "description": "Conformance-score weight; all active weights per target sum to exactly 100. Weight 0 means the check does not contribute to the score, and `scoring` says why: an extension (X-namespace) check is health-only, a `gate` check is a precondition whose failure makes the artifact non-conforming without being measured."
+      "description": "Conformance-score weight; all active weights per target sum to exactly 100. Extension (X-namespace) checks carry weight 0."
     },
     "conditional": {
       "type": "boolean",
-      "description": "When the condition does not apply, the check is EXCLUDED FROM BOTH the numerator and the denominator - it is removed from the calculation, exactly as a capability-forfeited check is. It is NOT awarded its weight. This is the not-applicable-is-not-a-pass rule: a check whose condition does not hold has not been satisfied, and scoring it as passed would let an artifact earn weight for an absence. Note the predicate itself is not machine-readable - it is stated in fires_when prose - so a linter decides applicability per check, and MUST report which checks it excluded and why."
+      "description": "Conditional checks score their full weight automatically when the condition does not apply"
     },
     "severity": {
       "type": "object",

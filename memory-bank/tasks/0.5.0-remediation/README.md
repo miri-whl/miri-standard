@@ -217,6 +217,18 @@ the note described.
   hand-maintained `changed_in` fails the same way `semantics_version` did in this release: one global fact copied
   into 119 files becomes 119 statements that can each go stale. If it is ever needed inside the definitions, the
   field must be one that cannot go stale by omission — a CI-verified content hash, not a human-updated marker.
+- **`check-v1.json` was not frozen, despite two documents saying it was.** Found while sweeping for stale
+  references. `CHANGELOG.md` and `schemas/README.md` both stated v1 is retained frozen and describes 0.4.0
+  semantics; diffing it against `main` showed `conditional` had been rewritten HERE to the new exclusion
+  semantics and the 0.5.0-only `scoring` property had been added to it. v1 was therefore v2 under an old title,
+  which made the v1-to-v2 diff illegible — and that diff is the release's own machine-detectable signal for the
+  breaking change, so the drift voided the stated reason for keeping v1 at all. Both edits reverted; v1 is now
+  byte-equivalent to 0.4.0 except its title and description, verified programmatically. Nothing validated against
+  it (all 119 definitions declare `check-v2.json`, no tool references v1), so the revert was safe. Two claims
+  that were false are now true rather than needing new prose. Also swept out five references to a `0.6.0` that
+  does not exist — leftovers from collapsing the version split — one of which additionally credited the new rule
+  to `check-v1.json`, which the revert would have made wrong a second way.
+
 - **Tag format** — decided bare `0.5.0`, no `v` prefix; recorded in `CONTRIBUTING.md`. Lower stakes than assumed:
   `checks_commit_sha` rejects tags outright and miri-py's `sync_checks.py` pins a `PINNED_SHA`, so nothing
   machine-readable depends on the tag. Matching `standard_version` exactly makes a report's version a usable ref.

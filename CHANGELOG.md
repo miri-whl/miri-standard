@@ -87,7 +87,12 @@ that a static-only run reports a score and no verdict.
 **What will not fail loudly if you skip it.** The three newly required `scores` fields catch a linter that did not
 update its *serializer*. Nothing in any schema relates `scores.excluded` to the `outcomes` that were excluded, so
 a linter that adds the fields and does not change its *arithmetic* validates clean and reports wrong numbers.
-`semantics_version` is the guard against that; it is a tripwire, not a proof.
+The guard against that is the [`check-v2.json`](schemas/check-v2.json) bump itself, together with the `$schema`
+each definition now declares: a linter still applying v1 arithmetic is reading a corpus that says v2, and the
+mismatch fails in both directions. It is a tripwire, not a proof — nothing can prove your arithmetic changed.
+(An earlier draft of this entry named a `semantics_version` field here. That field was proposed and rejected
+during this release — a single global fact copied into 119 files becomes 119 statements that can each go
+stale — and the schema bump replaced it. It does not exist; do not look for it.)
 
 ### Added
 
@@ -287,11 +292,35 @@ adding the second Production Map exposed.
   author writes the read-order for the question the task asks, and "is this package deprecated, and is its successor
   someone else's" qualifies every answer without being any single task's subject.
 
+- **That rule's same-session exemption is keyed on bytes, not on the session.** As first written, a consumer that
+  had already established the lifecycle facts "in the same session" need not re-fetch them. On a `package.replaced`
+  notice the consumer *does* hold them — for the previous artifact's bytes — so the exemption licensed precisely
+  the reuse [`MIRI-CONSUMER-052`](standards/consumption/checks/MIRI-CONSUMER-052.yaml) forbids. **Consumer
+  implementers:** if you cache these facts per session, a replacement must invalidate that cache.
+
+- **The conformance gate no longer reads a field no schema defines.** `tools/score_sample.py` gated on
+  `is_conforming`, which appears in no schema and no specification and survived on `additionalProperties: true`.
+  It now derives the verdict from schema-defined fields — `must_failures` empty, and `grade` outside
+  `{non-conforming, undetermined}` — a coupling [`lint-report-v1.json`](schemas/lint-report-v1.json) already
+  enforces. It also validates each report against that schema, and **warns rather than fails**: 0.5.0 newly
+  requires `effective_denominator`, `excluded` and `forfeited`, so gating would fail a linter for 0.5.0 support
+  that is legitimately still in flight.
+
 ### Specified
 
 - **Batching.** One observable action produces one event per package, with the binding coalescing *output* so a
   caller sees one report about one decision. Settled from implementation data rather than by adding a plural
   `subjects`, because a subject is what an event is about.
+
+- **Release tags carry no `v` prefix** — `0.5.0`, not `v0.5.0` ([CONTRIBUTING.md](CONTRIBUTING.md)). The tag is for
+  humans and GitHub releases only; the machine-readable pin is `checks_commit_sha`, which requires a 40-character
+  sha and rejects a tag outright. Matching `standard_version` exactly makes a report's version a usable git ref.
+
+- **Per-check revision history stays editorial** ([schemas/README.md](schemas/README.md)). `added_in` records birth
+  and nothing records revision, by decision: git is the revision record and `checks_commit_sha` makes it
+  addressable, so "what changed between two reports" is a diff rather than a claim. A hand-maintained `changed_in`
+  would fail the way `semantics_version` did — one global fact copied into 119 files becomes 119 statements that
+  can each go stale.
 
 ## 0.4.0 — 2026-09-06
 

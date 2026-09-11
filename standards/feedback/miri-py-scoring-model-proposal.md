@@ -49,7 +49,7 @@ Neither model is wrong. They are answering different questions, and each current
 - **Grade bands**: 90–100 Gold, 75–89 Silver, 50–74 Bronze, <50 non-conforming.
 - **Conditional checks** score full weight when the condition does not apply.
 
-> **Superseded, 0.6.0.** The "full weight" reading above reflected `check-v1.json`'s
+> **Superseded, 0.5.0.** The "full weight" reading above reflected `check-v1.json`'s
 > description at the time of writing. That description was wrong and is corrected: a conditional
 > check whose condition does not apply is excluded from both numerator and denominator. This
 > document is left as written, because it is a record of what was proposed and when.

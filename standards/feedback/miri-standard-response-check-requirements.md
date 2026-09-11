@@ -45,12 +45,14 @@ Your §3 table is adopted as proposed. On the two flagged items:
   migration guide as condition-not-applicable. The asymmetry is intentional — offline, a missing file cannot be
   distinguished from a first release, and conformance must not depend on a guess.
 
-  **Correction, 0.6.0.** This bullet originally said condition-not-applicable meant *"full weight"*. It does not, and
-  it did not then: `check-v1.json` and both producer checklists now agree that a check whose condition does not apply
-  is **excluded from both the numerator and the denominator**, never awarded its weight. The schema's own description
-  said "full weight" until 0.6.0, which is where the wording here came from — so this is a correction to our answer,
-  not a change of position. For `MIRI-PY-009` the practical effect is that an offline linter's score is computed over a
-  denominator three points smaller, rather than over 100 with three points granted.
+  **Correction, 0.5.0.** This bullet originally said condition-not-applicable meant *"full weight"*, taking that
+  wording from `check-v1.json`, whose own description said exactly that. As of 0.5.0 the rule is reversed: a check
+  whose condition does not apply is **excluded from both the numerator and the denominator**, never awarded its
+  weight — stated now in `check-v2.json` and in both producer checklists. `check-v1.json` still reads "full weight",
+  because it is the frozen pre-0.5.0 record and a linter pinned there is internally consistent rather than wrong;
+  that a reversal of meaning left the shape untouched is precisely why the schema was bumped instead of edited. For
+  `MIRI-PY-009` the practical effect is that an offline linter's score is computed over a denominator three points
+  smaller, rather than over 100 with three points granted.
 
   **Second correction, same release.** Offline, `MIRI-PY-009` is a **forfeit**, not an exclusion. Both leave the
   denominator so the score is identical, but the precedence rule now in both producer checklists says that where
