@@ -37,6 +37,22 @@ level up: you built the mechanism that prevents a number from overstating what w
 number that overstates what was verified. `0 fail` and `no MUST unassessed` are different claims, and only the
 second one licenses a grade.
 
+What makes this worth a whole section is that you already got it right in the other document you sent the same
+week. `0.5.0-measured-rerun.md` reports miri-py at `100%` with grade **`undetermined`** — correctly, because the
+default posture forfeits execution-gated MUSTs. So the rule is implemented and understood on the `python-wheel`
+path and not carried across to the behavioural families. One team, one week, two treatments of the same rule; the
+inconsistency is between your own two documents rather than between us.
+
+**And the same rule has just bitten us, which is worth reporting rather than hiding.** Our CI gate scores the
+sample SDK and, until today, demanded a definite grade from the default static posture. `MIRI-PY-015`, `036` and
+`040` are MUSTs requiring the `execution` capability and are not conditional, so that posture forfeits 9 weight and
+can never produce a grade for any artifact. The gate went red on your first 0.5.0-shaped report — `conformance=93`,
+`grade=undetermined`, `must_failures=[]` — with nothing actually wrong. We had written the gate to reject
+`undetermined`, which reads our own rule backwards: `undetermined` is not non-conformance. Fixed on our side; the
+static gate now fails on a non-empty `must_failures` or an explicit `non-conforming`, and accepts `undetermined`.
+Your report also validated against `lint-report-v1.json` on that run, so the three fields 0.5.0 newly required are
+landing correctly.
+
 It also sharpens your ask 2, which we are accepting — see below.
 
 ## 1. Ask 2 — driver semantics, stated normatively: accepted

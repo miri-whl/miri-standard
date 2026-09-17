@@ -105,10 +105,27 @@ def main():
             # sources, not verdicts — a stored `is_conforming` is a computed state that can disagree with
             # what produced it. Verified against the two real CI reports: static (must_failures=[],
             # grade=silver) and --execute (must_failures=[036,040], grade=non-conforming) reproduce the
-            # vendor field's True/False exactly. A missing `grade` is treated as undetermined, not as a
-            # pass, so absence cannot buy conformance.
-            conforming = not r.get("must_failures") and s.get("grade") not in (
-                None, "non-conforming", "undetermined")
+            # vendor field's True/False exactly.
+            #
+            # `undetermined` is ACCEPTED here, and that is deliberate rather than lax. 0.5.0's own rule is
+            # that `undetermined` is not non-conformance: a forfeited MUST leaves the artifact neither known
+            # to conform nor known to fail. Three MUSTs — MIRI-PY-015, 036 and 040 — require the `execution`
+            # capability and are not conditional, so the default static posture forfeits 9 weight and can
+            # never produce a grade for any artifact. An earlier version of this gate rejected
+            # `undetermined`, which made the static pass structurally unpassable the moment an implementation
+            # actually applied 0.5.0's semantics; it went red on miri-py's first 0.5.0-shaped report
+            # (conformance 93, grade undetermined, must_failures []) even though nothing was wrong. Gating on
+            # a definite grade from a posture that cannot determine one is reading our own rule backwards.
+            #
+            # What still fails: a non-empty `must_failures`, and an explicit `non-conforming` grade. Those are
+            # the schema's own coupled signals for a real MUST failure. A report declaring no grade at all is
+            # warned about rather than failed, since `grade` is not a required field and `must_failures` is —
+            # demanding more than the schema does would be stricter than the standard.
+            grade = s.get("grade")
+            if grade is None:
+                print(f"::warning::sample-sdk [{label}]: report declares no `grade`; "
+                      f"gating on `must_failures` alone.")
+            conforming = not r.get("must_failures") and grade != "non-conforming"
             print(f"sample-sdk [{label}]: conformance={s['conformance']} health={s.get('health')} "
                   f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
                   f"MUST_failures={r.get('must_failures')}")
