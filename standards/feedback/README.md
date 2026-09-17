@@ -45,6 +45,18 @@ Decisions worked through so far, each as a proposal plus the response that settl
   error of its own, and the answer corrected an inference the response had not yet challenged.
   `vacuous-conformance-answer-2.md` closes it: the pin format after a tag, and a prediction placed on
   record before the measurement that will test it.
+- `0.5.0-measured-rerun.md` — miri-py's implementation report against 0.5.0, closing the loop
+  `vacuous-conformance-answer-2.md` opened. Five real wheels rescored at the release pin; every figure landed on the
+  number filed in advance, so the measurement did not contradict the prediction. Reported, not yet answered.
+- `conformance-interop-contract-proposal.md` / `miri-standard-response-conformance-interop.md` — miri-py offers
+  the interop contract their linter now runs on: rule files owning verification, a four-operator vocabulary
+  executing them, and driver semantics whose core is forfeit-never-silence. The two schemas it delivers are
+  recorded verbatim under `conformance-interop-schemas/`. The response accepts the driver semantics and adds the
+  clause the proposal left out — a forfeited MUST withdraws the grade rather than discounting the score, which
+  makes all three of their behavioural families `undetermined` rather than "N pass / 0 fail". It declines to freeze
+  the operator vocabulary while a third of the behavioural checks need operator classes that do not exist, and
+  sets the promotion test. Fixture recipe blessed and checksummed; no binaries shipped. Nothing in `schemas/`
+  derives from the delivered files.
 
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.
