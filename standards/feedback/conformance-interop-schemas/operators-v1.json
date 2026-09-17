@@ -1,0 +1,245 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-standard.org/schemas/operators-v1.json",
+  "title": "MIRI operator vocabulary, version 1",
+  "description": "Every operator a rule may name, with the exact argument shape each accepts. A rule naming an operator absent from this document is refused at load - never skipped - and so is an argument this document does not declare. This file is the interop contract: a second implementation implements these semantics and is then driven by the same rule files.",
+  "operators": {
+    "native": {
+      "description": "The escape hatch, as a first-class operator: delegate to a hand-written implementation with the standard (context, definition) -> CheckOutcome contract. Counted and ratcheted by declarative_audit.py - the count may only fall.",
+      "arguments": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operator",
+          "binding"
+        ],
+        "properties": {
+          "operator": {
+            "const": "native"
+          },
+          "binding": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_.]*:[A-Za-z_][A-Za-z0-9_]*$",
+            "description": "module:function, importable, callable."
+          }
+        }
+      }
+    },
+    "document.schema_valid": {
+      "description": "The named agent-metadata document parses as JSON and validates against the named vendored schema. required: true fails an absent document; false passes it (the document is optional, but a present one must be valid). One violation per schema error, located at document:json-pointer.",
+      "arguments": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operator",
+          "document",
+          "schema",
+          "required"
+        ],
+        "properties": {
+          "operator": {
+            "const": "document.schema_valid"
+          },
+          "document": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+\\.json$"
+          },
+          "schema": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+-v[0-9]+\\.json$"
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cli.invoke": {
+      "description": "Invoke the family's configured subject (its own CLI) with argv and assert the machine contract: exit code, fields of the JSON envelope on stdout addressed by dotted path, and regex constraints on raw output. One violation per failed expectation, each naming expected and actual. The subject argv comes from configuration (families.<family>.subject), never from the rule - a rule says WHAT must hold, wiring says WHO is under test. stderr_matches and stderr_not_matches apply the same regex semantics to the diagnostic channel.",
+      "arguments": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operator",
+          "argv",
+          "expect"
+        ],
+        "properties": {
+          "operator": {
+            "const": "cli.invoke"
+          },
+          "argv": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
+          "expect": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "exit_code": {
+                "type": "object",
+                "additionalProperties": false,
+                "minProperties": 1,
+                "maxProperties": 1,
+                "properties": {
+                  "eq": {
+                    "type": "integer"
+                  },
+                  "ne": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "stdout_json": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "minProperties": 1,
+                  "maxProperties": 1,
+                  "properties": {
+                    "eq": {},
+                    "ne": {},
+                    "in": {
+                      "type": "array",
+                      "minItems": 1
+                    },
+                    "exists": {
+                      "type": "boolean"
+                    },
+                    "matches": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "stdout_matches": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "stdout_not_matches": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "stderr_matches": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              },
+              "stderr_not_matches": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "minItems": 1
+              }
+            }
+          },
+          "stdin": {
+            "type": "string",
+            "description": "Text written to the subject's stdin. Omitted, the stream is closed - a subject that reads gets end-of-file rather than a hang."
+          }
+        }
+      }
+    },
+    "mcp.invoke": {
+      "description": "One JSON-RPC exchange with the family's configured surface subject, judged over two layers: response_json applies the dotted-path grammar to the raw JSON-RPC response, envelope_json to the section-4 envelope parsed from the MCP text content. The subject argv comes from configuration; a rule says WHAT the surface must answer, wiring says WHICH surface is under test.",
+      "arguments": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "operator",
+          "expect"
+        ],
+        "properties": {
+          "operator": {
+            "const": "mcp.invoke"
+          },
+          "method": {
+            "enum": [
+              "tools/call",
+              "tools/list",
+              "initialize"
+            ],
+            "default": "tools/call"
+          },
+          "tool": {
+            "type": "string",
+            "minLength": 1
+          },
+          "arguments": {
+            "type": "object"
+          },
+          "expect": {
+            "type": "object",
+            "additionalProperties": false,
+            "minProperties": 1,
+            "properties": {
+              "envelope_json": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "minProperties": 1,
+                  "maxProperties": 1,
+                  "properties": {
+                    "eq": {},
+                    "ne": {},
+                    "in": {
+                      "type": "array",
+                      "minItems": 1
+                    },
+                    "exists": {
+                      "type": "boolean"
+                    },
+                    "matches": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "response_json": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "minProperties": 1,
+                  "maxProperties": 1,
+                  "properties": {
+                    "eq": {},
+                    "ne": {},
+                    "in": {
+                      "type": "array",
+                      "minItems": 1
+                    },
+                    "exists": {
+                      "type": "boolean"
+                    },
+                    "matches": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
