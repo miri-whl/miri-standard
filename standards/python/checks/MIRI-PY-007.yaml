@@ -1,5 +1,5 @@
 # MIRI-PY-007 — generated with the checklist table; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-007
 name: sdk-manifest.json valid
 target: python-wheel
@@ -7,15 +7,25 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Agent Metadata Core
-weight: 6
+weight: 5
 conditional: false
+conformance_tier: T1
+tiers:
+  T0:
+  - '`agent-metadata/sdk-manifest.json` is present, parses as strict JSON, and validates against sdk-manifest-v1.json'
+  T1:
+  - 'Every `quick_reference.common_imports` entry parses as a Python import statement AND resolves: each module it names exists in the wheel and each imported name is defined there (a `from _version.py import X` line is schema-valid text and not a valid import; this clause is what makes it fail)'
+  - 'Every `api_index` key parses as a dotted public path rooted at the package, and keys are unique'
+  - 'Every `quick_reference.primary_classes` and `key_methods` entry names a key present in `api_index`'
 severity:
   default: HIGH
   violation_unit: sdk-manifest.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
 short_description: Present and validates against schema
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
   schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
-  and validates against schema.'
+  and validates against schema. Since 0.6.0 it is TIERED: schema validity is T0 (exists), and T1 (true) requires that
+  `common_imports` actually import — the manifest is a document an agent transcribes into code, so a line that is valid
+  JSON and not valid Python is a lie the schema cannot see.'
 rationale: 'Agent Metadata §4.1 defines sdk-manifest.json as the agent''s substitute for parsing source: quick_reference
   for orientation, api_index for signatures, error_handling for recovery. Agents do not read it skeptically — an api_index
   entry that omits its parameters, or a common_imports line naming a module that moved, is transcribed directly into generated

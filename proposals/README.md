@@ -51,6 +51,14 @@ Accepted proposals move to implementation:
 - [Consumption Specification (RFC)](20260821-consumption-specification.md) — **Draft**, deferred to post-v0.2. A
   consumer-side spec closing the producer→consumer loop (task-to-document map, discovery contract, consumer conformance
   profile, verification recipe, paired fixture). Panel pre-reviewed 2026-08-21: endorse-with-changes.
+- Substance and Freshness — graduated scoring, from the miri-py implementation team, with our response in
+  [miri-standard-response-substance-and-freshness.md](miri-standard-response-substance-and-freshness.md).
+  **Partly accepted, partly blocked.** Two defects verified: presence scores as substance (`MIRI-PY-014` awards 4
+  weight at MUST for a one-line quickstart), and stale is invisible (no machine-readable changelog exists). The
+  pure-function-verdicts ask is adopted and has landed in `check-v3.json` for 0.6.0. The freshness contract,
+  `changelog.json`, graduated tier scoring and calibrated floors are blocked on five questions — chiefly whether a
+  partially-earned MUST passes or fails, which the proposal does not address and which decides whether tier scoring
+  is a scoring change or a conformance change.
 
 ### Accepted Proposals
 

@@ -29,8 +29,20 @@ consistency and enable automated validation of agent metadata.
   - Required fields: `version`, `nodes`, `edges`
   - Validates graph structure and workflow definitions
 
-- **[check-v2.json](check-v2.json)** - Schema for the per-check check definitions in `standards/<target>/checks/`
-  - **Current.** Requires each definition to declare `$schema` pointing at this file, which is what makes a
+- **[check-v3.json](check-v3.json)** - Schema for the per-check check definitions in `standards/<target>/checks/`
+  - **Current.** Adds `tiers` and `conformance_tier`: a substance-bearing check earns its weight as a cumulative
+    schedule (T0 exists, T1 true, T2 covers, T3 current) rather than as a bit, with the MUST boundary at the *lie*
+    (T1 by default), not at thinness. Also requires every `fires_when` and tier clause to be a pure function of the
+    artifact. Definitions without `tiers` mean exactly what they meant under v2.
+- **[changelog-v1.json](changelog-v1.json)** - Machine-readable release history, `agent-metadata/changelog.json`
+  - Mirrors the CLI family's `changelog --since` payload (MIRI-CLI-029). Conditional on a previous release
+    existing. `releases[0].version` must equal the wheel's version (version silence); every named symbol must
+    resolve in the current or previous `api_index` (dangling claim); every removal in the measured delta must
+    appear (uncovered delta).
+- **[check-v2.json](check-v2.json)** - **Superseded at 0.6.0, retained frozen** at its 0.5.0 bytes
+  - Its closed `additionalProperties` rejects a definition declaring `tiers` outright, which is the loud failure a
+    v2-pinned linter should get rather than a silently binary score of a tiered check.
+  - Was **current at 0.5.0.** Requires each definition to declare `$schema` pointing at this file, which is what makes a
     semantics change loud: a v2 definition carries a key v1's closed `additionalProperties` rejects, and a v1
     definition omits a key v2 requires, so a mismatched corpus-and-schema pairing fails in both directions
 - **[check-v1.json](check-v1.json)** - **Superseded at 0.5.0, retained frozen.** Describes pre-0.5.0 scoring

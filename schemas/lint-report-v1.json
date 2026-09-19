@@ -77,7 +77,8 @@
           "skip_reason": {"type": "string", "enum": ["network_unavailable", "previous_release_unavailable", "execution_disabled", "condition_not_applicable"]},
           "weight": {"type": "integer"},
           "forfeited": {"type": "boolean"},
-          "violations": {"type": "integer", "minimum": 0}
+          "violations": {"type": "integer", "minimum": 0},
+          "tier_earned": {"type": "string", "enum": ["T0", "T1", "T2", "T3"], "description": "Present only for a check whose definition declares `tiers` (check-v3). The highest tier whose every clause held, with all predecessors held. Pass/fail is DERIVED - tier_earned >= the definition's conformance_tier - so this field explains a status, never replaces it. Absent on a tiered check means the linter forfeited every tier, which on a MUST leaves the family undetermined."}
         },
         "additionalProperties": true
       }

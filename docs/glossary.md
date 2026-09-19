@@ -136,7 +136,7 @@ answer. A closed set of four, and the distinctions matter:
 ## Checking
 
 **Gate** ([Python checklist](../standards/python/linter-checklist.md); `scoring: gate` in
-[check-v2](../schemas/check-v2.json)) — a check that is a **precondition rather than a measurement**. It carries
+[check-v3](../schemas/check-v3.json)) — a check that is a **precondition rather than a measurement**. It carries
 weight 0, enters neither side of the conformance ratio, and failing it makes the artifact non-conforming. Three
 exist: `MIRI-PY-001`, `002`, `003`, the wheel-structure and metadata checks an index enforces at upload, which every
 correctly built wheel passed and which therefore separated nothing. A gate can only be a `MUST` — its sole declared
@@ -158,12 +158,12 @@ neither known to conform nor known to fail. An **excluded** MUST never produces 
 for this artifact. See [[conditional]] and [[forfeited]] for the distinction that decides which.
 
 **Check** — one numbered, mechanically decidable requirement, governed by
-[`check-v2.json`](../schemas/check-v2.json). Its authoritative form is a YAML file under
+[`check-v3.json`](../schemas/check-v3.json). Its authoritative form is a YAML file under
 `standards/<target>/checks/`; the tables in the profiles are a derived rendering. IDs are **never renumbered**, and
 the numbering is **sparse** — `MIRI-CONSUMER` runs 001–052 across eighteen checks, so an ID range is an address
 space and never a count.
 
-**`fires_when`** ([`check-v2.json`](../schemas/check-v2.json)) — the operative content of a check: the concrete
+**`fires_when`** ([`check-v3.json`](../schemas/check-v3.json)) — the operative content of a check: the concrete
 conditions under which a conforming linter raises
 it. Everything else in a check file is explanation; this is the part an implementer implements.
 
@@ -176,6 +176,22 @@ bad is this*.
 **Weight** ([Consumer Conformance §3](../standards/consumption/consumer-conformance.md)) — a check's share of 100. Every
 target's active weights sum to exactly 100, which is why adding a check
 means redistributing rather than appending.
+
+**Tiers** ([`check-v3.json`](../schemas/check-v3.json)) — for a substance-bearing check, the cumulative schedule by
+which its weight is earned instead of awarded as a bit: **T0** *exists* (present, parses, schema-valid), **T1** *true*
+(named symbols resolve, embedded code runs against this artifact), **T2** *covers* (a calibrated floor of the surface it
+owns), **T3** *current* (stamps in window, current version described, no dangling claim against the previous release).
+Every tier clause is a join or an execution, never a word count or a judgment. T2 ships defined but weightless until the
+corpus trigger in [`scoring-v1.json`](../schemas/scoring-v1.json) is met.
+
+**Conformance tier** ([`check-v3.json`](../schemas/check-v3.json)) — the tier at which a tiered check's *obligation* is
+satisfied; tiers above it price weight only. Pass/fail is derived — `tier_earned >= conformance_tier` — so the verdict
+vocabulary does not grow. Default **T1**: the MUST boundary sits at the *lie*, not at thinness. A document whose claims
+are false fails the MUST and the 74 cap fires; one that is true but thin passes and earns a thin score.
+
+**Tier earned** ([lint-report-v1](../schemas/lint-report-v1.json)) — the highest tier whose every clause held, with all
+predecessors held, reported per outcome for a tiered check. Explains a status; never replaces it. Absent on a tiered
+check means every tier was forfeited.
 
 **Conditional** ([Consumer Conformance §3](../standards/consumption/consumer-conformance.md)) — a check whose obligation
 only applies in some circumstances. **Not-applicable is not a pass**: a

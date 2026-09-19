@@ -1,6 +1,6 @@
 # Miri Linter Checklist: Python Wheels
 
-*Specification Version: 0.2-draft*
+*Specification Version: 0.3-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -129,7 +129,7 @@ Two profiles let a package adopt Miri incrementally:
   the hand-authorable `lifecycle.json` identity and advisory fields (MIRI-PY-018–023), support-status coherence
   (MIRI-PY-033), and graceful degradation (MIRI-PY-040). A package is **Core-conforming** when it passes every MUST
   check in this 14-check set. Core is the recommended on-ramp and the standard's most defensible layer.
-- **Miri Full** — all 40 checks, adding the generated agent-metadata surface (sdk-manifest, usage-patterns, api-graph),
+- **Miri Full** — all 43 active checks, adding the generated agent-metadata surface (sdk-manifest, usage-patterns, api-graph),
   embedded examples, deprecation-coherence machinery, and discovery APIs. The Bronze/Silver/Gold score is computed over
   the Full set.
 
@@ -152,31 +152,34 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
 | MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-python-wheel-extensions.md) | 2 |
-| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 6 |
-| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 5 |
+| MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 5 |
+| MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 4 |
 | MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
 | MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](miri-agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
 | MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](miri-agent-metadata-specification.md) | 2 |
-| MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
+| MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 2 |
 | MIRI-PY-013 | M | JSON hygiene | All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments) | RFC 8259 | 2 |
+| MIRI-PY-041 | M | changelog.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) / [schema](../../schemas/changelog-v1.json) | 3 |
 
 ### C. Examples (12 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 4 |
-| MIRI-PY-015 | M | Examples runnable | Every example compiles; runs in a clean virtual environment (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 4 |
-| MIRI-PY-016 | M | Example index coherent | `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions | [Miri Wheel Ext. §4.1](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-014 | M | Quickstart exists | `examples/quickstart.py` present | [Miri Wheel Ext. §5.1](miri-python-wheel-extensions.md) | 5 |
+| MIRI-PY-015 | M | Examples runnable | Every example compiles; runs in a clean virtual environment (except external credentials) | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 5 |
 | MIRI-PY-017 | S | Error handling shown | Examples demonstrate the package's error/exception handling | [Miri Wheel Ext. §7.2.2](miri-python-wheel-extensions.md) | 2 |
 
-### D. Identity & Security (25 points)
+*Withdrawn at 0.6.0:* **MIRI-PY-016** (Example index coherent, 2 points). Its both-ways index/file join is now
+MIRI-PY-014's T3 clause and its weight moved there. The ID and its definition file remain.
+
+### D. Identity & Security (23 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
 | MIRI-PY-018 | M | lifecycle.json valid | Present and validates against schema | [Lifecycle Spec §3](lifecycle-security-metadata.md) / [schema](../../schemas/lifecycle-v1.json) | 4 |
-| MIRI-PY-019 | M | purl coherence | `identity.purl` name+version exactly match `METADATA` | [purl spec](https://github.com/package-url/purl-spec) / [Lifecycle §8.2](lifecycle-security-metadata.md) | 4 |
+| MIRI-PY-019 | M | purl coherence | `identity.purl` name+version exactly match `METADATA` | [purl spec](https://github.com/package-url/purl-spec) / [Lifecycle §8.2](lifecycle-security-metadata.md) | 3 |
 | MIRI-PY-020 | M | Distribution & registry declared | `distribution` set; `registry` a well-formed index URL | [Lifecycle §3.1](lifecycle-security-metadata.md) | 2 |
-| MIRI-PY-021 | M | Advisory sources present | ≥1 entry in `advisory_sources`, valid type and URL | [Lifecycle §3.1](lifecycle-security-metadata.md) / [OSV schema](https://ossf.github.io/osv-schema/) | 3 |
+| MIRI-PY-021 | M | Advisory sources present | ≥1 entry in `advisory_sources`, valid type and URL | [Lifecycle §3.1](lifecycle-security-metadata.md) / [OSV schema](https://ossf.github.io/osv-schema/) | 2 |
 | MIRI-PY-022 | M | Private-source rule | `distribution: private` does not rely solely on public OSV | [Lifecycle §5.1](lifecycle-security-metadata.md) | 3 |
 | MIRI-PY-023 | M | Update check declared | `update_check` type/URL valid (PyPI JSON or PEP 700 index) | [Lifecycle §3.1](lifecycle-security-metadata.md) / [PEP 691](https://peps.python.org/pep-0691/)/[700](https://peps.python.org/pep-0700/) | 2 |
 | MIRI-PY-024 | M | SBOM when bundling | Wheels with non-Python components carry `.dist-info/sboms/` (*conditional*; binary-extension detection triggers it) | [PEP 770](https://peps.python.org/pep-0770/) / [Lifecycle §3.2](lifecycle-security-metadata.md) | 4 |
@@ -184,26 +187,29 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-PY-026 | S | VEX well-formed | `vex` URL, if present, serves an OpenVEX/CycloneDX VEX document | [OpenVEX](https://github.com/openvex/spec) | 1 |
 | MIRI-PY-027 | S | Security policy declared | `support.security_policy` present and resolvable | [Lifecycle §3.1](lifecycle-security-metadata.md) | 1 |
 
-### E. Deprecation & Lifecycle Coherence (25 points)
+### E. Deprecation & Lifecycle Coherence (28 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-028 | M | PEP 702 markers | Every interface listed as deprecated carries `@deprecated`; decorator message names replacement + removal version (*conditional*: no deprecated surfaces to check)| [PEP 702](https://peps.python.org/pep-0702/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 4 |
-| MIRI-PY-029 | M | Inventory derived | Every PEP 702 marker appears in `migration-guide.json` `deprecations` (*conditional*: no deprecated surfaces to check)| [Lifecycle §6.2/§6.4-1](lifecycle-security-metadata.md) | 4 |
-| MIRI-PY-030 | M | No silent removals | Every public interface removed since the prior release was listed in an earlier release's `deprecations` (*conditional*: needs a prior release)| [Lifecycle §6.4-2](lifecycle-security-metadata.md) | 5 |
+| MIRI-PY-028 | M | PEP 702 markers | Every interface listed as deprecated carries `@deprecated`; decorator message names replacement + removal version (*conditional*: no deprecated surfaces to check)| [PEP 702](https://peps.python.org/pep-0702/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 3 |
+| MIRI-PY-029 | M | Inventory derived | Every PEP 702 marker appears in `migration-guide.json` `deprecations` (*conditional*: no deprecated surfaces to check)| [Lifecycle §6.2/§6.4-1](lifecycle-security-metadata.md) | 3 |
+| MIRI-PY-030 | M | No silent removals | Every public interface removed since the prior release was listed in an earlier release's `deprecations` (*conditional*: needs a prior release)| [Lifecycle §6.4-2](lifecycle-security-metadata.md) | 4 |
 | MIRI-PY-031 | M | Replacements resolve | Every `deprecations[].replacement` exists in the new `sdk-manifest.json` (*conditional*: no deprecated surfaces to check)| [Lifecycle §6.4-3](lifecycle-security-metadata.md) | 3 |
 | MIRI-PY-032 | M | Removal versions sane | Every `removal_version` is greater than the current release (*conditional*: no deprecated surfaces to check)| [Lifecycle §6.4-3](lifecycle-security-metadata.md) / [PEP 440](https://peps.python.org/pep-0440/) | 2 |
-| MIRI-PY-033 | M | Support status coherent | `support.status` in enum; `deprecated`/`eol` ⇒ `replacement` present | [Lifecycle §3.1](lifecycle-security-metadata.md) / [schema](../../schemas/lifecycle-v1.json) | 3 |
+| MIRI-PY-033 | M | Support status coherent | `support.status` in enum; `deprecated`/`eol` ⇒ `replacement` present | [Lifecycle §3.1](lifecycle-security-metadata.md) / [schema](../../schemas/lifecycle-v1.json) | 2 |
 | MIRI-PY-034 | S | Grace period | Deprecated interfaces survive ≥2 releases before removal (*conditional*: needs a prior release)| [PEP 387](https://peps.python.org/pep-0387/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 2 |
 | MIRI-PY-035 | S | Runtime warnings fire | Importing/calling deprecated interfaces emits `DeprecationWarning` (*conditional*: no deprecated surfaces to check)| [PEP 565](https://peps.python.org/pep-0565/) | 2 |
+| MIRI-PY-042 | M | Version silence | `changelog.json` `releases[0].version` equals the wheel's version (*conditional*: document present) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) | 3 |
+| MIRI-PY-043 | M | Uncovered delta | Every interface in the measured API delta appears in `releases[0]` (*conditional*: needs a prior release) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) / [Lifecycle §6.4-2](lifecycle-security-metadata.md) | 2 |
+| MIRI-PY-044 | M | Dangling claim | Every symbol named in `changelog.json` resolves in the current or previous `api_index` (*conditional*: document present) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) | 2 |
 
-### F. Discovery & Degradation (10 points)
+### F. Discovery & Degradation (9 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
 | MIRI-PY-036 | M | Discovery and manifest verification | Discovery functions work; `sdk-manifest` api_index resolves against the installed API surface | [Miri Wheel Ext. §6](miri-python-wheel-extensions.md) / [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
 | MIRI-PY-037 | S | Embedded docs present | `docs/` directory with API reference and troubleshooting | [Miri Wheel Ext. §5.3](miri-python-wheel-extensions.md) | 2 |
-| MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-python-wheel-extensions.md) | 2 |
+| MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-python-wheel-extensions.md) | 1 |
 | MIRI-PY-039 | S | Prompt templates valid | `prompt-templates.md`, if present, follows the specified structure | [Agent Metadata §4.4](miri-agent-metadata-specification.md) | 1 |
 | MIRI-PY-040 | M | Graceful degradation | Package imports and functions normally with all Miri metadata stripped | [Miri Wheel Ext. §8.3](miri-python-wheel-extensions.md) | 2 |
 
@@ -211,13 +217,13 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 | Category | Points | Checks |
 |---|---|---|
-| A. Packaging Baseline | 10 | 001–005 |
-| B. Agent Metadata Core | 20 | 006–013 |
-| C. Examples | 10 | 014–017 |
-| D. Identity & Security | 25 | 018–027 |
-| E. Deprecation & Lifecycle Coherence | 25 | 028–035 |
-| F. Discovery & Degradation | 10 | 036–040 |
-| **Total** | **100** | **40** |
+| A. Packaging Baseline | 4 | 001–005 (001–003 gate) |
+| B. Agent Metadata Core | 24 | 006–013, 041 |
+| C. Examples | 12 | 014–017 (016 withdrawn) |
+| D. Identity & Security | 23 | 018–027 |
+| E. Deprecation & Lifecycle Coherence | 28 | 028–035, 042–044 |
+| F. Discovery & Degradation | 9 | 036–040 |
+| **Total** | **100** | **43 active** |
 
 ## Check Definitions (Source of Truth)
 
@@ -225,7 +231,7 @@ The standard's vocabulary: each *requirement* in a spec is verified by a *check*
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
 Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
-(`checks/MIRI-PY-NNN.yaml`), validated against [check-v2.json](../../schemas/check-v2.json). Each file carries the check's
+(`checks/MIRI-PY-NNN.yaml`), validated against [check-v3.json](../../schemas/check-v3.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —

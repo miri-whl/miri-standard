@@ -372,7 +372,7 @@ that way.
 ## 7. Check Definitions
 
 The authoritative definition of each check is its YAML file in `standards/consumption/checks/`, governed by
-`schemas/check-v2.json` with `target: consumer`. The tables in §5 are the derived rendering: where the two disagree,
+`schemas/check-v3.json` with `target: consumer`. The tables in §5 are the derived rendering: where the two disagree,
 the YAML is correct, and the disagreement is a bug to fix in the same change.
 
 Every check carries the canonical `severity` and `violation_unit` that implementations MUST use for health scoring,
@@ -380,7 +380,7 @@ exactly as the producer checks do — so that a consumer report and a wheel repo
 translating between two scoring vocabularies.
 
 Both values live in the check's YAML under `severity` (`standards/consumption/checks/<id>.yaml`, governed by
-[`check-v2.json`](../../schemas/check-v2.json)), which is the single source: `default` is one of `LOW MINOR MEDIUM
+[`check-v3.json`](../../schemas/check-v3.json)), which is the single source: `default` is one of `LOW MINOR MEDIUM
 HIGH CRITICAL`, and `violation_unit` names the countable thing that is one violation. A report is verified against
 them mechanically — for each finding it emits, its severity string MUST equal the `default` of the check it cites,
 and its count MUST be in that check's `violation_unit`. A report that substitutes its own severity scale is

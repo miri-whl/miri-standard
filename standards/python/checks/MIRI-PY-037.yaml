@@ -1,5 +1,5 @@
 # MIRI-PY-037 — generated with the checklist table; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-037
 name: Embedded docs present
 target: python-wheel
@@ -9,6 +9,17 @@ level: SHOULD
 category: Discovery & Degradation
 weight: 2
 conditional: false
+conformance_tier: T1
+tiers:
+  T0:
+  - '`docs/api_reference.md` and `docs/troubleshooting.md` exist and are not stubs (non-zero length, at least one heading with body content)'
+  T1:
+  - 'Every fenced `python` block in both files parses (`ast.parse`), and every import and dotted package path inside those blocks resolves in the wheel or in `api_index` — a block that is syntactically valid but names a module the wheel does not ship is a lie, and lies fail the MUST boundary of a document that is otherwise thin'
+  - 'Every identifier-shaped reference in prose that is backtick-quoted and rooted at the package name resolves in `api_index`'
+  T2:
+  - '`api_reference.md` mentions at least the calibrated floor of `api_index` keys; a mention counts only inside a document whose code blocks clear T1 (weightless until `t2_activation` is met)'
+  T3:
+  - 'No documented symbol is absent from the current release''s `api_index`, and any version string the docs name for the package equals the wheel''s version'
 severity:
   default: LOW
   violation_unit: the docs directory

@@ -1,5 +1,5 @@
 # MIRI-PY-030 — generated with the checklist table; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-030
 name: No silent removals
 target: python-wheel
@@ -7,7 +7,7 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Deprecation & Lifecycle Coherence
-weight: 5
+weight: 4
 conditional: true
 requirements:
 - previous-release

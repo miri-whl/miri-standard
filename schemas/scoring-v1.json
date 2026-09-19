@@ -34,6 +34,30 @@
         "gold_requires_provenance": {
           "type": "boolean",
           "description": "Whether Gold additionally requires PEP 740 attestations (MIRI-PY-005) for public-index wheels"
+        },
+        "tiers": {
+          "type": "object",
+          "description": "The tier schedule for checks that declare `tiers` (check-v3). Declared ONCE here so the four shares stay committee numbers with a single home rather than being copied into definitions. A tiered check's weight is a ceiling; it earns shares[T0..tier_earned] of it, cumulatively. The shares are PROVISIONAL committee numbers, not measured - stated so, and revisited against the corpus.",
+          "required": ["shares", "t2_activation"],
+          "additionalProperties": false,
+          "properties": {
+            "shares": {
+              "type": "object",
+              "required": ["T0", "T1", "T2", "T3"],
+              "additionalProperties": false,
+              "properties": {"T0": {"type": "number"}, "T1": {"type": "number"}, "T2": {"type": "number"}, "T3": {"type": "number"}},
+              "default": {"T0": 0.2, "T1": 0.3, "T2": 0.3, "T3": 0.2},
+              "description": "Fraction of a tiered check's weight each tier carries; MUST sum to 1.0. While T2 is inactive its share is PARKED IN T1 - the effective 0.6.0 schedule is T0/T1/T3 - so a linter computes T1's effective share as T1 + T2 until t2_activation is met."
+            },
+            "t2_activation": {
+              "type": "object",
+              "required": ["min_wheels", "min_publishers"],
+              "additionalProperties": false,
+              "properties": {"min_wheels": {"type": "integer", "minimum": 1}, "min_publishers": {"type": "integer", "minimum": 1}},
+              "default": {"min_wheels": 25, "min_publishers": 10},
+              "description": "T2 (covers) ships defined but weightless until the corpus of published conformant wheels reaches this size, at which point its percentile floors are recomputed from that corpus and T2 activates. The trigger is a COUNT, not a date. Until then T2 appears in reports as tier_earned and moves no score. Why: the only corpus available at 0.6.0 was seven wheels of which three had an api_index and two of those were the proposer's own - percentiles over that set are habits reflected back, not calibration."
+            }
+          }
         }
       },
       "additionalProperties": true

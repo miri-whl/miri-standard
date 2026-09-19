@@ -1,0 +1,56 @@
+# MIRI-PY-043 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v3.json
+id: MIRI-PY-043
+name: Uncovered delta
+target: python-wheel
+status: active
+added_in: 0.6.0-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 2
+conditional: true
+requirements:
+- previous-release
+severity:
+  default: HIGH
+  violation_unit: each public interface in the measured delta with no changelog entry
+  population_unit: all public interfaces in the api_index delta against the previous release
+short_description: 'Every interface in the measured API delta appears in `releases[0]` (*conditional*: needs a prior release)'
+long_description: 'Deprecation must be marked in code, inventoried in metadata, and never resolved by silent removal; the
+  same discipline applies to every measurable change. This check verifies: every public interface added to, removed from,
+  or changed in `sdk-manifest.json` `api_index` since the previous release is named in a `releases[0]` entry''s `symbols`.
+  MIRI-PY-030 covers removals against migration-guide.json; this check covers the whole delta against the changelog, so an
+  artifact that measurably changed cannot ship a changelog that says nothing.'
+rationale: An API-diff tool detects that the surface changed; nothing cross-checks the change against what the producer declared.
+  The delta is the same previous-release compare 0.5.0 already requires for MIRI-PY-030, and off-the-shelf tooling emits it
+  as typed breakage objects (griffe), so the join costs a set difference. It is the check that turns a changelog from a courtesy
+  into a claim a linter can falsify.
+fires_when:
+- 'Comparing against the previous release (requirement: `previous-release`): an `api_index` key present in one release and
+  absent from the other is named in no `releases[0]` entry''s `symbols`'
+- An `api_index` entry whose `type` or signature-bearing fields changed between the two releases is named in no `releases[0]`
+  entry's `symbols`
+remediation:
+- Derive the release's `added` / `removed` / `changed` entries from the api_index diff at build time rather than from memory
+- Gate the build on the delta being fully covered; an uncovered symbol is a missing fragment, not a linter false positive
+examples:
+  violation: '1.1.0 api_index: Client, Client.fetch, Client.legacy_fetch
+
+    1.2.0 api_index: Client, Client.fetch, Client.batch
+
+    changelog.json releases[0] (1.2.0): fixed: ["Timeout ignored under TLS"]
+
+    # Client.batch added and Client.legacy_fetch removed; neither named — the changelog is silent about a measured change'
+  compliant: "releases[0] (1.2.0):\n  added:   [{\"summary\": \"Batch fetch\", \"symbols\": [\"Client.batch\"]}]\n  removed:\
+    \ [{\"summary\": \"Legacy fetch\", \"symbols\": [\"Client.legacy_fetch\"]}]   # every delta symbol has an entry"
+suggested_fix: Derive changelog entries from the api_index diff so the measured delta is always covered.
+references:
+- title: Agent Metadata §4.7
+  url: miri-agent-metadata-specification.md
+  type: spec
+- title: Lifecycle §6.4-2
+  url: lifecycle-security-metadata.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-043.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-043.html

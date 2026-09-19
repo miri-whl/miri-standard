@@ -1,0 +1,52 @@
+# MIRI-PY-041 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v3.json
+id: MIRI-PY-041
+name: changelog.json valid
+target: python-wheel
+status: active
+added_in: 0.6.0-draft
+level: MUST
+category: Agent Metadata Core
+weight: 3
+conditional: true
+severity:
+  default: HIGH
+  violation_unit: changelog.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
+short_description: Present for any non-initial release; validates against changelog-v1.json (*conditional*)
+long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
+  schema-valid, and generated at build time. This check verifies: `changelog.json` is present for any non-initial release
+  and validates against changelog-v1.json. Conditional exactly as MIRI-PY-009: a first release has nothing to describe, and
+  requiring the document unconditionally would manufacture the empty-artifact class the freshness contract exists to kill.'
+rationale: 'The wheel metadata set records breaking changes in migration-guide.json and, until 0.6.0, had no home for what
+  was fixed. The originating incident: a maintainer shipped bug fixes with a silent changelog, and the downstream project
+  that had reported those bugs installed the fix and never learned it — every shipped document was present, schema-valid and
+  stamped in the build window, so no existing check could see it. Agent Metadata §4.7 defines the document; this check is
+  its presence and shape, and MIRI-PY-042 to 044 are the joins that make it mean something.'
+fires_when:
+- A previous release exists (the linter can establish one — MIRI-PY-030's condition) and `agent-metadata/changelog.json` is
+  absent from the wheel
+- The document is present and fails validation against changelog-v1.json — `schema_version` not `"1"`, `releases` empty, an
+  entry without `summary`, an unknown key anywhere
+- '`releases` is not ordered newest-first by PEP 440 version'
+remediation:
+- 'Assemble `changelog.json` at build time from per-change fragments (towncrier-class tooling): a change lands with a fragment
+  or CI fails, and the release assembles the document'
+- 'Validate before packaging: `check-jsonschema --schemafile changelog-v1.json src/example_sdk/agent-metadata/changelog.json`'
+- Keep `deprecated` and `removed` entries in agreement with migration-guide.json; it remains the authoritative lifecycle record
+examples:
+  violation: "Wheel 1.2.0 agent-metadata/:\n  sdk-manifest.json  usage-patterns.json  migration-guide.json  lifecycle.json\n\
+    \  # 1.1.0 exists on the index; no changelog.json — what 1.2.0 fixed is unrecorded"
+  compliant: "agent-metadata/changelog.json:\n  {\"schema_version\": \"1\", \"releases\": [\n    {\"version\": \"1.2.0\",\
+    \ \"fixed\": [{\"summary\": \"Timeout ignored under TLS\", \"refs\": [\"#408\"]}]},\n    {\"version\": \"1.1.0\", \"added\"\
+    : [{\"summary\": \"Batch fetch\", \"symbols\": [\"Client.batch\"]}]}]}"
+suggested_fix: Generate changelog.json from change fragments at build time; validate against changelog-v1.json.
+references:
+- title: Agent Metadata §4.7
+  url: miri-agent-metadata-specification.md
+  type: spec
+- title: schema
+  url: ../../schemas/changelog-v1.json
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-041.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-041.html

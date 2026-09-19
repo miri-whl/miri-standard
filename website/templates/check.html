@@ -38,6 +38,14 @@
   {% for f in check.fires_when %}<li>{{ f | codeish }}</li>{% endfor %}
 </ul>
 
+{% if check.tiers %}
+<h2>Tiers</h2>
+<p class="muted">Weight is earned as a cumulative schedule; the obligation is satisfied at <strong>{{ check.conformance_tier }}</strong>. Tiers above it price weight only.</p>
+<dl class="meta">
+  {% for tier, clauses in check.tiers.items() %}<dt>{{ tier }}{% if tier == check.conformance_tier %} — conformance{% endif %}</dt>
+  <dd><ul class="plain">{% for c in clauses %}<li>{{ c | codeish }}</li>{% endfor %}</ul></dd>{% endfor %}
+</dl>
+{% endif %}
 <h2>How to fix it</h2>
 <p>{{ check.suggested_fix | codeish }}</p>
 <ol class="plain">

@@ -462,6 +462,47 @@ source defaults (PyPI + public OSV), the private/internal package requirements (
 OSV-schema advisory sources), and the relationship to PEP 770 SBOMs. Like all files in this directory, it MUST be
 generated at build time.
 
+### 4.7 changelog.json (Version-Dependent)
+
+**Purpose**: Machine-readable release history, so that "what was fixed" has a home a consumer's tooling can read.
+`migration-guide.json` records breaking changes; nothing recorded fixes, and a fix shipped with a silent changelog never
+reached the downstream that had reported the bug. That incident produced this document.
+
+**Schema**: [`changelog-v1.json`](../../schemas/changelog-v1.json). The shape mirrors the CLI family's
+`changelog --since` payload (`MIRI-CLI-029`) so both targets share one vocabulary.
+
+```json
+{
+  "$schema": "https://miri-whl.github.io/schemas/changelog-v1.json",
+  "schema_version": "1",
+  "generated_at": "2026-09-18T12:00:00Z",
+  "releases": [
+    {"version": "1.2.0", "date": "2026-09-18",
+     "added":   [{"summary": "Batch fetch", "symbols": ["Client.batch"]}],
+     "changed": [{"summary": "fetch() retries on 429", "symbols": ["Client.fetch"], "refs": ["#412"]}],
+     "fixed":   [{"summary": "Timeout was ignored under TLS", "refs": ["#408"]}],
+     "removed": [{"summary": "Legacy fetch", "symbols": ["Client.legacy_fetch"]}]}
+  ]
+}
+```
+
+**Requirements**:
+
+- Conditional on a previous release existing, exactly as `migration-guide.json` (§4.3): a first release MAY ship it with
+  its initial entry. Whenever the document ships, the rules below apply (`MIRI-PY-041`).
+- `releases[0].version` MUST equal the wheel's own version. A changelog whose newest entry describes an earlier release
+  is *version silence* — the single rule that would have caught the originating incident (`MIRI-PY-042`).
+- Every public interface in the measured delta against the previous release (`sdk-manifest.json` `api_index`, both
+  directions) MUST appear in a `releases[0]` entry's `symbols`. An artifact that measurably changed while its changelog is
+  silent is an *uncovered delta* (`MIRI-PY-043`).
+- Every name in any `symbols` array MUST resolve in the current release's `api_index`, or — for `removed` and `deprecated`
+  entries — the previous release's. A symbol resolving in neither is a *dangling claim* (`MIRI-PY-044`).
+- `deprecated` and `removed` entries MUST agree with `migration-guide.json`; the latter remains the authoritative record
+  of the two-phase lifecycle (§4.3).
+
+**Consumer note**: a `dependency.version_change` trigger can answer "what changed since X" for a library from this
+document alone, which is the read the Consumption Map's upgrade task (§3.3) had no artifact for.
+
 ## 5. Automated Generation
 
 ### 5.1 Build-Time Generation
@@ -845,8 +886,9 @@ class AgentPerformanceTracker:
 
 Conformance is defined by the [Linter Checklist](linter-checklist.md), the single source of truth for what a wheel MUST
 and SHOULD provide: a wheel is conforming when it passes every MUST (M) check, and its tier is the checklist score. The
-`agent-metadata/` files this specification defines (`sdk-manifest.json`, `usage-patterns.json`, `lifecycle.json`, …)
-are required as specified by the corresponding checklist checks.
+`agent-metadata/` files this specification defines (`sdk-manifest.json`, `usage-patterns.json`, `lifecycle.json`,
+and — from the second release — `migration-guide.json` and `changelog.json`, …) are required as specified by the
+corresponding checklist checks.
 
 ### 8.2 Validation Requirements
 

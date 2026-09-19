@@ -11,6 +11,98 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.6.0 — unreleased
+
+**BREAKING.** The check schema is bumped to `check-v3.json` because `weight` changes meaning for any definition that
+declares `tiers`, and every score moves once the substance-bearing checks are tiered. What has landed so far is the
+schema foundation; the check definitions themselves follow.
+
+### Changed
+
+- **BREAKING — `check-v3.json` supersedes `check-v2.json`.** Two changes of meaning: a substance-bearing check may
+  declare [`tiers`](schemas/check-v3.json) and a `conformance_tier`, under which its `weight` is a ceiling earned as a
+  cumulative schedule (T0 exists, T1 true, T2 covers, T3 current) rather than a bit; and every `fires_when` and tier
+  clause must be a pure function of the artifact. Definitions without `tiers` mean exactly what they meant under v2.
+  All 119 definitions now declare `$schema: …/check-v3.json`. `check-v2.json` is retained frozen at its 0.5.0 bytes
+  — and its closed `additionalProperties` is the point: a v2-pinned linter handed a tiered definition fails loudly
+  instead of scoring it as binary. Design settled with the miri-py team (`substance-and-freshness-answers-1.md`, Q1):
+  pass/fail is derived as `tier_earned >= conformance_tier`, default **T1** — the MUST boundary sits at the *lie*, not
+  at thinness, so no currently conforming wheel non-conforms for being thin on the day tiers ship, and one shipping
+  filler does.
+- **`scoring-v1.json` gains `conformance.tiers`.** The four tier shares (`0.2 / 0.3 / 0.3 / 0.2`, provisional
+  committee numbers) and the T2 activation trigger (**25 wheels from 10 independent publishers**) live here once, as
+  schema defaults, never per check. T2 ships defined but weightless with its share parked in T1: the only corpus
+  available was seven wheels, three with an `api_index`, two of those the proposer's own — percentiles over that set
+  are habits reflected back, not calibration. The trigger is a count, not a date.
+- **`lint-report-v1.json` outcomes gain `tier_earned`** — the highest tier whose every clause held. Explains a
+  status, never replaces it; the verdict vocabulary stays pass / fail / forfeit / exclude.
+- **`MIRI-PY-016` withdrawn** (`withdrawn_in: 0.6.0-draft`). Its both-ways index/file join is `014`'s T3 clause and its
+  2 weight moved there — both halves in one change, per the rule that an ID leaves only by withdrawal. The file and ID
+  remain; "absorbed" was the proposal's word and was wrong.
+- **Twelve weight changes, so the target still sums to exactly 100 with four new checks.** `007` 6→5, `008` 5→4, `012`
+  3→2, `019` 4→3, `021` 3→2, `028` 4→3, `029` 4→3, `030` 5→4, `033` 3→2, `038` 2→1; `014` and `015` 4→5 each,
+  taking `016`'s weight. Categories: B 24 (unchanged, `041` inside), C 12 (unchanged), D 25→**23**, E 25→**28**,
+  F 10→**9**. Every published score moves — the BREAKING line at the top is earned here, not only by the schema.
+- **The checklist's category summary was stale and ungated** — it still read A 10 / B 20 / C 10 against actual
+  4 / 24 / 12, surviving because its wrong rows totalled 100. Rewritten to the real numbers with the gate-checked
+  headings. Checklist stamp `0.2-draft` → `0.3-draft`: 43 active checks.
+
+### Added
+
+- **Four checks, `MIRI-PY-041`–`044`** — the freshness contract's three staleness classes made decidable, plus the
+  document they read. `041` *changelog.json valid* (B, 3, conditional on a previous release — the `009` pattern).
+  `042` *version silence* (E, 3): `releases[0].version` equals the wheel's version, the single rule that would have
+  caught the originating incident. `043` *uncovered delta* (E, 2, `previous-release`): every interface in the measured
+  `api_index` delta is named in an entry. `044` *dangling claim* (E, 2): every named symbol resolves in the current or
+  previous `api_index`. All MUST. Stamp drift, the fourth class, was already `MIRI-PY-011`.
+- **Tier tables on the five substance-bearing checks** — `007`, `014`, `015`, `017`, `037`, all at `conformance_tier:
+  T1`. Presence is now T0 and earns a fraction of the weight, never all of it. `007`'s T1 requires every
+  `common_imports` line to parse *and resolve*: `from _version.py import WheelContext` is schema-valid text and not a
+  valid import, and it now fails a MUST — including in the proposer's own flagship, which they asked for. The
+  Deprecation & Lifecycle checks `028`–`034` are deliberately **not** tiered: that family is already decomposed into
+  discrete joins (subject existed / replacement resolves / delta covered / versions monotonic), which is the tier
+  ladder as separate checks. Tiering them would score the same join twice.
+- **Spec §4.7** in the Agent Metadata specification defines `changelog.json`; §8.1 lists it among the required files
+  from the second release.
+- **[`changelog-v1.json`](schemas/changelog-v1.json)** — machine-readable release history, `changelog.json`, mirroring
+  the CLI family's `changelog --since` payload (`MIRI-CLI-029`) so both targets share one shape. Conditional on a
+  previous release existing, the `030`/`034` pattern. It makes three staleness classes decidable: *version silence*
+  (`releases[0].version` equals the wheel's version — the single rule that would have caught the incident that
+  produced this proposal), *uncovered delta* (every removal in the measured API delta has an entry), and *dangling
+  claim* (every named symbol resolves in the current or previous `api_index`). The wheel metadata set had seven
+  schemas and none was a changelog, so "what was fixed" had nowhere to live.
+
+- **A check verdict MUST be a pure function of the artifact.** `fires_when` in
+  [`check-v3.json`](schemas/check-v3.json) now requires every clause to be decidable from the artifact under test
+  and, where the check declares `requirements`, from the capabilities those name — a previous release, the network,
+  execution. No clause may depend on model inference, on a judgment of style or quality, or on any other
+  nondeterministic input. Two conformant linters given the same artifact reach the same verdict bit for bit, and
+  that is the only reason a score is comparable between implementations at all.
+
+  **This is an addition, not a clarification, and it was first filed as one.** The draft of this entry called it a
+  clarification because all 119 active definitions already satisfy it and no score moves — both true, and neither
+  sufficient. It introduces a MUST that narrows what a check definition may be: a `fires_when` clause resting on
+  model judgment would have validated before and is non-conforming now, and a rule forbidding something previously
+  permitted is new even when nobody has done it yet. The supporting argument was circular as well, leaning on the
+  check-authoring guidance under `.claude/skills/` — internal tooling, not a normative source — while citing the
+  absence of any normative statement as the reason to write one.
+
+  Raised by the miri-py team, and their argument for settling it before the rest of their proposal is why it comes
+  first: the place a future editor would reach for a language model is a check about whether documentation is any
+  good, so the prohibition wants to exist before the checks that would tempt it.
+
+  No schema bump. JSON Schema cannot enforce this; it binds the check author and the linter and is verified by
+  review rather than by validation. A consumer holding the previous reading of `check-v2.json` computes identical
+  verdicts and identical numbers for every definition that declares no `tiers`.
+
+### Still undecided
+
+The four remaining asks of the same proposal: the freshness contract and its four staleness classes, a
+`changelog.json` document in the wheel metadata set, graduated tier scoring for the substance-bearing checks, and
+corpus-calibrated coverage floors. Tier scoring moves every conformance score, and a required `changelog.json`
+would make every currently conforming wheel non-conforming until it ships one, so adopting either makes this
+release BREAKING.
+
 ## 0.5.0 — 2026-09-10
 
 **BREAKING.** The first release to earn that label. Two changes alter every conformance score and both
