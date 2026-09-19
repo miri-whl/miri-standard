@@ -1,0 +1,32 @@
+{
+  "schema_version": "1",
+  "note": "sha256 of every fixture INPUT - the shared template source and each variant's metadata. Two implementations that build from inputs matching this manifest with build_fixtures.py have built the same fixture. Wheel BYTES are deliberately not asserted: the build is not reproducible (no SOURCE_DATE_EPOCH, timestamps inside the archive), so a wheel checksum would be a guarantee the recipe cannot keep. Declare sources, not verdicts - here, literally.",
+  "recipe": "python3 examples/fixtures/build_fixtures.py",
+  "inputs": {
+    "metadata/adversarial/lifecycle.json": "8259bcf4a053a70810151e514e0481fcb275db4e9f6256374a72ea67f4aadab1",
+    "metadata/adversarial/migration-guide.json": "217f042dd88336a41d556b3be86df0d503648e67b298aa69e5e203c9cb9ca03d",
+    "metadata/adversarial/sdk-manifest.json": "da6fdc7fb684cbfa5dcbc2f5835b7ebe9077a27362e2556c3b068ad3ee1ef0a2",
+    "metadata/adversarial/usage-patterns.json": "41a45ef8833639f8a83be93c123d6fb50529b7868819e727f1ed6dd326cb4ac3",
+    "metadata/malformed/lifecycle.json": "b5176ebd2e8f1172615352625aab24fcee5e7fc02175d508f08ce8dfedc7b939",
+    "metadata/malformed/sdk-manifest.json": "5016c0ae36a065678fb3999f41c15185dd0a2425ab62505c4539c54ee8d2df0e",
+    "metadata/malformed/usage-patterns.json": "8d6369e18e0074d92abc13d1f9aac49683d173eaf685d94a11e2af6c2f1ada45",
+    "metadata/miri/DOUBLES-NOTE.md": "dbe70c7230689ea59386b81db538e6e4081cdceffb35f04caedeb553ddfecc70",
+    "metadata/miri/lifecycle.json": "d1962a6c2bf3adbf6492d8a5b68e0ced440764913e7db4bd2236ee17bfaf4c6d",
+    "metadata/miri/migration-guide.json": "87f28f0005e2237bab64fa86e818f13c8218104fafc3ef4679b12228afd9abe3",
+    "metadata/miri/sdk-manifest.json": "7d4385d30e8d22b599933cce1ab9c57abc8daf61438cfef5058e89e7e5a5bd33",
+    "metadata/miri/test-patterns.json": "bafad8d648539d9ddc63159423497c6f0d3c0d5c3891a0b52f16bdb280e0d157",
+    "metadata/miri/usage-patterns.json": "6f50d865b9d93fd75d80b814255cb4e37246932f48be6561c812e74e8d1fdd53",
+    "metadata/replaced/lifecycle.json": "317a9380d15572fbcdf5a0c4438301b28bbc6303b0694c8717e0fa74f734de03",
+    "metadata/replaced/migration-guide.json": "87f28f0005e2237bab64fa86e818f13c8218104fafc3ef4679b12228afd9abe3",
+    "metadata/replaced/sdk-manifest.json": "7d4385d30e8d22b599933cce1ab9c57abc8daf61438cfef5058e89e7e5a5bd33",
+    "metadata/replaced/test-patterns.json": "bafad8d648539d9ddc63159423497c6f0d3c0d5c3891a0b52f16bdb280e0d157",
+    "metadata/replaced/usage-patterns.json": "6685ca3929702a7b675e609939d1cb066f4f736ea68205df81fd35a134d69335",
+    "metadata/spoofed/ATTACK.md": "e073a57f04e3588e3d9641d7d9b79f5dced708a1c4f9a8ae8872773c58d979d0",
+    "metadata/spoofed/lifecycle.json": "da4ccb4493706e6dc1281a772e47ff62ccdbf333c578082d9e45b1bc444e0620",
+    "metadata/symlinked/SECRET-NOT-PART-OF-PACKAGE.txt": "c7eeeb1d97fe75cf0d13fac50414af3010973a7153dd9a8277f6c66f23313005",
+    "metadata/symlinked/usage-patterns.json": "c7eeeb1d97fe75cf0d13fac50414af3010973a7153dd9a8277f6c66f23313005",
+    "src/_template/__init__.py": "c9d60bf6647ab5184bad7b9ae860fd00922138165a263337b9f037698ade794b",
+    "src/_template/core.py": "2338096144180077e4023c1fab7e78f6fcc955c68ae4bcf623b57811ab7a9b17",
+    "src/_template/testing.py": "1b82ea88685b24228effa79c3969a2a03495536e68238d35fbbae336ae503f2a"
+  }
+}

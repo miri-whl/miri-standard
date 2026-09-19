@@ -68,15 +68,20 @@
           "description": "A skipped check MUST name its reason from the closed set. Without this a linter could skip every hard check and report nothing about why, which is indistinguishable from having evaluated them.",
           "if": {"properties": {"status": {"const": "skipped"}}, "required": ["status"]},
           "then": {"required": ["skip_reason"]}
+        }, {
+          "description": "An implementation-coverage forfeit names its blocker (scoring-v1 conformance.coverage clause 5).",
+          "if": {"properties": {"skip_reason": {"const": "not_implemented"}}, "required": ["skip_reason"]},
+          "then": {"required": ["blocker", "forfeited"], "properties": {"forfeited": {"const": true}}}
         }],
         "type": "object",
         "required": ["id", "status"],
         "properties": {
           "id": {"type": "string", "pattern": "^MIRI-(PY|CLI|PYX|CLIX)-\\d{3}$"},
           "status": {"type": "string", "enum": ["pass", "fail", "skipped"]},
-          "skip_reason": {"type": "string", "enum": ["network_unavailable", "previous_release_unavailable", "execution_disabled", "condition_not_applicable"]},
+          "skip_reason": {"type": "string", "enum": ["network_unavailable", "previous_release_unavailable", "execution_disabled", "condition_not_applicable", "not_implemented"], "description": "The closed set. The first three are CAPABILITY forfeits (check-v3 `requirements`); `condition_not_applicable` is an EXCLUSION, the only reason that leaves a MUST without a verdict and without `undetermined`; `not_implemented` is an implementation-COVERAGE forfeit - the linter ships no verification for this check - and MUST carry a `blocker` (scoring-v1 `conformance.coverage`)."},
           "weight": {"type": "integer"},
           "forfeited": {"type": "boolean"},
+          "blocker": {"type": "string", "minLength": 1, "description": "Required with `skip_reason: not_implemented`: what the implementation lacks for this check - a missing operator class, an unbuilt fixture, a tool not vendored. Named so that an uncovered check is a work item rather than a fog."},
           "violations": {"type": "integer", "minimum": 0},
           "tier_earned": {"type": "string", "enum": ["T0", "T1", "T2", "T3"], "description": "Present only for a check whose definition declares `tiers` (check-v3). The highest tier whose every clause held, with all predecessors held. Pass/fail is DERIVED - tier_earned >= the definition's conformance_tier - so this field explains a status, never replaces it. Absent on a tiered check means the linter forfeited every tier, which on a MUST leaves the family undetermined."}
         },

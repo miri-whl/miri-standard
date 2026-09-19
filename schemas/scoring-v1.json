@@ -58,6 +58,19 @@
               "description": "T2 (covers) ships defined but weightless until the corpus of published conformant wheels reaches this size, at which point its percentile floors are recomputed from that corpus and T2 activates. The trigger is a COUNT, not a date. Until then T2 appears in reports as tier_earned and moves no score. Why: the only corpus available at 0.6.0 was seven wheels of which three had an api_index and two of those were the proposer's own - percentiles over that set are habits reflected back, not calibration."
             }
           }
+        },
+        "coverage": {
+          "type": "object",
+          "description": "Driver semantics: how a conformant linter accounts for what it does NOT verify. 0.5.0 defined forfeiting for CAPABILITY gaps - no network, no previous release, execution disabled. These clauses extend it to IMPLEMENTATION COVERAGE gaps - a check the linter has no verification for at all - and they are what make a coverage percentage comparable between two linters. Every field is `const: true`: these are rules, not options, and a scoring configuration cannot opt out of them. Proposed by the miri-py team (conformance-interop-contract-proposal.md section 4) from running their kernel; accepted in the standard's response with clause 3 added, because forfeit-never-silence without it lets a linter forfeit MUSTs and keep a grade - the incomparable number the whole exchange was about.",
+          "required": ["every_check_reports_outcome", "unverified_is_forfeited", "forfeited_must_withdraws_grade", "unexecutable_rule_fails_loudly", "report_coverage_per_family"],
+          "additionalProperties": false,
+          "properties": {
+            "every_check_reports_outcome": {"const": true, "description": "1. Every active check definition in a family appears in the report's `outcomes` with a status - pass, fail, or skipped. A check absent from the report is indistinguishable from one that passed, which is the silence this forbids."},
+            "unverified_is_forfeited": {"const": true, "description": "2. A check the implementation does not verify is reported skipped with `skip_reason: not_implemented` and `forfeited: true`. It is never passed. It is never EXCLUDED: exclusion asserts the obligation did not exist for this artifact, and for a merely unwritten verification it did. Same arithmetic as a capability forfeit, different claim about knowledge."},
+            "forfeited_must_withdraws_grade": {"const": true, "description": "3. A forfeited MUST - for any reason, capability or coverage - leaves the family verdict `undetermined`. Forfeiting is not a discount on the score; for a MUST it withdraws the grade. `scores.undetermined` counts exactly these checks and grade derivation reads it first. This clause is why an implementation covering 24 of 43 CLI checks reports `undetermined`, not `24 pass / 0 fail`."},
+            "unexecutable_rule_fails_loudly": {"const": true, "description": "4. A verification the linter DOES ship but cannot run - an unlaunchable subject, an unimportable binding, a missing tool - fails at load or run time with a diagnostic. It is never a quiet skip, because a quiet skip is a forfeit the report does not carry."},
+            "report_coverage_per_family": {"const": true, "description": "5. The report states, per family, how many checks passed, failed and were not verified, out of how many are defined; and every `not_implemented` outcome carries a `blocker` naming what the implementation lacks. 'Not yet covered' is a work item, not a fog."}
+          }
         }
       },
       "additionalProperties": true

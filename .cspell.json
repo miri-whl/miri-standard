@@ -124,6 +124,7 @@
     "unparseable",
     "unscored",
     "unvetted",
+    "pycache",
     "unimportable",
     "unlaunchable",
     "unwritable",

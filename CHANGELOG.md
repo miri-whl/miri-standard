@@ -34,6 +34,23 @@ schema foundation; the check definitions themselves follow.
   schema defaults, never per check. T2 ships defined but weightless with its share parked in T1: the only corpus
   available was seven wheels, three with an `api_index`, two of those the proposer's own — percentiles over that set
   are habits reflected back, not calibration. The trigger is a count, not a date.
+- **Driver semantics stated normatively — `scoring-v1.json` `conformance.coverage`.** Five clauses, every one
+  `const: true` so a scoring configuration cannot opt out: every defined check reports an outcome; a check the
+  implementation does not verify is *forfeited*, never passed and never excluded; a forfeited MUST withdraws the
+  grade; a verification that cannot run fails loudly; coverage is reported per family with a named blocker per
+  uncovered check. 0.5.0 defined forfeiting for capability gaps; this extends it to implementation-coverage gaps,
+  which is what makes a coverage percentage comparable between two linters. `lint-report-v1.json` gains the skip
+  reason `not_implemented` and a required `blocker` beside it. Proposed by miri-py from running their kernel; the
+  third clause was added in our response, because without it an implementation covering 24 of 43 CLI checks
+  reported `24 pass / 0 fail` instead of `undetermined`.
+- **The conformance kernel recorded as a reference artifact** — `reference/conformance-kernel/` holds
+  `rule-v1.json` and `operators-v1.json` unmodified from miri-py (pinned at `afc51324`), with the promotion test that
+  would make them normative. Not vendoring the 51-file rule corpus: a snapshot goes stale on their next commit and a
+  pinned pointer does not.
+- **The fixture recipe is normative and its inputs are checksummed.** `examples/fixtures/checksums.json` hashes every
+  file under `src/_template/` and `metadata/`, and `validate_fixtures.py` fails on drift. Wheel bytes are deliberately
+  not asserted — the build is not reproducible — so the guarantee is the one the recipe can keep: matching inputs plus
+  `build_fixtures.py` is the same fixture. No binaries shipped.
 - **`lint-report-v1.json` outcomes gain `tier_earned`** — the highest tier whose every clause held. Explains a
   status, never replaces it; the verdict vocabulary stays pass / fail / forfeit / exclude.
 - **`MIRI-PY-016` withdrawn** (`withdrawn_in: 0.6.0-draft`). Its both-ways index/file join is `014`'s T3 clause and its

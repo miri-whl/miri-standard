@@ -75,6 +75,19 @@ def main() -> int:
 
     print("consumption fixture invariants:")
 
+    # 0. The inputs match the committed manifest. This is what makes the recipe normative rather than
+    #    conventional: a second implementation building from inputs that match checksums.json has built
+    #    the same fixture. Wheel bytes are not asserted - the build is not reproducible - inputs are.
+    import hashlib
+    FIX = pathlib.Path(__file__).resolve().parent.parent / "examples/fixtures"
+    man = json.loads((FIX / "checksums.json").read_text())
+    fs = sorted(f for d in ("src/_template", "metadata") for f in (FIX / d).rglob("*")
+                if f.is_file() and "__pycache__" not in f.parts)
+    actual = {str(f.relative_to(FIX)): hashlib.sha256(f.read_bytes()).hexdigest() for f in fs}
+    drift = sorted(k for k in set(actual) | set(man["inputs"]) if actual.get(k) != man["inputs"].get(k))
+    check("fixture inputs match checksums.json", not drift,
+          f"{len(drift)} file(s) differ or are unlisted: {', '.join(drift[:4])}")
+
     # 1. The conforming twin must actually conform — it is the comparison arm, and a
     #    non-conforming one silently turns the experiment into bare-vs-nonconforming.
     #    Validate EVERY document present, not just the one that happens to be checked:

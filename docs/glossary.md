@@ -193,6 +193,14 @@ are false fails the MUST and the 74 cap fires; one that is true but thin passes 
 predecessors held, reported per outcome for a tiered check. Explains a status; never replaces it. Absent on a tiered
 check means every tier was forfeited.
 
+**Staleness classes** ([Agent Metadata §4.7](../standards/python/miri-agent-metadata-specification.md)) — the four
+ways a document that is present, schema-valid and stamped in the build window can still be wrong about the artifact it
+ships in. Each is a cross-artifact join, decidable without judgment. **Dangling claim** (`MIRI-PY-044`): the document
+names a symbol, document or version the artifact does not carry. **Uncovered delta** (`MIRI-PY-043`): the artifact
+measurably changed and the owning document is silent. **Version silence** (`MIRI-PY-042`): the release-describing
+document has no entry for the version it ships in. **Stamp drift** (`MIRI-PY-011`): the generation stamp falls outside
+the build window. The first three read `changelog.json`; the fourth predates it and was the pattern.
+
 **Conditional** ([Consumer Conformance §3](../standards/consumption/consumer-conformance.md)) — a check whose obligation
 only applies in some circumstances. **Not-applicable is not a pass**: a
 conditional check whose condition does not hold is removed from *both* the numerator and the denominator, never
@@ -202,6 +210,10 @@ credited. The earlier model awarded a CLI twenty points for never deprecating an
 not drive. Also excluded from both sides, and **reported**, because a
 coverage gap silently omitted becomes a coverage claim. A forfeited MUST leaves conformance **undetermined** — a
 third outcome, not a shade of pass or fail — and no grade is emitted.
+Two sources of forfeit, one arithmetic: a **capability** the linter lacks (`network_unavailable`,
+`previous_release_unavailable`, `execution_disabled`) and, since 0.6.0, **implementation coverage** — the linter ships no
+verification for the check at all (`not_implemented`, which must name a `blocker`). Neither is ever an exclusion,
+because the obligation existed; see `scoring-v1.json` `conformance.coverage` for the five driver clauses.
 
 ## Verifying
 
