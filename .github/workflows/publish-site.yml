@@ -20,6 +20,8 @@ on:
       # without these two, a changelog-only or spec-only merge left the published site stale.
       - 'CHANGELOG.md'
       - 'standards/*/*.md'
+      # This workflow itself, so a fix to it republishes rather than leaving the last failure standing.
+      - '.github/workflows/publish-site.yml'
   workflow_dispatch:
 
 jobs:
