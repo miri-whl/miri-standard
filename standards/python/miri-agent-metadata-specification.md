@@ -1,6 +1,6 @@
 # Miri Standard: Pre-Parsed Agent Metadata Specification
 
-*Specification Version: 0.2-draft*  
+*Specification Version: 0.3-draft*  
 *Status: Draft*  
 *Created: 2025*
 

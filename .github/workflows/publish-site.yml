@@ -16,6 +16,10 @@ on:
       - 'docs/*.md'
       - 'website/**'
       - 'tools/generate_site.py'
+      # The generator also renders the changelog and the spec pages listed in website/site.yaml;
+      # without these two, a changelog-only or spec-only merge left the published site stale.
+      - 'CHANGELOG.md'
+      - 'standards/*/*.md'
   workflow_dispatch:
 
 jobs:

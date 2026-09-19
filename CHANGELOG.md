@@ -112,13 +112,27 @@ schema foundation; the check definitions themselves follow.
   review rather than by validation. A consumer holding the previous reading of `check-v2.json` computes identical
   verdicts and identical numbers for every definition that declares no `tiers`.
 
-### Still undecided
+### Fixed
 
-The four remaining asks of the same proposal: the freshness contract and its four staleness classes, a
-`changelog.json` document in the wheel metadata set, graduated tier scoring for the substance-bearing checks, and
-corpus-calibrated coverage floors. Tier scoring moves every conformance score, and a required `changelog.json`
-would make every currently conforming wheel non-conforming until it ships one, so adopting either makes this
-release BREAKING.
+- **The site stopped publishing on changelog-only and spec-only merges.** `publish-site.yml` triggered on checks,
+  schemas, `docs/`, `website/` and the generator — not on `CHANGELOG.md` or `standards/*/*.md`, both of which the
+  generator renders. Both paths added. Found while confirming this release would publish; it would have, but the
+  next small edit would not.
+- **The Agent Metadata specification gained §4.7 without a header bump** in the commit that added it — `0.2-draft`
+  → `0.3-draft`. Our omission; recorded rather than quietly tidied.
+
+### Deferred by design, not undecided
+
+Every ask of the substance-and-freshness proposal is now decided and built — the four staleness classes, the
+document, the tier schedule, and the calibration policy. What is deliberately *not* live is **T2's weight**: the
+covers tier is defined on four checks and moves no score until the corpus of published conformant wheels reaches
+**25 wheels from 10 independent publishers** (`scoring-v1.json` `t2_activation`). The only corpus available was seven
+wheels, three with an `api_index`, two of those the proposer's own; percentiles over that set would be habits
+reflected back, not calibration. The trigger is a count, not a date, and until it fires T2's share sits in T1.
+
+Owed by the reference implementation, not blocking the release: tier tables for the `cli`, `surface` and
+`consumer` families under the same schedule, and the multi-invocation comparison operator — the first of the three
+operator classes whose absence keeps `rule-v1`/`operators-v1` a reference artifact rather than a normative one.
 
 ## 0.5.0 — 2026-09-10
 
