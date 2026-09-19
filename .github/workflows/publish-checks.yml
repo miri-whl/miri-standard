@@ -1,0 +1,93 @@
+name: Publish check definitions
+
+# The check definitions as a data-only wheel, attached to a GitHub Release at every release tag.
+# The repository stays the source of truth; the wheel is a derived output, like the site, and is
+# gated by the same validators before it is built. Hosted on GitHub Releases for now; an index
+# (PyPI, trusted publishing) is a later step and this job is the one that would grow it.
+#
+# This artifact is a supply-chain root: a poisoned definitions package weakens every linter that
+# installs it. So the build attests its provenance (actions/attest-build-provenance) and publishes a
+# SHA256SUMS beside the wheel, and the manifest inside the wheel pins the commit and a content hash.
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+
+jobs:
+  build-and-release:
+    name: Build wheel and attach to release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml jsonschema build
+
+      - name: Gate the tree before building from it
+        run: |
+          make validate
+          make consistency
+
+      - name: Build the wheel
+        run: make checks-wheel
+
+      # Dogfooding: the definitions wheel is a wheel, so the reference linter scores it. ADVISORY for now -
+      # reported in the log, never gating - because two MUSTs are known to fail for structural reasons the
+      # response to upstream-artifact-publishing-feedback.md section 4 records: MIRI-PY-020 has no vocabulary
+      # for an artifact distributed outside an index, and the package ships no agent-metadata yet. Gating a
+      # release on a rule the artifact cannot meet without PyPI would block the artifact meant to get it there.
+      # miri-py is installed best-effort exactly as ci.yml does; when unreachable the step is skipped, not failed.
+      - name: Install miri-py (best-effort)
+        id: miripy
+        continue-on-error: true
+        env:
+          MIRI_PY_TOKEN: ${{ secrets.MIRI_PY_TOKEN }}
+        run: pip install "git+https://${MIRI_PY_TOKEN}@github.com/miri-whl/miri-py.git"
+
+      - name: Score the wheel with the reference linter (advisory)
+        if: steps.miripy.outcome == 'success'
+        run: python3 tools/score_wheel.py .generated/checks-wheel/dist/*.whl
+
+      - name: Note skipped score
+        if: steps.miripy.outcome != 'success'
+        run: echo "::notice::miri-py unavailable - the definitions wheel was not scored this run."
+
+      - name: Attest build provenance
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-path: .generated/checks-wheel/dist/*.whl
+
+      - name: Attach to the release for this tag
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "Miri Standard ${GITHUB_REF_NAME}" \
+            --generate-notes \
+            .generated/checks-wheel/dist/*.whl \
+            .generated/checks-wheel/dist/SHA256SUMS \
+          || gh release upload "${GITHUB_REF_NAME}" --clobber \
+            .generated/checks-wheel/dist/*.whl \
+            .generated/checks-wheel/dist/SHA256SUMS
+
+      - name: Keep the wheel as a workflow artifact too
+        uses: actions/upload-artifact@v4
+        with:
+          name: miri-standard-checks
+          path: |
+            .generated/checks-wheel/dist/*.whl
+            .generated/checks-wheel/dist/SHA256SUMS

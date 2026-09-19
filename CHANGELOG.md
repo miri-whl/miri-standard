@@ -81,6 +81,16 @@ schema foundation; the check definitions themselves follow.
   ladder as separate checks. Tiering them would score the same join twice.
 - **Spec §4.7** in the Agent Metadata specification defines `changelog.json`; §8.1 lists it among the required files
   from the second release.
+- **The definitions as a data-only wheel, `miri-standard-checks`.** `tools/build_checks_wheel.py` stages the 123
+  definitions and 16 schemas at build time — the repository stays the source of truth — and `publish-checks.yml`
+  attaches the wheel to the GitHub Release at every release tag, after `make validate` and `make consistency` gate
+  the tree it is built from. `manifest.json` pins the release, the full commit sha and a content hash, so a report
+  scored from the wheel still carries the `checks_commit_sha` it must. Provenance is attested and `SHA256SUMS`
+  published beside it: a definitions package is a supply-chain root. Answers miri-py's 2026-08-18 note; PyPI later,
+  other registries declined until a consumer exists. Not a version bump — a derived output, like the site. The
+  wheel is scored by the reference linter in the same job, through the one gate `score_sample.py` already has
+  rather than a copy — advisory until two structural failures close: `MIRI-PY-020` has no vocabulary for an
+  artifact hosted outside an index, and the package ships no `agent-metadata/` yet.
 - **[`changelog-v1.json`](schemas/changelog-v1.json)** — machine-readable release history, `changelog.json`, mirroring
   the CLI family's `changelog --since` payload (`MIRI-CLI-029`) so both targets share one shape. Conditional on a
   previous release existing, the `030`/`034` pattern. It makes three staleness classes decidable: *version silence*

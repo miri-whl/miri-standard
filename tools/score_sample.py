@@ -58,6 +58,59 @@ def report_advisory(report, label):
         print(f"  - {loc}: {e.message[:160]}")
 
 
+def score_wheel(miri, wheel, extra_args, label, subject="sample-sdk"):
+    """Score one wheel with `miri score` and derive its verdict from schema-defined fields.
+
+    Hoisted out of main() so the definitions wheel (tools/score_wheel.py) is judged by the SAME gate as
+    the sample SDK rather than a copy of it - a copy of a gate is a fork of a gate, and the site publish
+    workflow's private copy of the validator is how 0.6.0's first publish failed. Returns True/False, or
+    None when `miri score` produced no parsable report.
+    """
+    # `miri score` exits 1 on non-conformance (valid data), not an error — do not use check=True.
+    p = subprocess.run([miri, "score", wheel, "--json", *extra_args], capture_output=True, text=True)
+    try:
+        r = json.loads(p.stdout)
+    except json.JSONDecodeError:
+        print(f"{subject} [{label}]: `miri score` errored (exit {p.returncode})\n{p.stderr[-800:]}")
+        return None
+    report_advisory(r, label)
+    s = r["scores"]
+    # Derived from schema-defined fields only. This gate previously read `is_conforming`, which
+    # no schema defines and no spec mentions — it survived on `additionalProperties: true`, so the
+    # one place in the repo where a gate failure visibly bites depended on a vendor field that
+    # could be renamed without anything here noticing. `lint-report-v1.json` already couples the
+    # verdict to its sources: a non-empty `must_failures` forces `grade: non-conforming` and caps
+    # `conformance` at 74. So the verdict is derivable, and per this repo's own rule — declare
+    # sources, not verdicts — a stored `is_conforming` is a computed state that can disagree with
+    # what produced it. Verified against the two real CI reports: static (must_failures=[],
+    # grade=silver) and --execute (must_failures=[036,040], grade=non-conforming) reproduce the
+    # vendor field's True/False exactly.
+    #
+    # `undetermined` is ACCEPTED here, and that is deliberate rather than lax. 0.5.0's own rule is
+    # that `undetermined` is not non-conformance: a forfeited MUST leaves the artifact neither known
+    # to conform nor known to fail. Three MUSTs — MIRI-PY-015, 036 and 040 — require the `execution`
+    # capability and are not conditional, so the default static posture forfeits 9 weight and can
+    # never produce a grade for any artifact. An earlier version of this gate rejected
+    # `undetermined`, which made the static pass structurally unpassable the moment an implementation
+    # actually applied 0.5.0's semantics; it went red on miri-py's first 0.5.0-shaped report
+    # (conformance 93, grade undetermined, must_failures []) even though nothing was wrong. Gating on
+    # a definite grade from a posture that cannot determine one is reading our own rule backwards.
+    #
+    # What still fails: a non-empty `must_failures`, and an explicit `non-conforming` grade. Those are
+    # the schema's own coupled signals for a real MUST failure. A report declaring no grade at all is
+    # warned about rather than failed, since `grade` is not a required field and `must_failures` is —
+    # demanding more than the schema does would be stricter than the standard.
+    grade = s.get("grade")
+    if grade is None:
+        print(f"::warning::{subject} [{label}]: report declares no `grade`; "
+              f"gating on `must_failures` alone.")
+    conforming = not r.get("must_failures") and grade != "non-conforming"
+    print(f"{subject} [{label}]: conformance={s['conformance']} health={s.get('health')} "
+          f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
+          f"MUST_failures={r.get('must_failures')}")
+    return conforming
+
+
 def main():
     miri = shutil.which("miri")
     if not miri:
@@ -86,58 +139,14 @@ def main():
             print("no wheel produced by `miri build`")
             return 1
 
-        def score(extra_args, label):
-            # `miri score` exits 1 on non-conformance (valid data), not an error — do not use check=True.
-            p = subprocess.run([miri, "score", wheels[0], "--json", *extra_args], capture_output=True, text=True)
-            try:
-                r = json.loads(p.stdout)
-            except json.JSONDecodeError:
-                print(f"sample-sdk [{label}]: `miri score` errored (exit {p.returncode})\n{p.stderr[-800:]}")
-                return None
-            report_advisory(r, label)
-            s = r["scores"]
-            # Derived from schema-defined fields only. This gate previously read `is_conforming`, which
-            # no schema defines and no spec mentions — it survived on `additionalProperties: true`, so the
-            # one place in the repo where a gate failure visibly bites depended on a vendor field that
-            # could be renamed without anything here noticing. `lint-report-v1.json` already couples the
-            # verdict to its sources: a non-empty `must_failures` forces `grade: non-conforming` and caps
-            # `conformance` at 74. So the verdict is derivable, and per this repo's own rule — declare
-            # sources, not verdicts — a stored `is_conforming` is a computed state that can disagree with
-            # what produced it. Verified against the two real CI reports: static (must_failures=[],
-            # grade=silver) and --execute (must_failures=[036,040], grade=non-conforming) reproduce the
-            # vendor field's True/False exactly.
-            #
-            # `undetermined` is ACCEPTED here, and that is deliberate rather than lax. 0.5.0's own rule is
-            # that `undetermined` is not non-conformance: a forfeited MUST leaves the artifact neither known
-            # to conform nor known to fail. Three MUSTs — MIRI-PY-015, 036 and 040 — require the `execution`
-            # capability and are not conditional, so the default static posture forfeits 9 weight and can
-            # never produce a grade for any artifact. An earlier version of this gate rejected
-            # `undetermined`, which made the static pass structurally unpassable the moment an implementation
-            # actually applied 0.5.0's semantics; it went red on miri-py's first 0.5.0-shaped report
-            # (conformance 93, grade undetermined, must_failures []) even though nothing was wrong. Gating on
-            # a definite grade from a posture that cannot determine one is reading our own rule backwards.
-            #
-            # What still fails: a non-empty `must_failures`, and an explicit `non-conforming` grade. Those are
-            # the schema's own coupled signals for a real MUST failure. A report declaring no grade at all is
-            # warned about rather than failed, since `grade` is not a required field and `must_failures` is —
-            # demanding more than the schema does would be stricter than the standard.
-            grade = s.get("grade")
-            if grade is None:
-                print(f"::warning::sample-sdk [{label}]: report declares no `grade`; "
-                      f"gating on `must_failures` alone.")
-            conforming = not r.get("must_failures") and grade != "non-conforming"
-            print(f"sample-sdk [{label}]: conformance={s['conformance']} health={s.get('health')} "
-                  f"grade={s['grade']} conforming={conforming} core={s.get('core_conforming')} "
-                  f"MUST_failures={r.get('must_failures')}")
-            return conforming
 
         # Static pass is the hard gate. The execution pass then runs our OWN trusted sample so the
         # execution-requiring MUSTs (015 examples-runnable, 036 discovery) are exercised; it is reported and
         # warns on failure but does not gate, since executing the artifact is environment-sensitive.
         # --execute runs only the standard's own sample here, never untrusted third-party code.
-        if not score([], "static"):
+        if not score_wheel(miri, wheels[0], [], "static"):
             return 1
-        execute_ok = score(["--execute", "--yes"], "execute")
+        execute_ok = score_wheel(miri, wheels[0], ["--execute", "--yes"], "execute")
         if execute_ok is None:
             print("::warning::--execute pass could not run; executable MUSTs unverified this run.")
         elif not execute_ok:
