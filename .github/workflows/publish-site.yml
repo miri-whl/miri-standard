@@ -20,6 +20,8 @@ on:
       # without these two, a changelog-only or spec-only merge left the published site stale.
       - 'CHANGELOG.md'
       - 'standards/*/*.md'
+      # This workflow itself, so a fix to it republishes rather than leaving the last failure standing.
+      - '.github/workflows/publish-site.yml'
   workflow_dispatch:
 
 jobs:
@@ -38,15 +40,10 @@ jobs:
 
       - name: Validate check definitions against schema
         run: |
-          python3 - <<'EOF'
-          import json, pathlib, yaml, jsonschema
-          schema = json.load(open('schemas/check-v2.json'))
-          jsonschema.Draft7Validator.check_schema(schema)
-          n = 0
-          for f in pathlib.Path('standards').glob('*/checks/*.yaml'):
-              jsonschema.validate(yaml.safe_load(f.read_text()), schema); n += 1
-          print(f"{n} check definitions valid")
-          EOF
+          # One validator, in the Makefile. This step used to carry its own copy of it with the schema
+          # path hard-coded, so the 0.6.0 bump to check-v3 repointed Makefile, hook and prose and never
+          # reached here: the first publish after the merge failed on `$schema` const. A copy is a fork.
+          make validate
 
       - name: Generate site
         run: python3 tools/generate_site.py --out site
