@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% import '_macros.html' as m %}
+{% block title %}Downloads — Miri Standard{% endblock %}
+{% block content %}
+{{ m.spec_header('Downloads', [('Version', site.version), ('Host', 'GitHub Releases')],
+   'The standard as installable artifacts. Every link below is computed from the release version, so what
+    you download is the tree at that tag and nothing else.') }}
+
+{% set rel = site.github ~ '/releases/tag/' ~ site.version %}
+{% set dl  = site.github ~ '/releases/download/' ~ site.version %}
+
+<div class="cardgrid">
+{% for a in site.artifacts %}
+{% set fname = a.filename.replace('{version}', site.version) %}
+  <div class="card">
+    <div class="card-title">{{ a.title }}</div>
+    <p>{{ a.what | codeish }}</p>
+    <p class="mono"><a href="{{ dl }}/{{ fname }}">{{ fname }}</a></p>
+    <p class="mono"><a href="{{ dl }}/{{ a.sums }}">{{ a.sums }}</a> · <a href="{{ rel }}">release page</a></p>
+    <p class="mono stat-sub">{{ a.install.replace('{version}', site.version) }}</p>
+  </div>
+{% endfor %}
+  <div class="card">
+    <div class="card-title">Source at this version</div>
+    <p>The repository as tagged — specifications, schemas, check definitions, fixtures and tools.</p>
+    <p class="mono"><a href="{{ site.github }}/archive/refs/tags/{{ site.version }}.tar.gz">{{ site.version }}.tar.gz</a> ·
+       <a href="{{ site.github }}/tree/{{ site.version }}">browse</a></p>
+  </div>
+</div>
+
+<h2>Verify what you downloaded</h2>
+<p>A definitions package is a supply-chain root: reweight one MUST to zero and every wheel passes. Three
+things let you check it without trusting the host.</p>
+<ol class="plain">
+  <li><span class="principle">The file hash.</span> <span class="mono">sha256sum -c SHA256SUMS</span> beside the
+  wheel. The build is reproducible (<span class="mono">SOURCE_DATE_EPOCH</span> is the commit date), so two builds
+  of one tag produce identical bytes.</li>
+  <li><span class="principle">The pin.</span> Inside the wheel, <span class="mono">manifest.json</span> carries
+  <span class="mono">checks_commit_sha</span> — the full 40-character commit, never a tag, because a tag is a movable
+  label — and <span class="mono">content_sha256</span> over every definition and schema in sorted order. Recompute it
+  from the source tree at that commit and it must match.</li>
+  <li><span class="principle">Provenance.</span> The release job attests build provenance for the wheel
+  (<span class="mono">gh attestation verify</span>).</li>
+</ol>
+
+<h2>JSON Schemas</h2>
+<p>Published at their <span class="mono">$id</span> URLs on this site, so a validator that dereferences them finds
+them. The same files ship inside the wheel under <span class="mono">schemas/</span>.</p>
+<ul class="plain mono">
+{% for s in schema_files %}
+  <li><a href="{{ root }}schemas/{{ s }}">{{ s }}</a></li>
+{% endfor %}
+</ul>
+
+<h2>How an artifact gets here</h2>
+<p>Nothing on this page is uploaded by hand. A release tag pushes to
+<span class="mono">{{ site.artifacts[0].workflow }}</span>, which runs the same validators the repository gates on
+(<span class="mono">make validate</span>, <span class="mono">make consistency</span>), builds the wheel with
+<span class="mono">{{ site.artifacts[0].built_by }}</span>, scores it with the reference linter, attests it, and
+attaches it to the release for that tag. The repository stays the source of truth; this is a derived output, like
+this site.</p>
+{% endblock %}

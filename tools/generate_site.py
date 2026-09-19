@@ -266,6 +266,9 @@ def main():
 
     (out / "index.html").write_text(env.get_template("home.html").render(
         site=site, root="", active="index.html", targets=targets))
+    (out / "downloads.html").write_text(env.get_template("downloads.html").render(
+        site=site, root="", active="downloads.html",
+        schema_files=sorted(p.name for p in (REPO / "schemas").glob("*.json"))))
     (out / "origin.html").write_text(env.get_template("origin.html").render(
         site=site, root="", active="origin.html",
         body=md_to_html((REPO / "docs/origin-story.md").read_text())))
@@ -337,7 +340,7 @@ def main():
 
     n = sum(len(t["checks"]) for t in targets.values())
     print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + "
-          f"{len(specs)} spec pages + landing + origin + why-consumption + changelog + glossary")
+          f"{len(specs)} spec pages + landing + origin + why-consumption + changelog + glossary + downloads")
 
 
 if __name__ == "__main__":
