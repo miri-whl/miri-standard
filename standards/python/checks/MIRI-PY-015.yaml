@@ -1,5 +1,5 @@
 # MIRI-PY-015 — generated with the checklist table; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-015
 name: Examples runnable
 target: python-wheel
@@ -7,8 +7,18 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Examples
-weight: 4
+weight: 5
 conditional: false
+conformance_tier: T1
+tiers:
+  T0:
+  - 'Every example listed in `AGENT_EXAMPLES.json` passes `py_compile`'
+  T1:
+  - 'Every example exits zero in a clean virtual environment holding only the built wheel and its declared dependencies (credentials placeholders documented per the existing clause), and every API name it calls resolves in `api_index`'
+  T2:
+  - 'Across all examples, at least the calibrated floor of `api_index` keys is exercised — an api_index entry counts as exercised only by an example that itself clears T1 (weightless until `t2_activation` is met)'
+  T3:
+  - 'No example calls a symbol that the previous release''s `api_index` carried and the current one does not: a stale example that still runs is documentation of a removed API'
 requirements:
 - execution
 severity:

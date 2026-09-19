@@ -30,6 +30,16 @@ python3 examples/fixtures/build_fixtures.py      # -> examples/fixtures/build/{b
 
 The output tree is generated and gitignored; the template and the metadata are the source of truth.
 
+**The recipe is normative and the inputs are checksummed.** `checksums.json` carries the sha256 of every file under
+`src/_template/` and `metadata/`, and `tools/validate_fixtures.py` fails if the tree no longer matches it — so a second
+implementation that builds from matching inputs with this script has built *the* fixture, not a fixture. Wheel bytes
+are deliberately not asserted: the build is not reproducible (no `SOURCE_DATE_EPOCH`; timestamps inside the archive),
+and a wheel checksum would be a guarantee the recipe cannot keep. Regenerate after any intentional input change:
+
+```bash
+python3 -c "import json,hashlib,pathlib;F=pathlib.Path('examples/fixtures');fs=sorted(f for d in ('src/_template','metadata') for f in (F/d).rglob('*') if f.is_file() and '__pycache__' not in f.parts);m=json.load(open(F/'checksums.json'));m['inputs']={str(f.relative_to(F)):hashlib.sha256(f.read_bytes()).hexdigest() for f in fs};open(F/'checksums.json','w').write(json.dumps(m,indent=2)+'\n')"
+```
+
 ## The attack table
 
 Each attack in the `adversarial` variant targets one specific rule. Every entry is **inert** — the only URLs are

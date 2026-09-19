@@ -197,6 +197,8 @@ To contribute to specification development:
 
 - [SIG-Spec](../community/sig-spec/): Specification development group
 - [Proposals](../proposals/): Proposed new specifications
+- [Reference artifacts](../reference/conformance-kernel/): implementation contracts recorded beside the standard —
+  versioned, pinned, and explicitly not normative
 - [Community](../community/): Community organization and communication
 - [Contributing](../CONTRIBUTING.md): How to contribute to the project
 

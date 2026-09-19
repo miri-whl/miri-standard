@@ -1,5 +1,5 @@
 # MIRI-PY-017 — generated with the checklist table; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-017
 name: Error handling shown
 target: python-wheel
@@ -9,6 +9,14 @@ level: SHOULD
 category: Examples
 weight: 2
 conditional: false
+conformance_tier: T1
+tiers:
+  T0:
+  - 'At least one example listed in `AGENT_EXAMPLES.json` contains a `try`/`except` (or equivalent guard) around a call into the package'
+  T1:
+  - 'Every exception type an example catches that is attributed to the package resolves in `sdk-manifest.json` `error_handling` / `common_errors` or in `api_index`'
+  T2:
+  - 'At least the calibrated floor of the exception types declared in `sdk-manifest.json` appears caught in some example''s AST (weightless until `t2_activation` is met)'
 severity:
   default: MINOR
   violation_unit: each example lacking error handling

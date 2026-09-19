@@ -1,9 +1,13 @@
 # MIRI-PY-016 — generated with the checklist table; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+# WITHDRAWN at 0.6.0. Its both-ways join (index entries <-> files on disk) became MIRI-PY-014's T3 clause and its
+# 2 weight moved there, both halves in the same change. Never "absorbed": the ID and this file stay forever, so a
+# report or a linter that names MIRI-PY-016 resolves to a definition that says where the obligation went.
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-016
 name: Example index coherent
 target: python-wheel
-status: active
+status: withdrawn
+withdrawn_in: 0.6.0-draft
 added_in: 0.1-draft
 level: MUST
 category: Examples

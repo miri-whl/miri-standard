@@ -1,0 +1,44 @@
+# MIRI-PY-042 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v3.json
+id: MIRI-PY-042
+name: Version silence
+target: python-wheel
+status: active
+added_in: 0.6.0-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 3
+conditional: true
+severity:
+  default: HIGH
+  violation_unit: the changelog document
+short_description: '`changelog.json` `releases[0].version` equals the wheel''s version (*conditional*: document present)'
+long_description: 'Agents working from frozen model weights cannot read changelogs; the machine-readable one must describe
+  the release it ships in. This check verifies: whenever `changelog.json` ships, its newest entry is the wheel''s own version.
+  A changelog whose newest entry describes an earlier release is not thin, it is lying about currency — which is why this
+  check''s obligation sits at currency rather than at existence.'
+rationale: 'This single rule would have caught the incident that produced the freshness contract: fixes shipped, changelog
+  untouched, downstream never told. It is the cheapest join in the standard — one string against one string — and it is decidable
+  with nothing but the wheel. Stamp drift (MIRI-PY-011) catches a document generated at the wrong time; version silence catches
+  one generated at the right time about the wrong release, which no timestamp can see.'
+fires_when:
+- '`changelog.json` is present and `releases[0].version`, parsed as PEP 440, is not equal to the wheel''s version from METADATA'
+- '`releases[0].version` does not parse as PEP 440 at all'
+remediation:
+- Assemble the release's entry at build time from fragments so the newest entry cannot lag the version being built
+- Fail the build when `releases[0].version` differs from the version in pyproject.toml / METADATA
+examples:
+  violation: 'METADATA: Version: 1.2.0
+
+    changelog.json releases[0].version: "1.1.0"   # 1.2.0''s fixes are unrecorded; the newest entry is a release old'
+  compliant: 'METADATA: Version: 1.2.0
+
+    changelog.json releases[0].version: "1.2.0"   # the document describes the release it ships in'
+suggested_fix: Make the newest changelog entry the version being built.
+references:
+- title: Agent Metadata §4.7
+  url: miri-agent-metadata-specification.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-042.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-042.html

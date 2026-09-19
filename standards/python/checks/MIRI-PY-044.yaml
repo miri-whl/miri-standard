@@ -1,0 +1,49 @@
+# MIRI-PY-044 — generated with the checklist table; canonical source of truth.
+$schema: https://miri-whl.github.io/schemas/check-v3.json
+id: MIRI-PY-044
+name: Dangling claim
+target: python-wheel
+status: active
+added_in: 0.6.0-draft
+level: MUST
+category: Deprecation & Lifecycle Coherence
+weight: 2
+conditional: true
+severity:
+  default: MEDIUM
+  violation_unit: each symbol named in changelog.json that resolves in neither release
+  population_unit: all symbols named in changelog.json
+short_description: 'Every symbol named in `changelog.json` resolves in the current or previous `api_index` (*conditional*:
+  document present)'
+long_description: 'Every symbol a metadata document names is a claim an agent will act on. This check verifies: every name
+  in any `symbols` array of `changelog.json` resolves in the current release''s `sdk-manifest.json` `api_index`, or — for
+  `removed` and `deprecated` entries — in the previous release''s. A symbol that resolves in neither is a dangling claim:
+  documentation of something the artifact does not carry, which an agent will try to call.'
+rationale: The class of defect is the one MIRI-PY-031 already names for replacements — a pointer into nothing — arriving through
+  a new document. The join is decidable from the wheel alone for current-release names (no previous release needed to confirm
+  a name resolves now), so the check is conditional only on the document shipping; the previous-release arm is a widening
+  that lets a removal entry be true, not a requirement for the check to run.
+fires_when:
+- A `symbols` entry under `added`, `changed` or `fixed` names a path with no matching key in the current release's `api_index`
+- A `symbols` entry under `removed` or `deprecated` names a path with no matching key in the current release's `api_index`
+  AND, where the previous release is available, none in the previous release's either
+remediation:
+- Validate every `symbols` entry against api_index during changelog assembly; a fragment naming an unknown symbol should fail
+  the fragment, not ship
+- Name symbols as the dotted public path api_index uses (`Client.fetch`), never as prose
+examples:
+  violation: 'changelog.json: added: [{"summary": "Batch fetch", "symbols": ["Client.batch_fetch"]}]
+
+    api_index keys: Client, Client.fetch, Client.batch   # batch_fetch was renamed before release; the changelog points at
+    nothing'
+  compliant: 'changelog.json: added: [{"summary": "Batch fetch", "symbols": ["Client.batch"]}]
+
+    api_index keys: Client, Client.fetch, Client.batch   # every named symbol resolves'
+suggested_fix: Validate changelog symbols against api_index at assembly time.
+references:
+- title: Agent Metadata §4.7
+  url: miri-agent-metadata-specification.md
+  type: spec
+urls:
+  definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-044.yaml
+  html: https://miri-whl.github.io/checks/python/MIRI-PY-044.html

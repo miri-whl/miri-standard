@@ -1,5 +1,5 @@
 # MIRI-SURFACE-031 — generated with the Surface Conformance profile; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-SURFACE-033
 name: Offers and scopes cursor continuation
 target: surface

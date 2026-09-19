@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-whl.github.io/schemas/rule-v1.json",
+  "title": "MIRI implementation rule",
+  "description": "How one committee-defined check is verified. A rule names an operator and gives it arguments; it may NEVER restate a definition-owned field (weight, level, severity, category) - additionalProperties: false makes that a schema error, not a quiet override. Worth comes from the vendored definition and nowhere else, so a re-pin of the standard re-weights every implementation without touching a rule.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "check",
+    "rule"
+  ],
+  "properties": {
+    "check": {
+      "type": "string",
+      "pattern": "^MIRI-(PY|CLI|SURFACE|CONSUMER)-[0-9]{3}$",
+      "description": "The committee check this rule verifies. Must be active in the vendored registry; the loader refuses it otherwise."
+    },
+    "rule": {
+      "type": "object",
+      "description": "The operator and its arguments. Argument shapes are declared per operator in operators-v1.json and validated there; this schema only fixes that an operator is named.",
+      "required": [
+        "operator"
+      ],
+      "properties": {
+        "operator": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "The evidence this rule can fail. A rule with no failing proof is a rule nobody has proven can fail - the vacuous-pass class the committee has catalogued five times.",
+      "properties": {
+        "fixtures": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "passes",
+            "fails"
+          ],
+          "properties": {
+            "passes": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            },
+            "fails": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "description": "A declarative document rule is a new execution path and ships failing fixtures. A native rule wraps an implementation the suite already pins. A cli.invoke rule's proof is its own expect block, executed live against the subject on every selfcheck run; expect.minProperties keeps it non-vacuous.",
+      "if": {
+        "properties": {
+          "rule": {
+            "properties": {
+              "operator": {
+                "enum": [
+                  "native",
+                  "cli.invoke",
+                  "mcp.invoke"
+                ]
+              }
+            }
+          }
+        }
+      },
+      "else": {
+        "required": [
+          "proof"
+        ]
+      }
+    }
+  ]
+}

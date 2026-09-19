@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-whl.github.io/schemas/changelog-v1.json",
+  "title": "Miri Changelog",
+  "description": "Machine-readable release history shipped in a wheel's agent-metadata/ as changelog.json. Mirrors the CLI family's proven `changelog --since` payload (MIRI-CLI-029) so the two targets share one shape. It exists because the wheel metadata set recorded breaking changes (migration-guide.json) and had no home for 'what was fixed', so a fix shipped with a silent changelog never reached a downstream's tooling - the incident that produced this schema. Every symbol named here is a claim that a linter JOINS against api_index in the current or previous release; an entry naming a symbol that resolves in neither is a dangling claim. The document is CONDITIONAL on a previous release existing (the MIRI-PY-030/034 pattern): a first release MAY ship it with its initial entry, and whenever it ships, releases[0].version MUST equal the wheel's version or the check fires (version silence).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "releases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1",
+      "description": "Top-level, per the MIRI-CLI-010 convention. Bumped only when this document's shape changes."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Build-window stamp, as for every other agent-metadata document (MIRI-PY-011 applies)."
+    },
+    "releases": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Newest first. releases[0] describes the release this wheel IS - the version-silence join. Ordering MUST be monotonic descending by PEP 440 version.",
+      "items": {
+        "type": "object",
+        "required": [
+          "version"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "PEP 440 version string of the release described."
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "added": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "changed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "fixed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            }
+          },
+          "deprecated": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            },
+            "description": "Deprecations announced in this release. The authoritative record is migration-guide.json; an entry here MUST agree with it (deprecation coherence)."
+          },
+          "removed": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/entry"
+            },
+            "description": "Surfaces removed in this release. Every removal in the measured API delta MUST appear here (uncovered delta), and MUST also be listed in migration-guide.json (MIRI-PY-030)."
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "entry": {
+      "type": "object",
+      "required": [
+        "summary"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbols": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "Dotted public names this entry concerns. Each MUST resolve in api_index of the current release, or - for `removed` and `deprecated` - of the previous release. Optional on `fixed` entries that name no surface."
+        },
+        "refs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true,
+          "description": "Issue or PR references, e.g. '#412'. Never an input to any score."
+        }
+      }
+    }
+  }
+}

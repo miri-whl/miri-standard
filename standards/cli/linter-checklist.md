@@ -161,7 +161,7 @@ The standard's vocabulary: each *requirement* in a spec is verified by a *check*
 *violation*. (The word "alert" is deliberately unused, left to tooling layers such as code-scanning dashboards.)
 
 Every check in this table has a canonical definition file in [`checks/`](checks/) — one YAML document per check
-(`checks/MIRI-CLI-NNN.yaml`), validated against [check-v2.json](../../schemas/check-v2.json). Each file carries the check's
+(`checks/MIRI-CLI-NNN.yaml`), validated against [check-v3.json](../../schemas/check-v3.json). Each file carries the check's
 name, level, category, weight, short and long descriptions, an example violation, a suggested fix, the standards
 references, versioning (`added_in`/`withdrawn_in`), canonical
 URLs (`urls.definition` on GitHub, `urls.html` on the published site — for linter reports to link), and — critically —

@@ -1,5 +1,5 @@
 # MIRI-PY-014 — generated with the checklist table; canonical source of truth.
-$schema: https://miri-whl.github.io/schemas/check-v2.json
+$schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-014
 name: Quickstart exists
 target: python-wheel
@@ -7,14 +7,27 @@ status: active
 added_in: 0.1-draft
 level: MUST
 category: Examples
-weight: 4
+weight: 5
 conditional: false
+conformance_tier: T1
+tiers:
+  T0:
+  - '`examples/quickstart.py` is present in the built wheel and `py_compile` succeeds on it'
+  T1:
+  - 'Every import in quickstart.py resolves against the wheel''s own package or its Requires-Dist, and every attribute path it takes on the package (`Client.fetch`, `example_sdk.connect`) names a key in `sdk-manifest.json` `api_index`'
+  T2:
+  - 'quickstart.py exercises at least the calibrated floor of `quick_reference.primary_classes` and `key_methods` (floor: scoring-v1.json `conformance.tiers`; weightless until `t2_activation` is met)'
+  T3:
+  - '`AGENT_EXAMPLES.json` entries ↔ files on disk hold in both directions: every `examples[*].file` exists, every `*.py` under examples/ (bar `__init__.py`) has an entry, and every id named in learning_paths, categories, prerequisites or related exists in the examples map — the join withdrawn MIRI-PY-016 performed'
+  - 'No example names a symbol absent from the current release''s `api_index`'
 severity:
   default: MEDIUM
   violation_unit: the examples directory
 short_description: '`examples/quickstart.py` present'
 long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
-  lesson at machine speed. This check verifies: `examples/quickstart.py` present.'
+  lesson at machine speed. This check verifies: `examples/quickstart.py` present. Since 0.6.0 it is TIERED: presence is
+  T0 and earns a fraction of the weight, never all of it; the index/file join that MIRI-PY-016 performed until its
+  withdrawal is this check''s T3 clause, and 016''s weight moved here with it.'
 rationale: Miri Wheel Extensions §5.1 names examples/quickstart.py as the one required example and §9.1.1 makes its presence
   the floor of basic conformance; the enhanced METADATA field Agent-Quickstart-File points to it by path. It is the first
   artifact an agent executes to confirm its model of the API before generating integration code — in its absence the agent

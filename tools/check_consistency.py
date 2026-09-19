@@ -276,7 +276,7 @@ def check_glossary():
 
       1. Every closed vocabulary it quotes matches its authoritative source. Trigger kinds come from
          agent-event-v1.json, error codes and payload keys from discovery-envelope-v1.json, vehicle
-         labels from the Consumption Map, severity from check-v2.json.
+         labels from the Consumption Map, severity from check-v3.json.
       2. Every defined term carries a link to where it is normatively defined, so a reader who needs
          the rule rather than the explanation can reach it in one click.
       3. No term is defined that the standard does not use, and the terms the standard defines in
