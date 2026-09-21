@@ -6,7 +6,7 @@ falsifies any of them. The existing wheel fixtures under examples/fixtures/ driv
 SURFACE families - they test what a reader does with metadata - and nothing tested what the
 checklist says about a wheel.
 
-Eight arms from one package source, byte-compared after materialization so any finding a linter
+Nine arms from one package source, byte-compared after materialization so any finding a linter
 reports is attributable to metadata rather than to code:
 
   conforming-1.0.0       the PREVIOUS release, so previous-release checks have something to compare

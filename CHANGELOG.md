@@ -13,8 +13,31 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
 
 ## 0.7.0 — unreleased
 
-Coverage. The `MIRI-PY` family had 43 checks, 100 weight and no artifact that falsified any of them — the founding
-family, and the only one with nothing to test against. It now has nine wheels and seven goldens.
+**BREAKING.** The tier arithmetic changes: `scoring-v2.json` withdraws v1's rule that a parked T2's share is parked
+in T1, in favour of renormalizing over the tiers a check declares. Every tiered score moves.
+
+Otherwise, coverage. The `MIRI-PY` family had 43 checks, 100 weight and no artifact that falsified any of them — the
+founding family, and the only one with nothing to test against. It now has nine wheels and seven goldens.
+
+### Changed
+
+- **BREAKING — `scoring-v2.json` supersedes `scoring-v1.json` for the tier arithmetic.** A check now earns
+  `weight × (shares of its live tiers up to tier_earned) ÷ (shares of ALL its live tiers)` — renormalized over what
+  the check *declares*, minus a parked T2. Under v1, `MIRI-PY-007` at weight 5 declaring only T0 and T1 earned
+  `5 × (0.2 + 0.6) = 4.0`; it now earns 5.0. A check that declares only T0 and T1 has no higher tier to earn, and
+  docking it for absent tiers scores it against a schedule it never claimed.
+
+  **This is a withdrawal, and the record matters more than the rule.** v1 was not silent: its `shares` description
+  said a parked T2's share is parked in T1, which is a complete rule producing different numbers. When the reference
+  implementation scored a wheel 47/48 against this standard's 45.6/48, **45.6 was what v1 specified and 47 was the
+  implementation diverging from it.** The draft that introduced the v2 field deleted the v1 sentence and asserted no
+  prior rule had existed — framing the adoption of an implementation's arithmetic as a clarification of a schema
+  that had said nothing. It had said something. A panel caught it against `origin/main`.
+
+  `scoring-v1.json` stays published and frozen at its 0.6.0 bytes, because anything that scored under it scored
+  under a real rule and must still be able to cite it. v2 also states two things v1 left to the implementation:
+  rounding is half-up, applied once at the end, and a **failing** tiered check contributes zero rather than its
+  earned tier share.
 
 ### Added
 

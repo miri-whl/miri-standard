@@ -119,7 +119,7 @@ vendoring.
 
 This is the useful one, and most of it is ours to fix.
 
-The `MIRI-PY` family now has fixtures: eight greetlib wheels, six goldens, `examples/fixtures/python/`. Graded
+The `MIRI-PY` family now has fixtures: nine greetlib wheels, seven goldens, `examples/fixtures/python/`. Graded
 against them, 0.6.0 **reports every check correctly** — right checks, right arms, nothing on the control — and
 satisfies **two goldens of six**: `P4-stale-stamps` and `P7-no-agent-metadata`, where the evidence a finding
 points at is the document itself and the document-only form is what those checks' own `violation_unit` names.
