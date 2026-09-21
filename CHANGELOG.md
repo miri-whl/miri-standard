@@ -11,6 +11,51 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.7.0 — unreleased
+
+Coverage. The `MIRI-PY` family had 43 checks, 100 weight and no artifact that falsified any of them — the founding
+family, and the only one with nothing to test against. It now has eight wheels and six goldens.
+
+### Added
+
+- **[`examples/fixtures/python/`](examples/fixtures/python/README.md) — the greetlib wheel fixtures.** Eight arms
+  built from one package source: two conforming releases and six adversarial. `conforming-1.0.0` is the part that
+  did not exist before, because `MIRI-PY-030` compares the public surface across releases and nothing in this
+  repository had ever shipped two wheel releases of one package. The check fires now, for the first time.
+  Untested weight fell from 234 to 195; `MIRI-PY` went from 0/43 checks with material to 13/43.
+- **`tools/validate_python_fixtures.py`** asserts each arm still carries its defect — against the built wheel's own
+  metadata rather than a linter's opinion, so the gate holds with no linter installed — and that the control carries
+  none of them, which is what makes a finding attributable. Mutation-tested.
+- **`tools/score_python_fixtures.py`** grades a linter against the goldens on attribution: a finding counts only if
+  it names the check *and* points at the declared evidence. Its self-test rejects seven ways of gaming it.
+
+### Fixed
+
+- **`changelog-v1.json` rejected the example this specification publishes.** It closed `additionalProperties`
+  without listing `$schema`, so the *conforming* fixture arm failed `MIRI-PY-041` on a document written from §4.7
+  verbatim. `lifecycle-v1` and `api-graph-v1` already allowed the pointer; the newer schemas did not — the drift a
+  new schema inherits when a convention lives in the examples rather than in the schemas. Found on the fixtures'
+  first run, which is what they are for.
+- **`MIRI-PY-009` had no anti-vacuity clause.** An all-zeros migration guide validates, so presence and schema
+  validity passed a document describing no migration at all. `MIRI-PY-008` was given such a clause in the
+  vacuous-conformance round and `009` never got the equivalent. It keys on a *measured* delta, since a release that
+  genuinely changed nothing is an honest all-zeros case.
+- The doc linters were scanning generated fixture arms (79 → 114 files); build trees are excluded and gitignored.
+  `opensource.org` 403s every non-browser request, so the README's MIT link joins `gnu.org` in the link-check
+  ignore list, with the reason stated.
+
+- **`lint-report-v1` outcomes gain `evidence`** — an array of `<document>:<field>` strings naming what a finding
+  points at. A report recorded *which* checks failed and nothing about *why*, so attribution could not be graded
+  from a conforming report and both golden harnesses invented a submission shape; a harness needing non-standard
+  input is one nobody runs. The form is not invented — it is what the reference linter already emits for its best
+  cases. `score_python_fixtures.py --reports` now grades conforming reports directly, falling back to
+  `violation_detail[].location` so linters that predate the field are still gradeable.
+
+  Measured immediately: miri-py 0.6.0 reports every fixture case correctly — right checks, right arms, nothing on
+  the control — and satisfies **one** golden clause, `MIRI-PY-018`, whose location happened to carry the field.
+  Detection and attribution are different properties, and until this field existed the standard could only ask for
+  the first.
+
 ## 0.6.0 — unreleased
 
 **BREAKING.** The check schema is bumped to `check-v3.json` because `weight` changes meaning for any definition that

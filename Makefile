@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: python-fixtures validate-python-fixtures checks-wheel help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
+.PHONY: python-fixtures validate-python-fixtures score-python-fixtures checks-wheel help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -67,6 +67,10 @@ findings-schema: ## Validate agent-findings-v1.json in both directions (accept +
 score-cli-linter: ## Prove the CLI golden harness rejects an inert AND a screaming linter
 	@python3 tools/score_cli_linter.py --self-test
 
+score-python-fixtures: ## Prove the greetlib golden harness rejects linters that game it
+	python3 tools/score_python_fixtures.py --self-test
+
+
 references: ## Verify every check's spec citations resolve (--report for reconciliation)
 	python3 tools/check_references.py
 
@@ -106,4 +110,4 @@ links: ## Check Markdown links (CI: markdown-link-check)
 	@echo "links: $$(find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' -not -path '*/fixtures/*/build/*' \
 		| wc -l | tr -d ' ') file(s), no dead links"
 
-check: validate validate-sample validate-fixtures validate-cli-fixtures validate-python-fixtures findings-schema score-cli-linter lint spell links ## Run everything CI runs locally (except the miri score gate)
+check: validate validate-sample validate-fixtures validate-cli-fixtures validate-python-fixtures findings-schema score-cli-linter score-python-fixtures lint spell links ## Run everything CI runs locally (except the miri score gate)

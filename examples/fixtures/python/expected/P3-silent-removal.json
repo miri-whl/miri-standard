@@ -15,8 +15,8 @@
         "MIRI-PY-044"
       ],
       "evidence": [
-        "previous release api_index vs current",
-        "changelog.json releases[0].added[].symbols"
+        "changelog.json:releases[0].added[].symbols",
+        "sdk-manifest.json:api_index"
       ],
       "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
     },

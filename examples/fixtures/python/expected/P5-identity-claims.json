@@ -19,9 +19,9 @@
         "MIRI-PY-022"
       ],
       "evidence": [
-        "lifecycle.json identity.registry",
-        "lifecycle.json identity.distribution",
-        "lifecycle.json advisory_sources"
+        "lifecycle.json:advisory_sources",
+        "lifecycle.json:identity.distribution",
+        "lifecycle.json:identity.registry"
       ],
       "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
     },

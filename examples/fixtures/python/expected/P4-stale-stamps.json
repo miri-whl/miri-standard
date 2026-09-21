@@ -15,8 +15,8 @@
         "MIRI-PY-042"
       ],
       "evidence": [
-        "agent-metadata generated_at",
-        "changelog.json releases[0].version"
+        "changelog.json:releases[0].version",
+        "sdk-manifest.json:generated_at"
       ],
       "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
     },

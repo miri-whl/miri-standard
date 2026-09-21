@@ -15,8 +15,8 @@
         "MIRI-PY-019"
       ],
       "evidence": [
-        "sdk-manifest.json sdk_version",
-        "lifecycle.json identity.purl"
+        "lifecycle.json:identity.purl",
+        "sdk-manifest.json:sdk_version"
       ],
       "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
     },

@@ -92,6 +92,66 @@ The release job gates on this: `ADVISORY` is off, and we mutation-tested it by r
 release-page registry — the gate returns exit 1. A definitions package with a failing MUST must never reach the
 release page, since it is what every downstream linter installs to learn what the rules are.
 
+## Finding 4 — 0.6.0 ships no `changelog-v1.json`, so `--previous-release` crashes
+
+```text
+❌ Unexpected error: [Errno 2] No such file or directory:
+   '.../site-packages/miri_py/schemas/changelog-v1.json'
+```
+
+The file is not in your source tree at all, so `package-data` never had anything to include. You re-synced the check
+definitions to 0.6.0 — which added `MIRI-PY-041` through `044`, every one of which reads `changelog.json` — without
+re-syncing the schemas. The mirror is half-updated, which is the failure mode our schema-governance guidance names:
+a vendored copy enforces rules it has never seen.
+
+It blocks the entire previous-release path, so `030`, `034`, `041` and `043` cannot be exercised by anyone until it
+lands. We patched a local venv with our copy to finish validating the fixtures; nothing in your repository was
+touched. The definitions wheel carries all seventeen schemas, which is one argument for consuming it rather than
+vendoring.
+
+## Finding 5 — you detect every case and can prove none of them
+
+This is the useful one, and most of it is ours to fix.
+
+The `MIRI-PY` family now has fixtures: eight greetlib wheels, six goldens, `examples/fixtures/python/`. Graded
+against them, 0.6.0 **reports every check correctly** — right checks, right arms, nothing on the control — and
+satisfies **one** golden clause, because a report says *which* check failed and not *what it points at*.
+
+That was our gap first: `lint-report-v1` had no field for it, so both golden harnesses invented a submission shape,
+and a harness needing non-standard input is one nobody runs. Fixed at 0.7.0 — `outcomes[].evidence`, an array of
+`<document>:<field>` strings. The form is not invented: it is what you already emit for your best cases.
+
+Your `violation_detail[].location` is three different things today, and the grader shows it:
+
+```text
+lifecycle.json:advisory_sources          MIRI-PY-018 — exactly right, and it SATISFIED the golden
+sdk-manifest.json                        MIRI-PY-012 — the document, missing the field
+greetlib-1.1.0-py3-none-any.whl          MIRI-PY-019, 020, 021, 022 — the whole wheel, which locates nothing
+```
+
+`018` passing on the strength of one well-formed location is the proof the mechanism works. The ask is to populate
+`evidence` with the `018` form everywhere, or to make `location` consistently `<document>:<field>` — the grader
+accepts `location` as a fallback precisely so this is gradeable before you adopt the new field.
+
+Per check, what the goldens want: `012` → `sdk-manifest.json:sdk_version`. `019` → `lifecycle.json:identity.purl`.
+`020` → `lifecycle.json:identity.registry`. `021`/`022` → `lifecycle.json:advisory_sources` and
+`lifecycle.json:identity.distribution`. `030` → `sdk-manifest.json:api_index`. `042` →
+`changelog.json:releases[0].version`. `044` → `changelog.json:releases[0].added[].symbols`.
+
+Run it yourself:
+
+```bash
+miri score <arm>.whl --format json --previous-release conforming-1.0.0.whl > reports/<arm>.json
+python3 tools/score_python_fixtures.py --reports reports/
+```
+
+## Finding 6 — `MIRI-PY-030` had never been exercised by anything
+
+It requires a previous release, and nothing in this repository had ever shipped two wheel releases of one package.
+`silent-removal-1.1.0` against `conforming-1.0.0` is the first time the check has fired since it was written. We
+mention it because it is the strongest argument we have for fixtures over review: the check was correct, implemented
+and unexercised for four releases, and nobody could have known which.
+
 ## One thing blocking you, not us
 
 `phase-0.6-stage-2` is unpushed. `pip install git+…` still serves `main` with all three bugs, so the wheel you sent

@@ -13,9 +13,9 @@
         "MIRI-PY-009"
       ],
       "evidence": [
-        "migration-guide.json deprecations",
-        "migration-guide.json summary",
-        "previous release api_index vs current"
+        "migration-guide.json:deprecations",
+        "migration-guide.json:summary",
+        "sdk-manifest.json:api_index"
       ],
       "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
     },
