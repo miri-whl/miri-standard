@@ -10,6 +10,7 @@
   ],
   "additionalProperties": false,
   "properties": {
+    "$schema": {"type": "string", "format": "uri", "description": "Pointer to this schema. Closed documents in this set must list it explicitly or they reject the very example the specification publishes - section 4.7's example carries it, and a first run of the greetlib fixtures failed MIRI-PY-041 on the conforming arm because this schema did not. lifecycle-v1 and api-graph-v1 already allowed it; the newer documents did not, which is the drift a new schema inherits when the convention lives in the examples rather than in the schemas."},
     "schema_version": {
       "type": "string",
       "const": "1",

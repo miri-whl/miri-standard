@@ -217,19 +217,32 @@ because the obligation existed; see `scoring-v1.json` `conformance.coverage` for
 
 ## Verifying
 
-**Fixture** ([`examples/fixtures/`](../examples/fixtures/README.md)) — one of ten variants of a single trivial
-package, built from one template. Every `.py` is verified
-**byte-identical** across the source-sharing variants, so any difference in a consumer's behavior is attributable to
-the metadata and nothing else. That property is what makes the whole suite evidential rather than anecdotal.
+**Fixture** ([`examples/fixtures/`](../examples/fixtures/README.md)) — one variant of a single trivial artifact,
+built from one template, differing from its siblings **only** in shipped metadata. Every `.py` is verified
+**byte-identical** across the source-sharing variants, so any difference in behavior is attributable to the metadata
+and nothing else. That property is what makes a suite evidential rather than anecdotal. Three suites exist: the
+consumption fixtures (three wheels, driving a *consumer*), the `greetctl` fixtures (driving a *CLI linter*), and the
+`greetlib` wheel fixtures (nine wheels, driving a *wheel linter*).
 
 **Adversarial twin** ([`examples/fixtures/`](../examples/fixtures/README.md)) — the variant whose metadata lies: forged
 envelope keys, phantom symbols, a padded index, a
 prompt injection, an SSRF payload, a cross-namespace replacement, and a field bidding for the agent's attention.
 
-**Golden** ([`examples/fixtures/expected/`](../examples/fixtures/README.md)) — a file stating what a conformant
-surface must return and what a conformant consumer must not do, for
-one attack. Authored from the specification, never captured from an implementation — because a golden captured from
-the tool it grades is the tool grading itself.
+**Golden** ([`examples/fixtures/expected/`](../examples/fixtures/README.md)) — a file stating, for one case, what a
+conformant implementation must produce: what a surface must return and a consumer must not do, or which checks a
+linter must report against which arm. Authored from the specification, never captured from an implementation —
+because a golden captured from the tool it grades is the tool grading itself. A golden an implementation does not
+attempt is **forfeited as unimplemented**, which is reported; it is never counted as a pass.
+
+**Attribution** ([`examples/fixtures/python/`](../examples/fixtures/README.md)) — the property a golden grades beyond
+detection: a finding satisfies a golden only if it names the right check **and** points at the declared evidence,
+keyed per check. Detection and attribution are different properties, and a grader that pools evidence across a case
+scores a shotgun report full marks.
+
+**Evidence** ([`lint-report-v1`](../schemas/lint-report-v1.json)) — an outcome's array of `<document>:<field>` strings
+naming what a finding points at. The document-only form (`changelog.json`, no field) is correct where the check's own
+`violation_unit` is the document. Added in 0.7.0, because until it existed the standard could ask a linter to be
+right and had no way to ask it to say where.
 
 **Paired control** ([Consumer Conformance §5](../standards/consumption/consumer-conformance.md)) — an attack fixture and
 its innocent twin, scored as one check over two runs. A consumer that

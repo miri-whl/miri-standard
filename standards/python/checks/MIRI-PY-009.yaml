@@ -11,13 +11,16 @@ weight: 3
 conditional: true
 requirements:
 - network
+- previous-release
 severity:
   default: MEDIUM
   violation_unit: migration-guide.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
-short_description: Present for any non-initial release; validates against schema
+short_description: Present for any non-initial release; validates; and reports the measured delta rather than nothing
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
-  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
-  for any non-initial release; validates against schema.'
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: present
+  for any non-initial release; validates against migration-guide-v1.json; and, on a release whose api_index measurably
+  differs from the previous one, reports a non-empty delta rather than an all-zeros guide that describes no migration
+  at all.'
 rationale: 'A coding agent''s knowledge of an API is frozen at its training cutoff, and the effect is measured, not hypothetical:
   empirical studies of LLM code completion report deprecated-API usage rates of 25-38% across eight popular Python libraries,
   because the model writes for version N-1 against an installed version N. migration-guide.json is the machine-readable
@@ -30,6 +33,14 @@ fires_when:
   summary missing)
 - '`to_version` does not equal the wheel''s own version, or `from_version` names no actually published prior release line'
 - A `deprecations` entry lacks id, deprecated, or replacement
+- The document is present and reports NOTHING - `deprecations` and `breaking_changes` both empty (or
+  absent) and every `summary` count zero - on a release whose `api_index` measurably differs from the
+  previous release's. An all-zeros guide validates against migration-guide-v1.json, so the clauses above
+  are satisfied by a document that describes no migration at all. This is the MIRI-PY-008 defect in the
+  other version-dependent document - presence and schema validity are not substance. Note the honest
+  all-zeros case is a release that genuinely changed nothing, which is why this fires on a MEASURED
+  delta rather than on emptiness alone - and why a FIRST release must ship no guide at all rather than
+  an empty one, the condition above being the whole point
 remediation:
 - Generate migration-guide.json in the release build, deriving `deprecations` from PEP 702 markers (`warnings.deprecated`
   on Python 3.13+, `typing_extensions.deprecated` earlier)

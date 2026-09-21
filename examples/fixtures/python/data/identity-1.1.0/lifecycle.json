@@ -1,0 +1,22 @@
+{
+  "$schema": "https://miri-whl.github.io/schemas/lifecycle-v1.json",
+  "miri_lifecycle_version": "0.1",
+  "generated_at": "2026-09-20T00:00:00Z",
+  "identity": {
+    "purl": "pkg:pypi/greetlib@1.1.0",
+    "distribution": "private",
+    "registry": "https://pypi.org/project/greetlib/",
+    "source_repository": "https://github.com/miri-whl/miri-standard"
+  },
+  "advisory_sources": [],
+  "update_check": {
+    "type": "pypi-json",
+    "url": "https://pypi.org/pypi/greetlib/json"
+  },
+  "support": {
+    "status": "active",
+    "supported_versions": [
+      ">=1.0"
+    ]
+  }
+}

@@ -11,6 +11,7 @@ Usage: python3 tools/generate_site.py [--out site]
 Requires: pyyaml, jinja2
 """
 import argparse
+import json
 import collections
 import hashlib
 import html
@@ -231,6 +232,48 @@ def main():
 
     for img in site["assets"]:
         shutil.copy(REPO / "assets/img" / img, out / "assets" / img)
+
+    # A PEP 503 simple index, so `identity.registry` in the definitions wheel names an INSTALLABLE
+    # INDEX rather than a release page. MIRI-PY-020 rejects a project page, correctly: a registry a
+    # consumer cannot install from is not a registry. GitHub Releases hosts the bytes; this makes them
+    # resolvable by pip:
+    #     pip install --index-url https://miri-whl.github.io/simple/ miri-standard-checks
+    # The JSON twin is the PEP 700 project detail `update_check` polls for a newer release. Both link
+    # the release asset for the declared version, so they are correct by construction and live the
+    # moment that tag exists - the same posture as the Downloads page.
+    simple = out / "simple"
+    (simple / "miri-standard-checks").mkdir(parents=True)
+    ver = site["version"]
+    whl = f"miri_standard_checks-{ver}-py3-none-any.whl"
+    asset = f"{site['github']}/releases/download/{ver}/{whl}"
+    (simple / "index.html").write_text(
+        "<!DOCTYPE html>\n<html><head><meta name=\"pypi:repository-version\" content=\"1.1\">"
+        "<title>Simple index</title></head><body>\n"
+        "<a href=\"miri-standard-checks/\">miri-standard-checks</a><br>\n</body></html>\n")
+    sums = REPO / ".generated/checks-wheel/dist/SHA256SUMS"
+    whl_sha = ""
+    if sums.exists():
+        for line in sums.read_text().splitlines():
+            digest, _, name = line.partition("  ")
+            if name.strip() == whl:
+                whl_sha = digest.strip()
+    frag = f"#sha256={whl_sha}" if whl_sha else ""
+    (simple / "miri-standard-checks" / "index.html").write_text(
+        "<!DOCTYPE html>\n<html><head><meta name=\"pypi:repository-version\" content=\"1.1\">"
+        f"<title>Links for miri-standard-checks</title></head><body>\n<h1>Links for miri-standard-checks</h1>\n"
+        f"<a href=\"{asset}{frag}\">{whl}</a><br>\n</body></html>\n")
+    (simple / "miri-standard-checks" / "index.json").write_text(json.dumps({
+        "meta": {"api-version": "1.1"},
+        "name": "miri-standard-checks",
+        "versions": [ver],
+        # The wheel's sha256, when a built one is present, so `pip install --index-url` VERIFIES what
+        # it downloads. Published empty, the index made every out-of-band mechanism the Downloads page
+        # offers - SHA256SUMS, the manifest pin, the attestation - irrelevant to the one command that
+        # actually installs the artifact. Absent a local build the field stays empty rather than
+        # carrying a fabricated digest, and the anchor below omits the fragment for the same reason.
+        "files": [{"filename": whl, "url": asset, "hashes": ({"sha256": whl_sha} if whl_sha else {}),
+                   "requires-python": ">=3.9", "yanked": False}],
+    }, indent=2) + "\n")
 
     # Publish the JSON Schemas so their $id URLs (miri-whl.github.io/schemas/…) resolve.
     schemas_out = out / "schemas"

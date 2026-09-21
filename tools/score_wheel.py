@@ -2,10 +2,17 @@
 """Score an arbitrary wheel with the reference linter, through the sample SDK's gate - not a copy of it.
 
 Used by publish-checks.yml on the definitions wheel (miri-standard-checks): the standard's own artifact held
-to the standard it carries. ADVISORY: the verdict is printed and the exit code does not depend on it, because
-two MUSTs are known to fail for structural reasons recorded in the response to
-upstream-artifact-publishing-feedback.md section 4 - MIRI-PY-020 has no vocabulary for an artifact distributed
-outside an index, and a data-only package still owes agent-metadata/. When both close, flip ADVISORY to False.
+to the standard it carries. GATING: a wheel with a failing MUST does not reach the release page.
+
+It was advisory while two MUSTs were known to fail - the package shipped no agent-metadata/, and its registry
+named a GitHub Releases page, which MIRI-PY-020 rejects because a registry a consumer cannot install from is
+not a registry. Both are closed: the build writes agent-metadata/, examples/ and docs/, and the site publishes
+a PEP 503 index the registry now names. Measured under miri-py 0.6.0: 98 of 53.0, health 100, zero MUST
+failures, grade `undetermined` because six MUSTs need --execute or a previous release.
+
+`undetermined` passes this gate deliberately - it is not non-conformance, and the default static posture
+structurally forfeits those six for every artifact. What fails: a non-empty must_failures, or an explicit
+non-conforming grade.
 
 Exit 0 after scoring; 1 if `miri score` produced no parsable report (a tooling failure, which IS worth failing
 on); 2 if miri is not on PATH.
@@ -17,7 +24,7 @@ import sys
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
 from score_sample import score_wheel  # noqa: E402
 
-ADVISORY = True
+ADVISORY = False
 
 
 def main(argv: list[str]) -> int:

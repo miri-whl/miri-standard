@@ -59,5 +59,21 @@ Decisions worked through so far, each as a proposal plus the response that settl
   sets the promotion test. Fixture recipe blessed and checksummed; no binaries shipped. Nothing in `schemas/`
   derives from the delivered files.
 
+- `miri-standard-response-compare-operator.md` — our response to miri-py's `compare` draft (the first of the three
+  missing operator classes). Shape accepted, all five of their questions answered favourably, and three findings:
+  their `MIRI-CONSUMER-051` rule is satisfied by a consumer that never fires, because it compares two arms and
+  anchors neither; two of the four checks need a per-arm `env` the grammar does not have; and a rule covering one
+  `fires_when` clause of three currently reports pass, which is the vacuous pass at rule level. The first finding is
+  a defect in **our** check, not their rule — `051`'s clause 1 is weaker than the `E3` golden it points at, and
+  drafting against it is what exposed that.
+
+- `miri-standard-dogfooding-the-definitions-wheel.md` — what happened when the standard's own definitions wheel was
+  scored by the reference linter. Three of miri-py's fixes confirmed from a clean install; six findings back,
+  three of which correct earlier drafts of this same document. The
+  first is the one that matters: the report's layout section advises shipping a document the report's own check
+  excludes, and the empty version of that document validates — so following the advice manufactures the vacuous
+  artifact. The second is that layout guidance fires no check, which is why we missed a real misplacement. The third
+  was ours, and is fixed: `scoring-v1.json` declared the tier shares without the formula.
+
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.

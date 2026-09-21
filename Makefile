@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: checks-wheel help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
+.PHONY: python-fixtures validate-python-fixtures score-python-fixtures checks-wheel help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -43,6 +43,12 @@ validate-fixtures: fixtures ## Verify the fixture invariants (conforming twin va
 cli-fixtures: ## Build the greetctl CLI fixture arms (bare/1.0.0/1.1.0/adversarial) and verify one implementation
 	@python3 examples/fixtures/cli/build_cli_fixtures.py
 
+python-fixtures: ## Build the greetlib wheel fixture arms into examples/fixtures/python/build
+	python3 examples/fixtures/python/build_python_fixtures.py
+
+validate-python-fixtures: python-fixtures ## Assert the greetlib wheel fixtures still demonstrate their goldens
+	python3 tools/validate_python_fixtures.py
+
 validate-cli-fixtures: cli-fixtures ## Verify the CLI fixture invariants (release history exercised; C1-C11 live)
 	@python3 tools/validate_cli_fixtures.py
 
@@ -60,6 +66,10 @@ findings-schema: ## Validate agent-findings-v1.json in both directions (accept +
 
 score-cli-linter: ## Prove the CLI golden harness rejects an inert AND a screaming linter
 	@python3 tools/score_cli_linter.py --self-test
+
+score-python-fixtures: ## Prove the greetlib golden harness rejects linters that game it
+	python3 tools/score_python_fixtures.py --self-test
+
 
 references: ## Verify every check's spec citations resolve (--report for reconciliation)
 	python3 tools/check_references.py
@@ -82,7 +92,7 @@ lint: ## Lint Markdown (CI: markdownlint-cli2)
 	# release whose added rules (MD060) fail files CI accepts, so `make check` went red on untouched files.
 	# Exclusions must be `#`-prefixed globs here: `.markdownlintignore` is a markdownlint-cli v1 file and
 	# cli2 does not read it, so its `memory-bank/**` and `.claude/**` entries are inert — both are linted.
-	npx -y markdownlint-cli2@0.13 "**/*.md" "#node_modules" "#.generated"
+	npx -y markdownlint-cli2@0.13 "**/*.md" "#node_modules" "#.generated" "#examples/fixtures/*/build"
 
 spell: ## Spell-check Markdown (CI: cspell)
 	# Pinned for the same reason as `lint`. Note pinning cspell does NOT pin its dictionaries: a real
@@ -94,10 +104,10 @@ spell: ## Spell-check Markdown (CI: cspell)
 links: ## Check Markdown links (CI: markdown-link-check)
 	# xargs, not `-exec`: `find -exec` reports find's exit status, so this target printed dead links
 	# and still exited 0. xargs exits 123 when any invocation fails, which is what makes `check` red.
-	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' -print0 \
+	find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' -not -path '*/fixtures/*/build/*' -print0 \
 		| xargs -0 -n1 npx -y markdown-link-check -q -c .markdown-link-check.json
 	# -q prints nothing for a clean file, so a passing run is otherwise silent and reads as "did nothing".
-	@echo "links: $$(find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' \
+	@echo "links: $$(find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' -not -path '*/fixtures/*/build/*' \
 		| wc -l | tr -d ' ') file(s), no dead links"
 
-check: validate validate-sample validate-fixtures validate-cli-fixtures findings-schema score-cli-linter lint spell links ## Run everything CI runs locally (except the miri score gate)
+check: validate validate-sample validate-fixtures validate-cli-fixtures validate-python-fixtures findings-schema score-cli-linter score-python-fixtures lint spell links ## Run everything CI runs locally (except the miri score gate)

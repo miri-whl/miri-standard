@@ -11,6 +11,92 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.7.0 — unreleased
+
+**BREAKING.** The tier arithmetic changes: `scoring-v2.json` withdraws v1's rule that a parked T2's share is parked
+in T1, in favour of renormalizing over the tiers a check declares. Every tiered score moves.
+
+Otherwise, coverage. The `MIRI-PY` family had 43 checks, 100 weight and no artifact that falsified any of them — the
+founding family, and the only one with nothing to test against. It now has nine wheels and seven goldens.
+
+### Changed
+
+- **BREAKING — `scoring-v2.json` supersedes `scoring-v1.json` for the tier arithmetic.** A check now earns
+  `weight × (shares of its live tiers up to tier_earned) ÷ (shares of ALL its live tiers)` — renormalized over what
+  the check *declares*, minus a parked T2. Under v1, `MIRI-PY-007` at weight 5 declaring only T0 and T1 earned
+  `5 × (0.2 + 0.6) = 4.0`; it now earns 5.0. A check that declares only T0 and T1 has no higher tier to earn, and
+  docking it for absent tiers scores it against a schedule it never claimed.
+
+  **This is a withdrawal, and the record matters more than the rule.** v1 was not silent: its `shares` description
+  said a parked T2's share is parked in T1, which is a complete rule producing different numbers. When the reference
+  implementation scored a wheel 47/48 against this standard's 45.6/48, **45.6 was what v1 specified and 47 was the
+  implementation diverging from it.** The draft that introduced the v2 field deleted the v1 sentence and asserted no
+  prior rule had existed — framing the adoption of an implementation's arithmetic as a clarification of a schema
+  that had said nothing. It had said something. A panel caught it against `origin/main`.
+
+  `scoring-v1.json` stays published and frozen at its 0.6.0 bytes, because anything that scored under it scored
+  under a real rule and must still be able to cite it. v2 also states two things v1 left to the implementation:
+  rounding is half-up, applied once at the end, and a **failing** tiered check contributes zero rather than its
+  earned tier share.
+
+### Added
+
+- **[`examples/fixtures/python/`](examples/fixtures/python/README.md) — the greetlib wheel fixtures.** Nine arms
+  built from one package source: two conforming releases and seven adversarial. `conforming-1.0.0` is the part that
+  did not exist before, because `MIRI-PY-030` compares the public surface across releases and nothing in this
+  repository had ever shipped two wheel releases of one package. The check fires now, for the first time.
+  Counting every active check named by a golden in any of the three suites: untested weight fell from 237 of 400
+  to 187, and `MIRI-PY` went from 0/43 checks with material to 18/43, 0 weight to 50. (Earlier drafts of this
+  entry said 234 → 195 and 13/43, from a scan that did not count a golden's `also_expected` checks.)
+  One arm was removed rather than kept: `support-1.1.0` was written for `MIRI-PY-023` and `033`, and every way of
+  violating those two is also `lifecycle-v1`-invalid, so `MIRI-PY-018` fires first and their 4 weight is not
+  independently reachable. Recorded in the suite's README, because a weight that cannot be earned separately is
+  worth knowing before anyone reads it as measuring something.
+- **The definitions wheel conforms, and the release gate enforces it.**
+  `miri-standard-checks` now ships its own `agent-metadata/` — `sdk-manifest.json`, `lifecycle.json`,
+  `changelog.json`, `api-graph.json` and a first-release `migration-guide.json` omission that is correct rather than
+  missing — written by `tools/build_checks_wheel.py` at build time from the definitions it carries, never by hand.
+  It scores 98 of an effective 53.0 with zero MUST failures, and `publish-checks.yml` fails the release if that
+  regresses, pinned to a fixed `MIRI_PY_REF` so the gate cannot move under the artifact. Dogfooding the standard on
+  the only wheel this repository publishes found six things worth telling miri-py, written up in
+  [`standards/feedback/`](standards/feedback/README.md) — including a report that told the reader a file was
+  *still owed* in the same run that scored its absence as correct.
+- **`tools/validate_python_fixtures.py`** asserts each arm still carries its defect — against the built wheel's own
+  metadata rather than a linter's opinion, so the gate holds with no linter installed — and that the control carries
+  none of them, which is what makes a finding attributable. Mutation-tested.
+- **`tools/score_python_fixtures.py`** grades a linter against the goldens on attribution: a finding counts only if
+  it names the check *and* points at the declared evidence. Its self-test rejects nine ways of gaming it, two of
+  which the grader itself failed first:
+  evidence pooled across a case (a shotgun report scored 6/6) and findings credited without checking which arm
+  they came from.
+
+### Fixed
+
+- **`changelog-v1.json` rejected the example this specification publishes.** It closed `additionalProperties`
+  without listing `$schema`, so the *conforming* fixture arm failed `MIRI-PY-041` on a document written from §4.7
+  verbatim. `lifecycle-v1` and `api-graph-v1` already allowed the pointer; the newer schemas did not — the drift a
+  new schema inherits when a convention lives in the examples rather than in the schemas. Found on the fixtures'
+  first run, which is what they are for.
+- **`MIRI-PY-009` had no anti-vacuity clause.** An all-zeros migration guide validates, so presence and schema
+  validity passed a document describing no migration at all. `MIRI-PY-008` was given such a clause in the
+  vacuous-conformance round and `009` never got the equivalent. It keys on a *measured* delta, since a release that
+  genuinely changed nothing is an honest all-zeros case.
+- The doc linters were scanning generated fixture arms (79 → 114 files); build trees are excluded and gitignored.
+  `opensource.org` 403s every non-browser request, so the README's MIT link joins `gnu.org` in the link-check
+  ignore list, with the reason stated.
+
+- **`lint-report-v1` outcomes gain `evidence`** — an array of `<document>:<field>` strings naming what a finding
+  points at. A report recorded *which* checks failed and nothing about *why*, so attribution could not be graded
+  from a conforming report and both golden harnesses invented a submission shape; a harness needing non-standard
+  input is one nobody runs. The form is not invented — it is what the reference linter already emits for its best
+  cases. `score_python_fixtures.py --reports` now grades conforming reports directly, falling back to
+  `violation_detail[].location` so linters that predate the field are still gradeable.
+
+  Measured immediately: miri-py 0.6.0 reports every fixture case correctly — right checks, right arms, nothing on
+  the control — and satisfies **two goldens of six**, both of them cases where the evidence is the document itself
+  and the document-only form is what the check's own `violation_unit` names. Detection and attribution are different
+  properties, and until this field existed the standard could only ask for the first.
+
 ## 0.6.0 — unreleased
 
 **BREAKING.** The check schema is bumped to `check-v3.json` because `weight` changes meaning for any definition that
@@ -23,7 +109,7 @@ schema foundation; the check definitions themselves follow.
   declare [`tiers`](schemas/check-v3.json) and a `conformance_tier`, under which its `weight` is a ceiling earned as a
   cumulative schedule (T0 exists, T1 true, T2 covers, T3 current) rather than a bit; and every `fires_when` and tier
   clause must be a pure function of the artifact. Definitions without `tiers` mean exactly what they meant under v2.
-  All 119 definitions now declare `$schema: …/check-v3.json`. `check-v2.json` is retained frozen at its 0.5.0 bytes
+  All 123 definitions now declare `$schema: …/check-v3.json`. `check-v2.json` is retained frozen at its 0.5.0 bytes
   — and its closed `additionalProperties` is the point: a v2-pinned linter handed a tiered definition fails loudly
   instead of scoring it as binary. Design settled with the miri-py team (`substance-and-freshness-answers-1.md`, Q1):
   pass/fail is derived as `tier_earned >= conformance_tier`, default **T1** — the MUST boundary sits at the *lie*, not
@@ -107,7 +193,7 @@ schema foundation; the check definitions themselves follow.
   that is the only reason a score is comparable between implementations at all.
 
   **This is an addition, not a clarification, and it was first filed as one.** The draft of this entry called it a
-  clarification because all 119 active definitions already satisfy it and no score moves — both true, and neither
+  clarification because all 122 active definitions already satisfy it and no score moves — both true, and neither
   sufficient. It introduces a MUST that narrows what a check definition may be: a `fires_when` clause resting on
   model judgment would have validated before and is non-conforming now, and a rule forbidding something previously
   permitted is new even when nobody has done it yet. The supporting argument was circular as well, leaning on the

@@ -94,7 +94,10 @@ consistency and enable automated validation of agent metadata.
 
 ### Reporting Schemas
 
-- **[scoring-v1.json](scoring-v1.json)** - Conformance score reports
+- **[scoring-v1.json](scoring-v1.json)** - Conformance score reports. Superseded for the tier arithmetic by
+  **[scoring-v2.json](scoring-v2.json)** as of 0.7.0, which withdraws v1's parked-in-T1 rule in favour of
+  renormalizing over the tiers a check declares. v1 stays published, frozen, and cited by anything that scored
+  under it — the change is a withdrawal with a date, not a correction of a schema that never said anything
 - **[lint-report-v1.json](lint-report-v1.json)** - Linter output. As of 0.5.0 a report MUST carry
   `scores.effective_denominator`, `scores.excluded`, `scores.forfeited` and `must_failures` beside a conformance
   score, because the number alone is not interpretable once checks leave the ratio
@@ -103,7 +106,13 @@ consistency and enable automated validation of agent metadata.
     and this field is its only representation
   - `checks_commit_sha` is a full 40-character sha, never a tag — a tag is movable and a published score must point
     at definitions that are not. The release name goes in `standard_version`
-  - A `skipped` outcome MUST name its `skip_reason` from the closed set
+  - A `skipped` outcome MUST name its `skip_reason` from the closed set. Since 0.6.0 that set includes
+    `not_implemented` — the linter ships no verification for the check — which MUST name a `blocker`, so a
+    coverage gap is reported rather than silently absent from the denominator
+  - As of 0.7.0 an outcome MAY carry `evidence`: an array of `<document>:<field>` strings naming what the finding
+    points at. A report said *which* checks failed and nothing about *why*, so attribution could not be graded
+    from a conforming report. The document-only form (`changelog.json`) is correct where the check's own
+    `violation_unit` is the document
 
 ## Usage
 
@@ -296,14 +305,14 @@ jobs:
 ### Recording Check-Definition Revisions
 
 `added_in` records when a check was introduced and `withdrawn_in` when it was retired. Nothing records
-**revision**: reading one of the 119 definitions does not tell you whether its meaning changed in the current
+**revision**: reading one of the 122 active definitions does not tell you whether its meaning changed in the current
 release. The governance decision is that this stays **editorial** — git history is the revision record, not a
 field.
 
 The reason is the failure mode of the alternative. A hand-maintained `changed_in` has to be updated on every
 edit, so every missed update is a definition silently claiming it did not change in a release where it did.
-0.5.0 rejected `semantics_version` on exactly these grounds: a single global fact copied into 119 files becomes
-119 statements that can each be wrong, while the fact has one true value. A revision marker has the same shape.
+0.5.0 rejected `semantics_version` on exactly these grounds: a single global fact copied into 123 files becomes
+123 statements that can each be wrong, while the fact has one true value. A revision marker has the same shape.
 
 Git holds the answer exactly, and `checks_commit_sha` makes it addressable — a lint report names the commit its
 definitions were read from, so "what changed between these two reports" is a diff rather than a claim:

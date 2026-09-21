@@ -7,7 +7,7 @@
 ## Purpose
 
 The explicit, numbered list of every check a Miri-conformance linter runs against a Python wheel, with the standard each
-check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-040`); the
+check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-043`); the
 weights sum to exactly **100**, so a wheel's Miri score is the sum of the weights of its passing checks over the weights
 of the checks that **applied** — see the Scoring Model below, which is not simply a total out
 of 100 when checks are excluded or forfeited.
@@ -154,7 +154,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-PY-006 | M | agent-metadata/ present | Directory exists in the package | [Miri Wheel Ext. §3.2](miri-python-wheel-extensions.md) | 2 |
 | MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 5 |
 | MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 4 |
-| MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates against schema (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
+| MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates; reports a measured delta, not an all-zeros guide (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
 | MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](miri-agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
 | MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](miri-agent-metadata-specification.md) | 2 |
 | MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 2 |
