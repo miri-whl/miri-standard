@@ -45,6 +45,21 @@ jobs:
           # reached here: the first publish after the merge failed on `$schema` const. A copy is a fork.
           make validate
 
+      # Every site publish regenerates simple/ and the deploy replaces the whole directory, so without a
+      # SHA256SUMS beside the generator this job republishes `hashes: {}` and silently undoes the digest
+      # the release job wrote. That is not hypothetical: it is how the index came to be hashless while a
+      # released wheel existed. Fetching the newest release's sums makes a docs merge unable to un-verify
+      # the published wheel. Best-effort by design — before the first release there is nothing to fetch,
+      # and the site must still publish. The generator never fabricates a digest, so a miss stays empty.
+      - name: Carry the published wheel's digest into the index
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .generated/checks-wheel/dist
+          gh release download --pattern SHA256SUMS -D .generated/checks-wheel/dist || true
+          cat .generated/checks-wheel/dist/SHA256SUMS 2>/dev/null || echo "::notice::no published release yet - index will carry no hash"
+
       - name: Generate site
         run: python3 tools/generate_site.py --out site
 
