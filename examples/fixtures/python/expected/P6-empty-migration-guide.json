@@ -2,27 +2,34 @@
   "case": "P6-empty-migration-guide",
   "fixture": "empty-migration-1.1.0 (paired against conforming-1.1.0, which does not carry it)",
   "checks": [
-    "MIRI-PY-009"
+    "MIRI-PY-009",
+    "MIRI-PY-030"
   ],
   "clause": "",
-  "note": "farewell() is really removed, and the migration guide reports no deprecations, no breaking changes and every summary count zero. An all-zeros guide validates against migration-guide-v1.json, so presence and schema validity pass a document that describes no migration at all.",
+  "note": "farewell() is really removed, and the migration guide reports no deprecations, no breaking changes and every summary count zero. An all-zeros guide validates against migration-guide-v1.json, so presence and schema validity pass a document that describes no migration at all. 030 fires here too, from the same real removal - the arm is not surgical and the golden now says so.",
   "linter_assertion": {
     "must_report_on": {
       "arm": "empty-migration-1.1.0",
       "checks": [
         "MIRI-PY-009"
       ],
-      "evidence": [
-        "migration-guide.json:deprecations",
-        "migration-guide.json:summary",
-        "sdk-manifest.json:api_index"
-      ],
-      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
+      "evidence": {
+        "MIRI-PY-009": [
+          "migration-guide.json:deprecations",
+          "migration-guide.json:summary",
+          "migration-guide.json"
+        ],
+        "MIRI-PY-030": [
+          "sdk-manifest.json:api_index"
+        ]
+      },
+      "evidence_note": "Evidence is keyed PER CHECK. A finding satisfies this golden only if it names the check AND points at one of that check's own locations - pooling evidence across a case let any check pass on another's, which a shotgun exploited. Where a check's declared violation_unit is the document itself, the document-only form is accepted, per lint-report-v1's evidence description."
     },
     "must_not_report_on": {
       "arm": "conforming-1.1.0",
       "checks": [
-        "MIRI-PY-009"
+        "MIRI-PY-009",
+        "MIRI-PY-030"
       ],
       "note": "The control ships the same source and conforming metadata. A linter that reports here is reporting on the package, not on the defect."
     }

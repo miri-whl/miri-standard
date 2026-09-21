@@ -7,7 +7,7 @@ to the standard it carries. GATING: a wheel with a failing MUST does not reach t
 It was advisory while two MUSTs were known to fail - the package shipped no agent-metadata/, and its registry
 named a GitHub Releases page, which MIRI-PY-020 rejects because a registry a consumer cannot install from is
 not a registry. Both are closed: the build writes agent-metadata/, examples/ and docs/, and the site publishes
-a PEP 503 index the registry now names. Measured under miri-py 0.6.0: 98 of 48.0, health 100, zero MUST
+a PEP 503 index the registry now names. Measured under miri-py 0.6.0: 98 of 53.0, health 100, zero MUST
 failures, grade `undetermined` because six MUSTs need --execute or a previous release.
 
 `undetermined` passes this gate deliberately - it is not non-conformance, and the default static posture

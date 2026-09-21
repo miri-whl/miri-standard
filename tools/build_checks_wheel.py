@@ -482,7 +482,13 @@ def inject_dist_info(wheel: pathlib.Path, staged: pathlib.Path) -> None:
 def main() -> int:
     out, manifest = stage()
     dist = out / "dist"
-    # Reproducible bytes: zip entries carry mtimes, so two builds of one tree differed in sha256 while
+    # Reproducible on one machine, not across machines. Entry timestamps are fixed by
+    # inject_dist_info(), which is what actually makes repeat builds byte-identical - SOURCE_DATE_EPOCH
+    # below is set for the build backend but every entry is rewritten afterwards, so it is not the
+    # operative mechanism. setuptools is unpinned (`requires = ["setuptools>=69"]`), and its version is
+    # embedded in WHEEL, so a rebuild against a newer setuptools produces different bytes with an
+    # identical content_sha256. Claiming tag-level reproducibility would require pinning it exactly.
+    # Original note: zip entries carry mtimes, so two builds of one tree differed in sha256 while
     # agreeing on content_sha256. SOURCE_DATE_EPOCH pinned to the commit date makes the wheel itself
     # byte-stable, so SHA256SUMS is a property of the tree rather than of the build minute.
     env = dict(os.environ, SOURCE_DATE_EPOCH=git("log", "-1", "--format=%ct"))

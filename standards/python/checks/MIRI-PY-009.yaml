@@ -17,8 +17,10 @@ severity:
   violation_unit: migration-guide.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
 short_description: Present for any non-initial release; validates; and reports the measured delta rather than nothing
 long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
-  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
-  for any non-initial release; validates against schema.'
+  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: present
+  for any non-initial release; validates against migration-guide-v1.json; and, on a release whose api_index measurably
+  differs from the previous one, reports a non-empty delta rather than an all-zeros guide that describes no migration
+  at all.'
 rationale: 'A coding agent''s knowledge of an API is frozen at its training cutoff, and the effect is measured, not hypothetical:
   empirical studies of LLM code completion report deprecated-API usage rates of 25-38% across eight popular Python libraries,
   because the model writes for version N-1 against an installed version N. migration-guide.json is the machine-readable

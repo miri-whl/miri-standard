@@ -104,7 +104,14 @@ def grade(report, verbose=True):
                 print(f"  FAIL   {name} — arm(s) absent or in the ungradeable bare-ID form: {missing}")
             continue
         (atk_f, atk_s), (ctl_f, ctl_s) = arms
-        want_ev = set(la["must_report_on"].get("evidence") or [])
+        # Evidence is keyed per check. It used to be one pooled set per golden, so a finding
+        # satisfied check C by carrying ANY check's evidence - a shotgun submitting every check with
+        # the union of evidence strings scored 6/6 while analysing nothing, and _honest() below had
+        # the same bug, which is why the self-test could not catch it even in principle.
+        want_by_check = la["must_report_on"].get("evidence") or {}
+        if isinstance(want_by_check, list):      # pre-0.7 goldens: pooled. Refuse rather than guess.
+            problems.append(f"{name}: evidence is a pooled list; goldens must key it per check")
+            want_by_check = {}
         scored += 1
         why = []
 
@@ -121,13 +128,28 @@ def grade(report, verbose=True):
             hits = [f for f in atk_f if f.get("check") == c]
             if not hits:
                 why.append(f"did not report {c} on {atk_arm}")
-            elif want_ev and not any(f.get("evidence") in want_ev for f in hits):
-                got = sorted({f.get("evidence") for f in hits})
-                why.append(f"reported {c} but pointed at {got}, not one of {sorted(want_ev)}")
+            else:
+                want = set(want_by_check.get(c) or [])
+                if want and not any(f.get("evidence") in want for f in hits):
+                    got = sorted({f.get("evidence") for f in hits})
+                    why.append(f"reported {c} but pointed at {got}, not one of {sorted(want)}")
 
         false_pos = sorted({f.get("check") for f in ctl_f} & checks)
         if false_pos:
             why.append(f"reported {false_pos} on the CONFORMING arm {ctl_arm}")
+
+        # The arm must report ONLY its own checks. Without this, a linter that fires every check from
+        # every golden on every adversarial arm - while staying silent on the control - satisfies all
+        # of them, because each check does carry its own correct evidence. It discriminates the
+        # control from the rest and nothing else. The arms are minimal enough that their full failure
+        # set is known and measured, so exactness is assertable; `also_expected` lets a golden declare
+        # a check it trips that another golden owns, rather than the harness guessing.
+        universe = {c for _, gg in load_goldens() for c in gg["checks"]}
+        allowed = checks | set(g.get("also_expected") or [])
+        stray = sorted({f.get("check") for f in atk_f} & (universe - allowed))
+        if stray:
+            why.append(f"reported {stray} on {atk_arm}, which this arm does not trip — an arm that "
+                       f"reports every check discriminates nothing")
 
         if why and aspirational and not false_pos:
             unreported_ok += 1
@@ -158,9 +180,12 @@ def _honest():
     for name, g in load_goldens():
         la = g["linter_assertion"]["must_report_on"]
         arm = rep.setdefault(la["arm"], {"findings": [], "skipped": {}})
-        ev = (la.get("evidence") or [None])[0]
+        by_check = la.get("evidence") or {}
         for c in g["checks"]:
-            arm["findings"].append({"check": c, "evidence": ev})
+            # Each check gets ITS OWN evidence. An earlier version handed every check in a case the
+            # case's first evidence string, so the reference "perfect linter" attributed MIRI-PY-030
+            # to a changelog `added` array - the harness's own ceiling was a misattribution.
+            arm["findings"].append({"check": c, "evidence": (by_check.get(c) or [None])[0]})
     return rep
 
 
@@ -191,6 +216,22 @@ def self_test():
         "permuted evidence — right checks, wrong reasons":
             {a: {"findings": [{"check": f["check"], "evidence": "some other field"}
                               for f in d["findings"]], "skipped": {}} for a, d in honest.items()},
+        # Both of these ACCEPTED under the pooled-evidence harness. They are the reason it changed.
+        "shotgun carrying the union of every evidence string, silent on the control":
+            {**{a: {"findings": [{"check": c, "evidence": e}
+                                 for _, g in load_goldens() for c in g["checks"]
+                                 for e in (g["linter_assertion"]["must_report_on"]["evidence"].get(c) or [])],
+                    "skipped": {}} for a in arms if a != "conforming-1.1.0"},
+             "conforming-1.1.0": {"findings": [], "skipped": {}}},
+        "within-case permutation — each check blamed on another check's evidence":
+            {**{la["arm"]: {"findings": [
+                    {"check": c, "evidence": (la["evidence"].get(other) or [None])[0]}
+                    for i, c in enumerate(g["checks"])
+                    for other in [g["checks"][(i + 1) % len(g["checks"])]]],
+                 "skipped": {}}
+                for _, g in load_goldens() if len(g["checks"]) > 1
+                for la in [g["linter_assertion"]["must_report_on"]]},
+             "conforming-1.1.0": {"findings": [], "skipped": {}}},
         "invented skip reason — outside the closed set":
             {**honest, "skew-1.1.0": {"findings": [], "skipped": {"MIRI-PY-012": "too_hard",
                                                                   "MIRI-PY-019": "too_hard"}}},

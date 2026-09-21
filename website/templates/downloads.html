@@ -30,9 +30,11 @@
 <p>A definitions package is a supply-chain root: reweight one MUST to zero and every wheel passes. Three
 things let you check it without trusting the host.</p>
 <ol class="plain">
-  <li><span class="principle">The file hash.</span> <span class="mono">sha256sum -c SHA256SUMS</span> beside the
-  wheel. The build is reproducible (<span class="mono">SOURCE_DATE_EPOCH</span> is the commit date), so two builds
-  of one tag produce identical bytes.</li>
+  <li><span class="principle">The file hash.</span> The index carries the wheel's
+  <span class="mono">sha256</span>, so <span class="mono">pip install --index-url</span> verifies what it downloads;
+  <span class="mono">sha256sum -c SHA256SUMS</span> checks it out of band. Two builds of one tag on one machine
+  produce identical bytes — entry timestamps are fixed at write time — but the wheel is <em>not</em> reproducible
+  across setuptools versions, which are unpinned, so a rebuild months later may differ.</li>
   <li><span class="principle">The pin.</span> Inside the wheel, <span class="mono">manifest.json</span> carries
   <span class="mono">checks_commit_sha</span> — the full 40-character commit, never a tag, because a tag is a movable
   label — and <span class="mono">content_sha256</span> over every definition and schema in sorted order. Recompute it

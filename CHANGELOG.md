@@ -14,20 +14,38 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
 ## 0.7.0 — unreleased
 
 Coverage. The `MIRI-PY` family had 43 checks, 100 weight and no artifact that falsified any of them — the founding
-family, and the only one with nothing to test against. It now has eight wheels and six goldens.
+family, and the only one with nothing to test against. It now has nine wheels and seven goldens.
 
 ### Added
 
-- **[`examples/fixtures/python/`](examples/fixtures/python/README.md) — the greetlib wheel fixtures.** Eight arms
-  built from one package source: two conforming releases and six adversarial. `conforming-1.0.0` is the part that
+- **[`examples/fixtures/python/`](examples/fixtures/python/README.md) — the greetlib wheel fixtures.** Nine arms
+  built from one package source: two conforming releases and seven adversarial. `conforming-1.0.0` is the part that
   did not exist before, because `MIRI-PY-030` compares the public surface across releases and nothing in this
   repository had ever shipped two wheel releases of one package. The check fires now, for the first time.
-  Untested weight fell from 234 to 195; `MIRI-PY` went from 0/43 checks with material to 13/43.
+  Counting every active check named by a golden in any of the three suites: untested weight fell from 237 of 400
+  to 187, and `MIRI-PY` went from 0/43 checks with material to 18/43, 0 weight to 50. (Earlier drafts of this
+  entry said 234 → 195 and 13/43, from a scan that did not count a golden's `also_expected` checks.)
+  One arm was removed rather than kept: `support-1.1.0` was written for `MIRI-PY-023` and `033`, and every way of
+  violating those two is also `lifecycle-v1`-invalid, so `MIRI-PY-018` fires first and their 4 weight is not
+  independently reachable. Recorded in the suite's README, because a weight that cannot be earned separately is
+  worth knowing before anyone reads it as measuring something.
+- **The definitions wheel conforms, and the release gate enforces it.**
+  `miri-standard-checks` now ships its own `agent-metadata/` — `sdk-manifest.json`, `lifecycle.json`,
+  `changelog.json`, `api-graph.json` and a first-release `migration-guide.json` omission that is correct rather than
+  missing — written by `tools/build_checks_wheel.py` at build time from the definitions it carries, never by hand.
+  It scores 98 of an effective 53.0 with zero MUST failures, and `publish-checks.yml` fails the release if that
+  regresses, pinned to a fixed `MIRI_PY_REF` so the gate cannot move under the artifact. Dogfooding the standard on
+  the only wheel this repository publishes found six things worth telling miri-py, written up in
+  [`standards/feedback/`](standards/feedback/README.md) — including a report that told the reader a file was
+  *still owed* in the same run that scored its absence as correct.
 - **`tools/validate_python_fixtures.py`** asserts each arm still carries its defect — against the built wheel's own
   metadata rather than a linter's opinion, so the gate holds with no linter installed — and that the control carries
   none of them, which is what makes a finding attributable. Mutation-tested.
 - **`tools/score_python_fixtures.py`** grades a linter against the goldens on attribution: a finding counts only if
-  it names the check *and* points at the declared evidence. Its self-test rejects seven ways of gaming it.
+  it names the check *and* points at the declared evidence. Its self-test rejects nine ways of gaming it, two of
+  which the grader itself failed first:
+  evidence pooled across a case (a shotgun report scored 6/6) and findings credited without checking which arm
+  they came from.
 
 ### Fixed
 
@@ -52,9 +70,9 @@ family, and the only one with nothing to test against. It now has eight wheels a
   `violation_detail[].location` so linters that predate the field are still gradeable.
 
   Measured immediately: miri-py 0.6.0 reports every fixture case correctly — right checks, right arms, nothing on
-  the control — and satisfies **one** golden clause, `MIRI-PY-018`, whose location happened to carry the field.
-  Detection and attribution are different properties, and until this field existed the standard could only ask for
-  the first.
+  the control — and satisfies **two goldens of six**, both of them cases where the evidence is the document itself
+  and the document-only form is what the check's own `violation_unit` names. Detection and attribution are different
+  properties, and until this field existed the standard could only ask for the first.
 
 ## 0.6.0 — unreleased
 

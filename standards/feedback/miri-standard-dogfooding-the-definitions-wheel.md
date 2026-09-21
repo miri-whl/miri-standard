@@ -121,13 +121,15 @@ This is the useful one, and most of it is ours to fix.
 
 The `MIRI-PY` family now has fixtures: eight greetlib wheels, six goldens, `examples/fixtures/python/`. Graded
 against them, 0.6.0 **reports every check correctly** — right checks, right arms, nothing on the control — and
-satisfies **zero goldens**. Two individual check clauses attribute (`MIRI-PY-008` → `usage-patterns.json:patterns`,
-`MIRI-PY-018` → `lifecycle.json:advisory_sources`); no golden passes, because a golden requires every check in its
-case to attribute and `P5` needs all four of `018`, `020`, `021`, `022`.
+satisfies **two goldens of six**: `P4-stale-stamps` and `P7-no-agent-metadata`, where the evidence a finding
+points at is the document itself and the document-only form is what those checks' own `violation_unit` names.
 
-An earlier draft of this section said "one clause" and claimed `018` "SATISFIED the golden". Both were wrong — the
-count was two, and satisfying a clause is not satisfying a golden. The number was stale against the same commit
-that wrote it, because the goldens moved to the `document:field` form in that commit.
+Two earlier drafts of this paragraph were wrong, in opposite directions, and the record is worth keeping: the first
+said "one clause" and claimed `MIRI-PY-018` "SATISFIED the golden" — satisfying a clause is not satisfying a golden,
+and none passed at that point. The number then changed twice more under us as the goldens were repaired: once when
+they moved to the `document:field` form, and once when evidence was keyed per check rather than pooled per case.
+A measurement quoted in a document addressed to you should be re-run against the tree that ships, and these were
+not until now.
 
 That was our gap first: `lint-report-v1` had no field for it, so both golden harnesses invented a submission shape,
 and a harness needing non-standard input is one nobody runs. Fixed at 0.7.0 — `outcomes[].evidence`, an array of
@@ -141,9 +143,10 @@ sdk-manifest.json                        MIRI-PY-012 — the document, missing t
 greetlib-1.1.0-py3-none-any.whl          MIRI-PY-019, 020, 021, 022 — the whole wheel, which locates nothing
 ```
 
-`008` and `018` attributing on the strength of two well-formed locations is the proof the mechanism works. The ask
-is to populate `evidence` with that form everywhere, or to make `location` consistently `<document>:<field>` — the
-grader accepts `location` as a fallback precisely so this is gradeable before you adopt the new field.
+`P4` passing is the proof the mechanism works end to end. The ask is to populate `evidence` with the
+`<document>:<field>` form everywhere, or to make `location` consistently that shape — the grader accepts `location`
+as a fallback precisely so this is gradeable before you adopt the new field, and it accepts the document-only form
+wherever a check's declared `violation_unit` is the document itself.
 
 `location` is five shapes today, not three: `document:field`; a bare document; the wheel filename; a wheel **pair**
 (`…1.0.0.whl -> …1.1.0.whl`, on `030`); and a **list of four documents** (on `011`).

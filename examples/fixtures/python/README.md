@@ -1,6 +1,6 @@
 # Python wheel fixtures — the MIRI-PY conformance suite
 
-Eight wheels built from one package source, used to check what the **checklist says about a wheel**.
+Nine wheels built from one package source, used to check what the **checklist says about a wheel**.
 
 Until 0.7 the `MIRI-PY` family had 43 checks, 100 weight, and no artifact that falsified any of them — the founding
 family, and the only one with nothing to test against. The fixtures under `examples/fixtures/` drive the `CONSUMER`
@@ -21,6 +21,7 @@ and `SURFACE` families: they test what a *reader* does with metadata. These test
 | `stale-1.1.0` | stamps years old; newest changelog entry a release behind | `011`, `042` |
 | `identity-1.1.0` | project page as registry; private distribution on public OSV; no advisory sources | `018`, `020`, `021`, `022` |
 | `empty-migration-1.1.0` | a real removal with an all-zeros migration guide that validates | `009` |
+| `stripped-1.1.0` | ships no `agent-metadata/` at all | `006` + ten downstream |
 
 ## Identical source, enforced mechanically
 
@@ -41,6 +42,18 @@ python3 tools/validate_python_fixtures.py                   # the arms still dem
 ```
 
 The build tree is generated and gitignored; the template, the arm data and the goldens are the source of truth.
+
+## Checks a fixture cannot isolate
+
+Building an arm for `MIRI-PY-033` (support status coherent) failed, and the failure is a finding about the
+standard rather than the fixture. `lifecycle-v1.json` already enforces every clause `033` states: `status: eol`
+requires `replacement`, and `replacement` must parse as a purl. So every document that violates `033` is also
+schema-invalid, `MIRI-PY-018` fires, and `033` can never be the *only* failure. The same holds for `MIRI-PY-023`:
+`update_check` is a required property, so a wheel missing it fails `018` first.
+
+Those two checks carry 4 weight between them that is not independently reachable. That is worth knowing before
+anyone treats their weight as measuring something `018` does not. The arm was removed rather than contorted into
+demonstrating a schema violation it did not mean to.
 
 ## What the first run found
 

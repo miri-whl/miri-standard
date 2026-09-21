@@ -1,19 +1,46 @@
-# Consumption Fixtures
+# Fixtures
 
-Three builds of one trivial package — **identical source, different shipped metadata** — used to check what a
+Three suites live under this directory. Each builds several variants of one trivial artifact from a single template,
+differing only in shipped metadata, so any difference in a tool's behavior is attributable to the metadata alone.
+
+| Suite | Artifact | Arms | Goldens | Drives |
+|---|---|---|---|---|
+| **Consumption** (this file) | `greet` wheels | 11 | 22 | a **consumer** — what it does with metadata that is absent, present, or hostile |
+| **CLI** ([`cli/`](cli/README.md)) | `greetctl` | 4 | 11 | a **CLI linter** — the `MIRI-CLI` family |
+| **Python** ([`python/`](python/README.md)) | `greetlib` wheels | 9 | 7 | a **wheel linter** — the `MIRI-PY` family |
+
+The consumption suite differs from the other two in what it grades: the CLI and Python suites grade a linter against
+the checklist, while this one grades a consumer against the threat model. The rest of this document describes it.
+
+## Consumption fixtures
+
+Eleven builds of one trivial package — **identical source, different shipped metadata** — used to check what a
 consumer actually does when the metadata is absent, present, or hostile.
 
 > **Honesty constraint.** These fixtures demonstrate what is *available* to a consumer, never what is *achieved* by
 > one. Nothing here is evidence that consuming Miri metadata improves agent outcomes; that claim is gated on the
 > pre-registered experiment.
 
-## The three variants
+## The variants
+
+Three are the base trio the attack table below is written against; the rest were each added for one case that the
+trio could not express.
 
 | Variant | Ships | Role |
 |---|---|---|
 | `bare` | no `agent-metadata/` at all | The **honest-degradation baseline**. A conformant consumer must report every document as absent and synthesize nothing. |
 | `miri` | a conforming `agent-metadata/` | The **comparison arm**: the same code, made legible. |
 | `adversarial` | a hostile `agent-metadata/` | The **attack arm**: metadata that lies, forges, and injects (table below). |
+| `malformed` | unparsable and schema-invalid documents | Makes `METADATA_UNREADABLE` falsifiable — a surface that never emits it cannot be shown to handle the case. |
+| `spoofed` | a schema-valid `lifecycle.json` claiming to be `pkg:pypi/requests` | `MIRI-SURFACE-040`. The lie needs no malformed document, which is the point. |
+| `symlinked` | a whitelisted document name that is a symlink out of the package | `MIRI-SURFACE-021` — the whitelist is on names, so the escape is on the filesystem. |
+| `replaced` | a second artifact at the **same** purl as `miri`, different bytes | `MIRI-CONSUMER-052`. Identity is a claim, not a guarantee of sameness. |
+| `ambiguous-a`, `ambiguous-b` | two distributions providing one import name | `MIRI-SURFACE-041`. The collision is verified at build time, not asserted. |
+| `dynamic` *(outlier)* | a surface served partly via `__getattr__` | `MIRI-CONSUMER-011` — `resolve` reports `not-in-source` for a symbol that works. Exempt from byte-identity by construction. |
+| `hostile-import` *(outlier)* | a module that writes a sentinel and raises on import | `MIRI-SURFACE-022` — catches a surface that resolves by **importing** rather than reading. Exempt from byte-identity. |
+
+The two outliers exist to differ in source, so `build_fixtures.py` materializes them outside the byte-comparison and
+says so when it does. The other nine are verified byte-identical on every `.py`.
 
 ## Identical source, enforced mechanically
 

@@ -18,12 +18,23 @@
         "MIRI-PY-021",
         "MIRI-PY-022"
       ],
-      "evidence": [
-        "lifecycle.json:advisory_sources",
-        "lifecycle.json:identity.distribution",
-        "lifecycle.json:identity.registry"
-      ],
-      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
+      "evidence": {
+        "MIRI-PY-018": [
+          "lifecycle.json:advisory_sources",
+          "lifecycle.json"
+        ],
+        "MIRI-PY-020": [
+          "lifecycle.json:identity.registry"
+        ],
+        "MIRI-PY-021": [
+          "lifecycle.json:advisory_sources"
+        ],
+        "MIRI-PY-022": [
+          "lifecycle.json:identity.distribution",
+          "lifecycle.json:advisory_sources"
+        ]
+      },
+      "evidence_note": "Evidence is keyed PER CHECK. A finding satisfies this golden only if it names the check AND points at one of that check's own locations - pooling evidence across a case let any check pass on another's, which a shotgun exploited. Where a check's declared violation_unit is the document itself, the document-only form is accepted, per lint-report-v1's evidence description."
     },
     "must_not_report_on": {
       "arm": "conforming-1.1.0",

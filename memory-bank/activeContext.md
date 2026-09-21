@@ -1,42 +1,34 @@
 # Active Context
 
-_Last updated: 2026-09-18._
+_Last updated: 2026-09-21._
 
 ## Current focus
 
-**0.6.0 on `phase-0.6` — BREAKING, committed, not yet pushed, no PR.** 0.5.0 merged to `main` as `6f4493c` on
-2026-09-17 (PR #13) and is still untagged; nothing machine-readable depends on the tag since miri-py pins the SHA.
+**0.7.0 on `phase-0.7-stage-1` — committed, not pushed, no PR.** 0.6.0 merged to `main` as `a769e50`; the wheel,
+the Downloads page and the PEP 503 index merged as `297c324`. Still **zero tags**, so the release job has never
+run and every link on the Downloads page 404s.
 
-What 0.6.0 carries so far: `check-v3.json` (tiers, `conformance_tier`, the pure-function rule), `changelog-v1.json`,
-`scoring-v1` tier schedule with T2 parked, `lint-report` `tier_earned`; four new checks `MIRI-PY-041`–`044` (the
-staleness classes); tier tables on `007` `014` `015` `017` `037`; `016` withdrawn into `014`'s T3; twelve weight
-changes; checklist stamp `0.3-draft`, 43 active. The design was settled with miri-py in
-`substance-and-freshness-answers-1.md` — Q1 (conformance at a named tier, default T1) is the load-bearing answer.
+What 0.7.0 carries: the **greetlib wheel fixtures** — nine arms, seven goldens, `examples/fixtures/python/` — which
+gave the `MIRI-PY` family its first test material (0/43 checks with material to 18/43, 0 to 50 weight; untested
+weight across all families 237 of 400 to 187, counting every active check
+any golden names). `lint-report-v1` gained `evidence`, so attribution is gradeable from a
+conforming report. `scoring-v2.json` supersedes v1 for the tier arithmetic. `MIRI-PY-009` gained an anti-vacuity
+clause and the `previous-release` capability it needs. The definitions wheel conforms (98 of 53.0, zero MUST
+failures) and the release job gates on it.
 
-**The three items promised in the merged interop reply are now written**: the five driver-semantics clauses live in
-`scoring-v1` `conformance.coverage`, every one `const: true`, with `not_implemented` + a required `blocker` in
-`lint-report-v1`; the conformance kernel's two schemas are recorded under `reference/conformance-kernel/` (reference,
-not normative, pinned to miri-py `afc51324`, with the promotion test); the fixture recipe is normative with
-`examples/fixtures/checksums.json` hashing every _input_ and `validate_fixtures.py` failing on drift — wheel bytes
-deliberately not asserted, since the build is not reproducible. From miri-py, still: tier tables for
-cli/surface/consumer and the multi-invocation operator draft.
+**Five adversarial panels ran against this branch and found more than any round this session.** The worst was
+about honesty rather than code: 0.6.0's `scoring-v1` DID specify the tier rule (a parked T2's share is parked in
+T1), and a draft deleted that sentence while asserting the schema had never said which reading was right — framing
+the adoption of the reference implementation's arithmetic as a clarification. Three claims about miri-py were also
+false, and the pattern behind them is the lesson: **the sharpest claim in a document was the least verified.** Our
+own side was checked thoroughly and universals about someone else's repository were written from it.
 
-**Coverage remains the biggest reality**: 361 of 400 weight has no test material and `MIRI-PY` is at zero; the four
-new checks and every tier clause add to that number. miri-py's rule corpus (51 rules) is the largest body of
-executable verification that exists for this standard.
+**Three lessons carried forward from 0.6.0, all still live:**
 
-**Three lessons from the 0.6.0 cycle, each caught late:**
-
-- _A frozen artifact has no test that it stayed frozen._ `check-v1.json` had been silently rewritten to v2 semantics
-  under a title saying "retained unchanged"; found by diffing against `main`, not by any gate. v2 was frozen by
-  restoring from `main` and verifying programmatically. The same instruction (`git diff 0.5.0 --`) sits in both
-  descriptions and is unverifiable until a tag exists.
-- _"Everything already complies" is not "nothing was added."_ The pure-function rule was filed as a 0.5.1
-  clarification; it is a new MUST that narrows what a check may be, so it is 0.6.0. The branch was renamed; the
-  version follows the content.
-- _Gate on the schema's own coupling, never on a vendor field, and read your own rule forwards._ The CI score gate
-  read `is_conforming` (defined nowhere), then, rewritten, rejected `undetermined` — which the schema says is not
-  non-conformance. It went red on miri-py's first 0.5.0-shaped report with nothing wrong.
+- _A frozen artifact has no test that it stayed frozen._ `check-v1` drifted silently; `scoring-v1` was frozen by
+  textual edit this time after a first pass reformatted the whole file.
+- _"Everything already complies" is not "nothing was added."_
+- _Gate on the schema's own coupling, never on a vendor field, and read your own rule forwards._
 
 ## Recent decisions
 
@@ -67,16 +59,16 @@ than bad luck.
 
 ## Next steps
 
-1. **Push `phase-0.6` and open the PR.** `make check` is green; the site builds with the Tiers block.
-2. **Push the #15 fix** (`proposal/substance-and-freshness-0.6`, one commit: headings and three dictionary words)
-   so the proposal can merge. The remote ref still carries the old `-0.5.1` name; the PR is retitled.
-3. **Tell miri-py the three rulings** they asked back for are decided and landed: Q1 design accepted as proposed; T2
-   activation at 25 wheels from 10 independent publishers; `007` gains the T1 clause. Send the `main` SHA after merge.
-4. **Sample SDK ships no `changelog.json`** and has no previous release, so `041`–`044` are excluded for it; a fixture
-   with a two-release history is what would exercise them, as `greetctl` does for the CLI.
+1. **Push `phase-0.7-stage-1` and open the PR.** `make check` green; four commits.
+2. **Tag.** Zero tags exist. Nothing has ever been built by the release job.
+3. **Send miri-py the dogfooding report** — six findings, three of which correct earlier drafts of the same
+   document, plus the `compare`-operator response awaiting their three answers.
+4. **The generator profile** — Discovery Contract §7's four security MUSTs with no check family. The largest named
+   hole in the standard itself, and unstarted.
 
-Then, unchanged in value: the generator profile (Discovery Contract §7, four rules, no suite); `MIRI-CLI-004`'s
-converse; pointing `A13` at `E3`; the clause-to-check audit; Go and Rust.
+Known and unfixed: `MIRI-PY-023` and `033` carry 4 weight that is not independently reachable, because
+`lifecycle-v1` already enforces every clause they state — recorded in the fixtures README. The wheel is not
+reproducible across setuptools versions (unpinned). `pkg:pypi/miri-standard-checks` is unclaimed on PyPI.
 
 ## The open question that matters most
 

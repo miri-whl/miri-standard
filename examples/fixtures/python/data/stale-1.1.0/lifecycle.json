@@ -12,7 +12,8 @@
     {
       "type": "osv",
       "ecosystem": "PyPI",
-      "url": "https://api.osv.dev/v1/query"
+      "url": "https://api.osv.dev/v1/query",
+      "authoritative": true
     }
   ],
   "update_check": {

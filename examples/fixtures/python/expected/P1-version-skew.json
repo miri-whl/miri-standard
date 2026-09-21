@@ -14,11 +14,15 @@
         "MIRI-PY-012",
         "MIRI-PY-019"
       ],
-      "evidence": [
-        "lifecycle.json:identity.purl",
-        "sdk-manifest.json:sdk_version"
-      ],
-      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
+      "evidence": {
+        "MIRI-PY-012": [
+          "sdk-manifest.json:sdk_version"
+        ],
+        "MIRI-PY-019": [
+          "lifecycle.json:identity.purl"
+        ]
+      },
+      "evidence_note": "Evidence is keyed PER CHECK. A finding satisfies this golden only if it names the check AND points at one of that check's own locations - pooling evidence across a case let any check pass on another's, which a shotgun exploited. Where a check's declared violation_unit is the document itself, the document-only form is accepted, per lint-report-v1's evidence description."
     },
     "must_not_report_on": {
       "arm": "conforming-1.1.0",

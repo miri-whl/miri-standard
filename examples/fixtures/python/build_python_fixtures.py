@@ -89,6 +89,15 @@ def build(build_wheels: bool = True) -> int:
         # committed stamps on purpose - being outside the window is the thing it demonstrates.
         stamps_frozen = arm.startswith("stale")
         now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        # One arm ships no agent-metadata/ at all. MIRI-PY-006 is CRITICAL and had no artifact,
+        # while costing exactly this `if` - the suite had covered the checks that were interesting
+        # to write about rather than the ones that were cheap to cover.
+        if json.loads((arm_dir / "_arm.json").read_text()).get("no_agent_metadata"):
+            (root / "pyproject.toml").write_text(PYPROJECT.format(version=version, arm=arm))
+            digests[arm] = hashlib.sha256((pkg / "__init__.py").read_bytes()).hexdigest()
+            print(f"  {arm:24s} v{version:<7} 0 document(s)   [ships no agent-metadata/ by design]")
+            continue
+
         meta = pkg / "agent-metadata"
         meta.mkdir()
         for doc in sorted(arm_dir.glob("*.json")):
