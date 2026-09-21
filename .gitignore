@@ -96,3 +96,6 @@ site/
 
 # Generated CLI fixture arms (rebuilt by examples/fixtures/cli/build_cli_fixtures.py)
 examples/fixtures/cli/build/
+
+# Generated greetlib wheel fixture arms (rebuilt by examples/fixtures/python/build_python_fixtures.py)
+examples/fixtures/python/build/

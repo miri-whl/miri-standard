@@ -1,0 +1,42 @@
+{
+  "case": "P5-identity-claims",
+  "fixture": "identity-1.1.0 (paired against conforming-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-PY-018",
+    "MIRI-PY-020",
+    "MIRI-PY-021",
+    "MIRI-PY-022"
+  ],
+  "clause": "",
+  "note": "The registry is a project page rather than an installable index, the distribution claims private while relying on public OSV, and advisory_sources is empty. A registry a consumer cannot install from is not a registry.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "identity-1.1.0",
+      "checks": [
+        "MIRI-PY-018",
+        "MIRI-PY-020",
+        "MIRI-PY-021",
+        "MIRI-PY-022"
+      ],
+      "evidence": [
+        "lifecycle.json identity.registry",
+        "lifecycle.json identity.distribution",
+        "lifecycle.json advisory_sources"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
+    },
+    "must_not_report_on": {
+      "arm": "conforming-1.1.0",
+      "checks": [
+        "MIRI-PY-018",
+        "MIRI-PY-020",
+        "MIRI-PY-021",
+        "MIRI-PY-022"
+      ],
+      "note": "The control ships the same source and conforming metadata. A linter that reports here is reporting on the package, not on the defect."
+    }
+  },
+  "paired_control": "conforming-1.1.0",
+  "previous_release": "conforming-1.0.0",
+  "why_this_case_was_missing": "MIRI-PY-020's installable-index clause was unimplemented in miri-py 0.2.0 and passed our own definitions wheel, which declared exactly this. Found by scoring a real artifact, not by review."
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://miri-whl.github.io/schemas/usage-patterns-v1.json",
+  "version": "1.0",
+  "generated_at": "2021-01-01T00:00:00Z",
+  "patterns": [
+    {
+      "id": "say_hello",
+      "name": "Say hello",
+      "description": "The one call the library exists for",
+      "complexity": "beginner",
+      "category": "basics",
+      "code": "import greetlib\nprint(greetlib.greet('world'))"
+    }
+  ],
+  "categories": {
+    "basics": {
+      "name": "Basics",
+      "description": "First calls",
+      "patterns": [
+        "say_hello"
+      ]
+    }
+  },
+  "learning_paths": {
+    "first_use": {
+      "name": "First use",
+      "description": "One call",
+      "patterns": [
+        "say_hello"
+      ]
+    }
+  }
+}

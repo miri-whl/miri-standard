@@ -11,6 +11,10 @@
     },
     {
       "pattern": "^https?://www\\.gnu\\.org/"
+    },
+    {
+      "comment": "opensource.org returns 403 to every non-browser request, including with a browser User-Agent. The license text is not gone; the host refuses crawlers, exactly as gnu.org does.",
+      "pattern": "^https?://opensource\\.org/"
     }
   ],
   "replacementPatterns": [],

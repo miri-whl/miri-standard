@@ -1,0 +1,35 @@
+{
+  "case": "P6-empty-migration-guide",
+  "fixture": "empty-migration-1.1.0 (paired against conforming-1.1.0, which does not carry it)",
+  "checks": [
+    "MIRI-PY-009"
+  ],
+  "clause": "",
+  "note": "farewell() is really removed, and the migration guide reports no deprecations, no breaking changes and every summary count zero. An all-zeros guide validates against migration-guide-v1.json, so presence and schema validity pass a document that describes no migration at all.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "empty-migration-1.1.0",
+      "checks": [
+        "MIRI-PY-009"
+      ],
+      "evidence": [
+        "migration-guide.json deprecations",
+        "migration-guide.json summary",
+        "previous release api_index vs current"
+      ],
+      "evidence_note": "A finding satisfies this golden only if it names the check AND points at this evidence. The right check ID for the wrong reason is not detection."
+    },
+    "must_not_report_on": {
+      "arm": "conforming-1.1.0",
+      "checks": [
+        "MIRI-PY-009"
+      ],
+      "note": "The control ships the same source and conforming metadata. A linter that reports here is reporting on the package, not on the defect."
+    }
+  },
+  "paired_control": "conforming-1.1.0",
+  "previous_release": "conforming-1.0.0",
+  "why_this_case_was_missing": "MIRI-PY-008 was given an anti-vacuity clause during the vacuous-conformance round and MIRI-PY-009 never got the equivalent. The clause was added after this fixture demonstrated the hole.",
+  "reported_by_any_implementation": false,
+  "status_note": "No implementation reports this yet. The obligation exists and the artifact exercises it; a linter that does not is correctly forfeiting coverage, not passing."
+}
