@@ -14,6 +14,11 @@ on:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
+    inputs:
+      republish_tag:
+        description: 'Existing release tag whose index to republish (takes the digest from the release, does not rebuild)'
+        required: false
+        type: string
 
 permissions:
   contents: write
@@ -104,11 +109,16 @@ jobs:
           make site OUT=site
           python3 tools/generate_site.py --out site
 
+      # The secret is MIRI_SITE_PUBLISH_TOKEN — the same one publish-site.yml has deployed with since 0.3.
+      # This step named a PAGES_TOKEN that has never existed, so the very first release built the wheel,
+      # attached it, and then failed here with "not found deploy key or tokens", leaving the index on the
+      # hashless copy publish-site.yml had written before any tag existed. A secret name is not type-checked
+      # by anything: an undefined one expands to empty and the action reports a missing key, not a missing name.
       - name: Deploy the rehashed index
         if: github.event_name == 'push'
         uses: peaceiris/actions-gh-pages@v4
         with:
-          personal_token: ${{ secrets.PAGES_TOKEN }}
+          personal_token: ${{ secrets.MIRI_SITE_PUBLISH_TOKEN }}
           external_repository: miri-whl/miri-whl.github.io
           publish_branch: main
           publish_dir: ./site
@@ -120,3 +130,47 @@ jobs:
           path: |
             .generated/checks-wheel/dist/*.whl
             .generated/checks-wheel/dist/SHA256SUMS
+
+  # Republishing the index for a tag that is already released, without rebuilding. Needed because the
+  # wheel is not byte-reproducible - setuptools is unpinned and the manifest carries `generated_at` - so a
+  # rebuilt wheel's digest would not describe the asset the index links to. The digest therefore comes from
+  # the release's own SHA256SUMS. Run this from main with `republish_tag: <tag>` when a release published
+  # but its index deploy did not, which is exactly what happened at 0.7.0.
+  republish-index:
+    name: Republish the index for an existing release
+    if: github.event_name == 'workflow_dispatch' && inputs.republish_tag != ''
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.republish_tag }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install pyyaml jsonschema jinja2
+
+      - name: Take the digest from the published release, never from a rebuild
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p .generated/checks-wheel/dist
+          gh release download "${{ inputs.republish_tag }}" -p SHA256SUMS -D .generated/checks-wheel/dist
+          cat .generated/checks-wheel/dist/SHA256SUMS
+
+      - name: Generate the site with that digest in the index
+        run: |
+          python3 tools/generate_site.py --out site
+          grep -q 'sha256' site/simple/miri-standard-checks/index.json
+          grep -q '#sha256=' site/simple/miri-standard-checks/index.html
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.MIRI_SITE_PUBLISH_TOKEN }}
+          external_repository: miri-whl/miri-whl.github.io
+          publish_branch: main
+          publish_dir: ./site
+          commit_message: 'site: republish index for ${{ inputs.republish_tag }}'

@@ -11,7 +11,7 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-## 0.7.0 — unreleased
+## 0.7.0 — 2026-09-21
 
 **BREAKING.** The tier arithmetic changes: `scoring-v2.json` withdraws v1's rule that a parked T2's share is parked
 in T1, in favour of renormalizing over the tiers a check declares. Every tiered score moves.
@@ -54,7 +54,7 @@ founding family, and the only one with nothing to test against. It now has nine 
   worth knowing before anyone reads it as measuring something.
 - **The definitions wheel conforms, and the release gate enforces it.**
   `miri-standard-checks` now ships its own `agent-metadata/` — `sdk-manifest.json`, `lifecycle.json`,
-  `changelog.json`, `api-graph.json` and a first-release `migration-guide.json` omission that is correct rather than
+  `changelog.json`, `usage-patterns.json` and a first-release `migration-guide.json` omission that is correct rather than
   missing — written by `tools/build_checks_wheel.py` at build time from the definitions it carries, never by hand.
   It scores 98 of an effective 53.0 with zero MUST failures, and `publish-checks.yml` fails the release if that
   regresses, pinned to a fixed `MIRI_PY_REF` so the gate cannot move under the artifact. Dogfooding the standard on
@@ -97,7 +97,11 @@ founding family, and the only one with nothing to test against. It now has nine 
   and the document-only form is what the check's own `violation_unit` names. Detection and attribution are different
   properties, and until this field existed the standard could only ask for the first.
 
-## 0.6.0 — unreleased
+## 0.6.0 — never tagged; first published inside 0.7.0
+
+0.6.0 was merged to `main` and no tag was ever cut, so no artifact carries it on its own and nothing could
+install it. Its content first reaches a consumer inside the 0.7.0 wheel. Recorded as that rather than
+back-dated to the merge, because a date here is a claim that something was published.
 
 **BREAKING.** The check schema is bumped to `check-v3.json` because `weight` changes meaning for any definition that
 declares `tiers`, and every score moves once the substance-bearing checks are tiered. What has landed so far is the
