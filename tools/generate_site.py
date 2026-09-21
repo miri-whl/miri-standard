@@ -11,6 +11,7 @@ Usage: python3 tools/generate_site.py [--out site]
 Requires: pyyaml, jinja2
 """
 import argparse
+import json
 import collections
 import hashlib
 import html
@@ -231,6 +232,35 @@ def main():
 
     for img in site["assets"]:
         shutil.copy(REPO / "assets/img" / img, out / "assets" / img)
+
+    # A PEP 503 simple index, so `identity.registry` in the definitions wheel names an INSTALLABLE
+    # INDEX rather than a release page. MIRI-PY-020 rejects a project page, correctly: a registry a
+    # consumer cannot install from is not a registry. GitHub Releases hosts the bytes; this makes them
+    # resolvable by pip:
+    #     pip install --index-url https://miri-whl.github.io/simple/ miri-standard-checks
+    # The JSON twin is the PEP 700 project detail `update_check` polls for a newer release. Both link
+    # the release asset for the declared version, so they are correct by construction and live the
+    # moment that tag exists - the same posture as the Downloads page.
+    simple = out / "simple"
+    (simple / "miri-standard-checks").mkdir(parents=True)
+    ver = site["version"]
+    whl = f"miri_standard_checks-{ver}-py3-none-any.whl"
+    asset = f"{site['github']}/releases/download/{ver}/{whl}"
+    (simple / "index.html").write_text(
+        "<!DOCTYPE html>\n<html><head><meta name=\"pypi:repository-version\" content=\"1.1\">"
+        "<title>Simple index</title></head><body>\n"
+        "<a href=\"miri-standard-checks/\">miri-standard-checks</a><br>\n</body></html>\n")
+    (simple / "miri-standard-checks" / "index.html").write_text(
+        "<!DOCTYPE html>\n<html><head><meta name=\"pypi:repository-version\" content=\"1.1\">"
+        f"<title>Links for miri-standard-checks</title></head><body>\n<h1>Links for miri-standard-checks</h1>\n"
+        f"<a href=\"{asset}\">{whl}</a><br>\n</body></html>\n")
+    (simple / "miri-standard-checks" / "index.json").write_text(json.dumps({
+        "meta": {"api-version": "1.1"},
+        "name": "miri-standard-checks",
+        "versions": [ver],
+        "files": [{"filename": whl, "url": asset, "hashes": {},
+                   "requires-python": ">=3.9", "yanked": False}],
+    }, indent=2) + "\n")
 
     # Publish the JSON Schemas so their $id URLs (miri-whl.github.io/schemas/…) resolve.
     schemas_out = out / "schemas"

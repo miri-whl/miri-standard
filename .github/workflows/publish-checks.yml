@@ -44,11 +44,12 @@ jobs:
       - name: Build the wheel
         run: make checks-wheel
 
-      # Dogfooding: the definitions wheel is a wheel, so the reference linter scores it. ADVISORY for now -
-      # reported in the log, never gating - because two MUSTs are known to fail for structural reasons the
-      # response to upstream-artifact-publishing-feedback.md section 4 records: MIRI-PY-020 has no vocabulary
-      # for an artifact distributed outside an index, and the package ships no agent-metadata yet. Gating a
-      # release on a rule the artifact cannot meet without PyPI would block the artifact meant to get it there.
+      # Dogfooding, and it GATES: the definitions wheel is a wheel, so the reference linter scores it, and a
+      # failing MUST stops the release. The standard's own artifact is held to the standard it carries.
+      # This was advisory until the wheel earned it - it shipped no agent-metadata and named a release page as
+      # its registry, which miri-py 0.6.0 correctly rejects. Both closed; it now scores 98 of 48.0 with zero
+      # MUST failures. A non-conforming definitions package must never reach the release page: it is what
+      # every downstream linter installs to learn what the rules are.
       # miri-py is installed best-effort exactly as ci.yml does; when unreachable the step is skipped, not failed.
       - name: Install miri-py (best-effort)
         id: miripy
@@ -57,7 +58,7 @@ jobs:
           MIRI_PY_TOKEN: ${{ secrets.MIRI_PY_TOKEN }}
         run: pip install "git+https://${MIRI_PY_TOKEN}@github.com/miri-whl/miri-py.git"
 
-      - name: Score the wheel with the reference linter (advisory)
+      - name: Score the wheel with the reference linter (gates the release)
         if: steps.miripy.outcome == 'success'
         run: python3 tools/score_wheel.py .generated/checks-wheel/dist/*.whl
 
