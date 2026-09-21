@@ -36,8 +36,9 @@ Decisions worked through so far, each as a proposal plus the response that settl
   treats artifact size (raw counts in the score; population and density as report-level data).
 - `check-requirements-proposal.md` / `miri-standard-response-check-requirements.md` — the machine-readable
   `requirements` field for check skip semantics.
-- `upstream-artifact-publishing-feedback.md` — a note arguing for publishing the check definitions as a versioned
-  artifact.
+- `upstream-artifact-publishing-feedback.md` / `miri-standard-response-artifact-publishing.md` — publishing the
+  check definitions as a versioned artifact. Answered a month late: tags yes, a gated data-only wheel on GitHub
+  Releases yes, PyPI later, npm and crates declined until a consumer exists.
 - `vacuous-conformance-proposal.md` / `miri-standard-response-vacuous-conformance.md` /
   `vacuous-conformance-answer.md` / `miri-standard-answer-vacuous-conformance.md` — sections that cannot
   discriminate: empty content arrays passing shape-only checks, and the weighting of the Packaging Baseline.

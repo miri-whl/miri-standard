@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
+.PHONY: checks-wheel help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -63,6 +63,9 @@ score-cli-linter: ## Prove the CLI golden harness rejects an inert AND a screami
 
 references: ## Verify every check's spec citations resolve (--report for reconciliation)
 	python3 tools/check_references.py
+
+checks-wheel: validate ## Build the check definitions as a data-only wheel into .generated/checks-wheel/dist
+	python3 tools/build_checks_wheel.py
 
 site: validate ## Generate the site into .generated/site for local review
 	python3 tools/generate_site.py --out $(OUT)

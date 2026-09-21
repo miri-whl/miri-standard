@@ -90,6 +90,8 @@ secrets.yaml
 # Generated site (published via CI, never committed)
 site/
 .generated/
+# Playwright MCP output (console logs, page snapshots) from browser-driven checks of the built site.
+.playwright-mcp/
 .claude/settings.local.json
 
 # Generated CLI fixture arms (rebuilt by examples/fixtures/cli/build_cli_fixtures.py)

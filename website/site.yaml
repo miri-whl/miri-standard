@@ -73,6 +73,7 @@ nav:
       - { label: Why consumption, href: why-consumption.html }
       - { label: Glossary, href: glossary.html }
       - { label: Changelog, href: changelog.html }
+      - { label: Downloads, href: downloads.html }
       - { label: Origin story, href: origin.html }
   - label: Python
     items:
@@ -100,6 +101,22 @@ nav:
     items:
       - { label: "Go scope sketch ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/go/README.md" }
       - { label: "Rust scope sketch ↗", href: "https://github.com/miri-whl/miri-standard/blob/main/standards/rust/README.md" }
+
+# Published artifacts, rendered on downloads.html. Every URL is COMPUTED from `github` and `version` by
+# the template - nothing here is a link that can go stale on its own. Assets attach to the GitHub Release
+# at each release tag (publish-checks.yml); the wheel filename is the one setuptools produces.
+artifacts:
+  - id: checks-wheel
+    title: Check definitions (wheel)
+    filename: "miri_standard_checks-{version}-py3-none-any.whl"
+    sums: SHA256SUMS
+    what: >-
+      All check definitions and JSON Schemas as a data-only Python package, pinned to the commit they were
+      built from. Install it and read the files from `miri_standard_checks.root()`; `manifest()` carries
+      the release, the full commit sha and a content hash.
+    install: pip install miri_standard_checks-{version}-py3-none-any.whl
+    built_by: tools/build_checks_wheel.py
+    workflow: .github/workflows/publish-checks.yml
 
 # Assets copied from assets/img/ into the published site.
 assets:
