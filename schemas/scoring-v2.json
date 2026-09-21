@@ -1,0 +1,188 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-whl.github.io/schemas/scoring-v2.json",
+  "title": "Miri Scoring Configuration (v2)",
+  "description": "Declares how a linter computes the two scores in a lint report: the ratio-based Conformance score (MUST-gated) and the severity-graded Health score. The Conformance model is a RATIO, not a bare total: a check whose condition does not apply, or which a linter forfeits for lack of a declared capability, leaves BOTH the numerator and the denominator. An earlier wording here called it 'the additive model: sum of passing check weights (0-100)', which contradicted both producer checklists and check-v1.json's definition of `conditional` — a stale description that survived the 0.5.0 semantics correction because nothing reads this file. Draft: reconcile with the reference linter before pinning constraints.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "conformance",
+    "health"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string"
+    },
+    "conformance": {
+      "type": "object",
+      "description": "Score = sum of the weights of PASSING checks, over the sum of the weights of checks that APPLIED and could be evaluated. Excluded and forfeited checks leave both sides, so the denominator is at most 100 and two scores are comparable only alongside their denominators. This is the not-applicable-is-not-a-pass rule: a check whose condition does not hold has not been satisfied, and awarding its weight would let an artifact earn points for an absence. GATES: a check with `scoring: gate` carries weight 0 and is in NEITHER sum. Do not infer that a failing gate is free - by this formula a weight-0 check contributes 0/0 whether it passed or failed, so the arithmetic cannot see it. A failing gate makes the artifact NON-CONFORMING, and the only place that is representable is `must_failures` in lint-report-v1, where it is coupled to the grade and the 74 cap. A linter computing conformance from this formula alone, without populating `must_failures`, will report a wheel with a corrupt RECORD as conforming. THERE IS NO COVERAGE FLOOR, deliberately — a small denominator usually means a simpler artifact rather than a worse one, and withholding a grade for having less surface would penalize simplicity. A linter MUST NOT impose a floor of its own: one linter with a floor and one without produce incomparable grades, which is the one thing a score exists to prevent.",
+      "required": [
+        "must_failure_cap",
+        "grade_bands"
+      ],
+      "properties": {
+        "report_effective_denominator": {
+          "type": "boolean",
+          "description": "Whether the linter reports the effective denominator and the excluded/forfeited counts beside the score. Both producer checklists make this a MUST, because a score without its denominator is not comparable to another score. Declared here so a scoring configuration cannot silently omit it; the report fields themselves live in lint-report-v1.json."
+        },
+        "gate_failure_is_non_conforming": {
+          "type": "boolean",
+          "description": "Whether the implementation treats a failing `scoring: gate` check as non-conformance. There is no legitimate reason to set this false; it exists so a configuration must state the behaviour rather than leave it inferred from a weight of 0."
+        },
+        "must_failure_cap": {
+          "type": "integer",
+          "description": "Score ceiling when any MUST check FAILS (non-conforming); the standard fixes this at 74. This concerns a MUST that failed, never one excluded or forfeited: an excluded MUST was not an obligation for this artifact, and a forfeited MUST leaves conformance undetermined rather than capped (see both producer checklists' Scoring Model)."
+        },
+        "grade_bands": {
+          "type": "object",
+          "description": "Lower bound of each grade band",
+          "properties": {
+            "gold": {
+              "type": "integer"
+            },
+            "silver": {
+              "type": "integer"
+            },
+            "bronze": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false
+        },
+        "gold_requires_provenance": {
+          "type": "boolean",
+          "description": "Whether Gold additionally requires PEP 740 attestations (MIRI-PY-005) for public-index wheels"
+        },
+        "tiers": {
+          "type": "object",
+          "description": "The tier schedule for checks that declare `tiers` (check-v3). Declared ONCE here so the four shares stay committee numbers with a single home rather than being copied into definitions. A tiered check's weight is a ceiling; it earns shares[T0..tier_earned] of it, cumulatively. The shares are PROVISIONAL committee numbers, not measured - stated so, and revisited against the corpus.",
+          "required": [
+            "shares",
+            "t2_activation",
+            "normalization"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "shares": {
+              "type": "object",
+              "required": [
+                "T0",
+                "T1",
+                "T2",
+                "T3"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "T0": {
+                  "type": "number"
+                },
+                "T1": {
+                  "type": "number"
+                },
+                "T2": {
+                  "type": "number"
+                },
+                "T3": {
+                  "type": "number"
+                }
+              },
+              "default": {
+                "T0": 0.2,
+                "T1": 0.3,
+                "T2": 0.3,
+                "T3": 0.2
+              },
+              "description": "Fraction of a tiered check's weight each tier carries; MUST sum to 1.0. PROVISIONAL committee numbers, not measured. They do not determine a score on their own - see `normalization`, which v1 did not carry."
+            },
+            "normalization": {
+              "const": "renormalize-over-declared-live-tiers",
+              "description": "How a tiered check's weight is computed. A tier is LIVE if the check declares it in `tiers` and it is not parked (T2 is parked until t2_activation). A check earns: weight * (sum of the shares of its live tiers up to and including tier_earned) / (sum of the shares of ALL its live tiers). The denominator is per check, so a check declaring only T0 and T1 and earning T1 has earned its TOP tier and takes full weight - it is not docked for tiers it never claimed. THIS WITHDRAWS AND REPLACES THE v1 RULE, and the record matters because an earlier draft of this field claimed otherwise. v1 was NOT silent: scoring-v1.json's `shares` description said a parked T2's share is PARKED IN T1, so a linter computed T1's effective share as T1 + T2. That is a complete rule and it produces different numbers - under it MIRI-PY-007 at weight 5 declaring only T0 and T1 earns 5 * (0.2 + 0.6) = 4.0, where renormalization gives it 5.0. When the reference implementation scored a wheel at 47/48 against this standard's 45.6/48, 45.6 was what v1 SPECIFIED and 47 was the implementation diverging from it. The draft that introduced this field deleted the v1 sentence and asserted no prior rule had existed, which framed adopting the implementation's arithmetic as a clarification. It was a change, and it is recorded as one. The change is still the right one: a check that declares only T0 and T1 has no higher tier to earn, and docking it for absent tiers scores it against a schedule it never claimed. But it moves every tiered check's contribution and therefore every score containing one, which is why this is v2 and why v1 is retained frozen. ROUNDING: contributions are summed at full precision and the FINAL conformance percentage is rounded half-up to an integer once; no intermediate rounding, because rounding per check and then summing is a different number. A FAILING tiered check contributes ZERO regardless of tier_earned - `tier_earned` explains how far a passing check got, and the numerator is the sum of PASSING weights, unchanged from v1."
+            },
+            "t2_activation": {
+              "type": "object",
+              "required": [
+                "min_wheels",
+                "min_publishers"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "min_wheels": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "min_publishers": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              },
+              "default": {
+                "min_wheels": 25,
+                "min_publishers": 10
+              },
+              "description": "T2 (covers) ships defined but weightless until the corpus of published conformant wheels reaches this size, at which point its percentile floors are recomputed from that corpus and T2 activates. The trigger is a COUNT, not a date. Until then T2 appears in reports as tier_earned and moves no score. Why: the only corpus available at 0.6.0 was seven wheels of which three had an api_index and two of those were the proposer's own - percentiles over that set are habits reflected back, not calibration."
+            }
+          }
+        },
+        "coverage": {
+          "type": "object",
+          "description": "Driver semantics: how a conformant linter accounts for what it does NOT verify. 0.5.0 defined forfeiting for CAPABILITY gaps - no network, no previous release, execution disabled. These clauses extend it to IMPLEMENTATION COVERAGE gaps - a check the linter has no verification for at all - and they are what make a coverage percentage comparable between two linters. Every field is `const: true`: these are rules, not options, and a scoring configuration cannot opt out of them. Proposed by the miri-py team (conformance-interop-contract-proposal.md section 4) from running their kernel; accepted in the standard's response with clause 3 added, because forfeit-never-silence without it lets a linter forfeit MUSTs and keep a grade - the incomparable number the whole exchange was about.",
+          "required": [
+            "every_check_reports_outcome",
+            "unverified_is_forfeited",
+            "forfeited_must_withdraws_grade",
+            "unexecutable_rule_fails_loudly",
+            "report_coverage_per_family"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "every_check_reports_outcome": {
+              "const": true,
+              "description": "1. Every active check definition in a family appears in the report's `outcomes` with a status - pass, fail, or skipped. A check absent from the report is indistinguishable from one that passed, which is the silence this forbids."
+            },
+            "unverified_is_forfeited": {
+              "const": true,
+              "description": "2. A check the implementation does not verify is reported skipped with `skip_reason: not_implemented` and `forfeited: true`. It is never passed. It is never EXCLUDED: exclusion asserts the obligation did not exist for this artifact, and for a merely unwritten verification it did. Same arithmetic as a capability forfeit, different claim about knowledge."
+            },
+            "forfeited_must_withdraws_grade": {
+              "const": true,
+              "description": "3. A forfeited MUST - for any reason, capability or coverage - leaves the family verdict `undetermined`. Forfeiting is not a discount on the score; for a MUST it withdraws the grade. `scores.undetermined` counts exactly these checks and grade derivation reads it first. This clause is why an implementation covering 24 of 43 CLI checks reports `undetermined`, not `24 pass / 0 fail`."
+            },
+            "unexecutable_rule_fails_loudly": {
+              "const": true,
+              "description": "4. A verification the linter DOES ship but cannot run - an unlaunchable subject, an unimportable binding, a missing tool - fails at load or run time with a diagnostic. It is never a quiet skip, because a quiet skip is a forfeit the report does not carry."
+            },
+            "report_coverage_per_family": {
+              "const": true,
+              "description": "5. The report states, per family, how many checks passed, failed and were not verified, out of how many are defined; and every `not_implemented` outcome carries a `blocker` naming what the implementation lacks. 'Not yet covered' is a work item, not a fog."
+            }
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "health": {
+      "type": "object",
+      "description": "The normative-baseline severity-graded model over canonical per-check severities",
+      "required": [
+        "method"
+      ],
+      "properties": {
+        "method": {
+          "type": "string",
+          "description": "Named scoring method (e.g. baseline additive-penalty, or a tiered-penalty variant)"
+        },
+        "profile": {
+          "type": "string",
+          "description": "Frozen, versioned severity profile identifier (e.g. balanced@1)"
+        },
+        "parameters": {
+          "type": "object",
+          "description": "Method parameters (severity weights, escalation factors, per-severity caps)",
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    }
+  },
+  "additionalProperties": true
+}

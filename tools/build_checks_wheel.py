@@ -42,6 +42,9 @@ Data-only: no rules are implemented here, only carried. `root()` is the director
 `checks/<target>/*.yaml` and `schemas/*.json`; `manifest()` pins what was built — the release, the
 full commit sha, and a content hash over every file — so a report can cite what it scored against.
 """
+# No PEP 604 unions in signatures: `str | None` is evaluated at def time and raises TypeError on
+# Python 3.9, which this package advertises as its floor. The wheel installed cleanly on 3.9 and
+# died on first import - a false Requires-Python is worse than a high one, because pip resolves it.
 import json
 import pathlib
 
@@ -64,7 +67,7 @@ def manifest() -> dict:
     return json.loads((root() / "manifest.json").read_text())
 
 
-def checks(target: str | None = None):
+def checks(target=None):
     """Paths of the check definitions, optionally for one target."""
     return sorted(root().glob(f"checks/{target or '*'}/*.yaml"))
 
@@ -313,6 +316,22 @@ should not be used to score anything.
 """)
 
 
+def _digest(mapping):
+    """sha256 over LENGTH-PREFIXED (path, bytes) pairs in sorted order.
+
+    Length-prefixed rather than delimiter-framed: with NUL separators, {"a": b"x", "b": b"y"} and
+    {"a": b"x\\0b\\0y"} hash identically. Not reachable through YAML or JSON, which cannot carry a
+    NUL, but nothing enforced that and the fix is one line. Paths are normalized to "/" so a
+    Windows build does not produce a different digest for an identical tree.
+    """
+    h = hashlib.sha256()
+    for rel in sorted(mapping):
+        key = rel.replace("\\", "/").encode()
+        h.update(len(key).to_bytes(4, "big")); h.update(key)
+        h.update(len(mapping[rel]).to_bytes(8, "big")); h.update(mapping[rel])
+    return h.hexdigest()
+
+
 def git(*args: str) -> str:
     return subprocess.run(["git", "-C", str(REPO), *args], capture_output=True, text=True, check=True).stdout.strip()
 
@@ -344,13 +363,15 @@ def stage() -> tuple[pathlib.Path, dict]:
         files[str(rel)] = f.read_bytes()
     for f in sorted((REPO / "schemas").glob("*.json")):
         files[str(pathlib.Path("schemas") / f.name)] = f.read_bytes()
+    # Every carried file, not just the corpus. api_reference.md and __init__.py both state that
+    # content_sha256 covers "every carried file", and hashing only checks/ and schemas/ left the
+    # package's ONLY executable code outside the digest - poison __init__.py so that checks() omits
+    # a definition and the hash still matched. The generated documents are added after this point,
+    # so they are folded in by _finalize_digest() once written.
     for rel, data in files.items():
         p = src / rel
         p.parent.mkdir(parents=True, exist_ok=True)
         p.write_bytes(data)
-    digest = hashlib.sha256()
-    for rel in sorted(files):
-        digest.update(rel.encode()); digest.update(b"\0"); digest.update(files[rel]); digest.update(b"\0")
     counts: dict[str, int] = {}
     for rel in files:
         if rel.startswith("checks/"):
@@ -370,7 +391,7 @@ def stage() -> tuple[pathlib.Path, dict]:
         "version": version(),
         "standard_version": declared_version(),
         "checks_commit_sha": git("rev-parse", "HEAD"),
-        "content_sha256": digest.hexdigest(),
+        "content_sha256": _digest(files),  # provisional; recomputed over every carried file below
         "definitions": counts,
         "schemas": sorted(rel.split("/")[1] for rel in files if rel.startswith("schemas/")),
         "source": "https://github.com/miri-whl/miri-standard",
@@ -378,6 +399,20 @@ def stage() -> tuple[pathlib.Path, dict]:
     (src / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     (src / "__init__.py").write_text(INIT_PY)
     write_agent_metadata(src, manifest)
+
+    # Recompute over EVERY file the package carries, now that the generated documents exist. The
+    # provisional value above covered only checks/ and schemas/, which is what api_reference.md and
+    # __init__.py already claimed it covered - they were wrong, and this makes them true rather than
+    # softening the claim. manifest.json is excluded because it carries the digest.
+    carried = {}
+    for f in sorted(src.rglob("*")):
+        if f.is_file() and f.name != "manifest.json":
+            carried[str(f.relative_to(src))] = f.read_bytes()
+    manifest["content_sha256"] = _digest(carried)
+    manifest["content_sha256_covers"] = (
+        "every file in the installed package except manifest.json itself; sha256 over length-prefixed "
+        "(path, bytes) pairs, paths normalized to / and sorted")
+    (src / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     (OUT / "pyproject.toml").write_text(f'''[build-system]
 requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"

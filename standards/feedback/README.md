@@ -68,7 +68,8 @@ Decisions worked through so far, each as a proposal plus the response that settl
   drafting against it is what exposed that.
 
 - `miri-standard-dogfooding-the-definitions-wheel.md` — what happened when the standard's own definitions wheel was
-  scored by the reference linter. Three of miri-py's fixes confirmed from a clean install; three findings back. The
+  scored by the reference linter. Three of miri-py's fixes confirmed from a clean install; six findings back,
+  three of which correct earlier drafts of this same document. The
   first is the one that matters: the report's layout section advises shipping a document the report's own check
   excludes, and the empty version of that document validates — so following the advice manufactures the vacuous
   artifact. The second is that layout guidance fires no check, which is why we missed a real misplacement. The third

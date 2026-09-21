@@ -68,7 +68,7 @@ schema foundation; the check definitions themselves follow.
   declare [`tiers`](schemas/check-v3.json) and a `conformance_tier`, under which its `weight` is a ceiling earned as a
   cumulative schedule (T0 exists, T1 true, T2 covers, T3 current) rather than a bit; and every `fires_when` and tier
   clause must be a pure function of the artifact. Definitions without `tiers` mean exactly what they meant under v2.
-  All 119 definitions now declare `$schema: …/check-v3.json`. `check-v2.json` is retained frozen at its 0.5.0 bytes
+  All 123 definitions now declare `$schema: …/check-v3.json`. `check-v2.json` is retained frozen at its 0.5.0 bytes
   — and its closed `additionalProperties` is the point: a v2-pinned linter handed a tiered definition fails loudly
   instead of scoring it as binary. Design settled with the miri-py team (`substance-and-freshness-answers-1.md`, Q1):
   pass/fail is derived as `tier_earned >= conformance_tier`, default **T1** — the MUST boundary sits at the *lie*, not
@@ -152,7 +152,7 @@ schema foundation; the check definitions themselves follow.
   that is the only reason a score is comparable between implementations at all.
 
   **This is an addition, not a clarification, and it was first filed as one.** The draft of this entry called it a
-  clarification because all 119 active definitions already satisfy it and no score moves — both true, and neither
+  clarification because all 122 active definitions already satisfy it and no score moves — both true, and neither
   sufficient. It introduces a MUST that narrows what a check definition may be: a `fires_when` clause resting on
   model judgment would have validated before and is non-conforming now, and a rule forbidding something previously
   permitted is new even when nobody has done it yet. The supporting argument was circular as well, leaning on the

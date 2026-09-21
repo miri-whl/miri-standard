@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://miri-whl.github.io/schemas/scoring-v1.json",
-  "title": "Miri Scoring Configuration",
-  "description": "Declares how a linter computes the two scores in a lint report: the ratio-based Conformance score (MUST-gated) and the severity-graded Health score. The Conformance model is a RATIO, not a bare total: a check whose condition does not apply, or which a linter forfeits for lack of a declared capability, leaves BOTH the numerator and the denominator. An earlier wording here called it 'the additive model: sum of passing check weights (0-100)', which contradicted both producer checklists and check-v1.json's definition of `conditional` — a stale description that survived the 0.5.0 semantics correction because nothing reads this file. Draft: reconcile with the reference linter before pinning constraints.",
+  "title": "Miri Scoring Configuration (v1 - SUPERSEDED)",
+  "description": "SUPERSEDED by scoring-v2.json at 0.7.0. Retained frozen at its 0.6.0 bytes: a consumer pinned here is internally consistent rather than wrong. It specifies the PARKED-IN-T1 tier rule - see `shares` below, which says a parked T2 share is computed as T1 + T2 - and that rule is complete and decidable. v2 withdraws it for renormalization over the tiers a check declares, which changes every tiered check's contribution, so scores under this file are not comparable with scores under v2. That is the whole reason for the bump. --- Declares how a linter computes the two scores in a lint report: the ratio-based Conformance score (MUST-gated) and the severity-graded Health score. The Conformance model is a RATIO, not a bare total: a check whose condition does not apply, or which a linter forfeits for lack of a declared capability, leaves BOTH the numerator and the denominator. An earlier wording here called it 'the additive model: sum of passing check weights (0-100)', which contradicted both producer checklists and check-v1.json's definition of `conditional` — a stale description that survived the 0.5.0 semantics correction because nothing reads this file. Draft: reconcile with the reference linter before pinning constraints.",
   "type": "object",
   "required": ["schema_version", "conformance", "health"],
   "properties": {
@@ -38,7 +38,7 @@
         "tiers": {
           "type": "object",
           "description": "The tier schedule for checks that declare `tiers` (check-v3). Declared ONCE here so the four shares stay committee numbers with a single home rather than being copied into definitions. A tiered check's weight is a ceiling; it earns shares[T0..tier_earned] of it, cumulatively. The shares are PROVISIONAL committee numbers, not measured - stated so, and revisited against the corpus.",
-          "required": ["shares", "t2_activation", "normalization"],
+          "required": ["shares", "t2_activation"],
           "additionalProperties": false,
           "properties": {
             "shares": {
@@ -47,11 +47,7 @@
               "additionalProperties": false,
               "properties": {"T0": {"type": "number"}, "T1": {"type": "number"}, "T2": {"type": "number"}, "T3": {"type": "number"}},
               "default": {"T0": 0.2, "T1": 0.3, "T2": 0.3, "T3": 0.2},
-              "description": "Fraction of a tiered check's weight each tier carries; MUST sum to 1.0. These are PROVISIONAL committee numbers, not measured. See `normalization` for how they are applied - the shares alone do not determine a score, and stating them without the formula is what let two implementations compute different numbers for the same wheel."
-            },
-            "normalization": {
-              "const": "renormalize-over-declared-live-tiers",
-              "description": "How a tiered check's weight is computed, stated because the shares alone do not determine it. A tier is LIVE if the check declares it in `tiers` and it is not parked (T2 is parked until t2_activation). A check earns: weight * (sum of the shares of its live tiers up to and including tier_earned) / (sum of the shares of ALL its live tiers). The denominator is per check, so a check that declares only T0 and T1 and earns T1 has earned its TOP tier and takes its full weight - it is not docked for tiers it never claimed. Added at 0.6.1 after two implementations scored the same wheel at 47/48 and 45.6/48: the reference linter renormalized, this schema had only published the four shares, and nothing said which reading was right. The discrepancy was the standard's fault, not the linter's - a score is only comparable between implementations if the arithmetic is written down, and this one was not. Worked example, MIRI-PY-007 at weight 5 declaring only T0 and T1, earning T1: live tiers are T0 and T1, shares 0.2 and 0.3, so 5 * (0.2 + 0.3) / (0.2 + 0.3) = 5. Under a fixed cumulative reading it would have been 4."
+              "description": "Fraction of a tiered check's weight each tier carries; MUST sum to 1.0. While T2 is inactive its share is PARKED IN T1 - the effective 0.6.0 schedule is T0/T1/T3 - so a linter computes T1's effective share as T1 + T2 until t2_activation is met."
             },
             "t2_activation": {
               "type": "object",

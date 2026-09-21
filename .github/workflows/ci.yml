@@ -90,8 +90,17 @@ jobs:
       run: make validate-fixtures
 
     # The MIRI-PY family had 43 checks and no artifact falsifying any of them until 0.7.
+    # `make validate-python-fixtures` builds the arms first, and building a wheel needs `build`.
+    # Without this the step exited 2 on every clean checkout and the gate protected nothing —
+    # the same shape as the comment eight lines above, reproduced in the commit that added it.
+    - name: Install the wheel builder
+      run: pip install build
+
     - name: Verify greetlib wheel fixture invariants
       run: make validate-python-fixtures
+
+    - name: Prove the greetlib golden harness rejects linters that game it
+      run: make score-python-fixtures
 
     # The CLI fixture suite gated nothing until now: it was wired into `make check`, and CI never calls
     # `make check`. That is the same gap the comment above records closing for the wheel fixtures, in the

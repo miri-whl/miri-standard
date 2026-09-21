@@ -296,14 +296,14 @@ jobs:
 ### Recording Check-Definition Revisions
 
 `added_in` records when a check was introduced and `withdrawn_in` when it was retired. Nothing records
-**revision**: reading one of the 119 definitions does not tell you whether its meaning changed in the current
+**revision**: reading one of the 122 active definitions does not tell you whether its meaning changed in the current
 release. The governance decision is that this stays **editorial** — git history is the revision record, not a
 field.
 
 The reason is the failure mode of the alternative. A hand-maintained `changed_in` has to be updated on every
 edit, so every missed update is a definition silently claiming it did not change in a release where it did.
-0.5.0 rejected `semantics_version` on exactly these grounds: a single global fact copied into 119 files becomes
-119 statements that can each be wrong, while the fact has one true value. A revision marker has the same shape.
+0.5.0 rejected `semantics_version` on exactly these grounds: a single global fact copied into 123 files becomes
+123 statements that can each be wrong, while the fact has one true value. A revision marker has the same shape.
 
 Git holds the answer exactly, and `checks_commit_sha` makes it addressable — a lint report names the commit its
 definitions were read from, so "what changed between these two reports" is a diff rather than a claim:

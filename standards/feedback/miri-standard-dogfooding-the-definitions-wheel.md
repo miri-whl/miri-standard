@@ -99,13 +99,19 @@ release page, since it is what every downstream linter installs to learn what th
    '.../site-packages/miri_py/schemas/changelog-v1.json'
 ```
 
-The file is not in your source tree at all, so `package-data` never had anything to include. You re-synced the check
-definitions to 0.6.0 — which added `MIRI-PY-041` through `044`, every one of which reads `changelog.json` — without
-re-syncing the schemas. The mirror is half-updated, which is the failure mode our schema-governance guidance names:
-a vendored copy enforces rules it has never seen.
+The file is not in your source tree at all, so the packaging `include` globs never had anything to pick up.
 
-It blocks the entire previous-release path, so `030`, `034`, `041` and `043` cannot be exercised by anyone until it
-lands. We patched a local venv with our copy to finish validating the fixtures; nothing in your repository was
+**We first wrote that you had re-synced the definitions "without re-syncing the schemas". That is false and you can
+disprove it in one command** — `8eb8fd3` updated `lint-report-v1.json` and `scoring-v1.json` in the same commit. The
+real mechanism is narrower and more interesting: `scripts/sync_checks.py` carries a hard-coded allowlist,
+`UPSTREAM_SHARED_SCHEMAS`, and `changelog-v1.json` was never added to it — while that commit's own message asserts
+it was vendored. The defect is an allowlist that cannot detect its own omissions, not carelessness, and the
+half-updated-mirror conclusion survives either way.
+
+The blast radius is narrower than we first said too: the schema read is guarded on a previous wheel AND a parseable
+`changelog.json`, so a wheel shipping no changelog completes fine. It is every wheel that DOES ship one — which is
+all eight fixtures and the definitions wheel, so the practical effect stands. We patched a local venv with our copy to
+finish validating the fixtures; nothing in your repository was
 touched. The definitions wheel carries all seventeen schemas, which is one argument for consuming it rather than
 vendoring.
 
@@ -115,7 +121,13 @@ This is the useful one, and most of it is ours to fix.
 
 The `MIRI-PY` family now has fixtures: eight greetlib wheels, six goldens, `examples/fixtures/python/`. Graded
 against them, 0.6.0 **reports every check correctly** — right checks, right arms, nothing on the control — and
-satisfies **one** golden clause, because a report says *which* check failed and not *what it points at*.
+satisfies **zero goldens**. Two individual check clauses attribute (`MIRI-PY-008` → `usage-patterns.json:patterns`,
+`MIRI-PY-018` → `lifecycle.json:advisory_sources`); no golden passes, because a golden requires every check in its
+case to attribute and `P5` needs all four of `018`, `020`, `021`, `022`.
+
+An earlier draft of this section said "one clause" and claimed `018` "SATISFIED the golden". Both were wrong — the
+count was two, and satisfying a clause is not satisfying a golden. The number was stale against the same commit
+that wrote it, because the goldens moved to the `document:field` form in that commit.
 
 That was our gap first: `lint-report-v1` had no field for it, so both golden harnesses invented a submission shape,
 and a harness needing non-standard input is one nobody runs. Fixed at 0.7.0 — `outcomes[].evidence`, an array of
@@ -129,11 +141,15 @@ sdk-manifest.json                        MIRI-PY-012 — the document, missing t
 greetlib-1.1.0-py3-none-any.whl          MIRI-PY-019, 020, 021, 022 — the whole wheel, which locates nothing
 ```
 
-`018` passing on the strength of one well-formed location is the proof the mechanism works. The ask is to populate
-`evidence` with the `018` form everywhere, or to make `location` consistently `<document>:<field>` — the grader
-accepts `location` as a fallback precisely so this is gradeable before you adopt the new field.
+`008` and `018` attributing on the strength of two well-formed locations is the proof the mechanism works. The ask
+is to populate `evidence` with that form everywhere, or to make `location` consistently `<document>:<field>` — the
+grader accepts `location` as a fallback precisely so this is gradeable before you adopt the new field.
 
-Per check, what the goldens want: `012` → `sdk-manifest.json:sdk_version`. `019` → `lifecycle.json:identity.purl`.
+`location` is five shapes today, not three: `document:field`; a bare document; the wheel filename; a wheel **pair**
+(`…1.0.0.whl -> …1.1.0.whl`, on `030`); and a **list of four documents** (on `011`).
+
+Per check, what the goldens want: `007` → `sdk-manifest.json:api_index`. `011` → `sdk-manifest.json:generated_at`.
+`012` → `sdk-manifest.json:sdk_version`. `019` → `lifecycle.json:identity.purl`.
 `020` → `lifecycle.json:identity.registry`. `021`/`022` → `lifecycle.json:advisory_sources` and
 `lifecycle.json:identity.distribution`. `030` → `sdk-manifest.json:api_index`. `042` →
 `changelog.json:releases[0].version`. `044` → `changelog.json:releases[0].added[].symbols`.
@@ -145,12 +161,20 @@ miri score <arm>.whl --format json --previous-release conforming-1.0.0.whl > rep
 python3 tools/score_python_fixtures.py --reports reports/
 ```
 
-## Finding 6 — `MIRI-PY-030` had never been exercised by anything
+## Finding 6 — `MIRI-PY-030` had no artifact on our side, and that was ours to fix
 
-It requires a previous release, and nothing in this repository had ever shipped two wheel releases of one package.
-`silent-removal-1.1.0` against `conforming-1.0.0` is the first time the check has fired since it was written. We
-mention it because it is the strongest argument we have for fixtures over review: the check was correct, implemented
-and unexercised for four releases, and nobody could have known which.
+It requires a previous release, and nothing in **this repository** had ever shipped two wheel releases of one
+package, so the standard had no artifact exercising it. `silent-removal-1.1.0` against `conforming-1.0.0` is the
+first time one of ours has fired it.
+
+**A correction before you read further.** An earlier draft of this section said the check "had never been exercised
+by anything" and was "unexercised for four releases". That is false about your repository:
+`tests/unit/linter/checks/test_history.py` opens *"Unit tests for silent-removal detection (MIRI-PY-030)"* and
+carries seven tests, including one that builds a two-wheel pair and asserts the outcome is FAILED. The claim was
+written as a universal about someone else's test suite on the strength of checking only our own, and it was the
+sharpest sentence in the section. The narrower true statement is the one worth making: a check can be correct,
+implemented and unit-tested, and still have no artifact on the standard's side that would catch the standard
+getting it wrong.
 
 ## One thing blocking you, not us
 

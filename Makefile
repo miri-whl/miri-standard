@@ -46,7 +46,7 @@ cli-fixtures: ## Build the greetctl CLI fixture arms (bare/1.0.0/1.1.0/adversari
 python-fixtures: ## Build the greetlib wheel fixture arms into examples/fixtures/python/build
 	python3 examples/fixtures/python/build_python_fixtures.py
 
-validate-python-fixtures: ## Assert the greetlib wheel fixtures still demonstrate their goldens
+validate-python-fixtures: python-fixtures ## Assert the greetlib wheel fixtures still demonstrate their goldens
 	python3 tools/validate_python_fixtures.py
 
 validate-cli-fixtures: cli-fixtures ## Verify the CLI fixture invariants (release history exercised; C1-C11 live)
