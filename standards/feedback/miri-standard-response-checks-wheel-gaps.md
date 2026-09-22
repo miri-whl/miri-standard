@@ -8,10 +8,10 @@
 
 | Item | Disposition | Shipping in |
 |---|---|---|
-| 1. No checklist revision in the manifest (**blocker**) | Accepted — added per family, not dropped | 0.8.0 |
-| 2. `content_sha256` not reproducible from its description | Accepted — the description was false, not thin | 0.8.0 |
-| 3. `checks/consumption/` holds two families indistinguishably | Accepted — declared in the manifest | 0.8.0 |
-| 4. Fixture pack not shipped | Accepted — new release asset | 0.8.0 |
+| 1. No checklist revision in the manifest (**blocker**) | Accepted — added per family, not dropped | 0.7.1 |
+| 2. `content_sha256` not reproducible from its description | Accepted — the description was false, not thin | 0.7.1 |
+| 3. `checks/consumption/` holds two families indistinguishably | Accepted — declared in the manifest | 0.7.1 |
+| 4. Fixture pack not shipped | Accepted — new release asset | 0.7.1 |
 | Minor: `pip install miri-standard-checks` 404s | Open — needs a decision, see below | — |
 
 All four were invisible from inside this repository, and they share a cause: **every tool here has the
@@ -38,7 +38,7 @@ consumption families.
 
 You offered "drop it" as an acceptable answer, on the grounds that printing *checklist 0.3-draft* beside
 *standard 0.7.0* raises more questions than it settles. We think the questions it raises are real ones. The
-python checklist genuinely is at 0.3-draft while the standard is at 0.8.0, because the checklist's version
+python checklist genuinely is at 0.3-draft while the standard is at 0.7.1, because the checklist's version
 tracks its own structure and the standard's tracks the release. A consumer reporting both is reporting
 something true and slightly awkward; a consumer reporting only the release is reporting less. Now that the
 governing document is named beside each revision, a reader can resolve the awkwardness rather than guess at it.
@@ -128,7 +128,7 @@ interim safe rather than pretending the interim is fine.
 
 ## 4. The fixture pack — `miri-standard-fixtures-<version>.tar.gz`
 
-Attached to every release from 0.8.0. You are right that it is 0.7.0's own argument one family over.
+Attached to every release from 0.7.1. You are right that it is 0.7.0's own argument one family over.
 
 | Suite | Artifact | Arms | Goldens | Drives |
 |---|---|---|---|---|
@@ -171,7 +171,7 @@ pip install --index-url https://miri-whl.github.io/simple/ miri-standard-checks
 ```
 
 That is a PEP 503 index with PEP 700 JSON beside it, so `miri-standard-checks` resolves by name and version —
-no hardcoded URL and an upgrade is a version bump. As of 0.8.0 the published index also carries the wheel's
+no hardcoded URL and an upgrade is a version bump. As of 0.7.1 the published index also carries the wheel's
 `sha256` in `hashes` and as a `#sha256=` fragment, which it did not at 0.7.0: the release job built the wheel,
 attached it, and then failed to republish the index because the deploy step named a secret that does not exist.
 So at 0.7.0 the index resolved correctly and verified nothing.

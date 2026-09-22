@@ -11,10 +11,17 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-## 0.8.0 — unreleased
+## 0.7.1 — unreleased
 
-Three gaps miri-py found by vendoring the 0.7.0 wheel and nothing else. All three were invisible from
-inside this repository, because every tool here has the repository.
+Four blockers miri-py found by vendoring the 0.7.0 wheel and nothing else, all invisible from inside
+this repository, because every tool here has the repository.
+
+**A patch rather than a minor, deliberately.** Nothing normative moved: no check definition, no
+schema, no specification sentence. What changed is how the standard is *packaged* — a digest that
+described the wrong tree, a manifest that could not name the checklist revision it implements, a
+directory holding two families with nothing to tell them apart, and a corpus of fixtures that existed
+only in a clone. The additions here are additions to the artifact, not to the standard, and the
+standard is still 0.7.
 
 ### Added
 
