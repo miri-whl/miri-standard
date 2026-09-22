@@ -11,6 +11,68 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.8.0 — unreleased
+
+Three gaps miri-py found by vendoring the 0.7.0 wheel and nothing else. All three were invisible from
+inside this repository, because every tool here has the repository.
+
+### Added
+
+- **The fixture pack — `miri-standard-fixtures-<version>.tar.gz`, attached to each release.** The wheel
+  ships the rules for four check families and nothing to run them against, so a vendor could read all
+  four and exercise two. The pack carries all three suites — 11 consumption variants, 4 CLI arms, 9
+  greetlib wheels, 40 goldens — with the build recipes, the validators, and the attribution graders.
+  Recipes rather than built artifacts: each suite derives its arms from one template and then asserts
+  byte-identity across them, so shipping the built wheels would ship the thing the suite exists to
+  derive. It carries no check definitions: those are the wheel's job, and the validators resolve them
+  from the installed wheel when run outside a checkout. Byte-reproducible — gzip's header mtime is
+  pinned, so two builds of one tree produce one sha256.
+- **`families` in the wheel's manifest** — one row per check family carrying `checklist_version`,
+  `governing_document`, `directory`, `id_prefix`, `active_checks` and `weight_total`. It answers two
+  of miri-py's four blockers at once. A vendor could report "standard 0.7.0, checks at 41aa2682" and
+  not which checklist revision those checks implement, where a vendor who clones could; the
+  checklists are prose and are not packaged, so the revision travels here or nowhere. Keyed by
+  **family** rather than target because the four revisions are four values (`0.3-draft`, `0.2-draft`,
+  `0.3.1-draft`, `0.5.0-draft`), and because `checks/consumption/` holds MIRI-SURFACE and
+  MIRI-CONSUMER on two separate 100-point scales — a consumer reading one directory per family sums
+  200 and fails a weight invariant with a message about arithmetic rather than about layout. The id
+  prefix was the only discriminator and had to be known out of band; it is now declared and
+  verifiable. Not `max(added_in)`, which gives the newest check's release — a different question.
+- **`checks(family=...)`**, so the per-directory read that sums 200 has an alternative that cannot.
+- **`families()`, `checklist_version()`, `verify_content()` and `content_digest()` in the installed
+  package**, so a consumer calls the algorithm rather than reconstructing it from prose.
+
+### Fixed
+
+- **BREAKING — `content_sha256` did not describe the installed package, and could not be reproduced
+  from any reading of its own description.** miri-py tried 36 combinations — three file sets, six
+  length encodings, two path spellings — and none matched, because the answer was in none of those
+  dimensions: the digest was computed over the **staging tree**, which carries
+  `_agent_examples.json.src`, a build intermediate `inject_dist_info()` moves into `.dist-info/` and
+  deletes from the wheel. The field hashed one file the consumer never receives, so no encoding could
+  have matched. The description said "every file in the installed package", which was false.
+
+  Both halves are closed: the digest now covers exactly what is installed, and the two length
+  prefixes are both 8 bytes where they were 4 and 8 — an asymmetry no reader guesses and the prose
+  never stated. `verify_shipped_digest()` now recomputes the value from the **finished wheel** and
+  fails the build if it disagrees, so the claim is gated rather than asserted. It had agreed with
+  itself for two releases because only one computation of it existed.
+
+  The shipped `docs/api_reference.md` now carries a worked example over two files — computed at build
+  time by the same function that hashes the package, so it cannot go stale against the algorithm it
+  documents.
+
+  Every 0.7.0 `content_sha256` is unverifiable and stays that way; verify that wheel against the
+  release's SHA256SUMS or its build attestation, which are unaffected.
+
+### Known and open
+
+- **`pip install miri-standard-checks` 404s.** `pkg:pypi/miri-standard-checks` is unclaimed and
+  nothing has been published to PyPI, so every consumer hardcodes a versioned release URL and an
+  upgrade is a text edit. What works today is the published index, which resolves by name and
+  version: `pip install --index-url https://miri-whl.github.io/simple/ miri-standard-checks`.
+  Publishing to PyPI proper needs the name claimed and trusted publishing configured.
+
 ## 0.7.0 — 2026-09-21
 
 **BREAKING.** The tier arithmetic changes: `scoring-v2.json` withdraws v1's rule that a parked T2's share is parked

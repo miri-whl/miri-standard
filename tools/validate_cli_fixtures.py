@@ -18,6 +18,9 @@ import re
 import subprocess
 import sys
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from checks_source import checks_dir, schema_path  # noqa: E402 — after sys.path is set
+
 REPO = pathlib.Path(__file__).resolve().parent.parent
 FIX = REPO / "examples/fixtures/cli"
 BUILD = FIX / "build"
@@ -60,7 +63,7 @@ def main():
         return 2
 
     print("greetctl CLI fixture invariants:")
-    schema = json.loads((REPO / "schemas/cli-describe-v1.json").read_text())
+    schema = json.loads(schema_path("cli-describe-v1.json").read_text())
 
     # --- 1. the conforming arms conform ------------------------------------------------------------------
     for arm in ("miri-1.0.0", "miri-1.1.0"):
@@ -289,7 +292,7 @@ def main():
     gdir = FIX / "expected"
     goldens = sorted(gdir.glob("C*.json"))
     check("CLI goldens present, one per attack", len(goldens) == 11, f"{len(goldens)} found")
-    known = {f.stem for f in (REPO / "standards/cli/checks").glob("MIRI-CLI-*.yaml")}
+    known = {f.stem for f in checks_dir("cli").glob("MIRI-CLI-*.yaml")}
     covered = set()
     for g in goldens:
         d = json.loads(g.read_text())

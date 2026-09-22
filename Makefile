@@ -6,7 +6,7 @@
 OUT := .generated/site
 PORT := 8000
 
-.PHONY: python-fixtures validate-python-fixtures score-python-fixtures checks-wheel help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
+.PHONY: fixture-pack python-fixtures validate-python-fixtures score-python-fixtures checks-wheel help deps envelope consistency references validate validate-sample score-sample site serve clean lint spell links check diagrams
 
 help: ## Show this help
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -76,6 +76,11 @@ references: ## Verify every check's spec citations resolve (--report for reconci
 
 checks-wheel: validate ## Build the check definitions as a data-only wheel into .generated/checks-wheel/dist
 	python3 tools/build_checks_wheel.py
+
+fixture-pack: validate-fixtures validate-cli-fixtures validate-python-fixtures ## Build the fixture suites as a release tarball
+	# Gated on the suites' own validators: a pack of fixtures that no longer demonstrate their cases
+	# is worse than no pack, because it looks like test material.
+	python3 tools/build_fixture_pack.py
 
 site: validate ## Generate the site into .generated/site for local review
 	python3 tools/generate_site.py --out $(OUT)

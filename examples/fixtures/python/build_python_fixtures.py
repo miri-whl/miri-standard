@@ -128,6 +128,14 @@ def build(build_wheels: bool = True) -> int:
     if not build_wheels:
         return 0
     print("\n  building wheels:")
+    # Named prerequisite, not a traceback 600 characters deep. Run from the fixture pack rather than a
+    # checkout, `build` is frequently absent, and the failure arrived as "No module named build" from
+    # a subprocess after eight arms had already been materialized - work that looked like progress.
+    try:
+        import build  # noqa: F401
+    except ImportError:
+        print("    needs the PyPA build frontend: pip install build", file=sys.stderr)
+        return 1
     for arm_dir in arms:
         root = BUILD / arm_dir.name
         r = subprocess.run([sys.executable, "-m", "build", "--wheel", "--outdir",

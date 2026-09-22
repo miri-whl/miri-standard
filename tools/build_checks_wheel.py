@@ -25,10 +25,13 @@ import hashlib
 import json
 import os
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
 import zipfile
+
+import yaml
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
 OUT = REPO / ".generated/checks-wheel"
@@ -45,15 +48,76 @@ full commit sha, and a content hash over every file — so a report can cite wha
 # No PEP 604 unions in signatures: `str | None` is evaluated at def time and raises TypeError on
 # Python 3.9, which this package advertises as its floor. The wheel installed cleanly on 3.9 and
 # died on first import - a false Requires-Python is worse than a high one, because pip resolves it.
+import hashlib
 import json
 import pathlib
 
-__all__ = ["root", "manifest", "checks", "schema"]
+__all__ = ["root", "manifest", "checks", "schema", "content_digest", "verify_content",
+           "checklist_version", "families"]
 
 
 def root() -> pathlib.Path:
     """Directory holding the installed definitions and schemas."""
     return pathlib.Path(__file__).resolve().parent
+
+
+def _carried() -> dict:
+    """Every file this package installs, except manifest.json, which carries the digest.
+
+    `.dist-info/` is outside the package directory and already hashed entry-by-entry by RECORD;
+    `__pycache__` appears only after import and is not part of what was installed.
+    """
+    base = root()
+    out = {}
+    for f in sorted(base.rglob("*")):
+        rel = f.relative_to(base).as_posix()   # as_posix() IS the / spelling; no escaping games
+        if f.is_file() and rel != "manifest.json" and "__pycache__" not in rel.split("/"):
+            out[rel] = f.read_bytes()
+    return out
+
+
+def content_digest() -> str:
+    """Recompute `manifest()["content_sha256"]` from the files on disk.
+
+    The algorithm, stated once so it is never reconstructed from prose again: sha256 over each
+    (path, content) pair in ascending path order, each of the two prefixed by its own 8-byte
+    big-endian length; paths UTF-8 with "/" separators, relative to this directory.
+    """
+    h = hashlib.sha256()
+    for rel, data in sorted(_carried().items()):
+        key = rel.encode()
+        h.update(len(key).to_bytes(8, "big")); h.update(key)
+        h.update(len(data).to_bytes(8, "big")); h.update(data)
+    return h.hexdigest()
+
+
+def verify_content() -> bool:
+    """True when the installed files still hash to what the manifest claims.
+
+    What this does and does not prove: it detects a package edited after installation, and it is a
+    self-consistency check, not provenance. An attacker who rewrites a file can rewrite manifest.json
+    too. For provenance, verify the release's SHA256SUMS or the build attestation against the wheel.
+    """
+    return content_digest() == manifest()["content_sha256"]
+
+
+def families() -> dict:
+    """Every check family: its checklist revision, its directory here, and its id prefix.
+
+    `checks/consumption/` carries two families on two separate 100-point scales, so a consumer that
+    reads one directory per family sums 200 and fails a weight invariant with a message about
+    arithmetic. Filter by `id_prefix` and check the totals against `weight_total` declared here.
+    """
+    return manifest()["families"]
+
+
+def checklist_version(family: str) -> str:
+    """The checklist revision a family implements, e.g. checklist_version("MIRI-PY") -> "0.3-draft".
+
+    Not derivable from the definitions: max(added_in) gives the newest check's release, which is a
+    different question and a different answer.
+    """
+    return manifest()["families"][family]["checklist_version"]
 
 
 def manifest() -> dict:
@@ -67,9 +131,16 @@ def manifest() -> dict:
     return json.loads((root() / "manifest.json").read_text())
 
 
-def checks(target=None):
-    """Paths of the check definitions, optionally for one target."""
-    return sorted(root().glob(f"checks/{target or '*'}/*.yaml"))
+def checks(target=None, family=None):
+    """Paths of the check definitions, optionally for one target or one family.
+
+    Filter by FAMILY, not by directory, when you mean a scoring family: `checks/consumption/` holds
+    MIRI-SURFACE and MIRI-CONSUMER, each on its own 100-point scale, so a per-directory read sums 200.
+    """
+    paths = sorted(root().glob(f"checks/{target or '*'}/*.yaml"))
+    if family:
+        paths = [p for p in paths if p.stem.startswith(f"{family}-")]
+    return paths
 
 
 def schema(name: str) -> dict:
@@ -264,6 +335,7 @@ def write_agent_metadata(src: pathlib.Path, manifest: dict) -> None:
 
     docs = src / "docs"
     docs.mkdir(exist_ok=True)
+    worked = _digest({"a.txt": b"hi", "b/c.txt": b"x"})
     (docs / "api_reference.md").write_text(f"""# API reference
 
 `miri_standard_checks` carries the Miri Standard's check definitions and JSON Schemas as installed
@@ -280,9 +352,61 @@ What this package was built from: `version`, `standard_version`, `checks_commit_
 definition counts. Raises `FileNotFoundError` if the install is incomplete and
 `json.JSONDecodeError` if the manifest is corrupt.
 
-## `checks(target=None) -> list[pathlib.Path]`
+## `checks(target=None, family=None) -> list[pathlib.Path]`
 
-Paths of the check definitions, sorted; `target` is one of `python`, `cli`, `consumption`.
+Paths of the check definitions, sorted; `target` is one of `python`, `cli`, `consumption`, and
+`family` one of `MIRI-PY`, `MIRI-CLI`, `MIRI-SURFACE`, `MIRI-CONSUMER`.
+
+**Filter by family, not by directory, when you mean a scoring family.** `checks/consumption/` holds
+MIRI-SURFACE and MIRI-CONSUMER, 18 checks each, each summing to 100 on its own scale — so reading
+one directory per family sums 200 and trips a weight invariant with a message about arithmetic
+rather than about layout.
+
+## `families() -> dict`
+
+One row per family: `checklist_version`, `governing_document`, `directory`, `id_prefix`,
+`active_checks`, `weight_total`. The checklist revision is prose in this repository and is not
+packaged, so this is where it travels. It is not `max(added_in)` over the definitions — that is the
+newest check's release, a different question with a different answer.
+
+## `checklist_version(family) -> str`
+
+For example `checklist_version("MIRI-PY")` -> `"0.3-draft"`.
+
+## `content_digest() -> str` and `verify_content() -> bool`
+
+Recompute `manifest()["content_sha256"]` from the installed files, and compare it to what the
+manifest claims. Call these rather than reimplementing the algorithm.
+
+**The algorithm, and a worked example.** For each file installed under the package directory except
+`manifest.json`, in ascending order of its path: feed the 8-byte big-endian path length, the path
+(UTF-8, `/` separators, relative to the package root), the 8-byte big-endian content length, then
+the content. `.dist-info/` is out of scope — RECORD already hashes it entry by entry — and so is
+`__pycache__`, which appears only after import.
+
+Over exactly two files, `a.txt` containing `hi` and `b/c.txt` containing `x`:
+
+```text
+sha256 of the concatenation of
+  0000000000000005  "a.txt"    0000000000000002  "hi"
+  0000000000000007  "b/c.txt"  0000000000000001  "x"
+= {worked}
+```
+
+```python
+import hashlib
+files = {{"a.txt": b"hi", "b/c.txt": b"x"}}
+h = hashlib.sha256()
+for path in sorted(files):
+    key = path.encode()
+    h.update(len(key).to_bytes(8, "big")); h.update(key)
+    h.update(len(files[path]).to_bytes(8, "big")); h.update(files[path])
+print(h.hexdigest())
+```
+
+What this proves: the installed files have not been edited since installation. What it does not:
+provenance. An attacker who rewrites a file can rewrite `manifest.json` too. For provenance, verify
+the release's SHA256SUMS or the build attestation against the wheel.
 
 ## `schema(name) -> dict`
 
@@ -319,17 +443,73 @@ should not be used to score anything.
 def _digest(mapping):
     """sha256 over LENGTH-PREFIXED (path, bytes) pairs in sorted order.
 
+    For each path in ascending order of its UTF-8 bytes, feed: an 8-byte big-endian path length, the
+    path (UTF-8, separators normalized to "/"), an 8-byte big-endian content length, the content.
+
     Length-prefixed rather than delimiter-framed: with NUL separators, {"a": b"x", "b": b"y"} and
     {"a": b"x\\0b\\0y"} hash identically. Not reachable through YAML or JSON, which cannot carry a
     NUL, but nothing enforced that and the fix is one line. Paths are normalized to "/" so a
     Windows build does not produce a different digest for an identical tree.
+
+    Both lengths are 8 bytes. They were 4 and 8 - an asymmetry no reader guesses and the prose did
+    not state, which is half of why miri-py could not reproduce this field from its own description
+    in 36 attempts. A field a second implementation cannot recompute is decoration.
     """
     h = hashlib.sha256()
     for rel in sorted(mapping):
         key = rel.replace("\\", "/").encode()
-        h.update(len(key).to_bytes(4, "big")); h.update(key)
+        h.update(len(key).to_bytes(8, "big")); h.update(key)
         h.update(len(mapping[rel]).to_bytes(8, "big")); h.update(mapping[rel])
     return h.hexdigest()
+
+
+# One row per check family: the document that governs it, the directory that holds it, and the id
+# prefix that identifies it. Keyed by family rather than by target because `checks/consumption/` holds
+# TWO families on TWO separate 100-point scales - a consumer reading one directory per family sums 200
+# and fails a weight invariant with a message about arithmetic rather than about layout. The prefix was
+# the only discriminator and had to be known out of band; declared here, it can be verified instead.
+FAMILIES = {
+    "MIRI-PY": ("python", "standards/python/linter-checklist.md"),
+    "MIRI-CLI": ("cli", "standards/cli/linter-checklist.md"),
+    "MIRI-SURFACE": ("consumption", "standards/consumption/surface-conformance.md"),
+    "MIRI-CONSUMER": ("consumption", "standards/consumption/consumer-conformance.md"),
+}
+
+
+def families() -> dict:
+    """What each family is, where it lives in this package, and which document revision it implements.
+
+    A vendor installing the wheel alone could report "standard 0.7.0, checks at 41aa2682" and not which
+    checklist revision those checks implement, where a vendor who clones could. The checklists are prose
+    and are not packaged, so the revision travels here or nowhere. It is NOT max(added_in) over the
+    definitions: that is the newest check's release, a different question with a different answer
+    (0.6.0-draft where the python checklist says 0.3-draft).
+    """
+    out = {}
+    for family, (target, doc) in FAMILIES.items():
+        text = (REPO / doc).read_text()
+        m = re.search(r"\*Specification Version: ([^*]+)\*", text)
+        if not m:
+            raise SystemExit(f"{doc}: no `*Specification Version: ...*` header to read")
+        active = [c for c in _family_checks(target, family)]
+        out[family] = {
+            "checklist_version": m.group(1).strip(),
+            "governing_document": doc,
+            "directory": f"checks/{target}",
+            "id_prefix": f"{family}-",
+            "active_checks": len(active),
+            "weight_total": sum(c.get("weight", 0) for c in active),
+        }
+    return out
+
+
+def _family_checks(target: str, family: str) -> list:
+    out = []
+    for f in sorted((REPO / "standards" / target / "checks").glob("*.yaml")):
+        d = yaml.safe_load(f.read_text())
+        if d.get("status") == "active" and d["id"].startswith(f"{family}-"):
+            out.append(d)
+    return out
 
 
 def git(*args: str) -> str:
@@ -387,6 +567,11 @@ def stage() -> tuple[pathlib.Path, dict]:
     manifest = {
         "schema_version": "1",
         "generated_at": stamp,
+        # Per target, because they differ - python is 0.3-draft and cli is 0.2-draft - and because the
+        # obvious fallback answers a different question: max(added_in) over the definitions gives the
+        # newest check's release (0.6.0-draft), not the checklist's own version. Read from the one
+        # place each checklist states it, so this cannot drift from the prose it mirrors.
+        "families": families(),
         "distribution": DIST_NAME,
         "version": version(),
         "standard_version": declared_version(),
@@ -404,14 +589,24 @@ def stage() -> tuple[pathlib.Path, dict]:
     # provisional value above covered only checks/ and schemas/, which is what api_reference.md and
     # __init__.py already claimed it covered - they were wrong, and this makes them true rather than
     # softening the claim. manifest.json is excluded because it carries the digest.
+    # NOT_SHIPPED is the staging intermediate inject_dist_info() moves into `.dist-info/` and deletes
+    # from the wheel. Hashing it made content_sha256 a digest of a tree no consumer receives, so the
+    # value could not be reproduced from an installed package by ANY encoding - which is what miri-py
+    # hit, and why their 36 combinations were 36 wrong answers to a question with no right one. The
+    # field claimed to cover "every file in the installed package" and covered something else.
+    NOT_SHIPPED = {"_agent_examples.json.src"}
     carried = {}
     for f in sorted(src.rglob("*")):
-        if f.is_file() and f.name != "manifest.json":
-            carried[str(f.relative_to(src))] = f.read_bytes()
+        rel = str(f.relative_to(src))
+        if f.is_file() and f.name != "manifest.json" and rel not in NOT_SHIPPED:
+            carried[rel] = f.read_bytes()
     manifest["content_sha256"] = _digest(carried)
     manifest["content_sha256_covers"] = (
-        "every file in the installed package except manifest.json itself; sha256 over length-prefixed "
-        "(path, bytes) pairs, paths normalized to / and sorted")
+        "every file installed under the package directory except manifest.json itself, which carries "
+        "this digest; .dist-info/ is excluded because RECORD already hashes it, and __pycache__ is "
+        "excluded because it is created after installation. sha256 over each (path, content) pair in "
+        "ascending path order, each prefixed by its 8-byte big-endian length, paths UTF-8 with / "
+        "separators. miri_standard_checks.verify_content() recomputes it; do not reimplement this.")
     (src / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
     (OUT / "pyproject.toml").write_text(f'''[build-system]
 requires = ["setuptools>=69"]
@@ -479,6 +674,30 @@ def inject_dist_info(wheel: pathlib.Path, staged: pathlib.Path) -> None:
             z.writestr(info, items[name])
 
 
+def verify_shipped_digest(wheel: pathlib.Path) -> None:
+    """Recompute content_sha256 from the FINISHED wheel and fail the build if it disagrees.
+
+    The claim "this digest covers what you installed" was false for two releases and nothing caught
+    it, because the only computation of it ran over the staging tree and agreed with itself. This
+    reads the wheel back - after inject_dist_info() has removed the staging intermediate - and
+    recomputes over exactly the entries a consumer receives. An unverifiable integrity field is worse
+    than none: it invites a consumer to check something that cannot be checked and conclude the
+    package is corrupt when it is not.
+    """
+    with zipfile.ZipFile(wheel) as z:
+        entries = {n[len(PKG) + 1:]: z.read(n) for n in z.namelist()
+                   if n.startswith(f"{PKG}/") and not n.endswith("/")}
+    claimed = json.loads(entries.pop("manifest.json"))["content_sha256"]
+    recomputed = _digest(entries)
+    if recomputed != claimed:
+        raise SystemExit(
+            f"content_sha256 does not describe the shipped package:\n"
+            f"  manifest claims : {claimed}\n"
+            f"  wheel hashes to : {recomputed}\n"
+            f"  entries hashed  : {len(entries)}")
+    print(f"  content_sha256 verified against the wheel's own {len(entries)} entries")
+
+
 def main() -> int:
     out, manifest = stage()
     dist = out / "dist"
@@ -496,6 +715,7 @@ def main() -> int:
                    check=True, capture_output=True, text=True, env=env)
     wheel = next(dist.glob("*.whl"))
     inject_dist_info(wheel, out)
+    verify_shipped_digest(wheel)
     sha = hashlib.sha256(wheel.read_bytes()).hexdigest()
     (dist / "SHA256SUMS").write_text(f"{sha}  {wheel.name}\n")
     print(f"built {wheel.name}")

@@ -3,7 +3,7 @@
 # static/css/, markup comes from templates/).
 github: https://github.com/miri-whl/miri-standard
 site_url: https://miri-whl.github.io
-version: 0.7.0
+version: 0.8.0
 status_badge: Incubation
 
 targets:
@@ -116,6 +116,18 @@ artifacts:
       the release, the full commit sha and a content hash.
     install: pip install miri_standard_checks-{version}-py3-none-any.whl
     built_by: tools/build_checks_wheel.py
+    workflow: .github/workflows/publish-checks.yml
+  - id: fixture-pack
+    title: Fixture suites (tarball)
+    filename: "miri-standard-fixtures-{version}.tar.gz"
+    sums: SHA256SUMS
+    what: >-
+      The three fixture suites — 11 consumption variants, 4 CLI arms, 9 greetlib wheels — with their 40
+      goldens, the build recipes, and the validators and attribution graders that gate them. The wheel
+      carries the rules; this carries what to run them against. Install the wheel alongside: the
+      validators resolve check definitions and schemas from it rather than duplicating them.
+    install: tar -xzf miri-standard-fixtures-{version}.tar.gz
+    built_by: tools/build_fixture_pack.py
     workflow: .github/workflows/publish-checks.yml
 
 # Assets copied from assets/img/ into the published site.

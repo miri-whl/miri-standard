@@ -75,5 +75,9 @@ Decisions worked through so far, each as a proposal plus the response that settl
   artifact. The second is that layout guidance fires no check, which is why we missed a real misplacement. The third
   was ours, and is fixed: `scoring-v1.json` declared the tier shares without the formula.
 
+- `miri-standard-response-checks-wheel-gaps.md` — answers miri-py's four blockers to depending on the
+  definitions wheel rather than copying out of it: the checklist revision per family, a `content_sha256`
+  that hashed the staging tree instead of the package, two families sharing one directory with nothing to
+  tell them apart, and the fixture pack that was never shipped. All four invisible from inside a checkout.
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.

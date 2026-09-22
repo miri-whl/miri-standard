@@ -20,6 +20,9 @@ import pathlib
 import sys
 import zipfile
 
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+from checks_source import checks_dir  # noqa: E402 — after sys.path is set
+
 REPO = pathlib.Path(__file__).resolve().parent.parent
 FIX = REPO / "examples/fixtures/python"
 BUILD = FIX / "build"
@@ -102,7 +105,7 @@ def main() -> int:
     print("greetlib wheel fixture invariants:")
 
     active = set()
-    for f in (REPO / "standards/python/checks").glob("*.yaml"):
+    for f in checks_dir("python").glob("*.yaml"):
         text = f.read_text()
         if "status: active" in text:
             active.add(f.stem)
