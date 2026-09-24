@@ -177,6 +177,15 @@ def grade(report, verbose=True):
 def _honest():
     """What a linter that actually detects each case would submit."""
     rep = {"conforming-1.1.0": {"findings": [], "skipped": {}}}
+    # Seed every arm a golden names as its control, not just the default one. The SBOM cases pair
+    # against `native-sbom-1.1.0` because MIRI-PY-024 is conditional on a native component and a
+    # pure-Python control is EXCLUDED from it rather than passing it. Without this, the honest
+    # submission was silent on an arm it was required to have analysed, and the harness rejected
+    # its own reference answer — the ceiling failing, not the linter.
+    for _, g in load_goldens():
+        control = g["linter_assertion"].get("must_not_report_on", {}).get("arm")
+        if control:
+            rep.setdefault(control, {"findings": [], "skipped": {}})
     for name, g in load_goldens():
         la = g["linter_assertion"]["must_report_on"]
         arm = rep.setdefault(la["arm"], {"findings": [], "skipped": {}})

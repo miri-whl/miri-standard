@@ -17,10 +17,15 @@ reports is attributable to metadata rather than to code:
   stale-1.1.0            changelog a release behind; stamps years old        (042, 011)
   identity-1.1.0         project page as registry; private on public OSV     (020, 021, 022)
   empty-migration-1.1.0  an all-zeros migration guide that validates         (009)
+  native-sbom-1.1.0      bundles a shared library AND covers it in an SBOM   (024 control)
+  native-nosbom-1.1.0    bundles a shared library, ships no sboms/           (024)
+  native-mismatch-1.1.0  an SBOM covering a library the wheel does not carry (024)
+  native-badpurl-1.1.0   a covering SBOM whose component purl does not parse (025)
 
 Each arm is built into a real wheel because `miri score` takes a wheel, not a source tree: the
 checks read dist-info, RECORD and the installed layout, none of which exist before the build.
 """
+import base64
 import datetime
 import hashlib
 import json
@@ -28,6 +33,7 @@ import pathlib
 import shutil
 import subprocess
 import sys
+import zipfile
 
 HERE = pathlib.Path(__file__).resolve().parent
 TEMPLATE = HERE / "src/_template"
@@ -50,8 +56,84 @@ packages = ["greetlib"]
 include-package-data = true
 
 [tool.setuptools.package-data]
-greetlib = ["agent-metadata/*.json", "examples/*.py", "docs/*.md"]
+greetlib = ["agent-metadata/*.json", "examples/*.py", "docs/*.md"{native_data}]
 '''
+
+# A stub, not a real shared library. MIRI-PY-024 fires on the PRESENCE of a native component in
+# the file inventory - `.so`/`.pyd`/`.dylib` or an auditwheel-style libs directory - and never
+# loads it, so compiling one would add a toolchain dependency to the fixture suite and prove
+# nothing the stub does not. It carries the ELF magic so a scanner sniffing bytes rather than
+# reading extensions also classifies it, and says what it is so nobody mistakes it for a build
+# product.
+NATIVE_STUB = (b"\x7fELF" + bytes(12)
+               + b"greetlib fixture stub - not a real shared object\n")
+
+
+# CycloneDX, because MIRI-PY-024's remediation names CycloneDX or SPDX and PEP 770 puts either
+# at `.dist-info/sboms/`. The bundled library is fictional - `libgreet` at a version no registry
+# carries - so no purl here can ever join against a real advisory.
+def sbom(component: str, purl: str) -> dict:
+    return {
+        "bomFormat": "CycloneDX",
+        "specVersion": "1.6",
+        "version": 1,
+        "metadata": {"component": {"type": "library", "name": "greetlib",
+                                   "purl": "pkg:pypi/greetlib@1.1.0"}},
+        "components": [{"type": "library", "name": component, "version": "2.1.0",
+                        "purl": purl}],
+    }
+
+
+
+def inject_sboms(wheel: pathlib.Path, mode: str) -> str:
+    """Write `.dist-info/sboms/` into a built wheel, the way PEP 770 places it.
+
+    It has to happen here rather than as package data: `.dist-info/` does not exist until the
+    backend writes it, and PEP 770 puts SBOM documents inside it precisely so scanners find them
+    without a package-specific pointer. Putting them in the package instead would produce an arm
+    that no conforming linter looks at - a fixture that cannot fail is worse than no fixture.
+
+    The `unlisted` mode deliberately does NOT add a RECORD line, which is MIRI-PY-024's third
+    clause and also makes the wheel fail MIRI-PY-001. Two checks on one arm is normally bad
+    attribution; here it is the point, because a file smuggled past RECORD is exactly how a
+    component inventory gets into a wheel the manifest does not account for.
+    """
+    if mode == "missing":
+        return "no sboms/ - the defect"
+    documents = {
+        # The library this wheel actually bundles, with a parseable purl: the control.
+        "covering": ("libgreet", "pkg:generic/libgreet@2.1.0"),
+        # A library the wheel does not carry. The directory exists, the document validates, and it
+        # covers nothing in the file inventory - the shape a linter that checks for a directory
+        # rather than for coverage will pass.
+        "mismatched": ("libssl", "pkg:generic/libssl@3.1.3"),
+        # Right library, purl missing its type: `pkg:` with no type does not parse.
+        "bad-purl": ("libgreet", "pkg:@2.1.0"),
+        "unlisted": ("libgreet", "pkg:generic/libgreet@2.1.0"),
+    }[mode]
+    payload = (json.dumps(sbom(*documents), indent=2) + "\n").encode()
+
+    with zipfile.ZipFile(wheel) as z:
+        items = {n: z.read(n) for n in z.namelist()}
+    dist_info = next(n.split("/")[0] for n in items if n.endswith(".dist-info/RECORD"))
+    target = f"{dist_info}/sboms/greetlib.cdx.json"
+    items[target] = payload
+
+    record = f"{dist_info}/RECORD"
+    if mode != "unlisted":
+        digest = base64.urlsafe_b64encode(hashlib.sha256(payload).digest()).rstrip(b"=").decode()
+        lines = items[record].decode().splitlines()
+        lines.insert(-1, f"{target},sha256={digest},{len(payload)}")
+        items[record] = ("\n".join(lines) + "\n").encode()
+
+    fixed = (1980, 1, 1, 0, 0, 0)
+    with zipfile.ZipFile(wheel, "w", zipfile.ZIP_DEFLATED) as z:
+        for name in sorted(items):
+            info = zipfile.ZipInfo(name, date_time=fixed)
+            info.compress_type = zipfile.ZIP_DEFLATED
+            info.external_attr = 0o644 << 16
+            z.writestr(info, items[name])
+    return f"sboms/ covers {documents[0]}" + ("" if mode != "unlisted" else ", unlisted in RECORD")
 
 
 def build(build_wheels: bool = True) -> int:
@@ -93,10 +175,23 @@ def build(build_wheels: bool = True) -> int:
         # while costing exactly this `if` - the suite had covered the checks that were interesting
         # to write about rather than the ones that were cheap to cover.
         if json.loads((arm_dir / "_arm.json").read_text()).get("no_agent_metadata"):
-            (root / "pyproject.toml").write_text(PYPROJECT.format(version=version, arm=arm))
+            (root / "pyproject.toml").write_text(
+                PYPROJECT.format(version=version, arm=arm, native_data=""))
             digests[arm] = hashlib.sha256((pkg / "__init__.py").read_bytes()).hexdigest()
             print(f"  {arm:24s} v{version:<7} 0 document(s)   [ships no agent-metadata/ by design]")
             continue
+
+        # Native components. The `.so` in the package and the one under `libs/` are what make
+        # MIRI-PY-024 APPLICABLE at all: it is conditional, so a pure-Python arm is excluded from
+        # both sides of the ratio rather than passing. That is the property the control arms prove
+        # and the reason a fixture for a conditional check needs both kinds of arm.
+        native = json.loads((arm_dir / "_arm.json").read_text()).get("native")
+        native_data = ""
+        if native:
+            (pkg / "_speedups.abi3.so").write_bytes(NATIVE_STUB)
+            (pkg / "libs").mkdir()
+            (pkg / "libs" / "libgreet-2.1.so").write_bytes(NATIVE_STUB)
+            native_data = ', "*.so", "libs/*.so"'
 
         meta = pkg / "agent-metadata"
         meta.mkdir()
@@ -108,13 +203,18 @@ def build(build_wheels: bool = True) -> int:
                 d["generated_at"] = now
             (meta / doc.name).write_text(json.dumps(d, indent=2) + "\n")
 
-        (root / "pyproject.toml").write_text(PYPROJECT.format(version=version, arm=arm))
+        (root / "pyproject.toml").write_text(
+            PYPROJECT.format(version=version, arm=arm, native_data=native_data))
         if not source_differs:
             digests[arm] = hashlib.sha256((pkg / "__init__.py").read_bytes()).hexdigest()
 
         n = len(list(meta.glob("*.json")))
-        print(f"  {arm:24s} v{version:<7} {n} document(s)"
-              + ("   [source differs by design: the removal is real]" if source_differs else ""))
+        note = ""
+        if source_differs:
+            note = "   [source differs by design: the removal is real]"
+        elif native:
+            note = f"   [bundles a shared library; sboms: {native['sboms']}]"
+        print(f"  {arm:24s} v{version:<7} {n} document(s){note}")
 
     unique = set(digests.values())
     if len(unique) != 1:
@@ -144,7 +244,9 @@ def build(build_wheels: bool = True) -> int:
             print(f"    {arm_dir.name}: build failed\n{r.stdout[-600:]}{r.stderr[-600:]}", file=sys.stderr)
             return 1
         whl = next((root / "dist").glob("*.whl"))
-        print(f"    {arm_dir.name:24s} -> {whl.name}")
+        native = json.loads((arm_dir / "_arm.json").read_text()).get("native")
+        extra = f"  [{inject_sboms(whl, native['sboms'])}]" if native else ""
+        print(f"    {arm_dir.name:24s} -> {whl.name}{extra}")
     return 0
 
 

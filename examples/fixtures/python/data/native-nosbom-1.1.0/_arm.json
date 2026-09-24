@@ -1,0 +1,7 @@
+{
+  "version": "1.1.0",
+  "native": {
+    "sboms": "missing"
+  },
+  "why": "bundles a shared library and ships no .dist-info/sboms/ at all (MIRI-PY-024 clause 1)"
+}

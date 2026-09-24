@@ -1,0 +1,39 @@
+{
+  "$schema": "https://miri-whl.github.io/schemas/sdk-manifest-v1.json",
+  "sdk_version": "1.1.0",
+  "generated_at": "2026-09-20T00:00:00Z",
+  "miri_version": "1.0",
+  "quick_reference": {
+    "primary_classes": [],
+    "key_methods": [
+      "greet",
+      "farewell"
+    ],
+    "common_imports": [
+      "import greetlib"
+    ]
+  },
+  "api_index": {
+    "greet": {
+      "type": "function",
+      "purpose": "greet() returns a string",
+      "complexity": "beginner"
+    },
+    "farewell": {
+      "type": "function",
+      "purpose": "farewell() returns a string",
+      "complexity": "beginner"
+    }
+  },
+  "error_handling": {
+    "TypeError": {
+      "when": "a non-string name is passed",
+      "common_causes": [
+        "passing None"
+      ],
+      "solutions": [
+        "pass a str"
+      ]
+    }
+  }
+}

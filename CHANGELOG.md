@@ -13,6 +13,37 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
 
 ## 0.7.2 — unreleased
 
+### Added
+
+- **Four native fixture arms, and `MIRI-PY-024` is falsifiable for the first time.** It is a MUST
+  worth 4 weight and it had never been *applicable* to anything in the suite: the check is
+  conditional on the wheel carrying a native component, and all eight arms were pure Python, so it
+  was excluded rather than passed. `native-sbom` bundles a stub `.so` and a vendored
+  `libs/libgreet-2.1.so` and covers them in a CycloneDX document; `native-nosbom` bundles the same
+  and ships no `.dist-info/sboms/`; `native-mismatch` ships a valid SBOM covering `libssl`, which
+  the wheel does not carry; `native-badpurl` covers the right library with a purl that cannot parse,
+  which is `MIRI-PY-025`.
+
+  Three goldens, `P8`–`P10`. **All three pair against `native-sbom`, not against the usual control**
+  — a conditional check cannot be paired against an arm that is excluded from it, and the control
+  has to bundle the same library or a linter could earn these cases by reporting on any wheel
+  containing a `.so`. The distinguishing fact has to be the SBOM.
+
+  `native-mismatch` is the arm that matters: a linter checking whether `.dist-info/sboms/` is
+  *present* passes it, and only one checking whether the documents *cover the bundled components*
+  fails it. That is clause 2, the anti-vacuity half, and it is the clause a linter is most likely to
+  skip because presence is cheap and coverage is not.
+
+  The SBOM documents are injected after the wheel is built, since `.dist-info/` does not exist until
+  the backend writes it — PEP 770 puts them there so scanners find them without a package-specific
+  pointer, and an arm that put them in the package would be one no conforming linter looks at.
+  `MIRI-PY` coverage: 18/43 checks to 20/43, 50 to 55 weight; untested weight across all families
+  187 to 182.
+
+  Found while wiring it up: the grader rejected its own reference answer. `_honest()` seeded only the
+  default control, so the honest submission was silent on `native-sbom-1.1.0` — an arm the goldens
+  require a linter to have analysed. The ceiling was failing, not the linter.
+
 Two clarifications of what the definitions already mean. No rule, level, weight or schema changed, so
 a linter that is correct today stays correct; both reach implementations on the next resync.
 

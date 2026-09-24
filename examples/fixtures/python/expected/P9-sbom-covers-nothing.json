@@ -1,0 +1,30 @@
+{
+  "case": "P9-sbom-covers-nothing",
+  "fixture": "native-mismatch-1.1.0 (paired against native-sbom-1.1.0, whose SBOM covers what the wheel carries)",
+  "checks": [
+    "MIRI-PY-024"
+  ],
+  "clause": "clause 2",
+  "note": "The wheel bundles libgreet and ships a schema-valid CycloneDX document covering libssl - a library it does not carry. The directory exists, the document parses, and the inventory is of something else. This is the arm that separates a linter checking for the PRESENCE of `.dist-info/sboms/` from one checking that its documents cover the bundled components, which is what clause 2 actually says. A linter that passes P8 and fails here has implemented the check's form and not its substance.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "native-mismatch-1.1.0",
+      "evidence": {
+        "MIRI-PY-024": [
+          "greetlib-1.1.0-py3-none-any.whl"
+        ]
+      },
+      "evidence_note": "Same violation_unit as P8: the wheel's SBOM state."
+    },
+    "must_not_report_on": {
+      "arm": "native-sbom-1.1.0",
+      "checks": [
+        "MIRI-PY-024"
+      ],
+      "note": "Identical bundled libraries; the only difference is which component the SBOM names."
+    }
+  },
+  "paired_control": "native-sbom-1.1.0",
+  "previous_release": "conforming-1.0.0",
+  "why_this_case_was_missing": "Clause 2 is the anti-vacuity half of MIRI-PY-024 and is the clause a linter is most likely to skip, because checking a directory exists is cheap and checking coverage is not."
+}

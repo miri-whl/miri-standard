@@ -1,0 +1,7 @@
+{
+  "version": "1.1.0",
+  "native": {
+    "sboms": "covering"
+  },
+  "why": "the control for the native case: bundles a shared library AND ships an SBOM that covers it"
+}

@@ -104,6 +104,8 @@
     "ruamel",
     "rustdoc",
     "sboms",
+    "nosbom",
+    "badpurl",
     "scorable",
     "sdist",
     "SLSA",
