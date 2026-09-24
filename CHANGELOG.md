@@ -11,7 +11,75 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-## 0.7.1 — unreleased
+## 0.7.2 — unreleased
+
+Two clarifications of what the definitions already mean. No rule, level, weight or schema changed, so
+a linter that is correct today stays correct; both reach implementations on the next resync.
+
+### Fixed
+
+- **Twenty-one PEPs were named in check prose and absent from that check's `references`**, across 18
+  checks. Reported by miri-py, who render `type: external` references as the authority line on a
+  failed check's fix card and found their report embedded 46 links, none of which reached a PEP it
+  cited by number. The standout is **PEP 702** — the document behind the entire deprecation-coherence
+  group — cited by nine checks and linked from one. Every number verified before accepting: 21 pairs,
+  18 checks, 11 distinct PEPs, reproduced exactly against this tree.
+
+  **`check_references.py` now gates the rule**, which is the part that keeps it closed: if a check's
+  prose names a PEP, that PEP must be reachable from its `references`. Mechanical on purpose — the
+  alternative is editorial judgment about which documents are important enough to link, which nothing
+  can gate and everyone answers differently. Mutation-tested: removing any one reference fails the
+  gate and names the entry to restore.
+
+  Found while here: one reference's title was the bare number `700`, so a renderer showing titles
+  printed `700` where every sibling printed `PEP 700`.
+
+- **The same gap outside the PEPs: RFCs, CycloneDX, SPDX and SLSA.** Ten more references across nine
+  checks. `MIRI-PY-026` requires a `vex` URL to serve "an OpenVEX document **or** a CycloneDX document
+  containing a `vulnerabilities[]` analysis" and referenced only OpenVEX, so a producer whose VEX is
+  CycloneDX had no link to the specification they were being judged against. `MIRI-PY-024` names both
+  SBOM formats it accepts and cited neither. Six checks named an RFC — 9457, 9745, 822, 3339, 8259 —
+  without linking it. The gate now covers RFCs too.
+
+  **It does not cover named bodies, deliberately.** 23 checks mention `purl` and 11 mention OSV, but
+  most of those are our own field names (`identity.purl`) or an ecosystem aside rather than a citation
+  of a specification. Gating them would add 34 references nobody asked for and dilute the trail the
+  rule exists to keep honest. Numbered documents are gateable because naming the number *is* the
+  citation and the URL is arithmetic; named bodies stay editorial.
+
+  The gate's own first draft got this wrong in the other direction: it matched only
+  `rfc-editor.org/rfc/rfcNNNN` and reported two RFCs on `MIRI-CLI-032` as unlinked when they were
+  linked all along as `/info/rfcNNNN/`, the spelling this repository actually uses. A gate that cannot
+  read its own repository's convention manufactures work rather than finding it.
+
+- **`MIRI-PY-005` says what it does not reach.** It checks that an index publishes PEP 740
+  attestations — the distribution mechanism. The attestation's payload is an in-toto statement whose
+  predicate is typically SLSA build provenance (`https://slsa.dev/provenance/v1`), carrying
+  `buildDefinition`, `runDetails`, and the `builder.id` that SLSA calls the sole determiner of the
+  build level. **This check asks whether provenance is published, not what it says**, so an attestation
+  whose predicate asserts nothing useful about the build still satisfies it. Verifying the payload is a
+  separate check that does not exist yet. The standard required provenance, shipped provenance, and had
+  never named the format its provenance is in: SLSA and in-toto appeared nowhere in 123 definitions.
+
+### Changed
+
+- **`MIRI-PY-001` states what passing it does not establish.** The check verifies that the archive matches
+  `RECORD` — every file listed, every sha256 recomputed. It is worth running, because pip has never
+  enforced it at install time. It is **not** tamper-evidence: `RECORD` is carried inside the archive it
+  describes, so whatever rewrites a file rewrites `RECORD` in the same motion. A report rendering a pass as
+  "verified" or "untampered" states a verdict its evidence cannot support — the integrity form of the
+  vulnerability claim this standard forbids everywhere else. Level (MUST) and weight (0) are unchanged and
+  no `fires_when` clause moved, so a linter implementing the check correctly today stays correct; the
+  boundary now travels inside the definitions wheel rather than living in a conversation.
+
+  **`MIRI-PY-005` was considered for promotion to MUST and deliberately left at SHOULD.** PEP 740
+  attestations became automatic only under Trusted Publishing, so a MUST would mark a large share of the
+  ecosystem non-conforming for a configuration choice — and this standard's own definitions wheel is not on
+  PyPI, so it would be a MUST our only artifact cannot satisfy. The bar is that a linter can decide it *and*
+  near-universal non-compliance is not the expected result; it fails the second half today. Recorded in
+  [`standards/feedback/`](standards/feedback/README.md) so revisiting it needs a number rather than a mood.
+
+## 0.7.1 — 2026-09-22
 
 Four blockers miri-py found by vendoring the 0.7.0 wheel and nothing else, all invisible from inside
 this repository, because every tool here has the repository.

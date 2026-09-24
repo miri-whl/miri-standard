@@ -48,6 +48,9 @@ references:
 - title: Lifecycle §8 (Conformance Requirements), item 2
   url: lifecycle-security-metadata.md
   type: spec
+- title: PEP 503
+  url: https://peps.python.org/pep-0503/
+  type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-019.yaml
   html: https://miri-whl.github.io/checks/python/MIRI-PY-019.html

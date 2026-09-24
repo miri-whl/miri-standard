@@ -21,7 +21,13 @@ severity:
 short_description: '`.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD'
 long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
   baseline cannot carry trustworthy agent metadata. This check verifies: `.dist-info/` with `METADATA`, `WHEEL`, `RECORD`;
-  archive matches RECORD.'
+  archive matches RECORD. What passing it does NOT establish is that the wheel is the one its publisher built: RECORD
+  is carried inside the archive it describes, so whatever rewrites a file rewrites RECORD in the same motion. This
+  detects corruption, truncation, and a post-build edit nobody tried to hide - not a deliberate one. Provenance is
+  decided outside the artifact, against an attestation (MIRI-PY-005), a digest published beside the release, or a
+  resolver-enforced lock digest fixed before the bytes are fetched. A report that renders passing this check as
+  "verified" or "untampered" states a verdict its evidence cannot support, which is the integrity form of the
+  vulnerability claim this standard forbids everywhere else.'
 rationale: 'PEP 427 makes RECORD the wheel''s own integrity manifest: every file except RECORD itself MUST be listed with
   an sha256-or-better hash, and the spec directs installers to fail when a file is absent from RECORD or hashed incorrectly.
   In practice pip has never enforced this at install time (pypa/pip#2752 has tracked the gap since 2015), so a wheel modified
@@ -56,6 +62,9 @@ references:
   type: external
 - title: Binary Distribution Format
   url: https://packaging.python.org/en/latest/specifications/binary-distribution-format/
+  type: external
+- title: PEP 517
+  url: https://peps.python.org/pep-0517/
   type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-001.yaml

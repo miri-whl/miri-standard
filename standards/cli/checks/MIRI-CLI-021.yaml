@@ -40,6 +40,12 @@ references:
 - title: CLI Spec §3.2
   url: cli-lifecycle-specification.md
   type: spec
+- title: PEP 702
+  url: https://peps.python.org/pep-0702/
+  type: external
+- title: RFC 9745
+  url: https://www.rfc-editor.org/info/rfc9745/
+  type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-021.yaml
   html: https://miri-whl.github.io/checks/cli/MIRI-CLI-021.html

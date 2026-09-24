@@ -52,6 +52,12 @@ references:
 - title: Lifecycle §6.1
   url: lifecycle-security-metadata.md
   type: spec
+- title: PEP 387
+  url: https://peps.python.org/pep-0387/
+  type: external
+- title: PEP 565
+  url: https://peps.python.org/pep-0565/
+  type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-028.yaml
   html: https://miri-whl.github.io/checks/python/MIRI-PY-028.html

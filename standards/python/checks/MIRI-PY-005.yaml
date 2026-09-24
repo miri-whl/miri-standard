@@ -26,7 +26,12 @@ rationale: 'PEP 740 attestations bind each uploaded file to the exact source rep
   under trusted publishing, so their absence is now a configuration choice rather than a tooling gap. The December 2024
   ultralytics compromise showed both halves of the mechanism: malicious wheels reached PyPI through an injected GitHub Actions
   workflow, and the release''s published provenance is what let responders reconstruct which workflow run produced the poisoned
-  artifacts.'
+  artifacts. Note what this check does and does not reach: PEP 740 is the DISTRIBUTION mechanism - how an index receives,
+  verifies and republishes an attestation - while the attestation''s payload is an in-toto statement whose predicate is
+  typically SLSA build provenance (`https://slsa.dev/provenance/v1`), carrying `buildDefinition` and `runDetails` and a
+  `builder.id` the SLSA spec calls the sole determiner of the build level. This check asks whether provenance is published,
+  not what it says; an attestation whose predicate asserts nothing useful about the build still satisfies it. Verifying the
+  payload is a separate question, and deliberately not this check''s.'
 fires_when:
 - 'The index named by `identity.registry`, queried via its PEP 691 JSON API (`Accept: application/vnd.pypi.simple.v1+json`),
   returns `"provenance": null` for the release''s files'
@@ -54,6 +59,12 @@ suggested_fix: Publish via trusted publishing so PEP 740 attestations are attach
 references:
 - title: PEP 740
   url: https://peps.python.org/pep-0740/
+  type: external
+- title: PEP 691
+  url: https://peps.python.org/pep-0691/
+  type: external
+- title: SLSA v1.2 build provenance
+  url: https://slsa.dev/spec/v1.2/build-provenance
   type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-005.yaml
