@@ -185,6 +185,21 @@ def build(build_wheels: bool = True) -> int:
         # MIRI-PY-024 APPLICABLE at all: it is conditional, so a pure-Python arm is excluded from
         # both sides of the ratio rather than passing. That is the property the control arms prove
         # and the reason a fixture for a conditional check needs both kinds of arm.
+        # MIRI-PY-014 is TIERED and its conformance_tier is T1: a thin example earns less weight and
+        # still conforms, while an example NAMING A SYMBOL THE PACKAGE DOES NOT HAVE fails T1 and is
+        # a MUST failure. That distinction is the whole point of the tier model - "the MUST boundary
+        # sits at the lie, not at thinness" - and no arm demonstrated it, so the boundary was a
+        # sentence in a schema rather than a property of an artifact. This arm is the lie; the
+        # conforming arms are the thin-but-honest control, unchanged.
+        if json.loads((arm_dir / "_arm.json").read_text()).get("example_lies"):
+            (pkg / "examples" / "quickstart.py").write_text(
+                '"""Install to first result, in four lines."""\n'
+                "import greetlib\n\n"
+                'print(greetlib.greet("world"))\n'
+                "# `shout` appears in no api_index of any release. py_compile still succeeds and the\n"
+                "# import still resolves; only the T1 clause catches it.\n"
+                'print(greetlib.shout("world"))\n')
+
         native = json.loads((arm_dir / "_arm.json").read_text()).get("native")
         native_data = ""
         if native:

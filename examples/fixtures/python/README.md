@@ -1,6 +1,6 @@
 # Python wheel fixtures — the MIRI-PY conformance suite
 
-Thirteen wheels built from one package source, used to check what the **checklist says about a wheel**.
+Fourteen wheels built from one package source, used to check what the **checklist says about a wheel**.
 
 Until 0.7 the `MIRI-PY` family had 43 checks, 100 weight, and no artifact that falsified any of them — the founding
 family, and the only one with nothing to test against. The fixtures under `examples/fixtures/` drive the `CONSUMER`
@@ -25,12 +25,36 @@ and `SURFACE` families: they test what a *reader* does with metadata. These test
 | `native-nosbom-1.1.0` | bundles a shared library and ships no `.dist-info/sboms/` at all | `024` |
 | `native-mismatch-1.1.0` | ships a valid SBOM covering a library the wheel does not carry | `024` |
 | `native-badpurl-1.1.0` | a covering SBOM whose component purl (`pkg:@2.1.0`) does not parse | `025` |
+| `example-lies-1.1.0` | an example calling `greetlib.shout()`, a symbol no `api_index` carries | `014` (T1) |
 | `stripped-1.1.0` | ships no `agent-metadata/` at all | `006` + ten downstream |
 
 ## Identical source, enforced mechanically
 
 Every arm is materialized from `src/_template/` and the source is byte-compared after materialization, so any
 finding a linter reports is attributable to metadata rather than to code.
+
+## The tier arm, and the boundary it demonstrates
+
+0.6.0 introduced tiered checks with a rule: **the MUST boundary sits at the lie, not at thinness.** A
+check declaring `tiers` earns its weight on a schedule — T0 exists, T1 true, T2 covers, T3 current —
+and fails only below its `conformance_tier`, which is T1 by default. Nothing in this suite
+demonstrated that, so the boundary existed as a sentence in a schema rather than as a property of an
+artifact.
+
+`example-lies-1.1.0` is the lie. Its `quickstart.py` calls `greetlib.shout()`, a symbol no release's
+`api_index` carries. The file is present, `py_compile` succeeds, and the import resolves — so the arm
+**earns T0** and fails T1, whose clause requires every attribute path an example takes to name a key
+in `sdk-manifest.json`. T1 is `MIRI-PY-014`'s `conformance_tier`, so that is a MUST failure.
+
+The control is `conforming-1.1.0`, and it is the more interesting half: its example exercises two
+symbols, both real, and reaches no higher than T1. It is **thin, honest, and conforming**. A linter
+that reports both arms has not implemented tiers — it has implemented thinness-as-failure, which is
+exactly what tiers were introduced to stop.
+
+What this still does not cover: tier *earning* above the boundary. No arm reaches T3, and the
+goldens grade pass/fail attribution rather than `tier_earned`, so the schedule's upper half remains
+untested. Four of the five tiered checks — `015`, `017`, `037`, and `007` beyond its incidental
+coverage — have no tier material at all.
 
 ## The native arms, and why a conditional check needs two controls
 

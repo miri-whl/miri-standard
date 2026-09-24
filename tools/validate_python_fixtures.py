@@ -51,6 +51,8 @@ def wheel_docs(arm: str) -> dict:
         # directory: `.dist-info/sboms/` does not exist until the backend writes dist-info, so the
         # only honest place to assert it is the built wheel.
         out["_native"] = [n for n in z.namelist() if n.endswith((".so", ".pyd", ".dylib"))]
+        qs = next((n for n in z.namelist() if n.endswith("examples/quickstart.py")), None)
+        out["_quickstart"] = z.read(qs).decode() if qs else ""
         out["_sboms"] = [n for n in z.namelist() if "/sboms/" in n]
         out["_sbom_components"], out["_sbom_purls"] = [], []
         for n in out["_sboms"]:
@@ -121,6 +123,13 @@ def defects(arm: str, d: dict) -> dict[str, bool]:
             "its SBOM covers a bundled library":
                 any(c.lower() in " ".join(d.get("_native", [])).lower()
                     for c in d.get("_sbom_components", [])),
+        },
+        "example-lies-1.1.0": {
+            # Read out of the built wheel: the example must still name a symbol no api_index carries,
+            # or the arm stops demonstrating the tier boundary it exists for.
+            "its example names a symbol no api_index carries":
+                "shout" in d.get("_quickstart", "") and "shout" not in api,
+            "its example still compiles and imports": "import greetlib" in d.get("_quickstart", ""),
         },
         "identity-1.1.0": {
             "registry is a project page, not an index": "/project/" in str(ident.get("registry", "")),

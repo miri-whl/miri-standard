@@ -15,6 +15,20 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
 
 ### Added
 
+- **The tier boundary is demonstrated by an artifact for the first time.** 0.6.0 shipped tiered
+  checks with the rule that *the MUST boundary sits at the lie, not at thinness* — a check earns
+  weight on a schedule and fails only below its `conformance_tier`. Nothing in the suite
+  distinguished the two cases, so the rule existed as a sentence in a schema rather than as a
+  property of an artifact. `example-lies-1.1.0`'s `quickstart.py` calls `greetlib.shout()`, a symbol
+  no release's `api_index` carries: the file is present and compiles, so the arm **earns T0** and
+  fails T1 — a MUST failure for `MIRI-PY-014`, weight 5. Its control is `conforming-1.1.0`, whose
+  example is **thin, honest and conforming**, reaching T1 and no higher. A linter reporting both has
+  implemented thinness-as-failure, which is what tiers were introduced to stop.
+
+  Still uncovered and stated in the fixtures README rather than left implicit: tier *earning* above
+  the boundary. No arm reaches T3, the goldens grade pass/fail rather than `tier_earned`, and three
+  of the five tiered checks have no tier material at all.
+
 - **Four native fixture arms, and `MIRI-PY-024` is falsifiable for the first time.** It is a MUST
   worth 4 weight and it had never been *applicable* to anything in the suite: the check is
   conditional on the wheel carrying a native component, and all eight arms were pure Python, so it
@@ -37,8 +51,8 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
   The SBOM documents are injected after the wheel is built, since `.dist-info/` does not exist until
   the backend writes it — PEP 770 puts them there so scanners find them without a package-specific
   pointer, and an arm that put them in the package would be one no conforming linter looks at.
-  `MIRI-PY` coverage: 18/43 checks to 20/43, 50 to 55 weight; untested weight across all families
-  187 to 182.
+  `MIRI-PY` coverage across both additions: 18/43 checks to 21/43, 50 to 60 weight; untested weight
+  across all families 187 to 177.
 
   Found while wiring it up: the grader rejected its own reference answer. `_honest()` seeded only the
   default control, so the honest submission was silent on `native-sbom-1.1.0` — an arm the goldens
@@ -94,6 +108,16 @@ a linter that is correct today stays correct; both reach implementations on the 
 
 ### Changed
 
+- **`make check` now runs what it claims to.** Its help said "run everything CI runs locally" while
+  omitting `consistency`, `envelope` and `references` — all three are CI steps in their own right, so
+  a local green could still fail CI, and the reference gate added this release was enforced in CI and
+  by nothing a contributor runs. A claim about coverage that nothing verifies is the defect this
+  repository keeps finding in other people's checks.
+- **`docs/glossary.md` gains SBOM, VEX, Provenance, and Attestation versus self-consistency.** All
+  four appear in check prose and in shipped feedback documents, and the glossary is where the specs'
+  vocabulary is supposed to be settled. The fourth is the one that matters: it states the boundary
+  between what a conformance report may conclude from inside an artifact and what needs a root
+  outside it.
 - **`MIRI-PY-001` states what passing it does not establish.** The check verifies that the archive matches
   `RECORD` — every file listed, every sha256 recomputed. It is worth running, because pip has never
   enforced it at install time. It is **not** tamper-evidence: `RECORD` is carried inside the archive it

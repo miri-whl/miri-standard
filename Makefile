@@ -115,4 +115,9 @@ links: ## Check Markdown links (CI: markdown-link-check)
 	@echo "links: $$(find . -name '*.md' -not -path './node_modules/*' -not -path './.generated/*' -not -path '*/fixtures/*/build/*' \
 		| wc -l | tr -d ' ') file(s), no dead links"
 
-check: validate validate-sample validate-fixtures validate-cli-fixtures validate-python-fixtures findings-schema score-cli-linter score-python-fixtures lint spell links ## Run everything CI runs locally (except the miri score gate)
+# consistency, envelope and references are CI steps in their own right (ci.yml), and this target
+# claimed to run everything CI runs while omitting all three - so a local green could still fail
+# CI, and the reference gate added in 0.7.2 was enforced in CI and by nothing a contributor runs.
+# A claim about coverage that nothing verifies is the defect this repository keeps finding in
+# other people's checks.
+check: validate validate-sample validate-fixtures validate-cli-fixtures validate-python-fixtures findings-schema score-cli-linter score-python-fixtures consistency envelope references lint spell links ## Run everything CI runs locally (except the miri score gate)

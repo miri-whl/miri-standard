@@ -1,0 +1,5 @@
+{
+  "version": "1.1.0",
+  "example_lies": true,
+  "why": "quickstart.py calls greetlib.shout(), which no api_index carries. MIRI-PY-014's T1 clause requires every attribute path an example takes to name a key in sdk-manifest.json api_index, and T1 is its conformance_tier - so this is a MUST failure, where a THIN but honest example is not. That distinction is what tiers were introduced for and nothing demonstrated it."
+}
