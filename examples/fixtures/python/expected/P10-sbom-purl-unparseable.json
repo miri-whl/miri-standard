@@ -1,0 +1,30 @@
+{
+  "case": "P10-sbom-purl-unparseable",
+  "fixture": "native-badpurl-1.1.0 (paired against native-sbom-1.1.0, whose component purl parses)",
+  "checks": [
+    "MIRI-PY-025"
+  ],
+  "clause": "clause 2",
+  "note": "The SBOM covers the right library and gives its component the purl `pkg:@2.1.0`, which has no type and cannot parse under the purl grammar. A purl that does not parse cannot join against an advisory, so the component is inventoried and still invisible to every scanner that keys on identity - the SBOM is present, covering, and useless. MIRI-PY-025 is a SHOULD worth 1, and it is the check that stops MIRI-PY-024 from being satisfiable with an inventory nothing can query.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "native-badpurl-1.1.0",
+      "evidence": {
+        "MIRI-PY-025": [
+          "greetlib.cdx.json:components[0].purl"
+        ]
+      },
+      "evidence_note": "MIRI-PY-025's violation_unit is `each malformed SBOM purl`, so the evidence names the field rather than the document: one violation per purl, and the report has to say which."
+    },
+    "must_not_report_on": {
+      "arm": "native-sbom-1.1.0",
+      "checks": [
+        "MIRI-PY-025"
+      ],
+      "note": "Same document shape with `pkg:generic/libgreet@2.1.0`, which parses."
+    }
+  },
+  "paired_control": "native-sbom-1.1.0",
+  "previous_release": "conforming-1.0.0",
+  "why_this_case_was_missing": "MIRI-PY-025 had no artifact because nothing in the suite shipped an SBOM at all."
+}

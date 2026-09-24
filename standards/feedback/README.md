@@ -79,5 +79,15 @@ Decisions worked through so far, each as a proposal plus the response that settl
   definitions wheel rather than copying out of it: the checklist revision per family, a `content_sha256`
   that hashed the staging tree instead of the package, two families sharing one directory with nothing to
   tell them apart, and the fixture pack that was never shipped. All four invisible from inside a checkout.
+
+- `miri-standard-note-integrity-semantics.md` — what a linter may conclude from `MIRI-PY-001` and what it may
+  not. Passing means the archive agrees with its own `RECORD`, which is carried inside the archive it
+  describes, so it detects corruption and an edit nobody hid — not a deliberate one. Provenance is decided
+  outside the artifact. Records why `MIRI-PY-005` was considered for MUST and left at SHOULD.
+
+- `miri-standard-response-check-references.md` — accepts miri-py's finding that 21 PEPs are named in check
+  prose and missing from that check's `references`, and gates the rule so it cannot reopen. Asks them to
+  relabel their fix card from "Defined by" to "References", because four of the 21 are tooling
+  instructions, cautionary examples, or cross-ecosystem prior art rather than the authority for the rule.
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.

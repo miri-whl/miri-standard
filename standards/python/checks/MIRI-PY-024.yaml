@@ -49,6 +49,12 @@ references:
 - title: Lifecycle §3.2
   url: lifecycle-security-metadata.md
   type: spec
+- title: CycloneDX
+  url: https://cyclonedx.org/
+  type: external
+- title: SPDX
+  url: https://spdx.dev/
+  type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-024.yaml
   html: https://miri-whl.github.io/checks/python/MIRI-PY-024.html

@@ -1,0 +1,36 @@
+{
+  "case": "P11-example-names-absent-symbol",
+  "fixture": "example-lies-1.1.0 (paired against conforming-1.1.0, whose example is THIN and honest)",
+  "checks": [
+    "MIRI-PY-014"
+  ],
+  "clause": "T1",
+  "tier": {
+    "conformance_tier": "T1",
+    "arm_earns": "T0",
+    "control_earns": "T1",
+    "note": "The arm satisfies T0 \u2014 quickstart.py is present and py_compile succeeds \u2014 and fails T1, whose clause requires every attribute path an example takes to name a key in sdk-manifest.json api_index. Because T1 is the conformance_tier, that is a MUST failure. The control earns T1 and stops there: it is thin, it never reaches T3, and it conforms."
+  },
+  "note": "This is the case the tier model was introduced for and nothing demonstrated. 0.6.0 shipped `tiers` with the rule that the MUST boundary sits at the lie rather than at thinness, and every arm in the suite was either fully conforming or broken in some other check \u2014 so the boundary existed only as a sentence in a schema. `greetlib.shout()` is a symbol no api_index of any release carries: the file compiles, the import resolves, and only the T1 clause catches it. A linter that fails the control alongside the arm has not implemented tiers, it has implemented thinness-as-failure, which is precisely what tiers were designed to stop.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "example-lies-1.1.0",
+      "evidence": {
+        "MIRI-PY-014": [
+          "examples/quickstart.py"
+        ]
+      },
+      "evidence_note": "The example file is the violation unit; the offending attribute path is `greetlib.shout`, absent from sdk-manifest.json api_index."
+    },
+    "must_not_report_on": {
+      "arm": "conforming-1.1.0",
+      "checks": [
+        "MIRI-PY-014"
+      ],
+      "note": "Its quickstart.py exercises two symbols, both in api_index. It earns T1 and no higher \u2014 thin, honest, conforming. Reporting it is the failure mode this case exists to catch."
+    }
+  },
+  "paired_control": "conforming-1.1.0",
+  "previous_release": "conforming-1.0.0",
+  "why_this_case_was_missing": "0.6.0's central scoring change \u2014 tiers, and a MUST boundary at T1 \u2014 shipped with no artifact that distinguishes a thin example from a lying one. Four of the five tiered checks still have no tier material; this closes the heaviest."
+}

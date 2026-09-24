@@ -1,6 +1,6 @@
 # Progress
 
-_Last updated: 2026-09-21._
+_Last updated: 2026-09-23._
 
 ## What exists
 
@@ -37,6 +37,14 @@ _Last updated: 2026-09-21._
 - **The definitions wheel** (`miri-standard-checks`): every check YAML and schema, packaged, with its own
   `agent-metadata/` written at build time from the definitions it carries. Scores 98 of an effective 53.0 with zero
   MUST failures. Published from a tag to `miri-whl.github.io/simple/` as a PEP 503 index with PEP 700 JSON.
+  **Released: 0.7.0 on 2026-09-21, 0.7.1 on 2026-09-22.** `pip install --index-url
+  https://miri-whl.github.io/simple/ miri-standard-checks` resolves it by name, and since 0.7.1 the index carries
+  the wheel's sha256. Its manifest carries a `families` block — each family's checklist revision, directory, id
+  prefix and weight total — and the package carries `verify_content()`, `content_digest()`, `families()` and
+  `checklist_version()`.
+- **The fixture pack** (`miri-standard-fixtures-<version>.tar.gz`), attached to each release since 0.7.1: all three
+  suites, 40 goldens, the build recipes and the validators. Carries no check definitions — the validators resolve
+  those and the schemas from the installed wheel, so the two artifacts are complementary. Byte-reproducible.
 
 ## What is planned
 
@@ -90,7 +98,7 @@ Engineering backlog, stated factually so it does not get lost:
 
 ## Verification status
 
-As of 0.7.0 (`phase-0.7-stage-1`), `make check` runs all of this locally and is green:
+As of 0.7.2 (`phase-0.7.2`), `make check` runs all of this locally and is green:
 
 - 123 check definitions valid against `check-v3.json`; all four targets sum to exactly 100.
 - All seventeen schemas are valid draft-07; the envelope is round-tripped 24/24 by `make envelope`.
@@ -100,7 +108,10 @@ As of 0.7.0 (`phase-0.7-stage-1`), `make check` runs all of this locally and is 
   seven for the CLI one. Two of the nine are cheats the Python grader itself failed before the panel found them:
   evidence pooled across a case, and findings credited without checking which arm they came from.
 - `make consistency` (9 specs clean, plus the schema index, category totals and checklist↔YAML coherence) and
-  `make references` (140 citations resolve across 107 checks) catch drift the linters cannot see.
+  `make references` (140 spec citations resolve across 107 checks) catch drift the linters cannot see. Since
+  0.7.2 `make references` also gates the standards trail in the other direction: every PEP and RFC a check names
+  in its prose must be reachable from its `references`. Numbered documents only — naming the number is the
+  citation and the URL is arithmetic, where 23 checks mention `purl` mostly as our own field name.
 - `make check` includes the link check since 0.5.0's tail; `make links` had used `find -exec` and had never failed.
 - Doc CI (markdownlint/cspell/link) is the gate for prose changes. `make lint` is pinned to the version the CI
   action bundles; unpinned, npx resolves to a newer release whose added rules fail files CI accepts.

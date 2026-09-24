@@ -1,0 +1,31 @@
+{
+  "case": "P8-sbom-absent",
+  "fixture": "native-nosbom-1.1.0 (paired against native-sbom-1.1.0, which bundles the same library and covers it)",
+  "checks": [
+    "MIRI-PY-024"
+  ],
+  "clause": "clause 1",
+  "note": "The wheel bundles a shared library (`greetlib/_speedups.abi3.so` and `greetlib/libs/libgreet-2.1.so`) and ships no `.dist-info/sboms/` directory. This is the phantom-dependency case the check exists for: a pip-level scan of this wheel sees greetlib 1.1.0 and nothing else, exactly as it did for the cryptography wheels that re-released solely to bundle a patched OpenSSL. The paired control is what makes the finding mean something - it bundles the SAME library and passes, so a linter cannot earn this case by reporting on any wheel with a .so in it.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "native-nosbom-1.1.0",
+      "evidence": {
+        "MIRI-PY-024": [
+          "greetlib-1.1.0-py3-none-any.whl"
+        ]
+      },
+      "evidence_note": "MIRI-PY-024's violation_unit is `the wheel's SBOM state` - one violation per wheel, not per bundled library - so the document-only form is what lint-report-v1 sanctions here."
+    },
+    "must_not_report_on": {
+      "arm": "native-sbom-1.1.0",
+      "checks": [
+        "MIRI-PY-024",
+        "MIRI-PY-025"
+      ],
+      "note": "Bundles the same two .so files and ships a CycloneDX document covering libgreet, listed in RECORD."
+    }
+  },
+  "paired_control": "native-sbom-1.1.0",
+  "previous_release": "conforming-1.0.0",
+  "why_this_case_was_missing": "MIRI-PY-024 is a MUST worth 4 weight and had no artifact at all: every arm in the suite was pure Python, so the check was never even applicable, let alone falsified."
+}

@@ -261,6 +261,35 @@ package URL that joins an artifact to advisory data. A **surface-derived** field
 it from the installed distribution's own record and never from a served document, because a package that could
 declare its own purl could inherit any namespace's trust by saying so.
 
+**SBOM** ([MIRI-PY-024](../standards/python/checks/MIRI-PY-024.yaml); [PEP
+770](https://peps.python.org/pep-0770/)) — the inventory of what an artifact *contains* beyond the code its
+package manager knows about. A wheel that vendors a native library has two identities: the one its purl
+declares and the one linked inside it, which no dependency-graph scan can see. PEP 770 places the documents at
+`.dist-info/sboms/`, where scanners find them without a Miri-specific pointer. Required only when the artifact
+bundles non-Python components, and required to **cover** them — a document that exists and inventories
+something else satisfies the form and not the rule.
+
+**VEX** ([MIRI-PY-026](../standards/python/checks/MIRI-PY-026.yaml); [OpenVEX](https://github.com/openvex/spec))
+— a vendor-authored statement that a vulnerability in a listed component is or is not exploitable in this
+artifact, letting a consumer suppress a false positive with an auditable record instead of an ignore-list. It
+is a *source*, not a verdict: a declared `vex` URL that serves nothing is worse than none, because a consumer
+that planned to apply suppressions on its authority either re-raises every finding or fails open.
+
+**Provenance** ([MIRI-PY-005](../standards/python/checks/MIRI-PY-005.yaml); [SLSA build
+provenance](https://slsa.dev/spec/v1.2/build-provenance)) — a signed statement binding an artifact to the
+source and the build that produced it. The **mechanism** and the **content** are separate and often confused:
+PEP 740 is how an index receives, verifies and republishes an attestation, while SLSA provenance is what the
+attestation says — `buildDefinition`, `runDetails`, and a `builder.id`. Miri checks the first and not yet the
+second, so an attestation asserting nothing useful about the build still satisfies `MIRI-PY-005`.
+
+**Attestation versus self-consistency** ([MIRI-PY-001](../standards/python/checks/MIRI-PY-001.yaml)) — the
+boundary a conformance report must not blur. Checks computed *inside* an artifact — RECORD matching the
+archive, a manifest digest matching the files — prove the artifact agrees with itself, which detects
+corruption and an edit nobody hid. They cannot establish where the artifact came from, because whatever
+rewrote a file rewrote the manifest in the same motion. Only a root outside the artifact does that: an
+attestation, a digest published beside the release, or a resolver-enforced lock. A report rendering internal
+consistency as *"verified"* states a verdict its evidence cannot support.
+
 **`advisory_coverage`** ([CLI Spec §4.1](../standards/cli/cli-lifecycle-specification.md)) — whether any listed advisory
 source is authoritative for the artifact *itself* rather than
 its dependency tree. `none` declares honestly that no machine-queryable source covers this artifact — the true state

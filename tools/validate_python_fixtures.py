@@ -17,6 +17,7 @@ Run tools/score_python_fixtures.py for the other half: grading a linter against 
 """
 import json
 import pathlib
+import re
 import sys
 import zipfile
 
@@ -26,6 +27,7 @@ from checks_source import checks_dir  # noqa: E402 — after sys.path is set
 REPO = pathlib.Path(__file__).resolve().parent.parent
 FIX = REPO / "examples/fixtures/python"
 BUILD = FIX / "build"
+DATA = FIX / "data"
 CONTROL = "conforming-1.1.0"
 
 failures = 0
@@ -45,6 +47,19 @@ def wheel_docs(arm: str) -> dict:
         return {}
     out = {}
     with zipfile.ZipFile(whl) as z:
+        # Native components and SBOM state, read from the archive rather than from the arm's data
+        # directory: `.dist-info/sboms/` does not exist until the backend writes dist-info, so the
+        # only honest place to assert it is the built wheel.
+        out["_native"] = [n for n in z.namelist() if n.endswith((".so", ".pyd", ".dylib"))]
+        qs = next((n for n in z.namelist() if n.endswith("examples/quickstart.py")), None)
+        out["_quickstart"] = z.read(qs).decode() if qs else ""
+        out["_sboms"] = [n for n in z.namelist() if "/sboms/" in n]
+        out["_sbom_components"], out["_sbom_purls"] = [], []
+        for n in out["_sboms"]:
+            doc = json.loads(z.read(n))
+            for c in doc.get("components", []):
+                out["_sbom_components"].append(c.get("name", ""))
+                out["_sbom_purls"].append(c.get("purl", ""))
         for n in z.namelist():
             if "/agent-metadata/" in n and n.endswith(".json"):
                 out[n.rsplit("/", 1)[1]] = json.loads(z.read(n))
@@ -83,6 +98,39 @@ def defects(arm: str, d: dict) -> dict[str, bool]:
             "newest changelog entry is not this release":
                 chg.get("releases", [{}])[0].get("version") != ver,
         },
+        "native-nosbom-1.1.0": {
+            "bundles a native component": bool(d.get("_native")),
+            "ships no .dist-info/sboms/": not d.get("_sboms"),
+        },
+        "native-mismatch-1.1.0": {
+            "bundles a native component": bool(d.get("_native")),
+            "ships an SBOM": bool(d.get("_sboms")),
+            "its SBOM covers no bundled library":
+                not any(c.lower() in " ".join(d.get("_native", [])).lower()
+                        for c in d.get("_sbom_components", [])),
+        },
+        "native-badpurl-1.1.0": {
+            "its SBOM covers a bundled library":
+                any(c.lower() in " ".join(d.get("_native", [])).lower()
+                    for c in d.get("_sbom_components", [])),
+            "a component purl does not parse":
+                any(not re.match(r"^pkg:[a-zA-Z][a-zA-Z0-9.+-]*/", u) for u in d.get("_sbom_purls", [])),
+        },
+        "native-sbom-1.1.0": {
+            # The control for the three above: it must keep BOTH properties, or the pairing that
+            # makes those findings attributable stops holding.
+            "bundles a native component": bool(d.get("_native")),
+            "its SBOM covers a bundled library":
+                any(c.lower() in " ".join(d.get("_native", [])).lower()
+                    for c in d.get("_sbom_components", [])),
+        },
+        "example-lies-1.1.0": {
+            # Read out of the built wheel: the example must still name a symbol no api_index carries,
+            # or the arm stops demonstrating the tier boundary it exists for.
+            "its example names a symbol no api_index carries":
+                "shout" in d.get("_quickstart", "") and "shout" not in api,
+            "its example still compiles and imports": "import greetlib" in d.get("_quickstart", ""),
+        },
         "identity-1.1.0": {
             "registry is a project page, not an index": "/project/" in str(ident.get("registry", "")),
             "distribution claims private": ident.get("distribution") == "private",
@@ -118,8 +166,17 @@ def main() -> int:
         check(f"golden {g.stem}: cites only active checks", not unknown, f"unknown: {unknown}")
         check(f"golden {g.stem}: declares evidence a finding must point at",
               bool(d["linter_assertion"]["must_report_on"]["evidence"]))
-        check(f"golden {g.stem}: pairs its arm against the control",
-              d.get("paired_control") == CONTROL)
+        # The paired control is not always `conforming-1.1.0`. MIRI-PY-024 is conditional on the
+        # wheel carrying a native component, so a pure-Python control cannot pair with it: it does
+        # not fail the check, it is excluded from it, and "excluded" is not the same evidence as
+        # "passed". The SBOM cases therefore pair against an arm bundling the SAME library, which
+        # is what makes the finding attributable to the SBOM rather than to the presence of a .so.
+        pair = d.get("paired_control")
+        check(f"golden {g.stem}: names a paired control", bool(pair))
+        check(f"golden {g.stem}: its control is a real arm", (DATA / pair).is_dir() if pair else False,
+              f"{pair} is not an arm")
+        check(f"golden {g.stem}: its control is not the arm under test",
+              pair != d["linter_assertion"]["must_report_on"]["arm"])
 
     control = wheel_docs(CONTROL)
     check(f"control {CONTROL} was built", bool(control))

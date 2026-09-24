@@ -1,0 +1,7 @@
+{
+  "version": "1.1.0",
+  "native": {
+    "sboms": "mismatched"
+  },
+  "why": "ships an SBOM that covers a library the wheel does not bundle (MIRI-PY-024 clause 2)"
+}

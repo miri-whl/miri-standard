@@ -50,6 +50,9 @@ references:
 - title: OpenVEX
   url: https://github.com/openvex/spec
   type: external
+- title: CycloneDX
+  url: https://cyclonedx.org/
+  type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-026.yaml
   html: https://miri-whl.github.io/checks/python/MIRI-PY-026.html

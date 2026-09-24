@@ -64,6 +64,9 @@ references:
 - title: purl specification
   url: https://github.com/package-url/purl-spec
   type: external
+- title: PEP 740
+  url: https://peps.python.org/pep-0740/
+  type: external
 examples:
   violation: 'A consumer reads `greet@1.0.0`, queries its advisory sources, finds nothing, and records "greet@1.0.0:
     clean". The wheel is rebuilt and reinstalled at 1.0.0 with a hostile `usage-patterns.json`. On the next question

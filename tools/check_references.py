@@ -70,12 +70,63 @@ def collect():
     return rows, failures
 
 
+# Fields whose prose a producer reads. A PEP named in any of them is a citation the reader can see
+# and cannot follow unless it is also in `references`.
+PROSE_FIELDS = ("short_description", "long_description", "rationale", "fires_when",
+                "remediation", "examples", "suggested_fix")
+PEP_IN_PROSE = re.compile(r"PEP[\s\u00a0-]?(\d{3,4})")
+PEP_IN_URL = re.compile(r"peps\.python\.org/pep-0*(\d{3,4})")
+RFC_IN_PROSE = re.compile(r"RFC[\s\u00a0-]?(\d{3,4})")
+# Both spellings the IETF serves and both this repository uses. Matching only /rfc/rfcNNNN made an
+# audit report two RFCs as unlinked that were linked all along, as /info/rfcNNNN/ — a gate that
+# cannot read its own repository's convention manufactures work rather than finding it.
+RFC_IN_URL = re.compile(r"rfc-?editor\.org/(?:rfc|info)/rfc0*(\d{3,4})"
+                        r"|datatracker\.ietf\.org/doc/html/rfc0*(\d{3,4})")
+
+# Numbered documents only. "PEP 702" and "RFC 9745" name one document and can be turned into a URL
+# with arithmetic; a check naming them is always citing them. Named bodies are NOT gateable the same
+# way: 23 checks mention `purl` and 11 mention OSV, but most of those are our own field names
+# (`identity.purl`) or an ecosystem aside, not a citation of the specification. Gating those would
+# add 34 references nobody asked for and dilute the trail this rule exists to keep honest. They stay
+# editorial, and the audit for them is a person reading the prose.
+
+
+def unlinked_peps():
+    """Every (check, PEP) pair where the check's own prose names a PEP its references omit.
+
+    Proposed by the miri-py team, who render `type: external` references as the authority line on a
+    failed check's fix card and found 21 such pairs across 18 checks in 0.7.1 — including PEP 702,
+    the document behind the entire deprecation-coherence group, cited by nine checks and linked from
+    one. Their report embedded 46 links and none reached a PEP it cited by number.
+
+    Mechanical on purpose. The alternative is editorial judgment about which documents are important
+    enough to link, which nothing can gate and everyone answers differently. This rule has one
+    answer: if the text names it, the reader can reach it.
+    """
+    pairs = []
+    for f in sorted(REPO.glob("standards/*/checks/*.yaml")):
+        d = yaml.safe_load(f.read_text())
+        if d.get("status") != "active":
+            continue
+        prose = " ".join(str(d.get(field, "")) for field in PROSE_FIELDS)
+        urls = [str(ref.get("url", "")) for ref in (d.get("references") or [])]
+        for kind, in_prose, in_url, canonical in (
+                ("PEP", PEP_IN_PROSE, PEP_IN_URL, "https://peps.python.org/pep-{:04d}/"),
+                ("RFC", RFC_IN_PROSE, RFC_IN_URL, "https://www.rfc-editor.org/info/rfc{:d}/")):
+            cited = {int(n) for n in in_prose.findall(prose)}
+            linked = {int(g) for u in urls for m in in_url.findall(u) for g in (m if isinstance(m, tuple) else (m,)) if g}
+            for number in sorted(cited - linked):
+                pairs.append((d["id"], kind, number, canonical.format(number)))
+    return pairs
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--report", action="store_true",
                     help="print the check-to-section list for human reconciliation")
     args = ap.parse_args()
     rows, failures = collect()
+    unlinked = unlinked_peps()
 
     if args.report:
         print(f"{'check':22s} {'cites':58s} {'section':>8s}")
@@ -94,8 +145,15 @@ def main():
         for f in failures:
             print("  FAIL", f)
         return 1
+    if unlinked:
+        print(f"{len(unlinked)} numbered document(s) named in prose but absent from `references`:\n")
+        for cid, kind, number, url in unlinked:
+            print(f"  FAIL  {cid} cites {kind} {number} — add "
+                  f"{{title: {kind} {number}, url: {url}, type: external}}")
+        return 1
     print(f"references: {len(rows)} spec citation(s) resolve, "
-          f"across {len({r[0] for r in rows})} checks")
+          f"across {len({r[0] for r in rows})} checks; "
+          f"every PEP and RFC named in prose is reachable from `references`")
     return 0
 
 
