@@ -108,6 +108,16 @@ a linter that is correct today stays correct; both reach implementations on the 
 
 ### Changed
 
+- **RFC links moved from `rfc-editor.org` to `datatracker.ietf.org`.** CI's link check failed on
+  RFC 9745 and RFC 8594 with socket timeouts, on links this release did not touch. Measured rather
+  than guessed: eight rapid requests to `www.rfc-editor.org/info/rfcNNNN/` all timed out at 25
+  seconds, while the identical burst against `datatracker.ietf.org/doc/html/rfcNNNN` returned in
+  ~0.15s every time. The host stalls under bursts, and CI requests the same RFC from several
+  documents in quick succession — so the links resolved fine one at a time and failed as a group,
+  which is why a local `make links` passed while CI did not. Fifteen links across nine files, and
+  `check_references.py` now suggests the datatracker form. The first diagnosis here was wrong and is
+  worth recording: a single slow response looked like the `/info/` path being slower than
+  `/rfc/…html`, and four more measurements showed both paths are fast until the host rate-limits.
 - **`make check` now runs what it claims to.** Its help said "run everything CI runs locally" while
   omitting `consistency`, `envelope` and `references` — all three are CI steps in their own right, so
   a local green could still fail CI, and the reference gate added this release was enforced in CI and

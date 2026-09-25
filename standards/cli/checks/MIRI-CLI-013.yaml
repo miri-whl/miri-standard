@@ -60,7 +60,7 @@ references:
   url: cli-lifecycle-specification.md
   type: spec
 - title: RFC 9457
-  url: https://www.rfc-editor.org/info/rfc9457/
+  url: https://datatracker.ietf.org/doc/html/rfc9457
   type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/cli/checks/MIRI-CLI-013.yaml

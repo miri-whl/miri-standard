@@ -336,8 +336,8 @@ The `lifecycle` block deliberately mirrors the converged deprecation shape of th
 carries a citation trail rather than being invented here:
 
 - `deprecated_since` / `removed_in` are the CLI equivalent of the two-phase HTTP lifecycle: the `Deprecation` header
-  field ([RFC 9745](https://www.rfc-editor.org/info/rfc9745/)) marking the start, the `Sunset` header ([RFC
-  8594](https://www.rfc-editor.org/info/rfc8594/)) marking end-of-life, with `migration` playing RFC 9745's deprecation
+  field ([RFC 9745](https://datatracker.ietf.org/doc/html/rfc9745)) marking the start, the `Sunset` header ([RFC
+  8594](https://datatracker.ietf.org/doc/html/rfc8594)) marking end-of-life, with `migration` playing RFC 9745's deprecation
   link relation.
 - `replacement` plus a human-readable reason follows Python's [PEP 702](https://peps.python.org/pep-0702/) `@deprecated`
   decorator, GraphQL's `@deprecated(reason:)` directive, Java's `@Deprecated(since, forRemoval)`, and Rust's
@@ -511,8 +511,8 @@ A conformance test suite is a planned deliverable alongside the introspection sc
 - OWASP CLE (Common Lifecycle Enumeration) — <https://owasp.org/www-project-common-lifecycle-enumeration/>
 - endoflife.date — <https://endoflife.date/>
 - OpenVEX — <https://github.com/openvex/spec>
-- RFC 9745 — The Deprecation HTTP Response Header Field — <https://www.rfc-editor.org/info/rfc9745/>
-- RFC 8594 — The Sunset HTTP Header Field — <https://www.rfc-editor.org/info/rfc8594/>
+- RFC 9745 — The Deprecation HTTP Response Header Field — <https://datatracker.ietf.org/doc/html/rfc9745>
+- RFC 8594 — The Sunset HTTP Header Field — <https://datatracker.ietf.org/doc/html/rfc8594>
 - PEP 702 — Marking deprecations using the type system — <https://peps.python.org/pep-0702/>
 - Kubernetes deprecation policy (CLI elements) — <https://kubernetes.io/docs/reference/using-api/deprecation-policy/>
 - The `kubectl get --export` removal case study — <https://www.infoq.com/articles/ai-agent-cli/>

@@ -56,7 +56,7 @@ references:
   url: https://peps.python.org/pep-0503/
   type: external
 - title: RFC 822
-  url: https://www.rfc-editor.org/info/rfc822/
+  url: https://datatracker.ietf.org/doc/html/rfc822
   type: external
 - title: SPDX
   url: https://spdx.dev/

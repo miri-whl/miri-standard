@@ -44,10 +44,10 @@ references:
   url: cli-lifecycle-specification.md
   type: spec
 - title: RFC 9745
-  url: https://www.rfc-editor.org/info/rfc9745/
+  url: https://datatracker.ietf.org/doc/html/rfc9745
   type: external
 - title: RFC 8594
-  url: https://www.rfc-editor.org/info/rfc8594/
+  url: https://datatracker.ietf.org/doc/html/rfc8594
   type: external
 - title: PEP 702
   url: https://peps.python.org/pep-0702/

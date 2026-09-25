@@ -47,7 +47,7 @@ references:
   url: miri-agent-metadata-specification.md
   type: spec
 - title: RFC 3339
-  url: https://www.rfc-editor.org/info/rfc3339/
+  url: https://datatracker.ietf.org/doc/html/rfc3339
   type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-011.yaml

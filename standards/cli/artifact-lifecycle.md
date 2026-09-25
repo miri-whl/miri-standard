@@ -70,7 +70,7 @@ stateDiagram-v2
 Transition requirements (enforced by [coherence checks MIRI-CLI-031…038](linter-checklist.md)):
 
 1. **Active → Deprecated**: `lifecycle` block set (`deprecated_since`, `removed_in`, `replacement`, `migration` — the
-   [RFC 9745](https://www.rfc-editor.org/info/rfc9745/) /[8594](https://www.rfc-editor.org/info/rfc8594/) two-phase
+   [RFC 9745](https://datatracker.ietf.org/doc/html/rfc9745) /[8594](https://datatracker.ietf.org/doc/html/rfc8594) two-phase
    shape); the deprecating release's `changelog --since` records it; warnings go to stderr only.
 2. **Deprecated (holding)**: functions for ≥1 minor release ([K8s
    policy](https://kubernetes.io/docs/reference/using-api/deprecation-policy/) shape) so live introspection and

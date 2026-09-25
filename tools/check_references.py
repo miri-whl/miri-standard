@@ -77,9 +77,12 @@ PROSE_FIELDS = ("short_description", "long_description", "rationale", "fires_whe
 PEP_IN_PROSE = re.compile(r"PEP[\s\u00a0-]?(\d{3,4})")
 PEP_IN_URL = re.compile(r"peps\.python\.org/pep-0*(\d{3,4})")
 RFC_IN_PROSE = re.compile(r"RFC[\s\u00a0-]?(\d{3,4})")
-# Both spellings the IETF serves and both this repository uses. Matching only /rfc/rfcNNNN made an
-# audit report two RFCs as unlinked that were linked all along, as /info/rfcNNNN/ — a gate that
-# cannot read its own repository's convention manufactures work rather than finding it.
+# Every spelling the IETF serves, because this repository has used two of them. Matching only
+# /rfc/rfcNNNN once made an audit report two RFCs as unlinked that were linked all along as
+# /info/rfcNNNN/ — a gate that cannot read its own repository's convention manufactures work rather
+# than finding it. The canonical form suggested below is datatracker: www.rfc-editor.org stalls
+# under bursts, and CI requests the same RFC from several documents in quick succession, so its
+# links failed the link check as a group while resolving fine one at a time.
 RFC_IN_URL = re.compile(r"rfc-?editor\.org/(?:rfc|info)/rfc0*(\d{3,4})"
                         r"|datatracker\.ietf\.org/doc/html/rfc0*(\d{3,4})")
 
@@ -112,7 +115,7 @@ def unlinked_peps():
         urls = [str(ref.get("url", "")) for ref in (d.get("references") or [])]
         for kind, in_prose, in_url, canonical in (
                 ("PEP", PEP_IN_PROSE, PEP_IN_URL, "https://peps.python.org/pep-{:04d}/"),
-                ("RFC", RFC_IN_PROSE, RFC_IN_URL, "https://www.rfc-editor.org/info/rfc{:d}/")):
+                ("RFC", RFC_IN_PROSE, RFC_IN_URL, "https://datatracker.ietf.org/doc/html/rfc{:d}")):
             cited = {int(n) for n in in_prose.findall(prose)}
             linked = {int(g) for u in urls for m in in_url.findall(u) for g in (m if isinstance(m, tuple) else (m,)) if g}
             for number in sorted(cited - linked):

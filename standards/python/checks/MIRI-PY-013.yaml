@@ -43,7 +43,7 @@ examples:
 suggested_fix: 'Emit strict RFC 8259 JSON: UTF-8, no NaN/Infinity, no comments.'
 references:
 - title: RFC 8259
-  url: https://www.rfc-editor.org/info/rfc8259/
+  url: https://datatracker.ietf.org/doc/html/rfc8259
   type: external
 urls:
   definition: https://github.com/miri-whl/miri-standard/blob/main/standards/python/checks/MIRI-PY-013.yaml
