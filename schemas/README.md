@@ -24,7 +24,9 @@ consistency and enable automated validation of agent metadata.
   - Required fields: `from_version`, `to_version`, `migration_type`, `generated_at`, `summary`
   - Validates breaking changes, new features, and deprecations
 
-- **[api-graph-v1.json](api-graph-v1.json)** - Schema for `api-graph.json`
+- **[api-graph-v1.json](api-graph-v1.json)** - Schema for `api-graph.json`. **The document was withdrawn at
+  0.7.3**; the schema stays published and frozen so anything that already validates against it still can. The
+  obligation it served moved to `sdk-manifest.json` `code_index` and MIRI-PY-045
   - API relationship mapping for advanced agent reasoning
   - Required fields: `version`, `nodes`, `edges`
   - Validates graph structure and workflow definitions
@@ -109,6 +111,11 @@ consistency and enable automated validation of agent metadata.
   - A `skipped` outcome MUST name its `skip_reason` from the closed set. Since 0.6.0 that set includes
     `not_implemented` — the linter ships no verification for the check — which MUST name a `blocker`, so a
     coverage gap is reported rather than silently absent from the denominator
+  - As of 0.7.3 `scores` carries `earned`, the numerator the conformance score was computed over.
+    Integral before tiers and fractional since, because a tiered check earns a share of its weight —
+    so a report with only a rounded `conformance` and an integer `effective_denominator` could not be
+    recomputed by its reader. `effective_denominator` stays an **integer**: it is the sum of the
+    integer *weights* of the checks that applied, and tier arithmetic touches the numerator only
   - As of 0.7.0 an outcome MAY carry `evidence`: an array of `<document>:<field>` strings naming what the finding
     points at. A report said *which* checks failed and nothing about *why*, so attribution could not be graded
     from a conforming report. The document-only form (`changelog.json`) is correct where the check's own

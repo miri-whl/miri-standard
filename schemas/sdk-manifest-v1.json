@@ -65,6 +65,18 @@
         }
       }
     },
+    "code_index": {
+      "type": "object",
+      "required": ["path", "format"],
+      "additionalProperties": false,
+      "description": "Where a precomputed code index lives in this wheel and what format it is in, so a consumer can DISCOVER it and decide whether it can read it before opening it. Optional, and MIRI-PY-045 is a SHOULD: no toolchain produces these for wheels yet. The standard names the format and not the producer, exactly as it names the wheel format and not the build backend. Declaring the format is the load-bearing part - a protobuf index is far cheaper than the source when queried for one symbol and more expensive than the source when read whole, so a consumer that cannot decode it needs to know that from the manifest rather than from a failed parse, and fall back to `api_index`.",
+      "properties": {
+        "path": {"type": "string", "pattern": "^\\.dist-info/", "description": "Path within the wheel, under `.dist-info/` beside the SBOM documents PEP 770 places there — one convention for precomputed artifacts rather than two. MUST be listed in RECORD like every other carried file."},
+        "format": {"type": "string", "enum": ["scip"], "description": "A closed set of one. SCIP is a published format with a protobuf schema, several indexers and existing consumers; the standard adopting it rather than maintaining its own graph is the whole point of withdrawing api-graph.json. Adding a format here is a schema change, deliberately, so two wheels never describe the same thing differently."},
+        "reduction": {"type": "string", "enum": ["none", "occurrences-stripped", "references-stripped"], "description": "Which sections were removed before shipping. A full index measured 62% of a 1.87 MB wheel against 20% with reference occurrences removed, so shipping one unreduced is usually wrong — but WHICH reduction is safe is unsettled: if third-party readers locate definitions through definition occurrences rather than through SymbolInformation, stripping all occurrences breaks them. Declared so a consumer knows what it was handed instead of inferring it, and so the answer can be measured across implementations before the standard prescribes one."},
+        "produced_by": {"type": "string", "description": "Indexer name and version, informative. Recorded because two producers emitting different symbol IDs for the same code would break cross-release deltas, and that has not been tested across two indexers."}
+      }
+    },
     "api_index": {
       "type": "object",
       "minProperties": 1,

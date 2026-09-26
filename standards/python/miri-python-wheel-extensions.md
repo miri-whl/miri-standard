@@ -125,7 +125,7 @@ The `agent-metadata/` directory contains structured data that agents can read wi
 - `sdk-manifest.json` - Core API index with structured signatures
 - `usage-patterns.json` - Pre-extracted, categorized code patterns
 - `migration-guide.json` - Structured version change documentation
-- `api-graph.json` - Relationship mapping between API components
+- `api-graph.json` - *withdrawn at 0.7.3; see §5.5 and Agent Metadata §4.5*
 - `lifecycle.json` - Identity (purl), advisory sources, update check, and support status ([full specification](lifecycle-security-metadata.md))
 
 #### 3.1.4 Discovery APIs
@@ -150,7 +150,7 @@ package-1.0.0-py3-none-any.whl
 │   │   ├── usage-patterns.json      # Common code patterns (required)
 │   │   ├── migration-guide.json     # Version-specific changes
 │   │   ├── prompt-templates.md      # Agent interaction guides
-│   │   ├── api-graph.json          # API relationship graph
+│   │   ├── api-graph.json          # withdrawn at 0.7.3 (§4.5); a wheel need not ship it
 │   │   └── lifecycle.json          # Identity, advisory sources, support status (required)
 │   ├── examples/                     # Miri: Embedded examples
 │   │   ├── __init__.py              # Example discovery
@@ -425,6 +425,81 @@ templates/
 ├── integration_template.py     # Integration patterns
 └── testing_template.py        # Testing setup template
 ```
+
+### 5.5 Precomputed Code Index
+
+*Status: SHOULD (MIRI-PY-045). Added 0.7.3, replacing the withdrawn `api-graph.json`.*
+
+A wheel MAY carry a precomputed code index under `.dist-info/`, and SHOULD do so where a producer can generate
+one. `sdk-manifest.json` `code_index` declares its path and format.
+
+```text
+greetlib-1.1.0.dist-info/
+├── RECORD                       # lists the index with its sha256 and size, like every carried file
+├── sboms/                       # PEP 770 SBOM documents
+└── scip/index.scip              # the index, declared in sdk-manifest.json code_index
+```
+
+#### Why this helps a consumer, and what the evidence is
+
+An agent writes against the API it was trained on, and the gap between that API and the installed one is
+measured rather than assumed. A benchmark of 270 real API updates across eight Python libraries found that
+**25.36%** of generations ignored the update entirely, **16.4%** used only the removed API, and **12.3%** mixed
+old and new APIs *in the same file*. Supplying structured API documentation alongside the request raised the
+share of generated code that **executes** from **42.55% to 66.36%** — the largest single intervention measured,
+against 2.34 points for chain-of-thought prompting.
+
+That study supplied the documentation by hand, in a prompt. The whole argument for carrying it in the wheel is
+that nobody should have to: it ships versioned with the code, it is there offline, and it describes the release
+that is actually installed rather than the one a model remembers.
+
+**And 128 of those 270 updates were modifications** — symbols that kept their name and changed shape. That is
+the class a name-keyed index cannot see at all, and the one that produces the mixed-API failure, because the
+name still resolves and the call is wrong. It is also why `api-graph.json` was withdrawn rather than extended:
+a graph of names and kinds cannot express the change a consumer most needs to be told about.
+
+#### Why a published format, and not one of ours
+
+Every code-intelligence format in production — LSIF, SCIP, Kythe, Stack Graphs — is produced by CI and ingested
+by a central service. **None of them ships inside the distribution**, and an agent that has just run
+`pip install` cannot query anybody's host. Carrying the index in the artifact is this standard's contribution;
+the *format* does not need to be, and a format one implementation maintains is worse than one with a protobuf
+schema, several indexers and existing consumers.
+
+The standard therefore names **SCIP** as the format and says nothing about the indexer, exactly as it names the
+wheel format and not the build backend. Producer maturity is a moving target: of the two Python indexers
+measured, one is mature and requires npm, the other installs with pip and was two days old.
+
+#### What a consumer should expect, stated honestly
+
+- **The benefit is conditional on having a reader.** Measured on a 1.87 MB wheel: read end to end, an index
+  costs *more* than reading the source; queried for one symbol, it is **22x cheaper** than opening the file
+  and 889x cheaper than reading `sdk-manifest.json` whole. A consumer that cannot decode protobuf gains nothing
+  and should fall back to `api_index` — which is why `code_index` declares the format, so that decision is made
+  from the manifest rather than from a failed parse.
+- **`api_index` remains the readable surface.** It is JSON, every consumer can parse it, and nothing here
+  deprecates it. The index is an addition for consumers that can use it, not a replacement for the document
+  that works everywhere.
+- **Ship it reduced.** A full index measured **62%** of that wheel's size; the same index with reference
+  occurrences removed measured **20%**. Occurrences record where a symbol is referenced *within the indexed
+  source* — a navigation concern for a code host displaying the package's own repository, not something a
+  consumer of a published API needs.
+- **Which reduction is safe is unsettled.** If third-party readers locate definitions through definition
+  occurrences rather than through `SymbolInformation`, stripping all occurrences breaks them and the correct
+  reduction keeps definitions and drops references only. `code_index.reduction` declares which was applied so a
+  consumer knows what it was handed, and so the question can be settled by measurement across implementations
+  before this specification prescribes an answer.
+- **Cross-release symbol stability is untested.** If two indexers, or two versions of one, emit different
+  symbol IDs for the same code, a delta computed across releases breaks. `code_index.produced_by` records the
+  producer for that reason.
+
+#### What it makes decidable
+
+`MIRI-PY-043` compares an `api_index` entry's signature-bearing fields across releases. With signature-level
+identity available, a release delta stops being *declared* by the producer and becomes *computable* from two
+artifacts the releases already ship — which is what makes 030, 043 and 044 verifiable rather than approximate.
+This is why the index is worth its bytes even for a consumer that never opens it: the producer's own CI can
+compute the delta the changelog must then declare.
 
 ## 6. Discovery and Access APIs
 

@@ -129,7 +129,7 @@ Two profiles let a package adopt Miri incrementally:
   the hand-authorable `lifecycle.json` identity and advisory fields (MIRI-PY-018–023), support-status coherence
   (MIRI-PY-033), and graceful degradation (MIRI-PY-040). A package is **Core-conforming** when it passes every MUST
   check in this 14-check set. Core is the recommended on-ramp and the standard's most defensible layer.
-- **Miri Full** — all 43 active checks, adding the generated agent-metadata surface (sdk-manifest, usage-patterns, api-graph),
+- **Miri Full** — all 43 active checks, adding the generated agent-metadata surface (sdk-manifest, usage-patterns, changelog),
   embedded examples, deprecation-coherence machinery, and discovery APIs. The Bronze/Silver/Gold score is computed over
   the Full set.
 
@@ -155,7 +155,7 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 | MIRI-PY-007 | M | sdk-manifest.json valid | Present and validates against schema | [Agent Metadata §4.1](miri-agent-metadata-specification.md) / [schema](../../schemas/sdk-manifest-v1.json) | 5 |
 | MIRI-PY-008 | M | usage-patterns.json valid | Present and validates against schema | [Agent Metadata §4.2](miri-agent-metadata-specification.md) / [schema](../../schemas/usage-patterns-v1.json) | 4 |
 | MIRI-PY-009 | M | migration-guide.json valid | Present for any non-initial release; validates; reports a measured delta, not an all-zeros guide (*conditional*) | [Agent Metadata §4.3](miri-agent-metadata-specification.md) / [schema](../../schemas/migration-guide-v1.json) | 3 |
-| MIRI-PY-010 | S | api-graph.json valid | If present, validates against schema | [Agent Metadata §4.5](miri-agent-metadata-specification.md) / [schema](../../schemas/api-graph-v1.json) | 1 |
+| MIRI-PY-045 | S | Precomputed code index declared | An index ships under `.dist-info/`, is listed in RECORD, and `sdk-manifest.json` `code_index` names its path and format | [Miri Wheel Ext. §5.5](miri-python-wheel-extensions.md) / [SCIP](https://github.com/sourcegraph/scip) | 1 |
 | MIRI-PY-011 | M | Build-time generation | `generated_at` timestamps within the build window; not hand-edited afterward | [Agent Metadata §5](miri-agent-metadata-specification.md) | 2 |
 | MIRI-PY-012 | M | Version coherence | `sdk_version` in every metadata file equals the wheel version | [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 2 |
 | MIRI-PY-013 | M | JSON hygiene | All metadata files parse as strict UTF-8 JSON (no NaN/Infinity, no comments) | RFC 8259 | 2 |
@@ -171,6 +171,13 @@ The two profiles share one check corpus and one weighting; Core is a named subse
 
 *Withdrawn at 0.6.0:* **MIRI-PY-016** (Example index coherent, 2 points). Its both-ways index/file join is now
 MIRI-PY-014's T3 clause and its weight moved there. The ID and its definition file remain.
+
+*Withdrawn at 0.7.3:* **MIRI-PY-010** (api-graph.json valid, 1 point), together with the document it validated.
+`api-graph.json` carried a name and a kind per node — no signature, no position, no identity surviving a rename,
+and no way to tell whether a symbol changed shape between releases, which is the half of API change a consumer
+most needs to hear about. It was optional and nothing but this check read it; the delta checks that need
+structure (030, 043, 044) read `sdk-manifest.json` `api_index`. Its weight moved to MIRI-PY-045, which asks for
+an index in a published format rather than one this standard maintains. The ID and its definition file remain.
 
 ### D. Identity & Security (23 points)
 
@@ -218,7 +225,7 @@ MIRI-PY-014's T3 clause and its weight moved there. The ID and its definition fi
 | Category | Points | Checks |
 |---|---|---|
 | A. Packaging Baseline | 4 | 001–005 (001–003 gate) |
-| B. Agent Metadata Core | 24 | 006–013, 041 |
+| B. Agent Metadata Core | 24 | 006–009, 011–013, 041, 045 (010 withdrawn) |
 | C. Examples | 12 | 014–017 (016 withdrawn) |
 | D. Identity & Security | 23 | 018–027 |
 | E. Deprecation & Lifecycle Coherence | 28 | 028–035, 042–044 |

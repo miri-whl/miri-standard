@@ -85,6 +85,11 @@ Decisions worked through so far, each as a proposal plus the response that settl
   describes, so it detects corruption and an edit nobody hid — not a deliberate one. Provenance is decided
   outside the artifact. Records why `MIRI-PY-005` was considered for MUST and left at SHOULD.
 
+- `miri-standard-response-scoring-denominator.md` — miri-py implemented scoring-v2 and hit a report that
+  fails the standard's own wire schema. The blocker is real; the diagnosis was one field off. The numerator
+  had no field at all, `effective_denominator` is an integer by definition, and this schema used the word
+  *denominator* for two different quantities. Records why widening the wire field was declined.
+
 - `miri-standard-response-check-references.md` — accepts miri-py's finding that 21 PEPs are named in check
   prose and missing from that check's `references`, and gates the rule so it cannot reopen. Asks them to
   relabel their fix card from "Defined by" to "References", because four of the 21 are tooling

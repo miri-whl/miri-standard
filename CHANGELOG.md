@@ -11,7 +11,131 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-## 0.7.2 — unreleased
+## 0.7.3 — unreleased
+
+`api-graph.json` is withdrawn, and `MIRI-PY-010` with it. A wheel need not ship the document and a consumer
+must not expect it; the schema stays published and frozen so anything already validating against it still can.
+
+**A patch carrying a withdrawal, which the versioning policy would normally place in a minor.** Stated rather
+than glossed: the withdrawn check is a SHOULD worth 1 point, its weight moved to `MIRI-PY-045` in the same
+change, no MUST moved, and no wheel becomes invalid — `code_index` is optional and a wheel still shipping
+`api-graph.json` is not non-conforming for carrying it. The largest effect on any published score is one point.
+Everything else here is a fix or a clarification.
+
+### Removed
+
+- **`api-graph.json`, and `MIRI-PY-010` (SHOULD, 1 point) which validated it.** The document carried a name and
+  a kind per node and nothing else — no signature, no position, no identity surviving a rename, and no way to
+  tell whether a symbol **changed shape** between releases. It was optional, nothing but that one check read it,
+  and the delta checks that need structure (`030`, `043`, `044`) read `sdk-manifest.json` `api_index` instead.
+  Extending it would have been rebuilding, slowly, what a published format already specifies.
+
+  Agent Metadata §4.5 keeps its heading so §4.6 and §4.7 do not renumber and every citation still resolves.
+
+### Added
+
+- **`MIRI-PY-045` — a precomputed code index, declared (SHOULD, 1 point).** Takes the withdrawn check's weight,
+  so the target still sums to exactly 100 and Agent Metadata Core still holds 24. A wheel SHOULD carry an index
+  under `.dist-info/` — beside the SBOM documents PEP 770 puts there — and declare its path and format in
+  `sdk-manifest.json` `code_index`. **SHOULD, not MUST**, deliberately: no toolchain produces these for wheels
+  today, and a MUST whose expected result is near-universal non-compliance is one nobody treats as real.
+
+  **The standard names the format and not the producer**, exactly as it names the wheel format and not the build
+  backend. SCIP is a published format with a protobuf schema, several indexers and existing consumers; of the
+  two Python indexers measured one is mature and needs npm, the other installs with pip and was two days old, so
+  pinning either would have been the wrong kind of specificity.
+
+- **Miri Wheel Extensions §5.5 — the standard's opinion on why this helps**, which is the part worth more than
+  the check. An agent writes against the API it was trained on, and the cost is measured: across 270 real API
+  updates in eight Python libraries, 25.36% of generations ignored the update, 16.4% used only the removed API,
+  and 12.3% mixed old and new APIs in one file. Supplying structured API documentation raised the share of
+  generated code that **executes from 42.55% to 66.36%** — the largest single intervention measured, against
+  2.34 points for chain-of-thought prompting. That study supplied it by hand in a prompt; the argument for
+  carrying it in the wheel is that nobody should have to.
+
+  **128 of those 270 updates were modifications** — the class a name-keyed graph cannot see, and the one that
+  produces the mixed-API failure because the name still resolves and the call is wrong.
+
+  §5.5 states the limits as plainly as the case, because the case does not survive pretending otherwise: read
+  whole an index costs *more* than reading the source and is only 22x cheaper when queried for one symbol, so
+  the benefit is conditional on the consumer having a decoder — which is why `code_index` declares the format
+  and `api_index` stays the readable surface for everyone else. Which reduction is safe is unsettled (stripping
+  all occurrences may break readers that locate definitions through them), and cross-indexer symbol stability
+  is untested; `code_index.reduction` and `produced_by` record both so they can be measured rather than assumed.
+
+- **`sdk-manifest.json` gains `code_index`** — `path` (must be under `.dist-info/`), `format` (a closed set of
+  one), and optional `reduction` and `produced_by`. Optional, so no existing wheel becomes invalid.
+
+- **The Discovery Contract's `graph` operation now reads the declared index**, and is explicitly optional. Where
+  no `code_index` is declared a surface returns `present: false` with a reason, exactly as for any absent
+  document; it is never synthesized from `api_index`, because a name-keyed index cannot express an edge and
+  inventing one would put a guess behind a field a consumer uses to plan a change.
+
+  **This is where a format the consumer cannot read belongs.** A surface is a server: it can afford a protobuf
+  decoder and it answers in the envelope's JSON, so the asymmetry lands where it is cheap and the consumer keeps
+  a JSON-only contract. A consumer holding only the wheel still reads `api_index` and loses nothing it had; a
+  consumer with a surface gains what `api_index` cannot give it, which is what relates to what — now with
+  signatures, so an edge can say `transfer` still exists and takes a third argument.
+
+  The Consumption Map records the withdrawal against its own rule: `api-graph.json` survived a review by being
+  given a consumption role, and was withdrawn once that role turned out to be servable from a published index —
+  the element→task rule working as intended, one release after it first spared the document.
+
+Proposed by miri-py, who measured their own graph at 438 nodes carrying `{"type": "class"}` per node, priced
+three index reductions, and published a negative result about token efficiency alongside the positive one about
+correctness. We declined the part they asked for — SCIP as the wheel's consumer-facing format — and took the part
+their own §8 identified as the honest shape.
+
+### Fixed
+
+- **`scoring-v2` specified a numerator `lint-report-v1` had no field for.** A tiered check earns
+  `weight × (shares up to tier_earned) ÷ (shares of its live tiers)`, summed at full precision, so the
+  numerator is fractional — and `scores` carried `conformance` (a rounded percentage) and
+  `effective_denominator` (an integer) and nothing for the sum those were computed from. A reader
+  given `79` and `17` could not recompute the score, which is exactly what scoring-v2 asks a consumer
+  to be able to do. `scores.earned` closes it: MUST be present when a tiered check contributed,
+  optional otherwise.
+
+  **`effective_denominator` stays an integer, deliberately.** miri-py implemented v2, emitted
+  `56.57` there, found it failed the wire schema, and reported the two schemas as contradictory —
+  reasonably, because this schema uses the word *denominator* for two different things. The **share**
+  denominator is one check's live shares; the **score** denominator is the sum of the integer weights
+  of every check that applied. Tier arithmetic never touches the second: a tiered check contributes
+  its full integer weight to the denominator and its earned fraction to the numerator. Widening the
+  field to `number` — the resolution they preferred — would have encoded the conflation and made two
+  linters' denominators incomparable. The sentence in `scoring-v2` now distinguishes them.
+
+- **A tier the run cannot assess is not live for that run.** Raised by miri-py immediately after
+  implementing the fix above: a check whose obligation was assessed but whose tier *above* it could not
+  be — T3 needing a capability the linter lacks — has three readings that all give an integral
+  denominator and disagree. `scoring-v2` now settles it from a rule it already stated rather than by
+  picking: a tier is live if declared, not parked, **and assessable by this run**. So an unassessable
+  tier leaves the check's share denominator exactly as a parked tier does, and:
+
+  - a tier **at or below** `conformance_tier` that cannot be assessed means the check's own obligation
+    went unassessed — the **check** forfeits, never passes, and for a MUST withdraws the grade;
+  - a tier **above** `conformance_tier` that cannot be assessed drops from the live set, so a check
+    earning the highest tier that *was* live takes full weight and is not docked for a ceiling the run
+    could not reach.
+
+  Neither charges the artifact for the linter's environment, which `forfeited_must_withdraws_grade`
+  already forbids — forfeiting is not a discount. `outcomes[].tiers_unassessable` is now required when
+  a tier was dropped, because a percentage over a reduced live set is not comparable to one over the
+  full set unless the reader can see which tiers left it.
+
+  **This agrees with the reading miri-py chose on their wheel and disagrees with it as a rule.** Their
+  reading — the check applied, so it takes full weight — gives the same number where the missing tier
+  was unassessable, and over-credits every tiered check that simply failed to reach a tier that *was*
+  assessable: weight 5 earning T1 with T3 available scores 5.0 under their rule and 3.5714 under this
+  one. That second case is what `example-lies-1.1.0` was built to expose, so the divergence would have
+  surfaced on the next fixture run rather than in a report.
+
+  They shipped the v1 fold rather than a report that fails the published schema, and said so at the
+  point of implementation rather than letting it read as an oversight. That was the right call: their
+  own wheel is unaffected because every tiered check on it earns its top tier, so the divergence
+  appears only on the wheels a linter exists to judge.
+
+## 0.7.2 — 2026-09-24
 
 ### Added
 
