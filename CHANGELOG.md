@@ -66,6 +66,14 @@ Everything else here is a fix or a clarification.
 - **`sdk-manifest.json` gains `code_index`** — `path` (must be under `.dist-info/`), `format` (a closed set of
   one), and optional `reduction` and `produced_by`. Optional, so no existing wheel becomes invalid.
 
+- **The site presented withdrawn checks as live.** `MIRI-PY-016` had rendered in the check index as a
+  MUST worth 2 points since 0.6.0: a definition keeps the level and weight it had when withdrawn, and the
+  index printed them without qualification, so a reader of the published site saw a current obligation. Found
+  by rendering the site after withdrawing a second check. Withdrawn rows now carry a `withdrawn <version>`
+  badge, show dashes for level, severity and weight, and recede visually; the page and the ID stay, because a
+  report naming a withdrawn check must still resolve to a definition. A site that presents a withdrawn
+  obligation as current is the defect the checks themselves exist to catch.
+
 - **The Discovery Contract's `graph` operation now reads the declared index**, and is explicitly optional. Where
   no `code_index` is declared a surface returns `present: false` with a reason, exactly as for any absent
   document; it is never synthesized from `api_index`, because a name-keyed index cannot express an edge and

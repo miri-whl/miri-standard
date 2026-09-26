@@ -72,6 +72,11 @@ p { margin: 0 0 var(--space-4); max-width: var(--measure-prose); }
 .badge.maintenance { background: var(--status-maintenance-bg); color: var(--amber-600); border-color: var(--amber-400); }
 .badge.deprecated { background: var(--status-deprecated-bg); color: var(--red-600); border-color: var(--red-400); }
 .badge.eol { background: var(--status-eol-bg); color: var(--ink-700); border-color: var(--ink-300); }
+/* A withdrawn check keeps its row so its ID resolves, and must not read as live: the level,
+   severity and weight cells are dashes and the row recedes. */
+tr.withdrawn td { color: var(--text-muted); }
+tr.withdrawn td.id a, tr.withdrawn a.rowname { color: var(--text-muted); text-decoration-style: dotted; }
+
 .tag { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--text-muted);
   border: var(--border-width) solid var(--border-hairline); border-radius: var(--radius-xs);
   padding: 2px 6px; display: inline-block; line-height: 1.5; background: var(--surface-card); }

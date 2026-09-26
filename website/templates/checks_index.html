@@ -22,12 +22,18 @@ the <a href="{{ site.github }}/blob/main/{{ meta.checklist }}">checklist table</
 <tr class="cat"><td colspan="6">{{ row.category }} · {{ row.points }} points</td></tr>
 {% else %}
 {% set d = row.check %}
-<tr class="rowlink" data-href="{{ d.id }}.html" data-level="{{ 0 if d.level == 'MUST' else 1 }}" data-sev="{{ sev_order.index(d.severity.default) + 1 }}" data-weight="{{ d.weight }}">
+{# A withdrawn check keeps its page and its ID forever, so it keeps its row — but it must not read as
+   live. Before this, MIRI-PY-016 had rendered here as a MUST worth 2 points since 0.6.0: the level and
+   weight a definition carries are the ones it had when withdrawn, and the index printed them without
+   qualification. A site that presents a withdrawn obligation as current is the same defect the checks
+   themselves are written to catch. #}
+{% set gone = d.status == 'withdrawn' %}
+<tr class="rowlink{% if gone %} withdrawn{% endif %}" data-href="{{ d.id }}.html" data-level="{{ 0 if d.level == 'MUST' else 1 }}" data-sev="{{ sev_order.index(d.severity.default) + 1 }}" data-weight="{{ 0 if gone else d.weight }}"{% if gone %} data-withdrawn="1"{% endif %}>
   <td class="id"><a href="{{ d.id }}.html">{{ d.id }}</a></td>
-  <td><a class="rowname" href="{{ d.id }}.html">{{ d.name }}</a>{% for r in d.requirements or [] %} {{ m.tag(r) }}{% endfor %}</td>
-  <td>{{ m.level_badge(d.level) }}</td>
-  <td>{{ m.badge(sev_tone[d.severity.default], d.severity.default) }}</td>
-  <td class="num">{{ d.weight }}</td>
+  <td><a class="rowname" href="{{ d.id }}.html">{{ d.name }}</a>{% if gone %} {{ m.badge('eol', 'withdrawn ' + (d.withdrawn_in or '')) }}{% else %}{% for r in d.requirements or [] %} {{ m.tag(r) }}{% endfor %}{% endif %}</td>
+  <td>{% if gone %}—{% else %}{{ m.level_badge(d.level) }}{% endif %}</td>
+  <td>{% if gone %}—{% else %}{{ m.badge(sev_tone[d.severity.default], d.severity.default) }}{% endif %}</td>
+  <td class="num">{% if gone %}—{% else %}{{ d.weight }}{% endif %}</td>
   <td>{{ d.short_description | codeish }}</td>
 </tr>
 {% endif %}
