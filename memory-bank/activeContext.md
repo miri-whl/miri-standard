@@ -1,42 +1,43 @@
 # Active Context
 
-_Last updated: 2026-09-23._
+_Last updated: 2026-09-26._
 
 ## Current focus
 
-**0.7.2 on `phase-0.7.2` — uncommitted, awaiting the maintainer's review.** Nothing pushed, no PR.
+**0.7.3 on `phase-0.7.3` — two commits, pushed, no PR yet.** 0.7.2 released 2026-09-24 with both artifacts and
+a working index entry; the live site shows 0.7.2.
 
-**Two releases now exist, and the Downloads links work.** 0.7.0 was tagged 2026-09-21 and 0.7.1 on 2026-09-22;
-both carry the definitions wheel, and 0.7.1 adds the fixture pack. The published index resolves
-`miri-standard-checks` by name and carries the wheel's sha256, verified by installing from it into a clean venv.
-The line in every earlier version of this file about zero tags and 404ing links is no longer true.
+0.7.3 answers two miri-py findings and withdraws a document.
 
-What 0.7.1 closed, all found by miri-py vendoring the wheel with no checkout: `content_sha256` hashed the
-build's staging tree rather than the installed package, so no consumer could reproduce it by any encoding; the
-manifest could not name the checklist revision it implements; `checks/consumption/` held two families on two
-100-point scales with the id prefix as the only discriminator; and the fixture suites shipped nowhere. The
-manifest now carries a `families` block, the package carries `verify_content()`, and the release attaches
-`miri-standard-fixtures-<version>.tar.gz`.
+**Scoring.** They implemented `scoring-v2`, emitted a non-integral `effective_denominator`, and reported the two
+schemas as contradictory. The blocker was real and the diagnosis one field off: the score denominator is the sum
+of integer weights and never goes fractional; the NUMERATOR does, and `lint-report-v1` had no field for it, so a
+report could not be recomputed by its reader. `scores.earned` closes it. The confusion was ours — `scoring-v2`
+used "denominator" for two different quantities. Their preferred fix (widen the field to `number`) was declined:
+two scores are comparable only alongside their denominators. They then hit a tier above the obligation that a run
+cannot assess, and that is now settled from a rule v2 already stated — a tier is live if declared, not parked,
+**and assessable by this run** — with `outcomes[].tiers_unassessable` required when one drops.
 
-What 0.7.2 carries, uncommitted: 31 references added across 26 checks, closing every numbered document named
-in check prose but absent from that check's `references` — 21 PEPs miri-py reported, 6 RFCs, CycloneDX and
-SPDX on the two checks that require those formats, and SLSA on `MIRI-PY-005`. `check_references.py` gates the
-rule for PEPs and RFCs. `MIRI-PY-001` and `MIRI-PY-005` now state what passing them does **not** establish:
-RECORD is carried inside the archive it describes, and PEP 740 is how an attestation is distributed rather
-than what it says.
+**The graph is gone.** `api-graph.json` and `MIRI-PY-010` are withdrawn. The document carried a name and a kind
+per node: no signature, no identity surviving a rename, no way to see a symbol change shape. Of 270 measured API
+updates, 128 were modifications, which a name-keyed graph cannot detect at all. `MIRI-PY-045` takes its 1 weight
+as a SHOULD — a precomputed index under `.dist-info/`, declared in `sdk-manifest.json` `code_index`, format named
+(SCIP) and producer not. Wheel Extensions §5.5 carries the case (42.55% to 66.36% executable with structured API
+documentation) and its limits in the same breath. The Discovery Contract's `graph` operation now reads the
+declared index and is optional, which is where a format the consumer cannot read belongs: a surface is a server,
+so it affords the decoder and answers in JSON.
 
-**SLSA and in-toto had appeared nowhere in 123 definitions.** The standard required provenance, ships
-provenance on its own releases, and had never named the format its provenance is in.
+**Found by rendering the site:** the published check index had shown `MIRI-PY-016` as a live MUST worth 2 points
+since 0.6.0. Withdrawn rows are now marked and carry no level, severity or weight.
 
 **Three lessons carried forward, all still live:**
 
-- _A frozen artifact has no test that it stayed frozen._ `check-v1` drifted silently; `scoring-v1` was frozen
-  by textual edit after a first pass reformatted the whole file.
-- _The sharpest claim in a document is the least verified._ Our own side gets checked thoroughly and then
-  universals about someone else's repository are written from it.
-- _A gate that cannot read its own repository's convention manufactures work rather than finding it._ The new
-  reference gate's first draft matched only one of the two RFC URL spellings this repo uses, and reported two
-  citations as missing that had been there all along.
+- _The sharpest claim in a document is the least verified._ Four of the last five miri-py findings were cases our
+  own artifact could not exercise — every tiered check on their wheel earns its top tier, so the tier divergence
+  only appears on the wheels a linter exists to judge.
+- _A gate that cannot read its own repository's convention manufactures work rather than finding it._
+- _A claim about coverage that nothing verifies is the defect we keep finding in other people's checks._
+  `make check` claimed to run everything CI runs and omitted three steps.
 
 ## Recent decisions
 
@@ -67,19 +68,29 @@ than bad luck.
 
 ## Next steps
 
-1. **Review `phase-0.7.2`, then commit and tag.** Uncommitted; `make check` green; the wheel builds at
-   `0.7.2.dev0`. `website/site.yaml` is already at 0.7.2, so the site advertises it the moment main moves —
-   tag promptly after merge, as the 0.7.1 round showed.
-2. **Send miri-py the three replies** — the four-blockers response, the integrity-semantics note, and the
-   references response, which asks them to relabel their fix card from "Defined by" to "References" because
-   four of the 21 PEPs are tooling instructions or prior art rather than the authority for the rule.
-3. **Decide on a predicate-and-builder check.** `MIRI-PY-005` now documents that it verifies provenance is
-   _published_, not what it says. A check on the SLSA predicate type and a non-empty `builder.id` is
-   decidable; whether it earns weight is not decided.
-4. **The generator profile** — Discovery Contract §7's four security MUSTs with no check family. Still the
+1. **Open the PR for `phase-0.7.3`, merge, then tag promptly.** Two commits, pushed, `make check` green.
+   `website/site.yaml` is at 0.7.3, so the site advertises artifacts that do not exist from the moment main
+   moves — minutes, not hours, as 0.7.1 showed.
+2. **Answer miri-py's SCIP proposal.** 359 lines, three questions in its §9, and 0.7.3 decides all three —
+   no to SCIP as the wheel's consumer-facing format, yes as the `graph` operation's source, and `MIRI-PY-043`
+   fixed by requiring `signature` rather than by respecification. Without the reply they have to infer the
+   decisions from a changelog. The only substantive thing left in this release.
+3. **Send the three earlier replies** if they have not gone: the four-blockers response, the
+   integrity-semantics note, and the references response, which asks them to relabel their fix card from
+   "Defined by" to "References".
+4. **`MIRI-PY-043` passes vacuously when `signature` is absent** — a MUST comparing "signature-bearing fields"
+   against a field `sdk-manifest-v1` makes optional and the sample SDK never populates. This is why their delta
+   detection degenerated to key-set diffing. Requiring it newly fails conforming producers, so it is 0.8.0 with
+   the sample SDK updated in the same change. **The next real gap.**
+5. **Grade tiers in the fixture harness.** `tier_earned`, `earned` and `tiers_unassessable`, so a golden can
+   assert them. Offered to miri-py, who offered to draft the arms; arms 3 and 4 (a tier assessable-and-unreached,
+   and a tier unassessable) are the ones that would have caught the ambiguity they just hit.
+6. **Decide on a predicate-and-builder check.** `MIRI-PY-005` documents that it verifies provenance is
+   _published_, not what it says. Decidable; whether it earns weight is not decided.
+7. **The generator profile** — Discovery Contract §7's four security MUSTs with no check family. Still the
    largest named hole in the standard itself, and still unstarted.
-5. **Decide on PyPI.** `pkg:pypi/miri-standard-checks` is unclaimed, so `pip install miri-standard-checks`
-   404s and every consumer hardcodes the index URL. Needs the name claimed and trusted publishing configured.
+8. **Decide on PyPI.** `pkg:pypi/miri-standard-checks` is unclaimed, so `pip install miri-standard-checks` 404s
+   and every consumer hardcodes the index URL.
 
 Known and unfixed: `MIRI-PY-023` and `033` carry 4 weight that is not independently reachable, because
 `lifecycle-v1` already enforces every clause they state — recorded in the fixtures README. `MIRI-PY-026`

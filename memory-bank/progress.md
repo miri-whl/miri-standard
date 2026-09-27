@@ -1,6 +1,6 @@
 # Progress
 
-_Last updated: 2026-09-23._
+_Last updated: 2026-09-26._
 
 ## What exists
 
@@ -98,9 +98,11 @@ Engineering backlog, stated factually so it does not get lost:
 
 ## Verification status
 
-As of 0.7.2 (`phase-0.7.2`), `make check` runs all of this locally and is green:
+As of 0.7.3 (`phase-0.7.3`), `make check` runs all of this locally and is green — and since 0.7.2 it
+actually runs what CI runs, having omitted `consistency`, `envelope` and `references` while claiming not to:
 
-- 123 check definitions valid against `check-v3.json`; all four targets sum to exactly 100.
+- 124 check definitions valid against `check-v3.json` (122 active, `MIRI-PY-010` and `016` withdrawn); all
+  four targets sum to exactly 100.
 - All seventeen schemas are valid draft-07; the envelope is round-tripped 24/24 by `make envelope`.
 - Consumption, CLI and Python fixture invariants all hold, including the eight event traces. Every validator is
   mutation-tested: disarming any attack must fail it.
