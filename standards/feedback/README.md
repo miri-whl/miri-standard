@@ -85,6 +85,13 @@ Decisions worked through so far, each as a proposal plus the response that settl
   describes, so it detects corruption and an edit nobody hid — not a deliberate one. Provenance is decided
   outside the artifact. Records why `MIRI-PY-005` was considered for MUST and left at SHOULD.
 
+- `miri-standard-response-api-graph-to-scip.md` — miri-py proposed replacing `api-graph.json` with SCIP. The
+  graph is withdrawn outright and the index is a SHOULD (`MIRI-PY-045`), with the format named and the indexer
+  not; the consumer-facing swap is declined on their own measurement, and the reader dependency moved to the
+  surface, where a server can afford a decoder. Corrects their §4: `MIRI-PY-043` already asks for a signature
+  comparison, and the field it needs is optional and unpopulated in our own sample — which is why their delta
+  detection could only diff key sets.
+
 - `miri-standard-response-scoring-denominator.md` — miri-py implemented scoring-v2 and hit a report that
   fails the standard's own wire schema. The blocker is real; the diagnosis was one field off. The numerator
   had no field at all, `effective_denominator` is an integer by definition, and this schema used the word
