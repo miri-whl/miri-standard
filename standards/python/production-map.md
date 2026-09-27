@@ -82,7 +82,7 @@ release that may not exist (§3).
 
 ### Stage 4 — Views over the surface
 
-**Settled:** `usage-patterns.json`, `api-graph.json`.
+**Settled:** `usage-patterns.json`. (`api-graph.json` was withdrawn at 0.7.3 — Agent Metadata §4.5.)
 
 Both describe the surface Stage 2 declared. They are last in dependency order and may be generated in either
 order, or in parallel, and no *metadata document* is generated from either.

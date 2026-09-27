@@ -1,13 +1,21 @@
 # MIRI-PY-010 — generated with the checklist table; canonical source of truth.
+# WITHDRAWN at 0.7.3 together with the document it validated. api-graph.json carried a name and a kind per
+# node and nothing else: no signature, no position, no identity surviving a rename, no way to tell whether a
+# symbol changed shape between releases. It was optional, nothing but this SHOULD read it, and the delta
+# checks that need structure (030, 043, 044) read sdk-manifest.json's api_index instead. Its 1 weight moved to
+# MIRI-PY-045, which asks for a precomputed index in a published format rather than one this standard
+# maintains. Never "absorbed": the ID and this file stay forever, so a report or a linter naming MIRI-PY-010
+# resolves to a definition that says where the obligation went.
 $schema: https://miri-whl.github.io/schemas/check-v3.json
 id: MIRI-PY-010
 name: api-graph.json valid
 target: python-wheel
-status: active
+status: withdrawn
+withdrawn_in: 0.7.3-draft
 added_in: 0.1-draft
 level: SHOULD
 category: Agent Metadata Core
-weight: 1
+weight: 0
 conditional: false
 severity:
   default: LOW

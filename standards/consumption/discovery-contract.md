@@ -120,7 +120,7 @@ existence and why no consumer may settle it from index membership (§3.5).
 | `api-index` | `package`, optional `query`, `limit`, `cursor` | `entries` | A capped, filtered routing view derived from `sdk-manifest.json` |
 | `resolve` | `package`, `symbol` | `resolution` | Whether a symbol exists in the installed package's **source**, and where |
 | `patterns` | `package`, optional `category`/`complexity`/`query`, `limit`, `cursor` | `patterns` | A capped, filtered view of `usage-patterns.json` |
-| `graph` | `package`, `symbol`, optional `depth`/`direction`, `limit` | `graph` | The neighborhood of one symbol in `api-graph.json` |
+| `graph` | `package`, `symbol`, optional `depth`/`direction`, `limit` | `graph` | The neighborhood of one symbol, read from the declared code index (*optional*: `present: false` where none is declared) |
 
 `lifecycle` and `migration-guide` are **named shorthands**, not distinct capabilities: each MUST return exactly what
 `document` would return for the same package and document name. They exist because they are the two highest-traffic
@@ -236,7 +236,7 @@ case as an error and collapse exactly the distinction §4.2 exists to protect: a
 
 | Servable | Not servable |
 |---|---|
-| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `api-graph.json`, `test-patterns.json` *(provisional)* | everything else, including `prompt-templates.md` and `README.md` |
+| `lifecycle.json`, `migration-guide.json`, `sdk-manifest.json`, `usage-patterns.json`, `test-patterns.json` *(provisional)* | everything else, including `prompt-templates.md` and `README.md` |
 
 The servable set is **closed and exhaustive**: it is not a sample, and a surface MUST NOT extend it. Membership is
 governed by one criterion, so that future document types are adjudicated by principle rather than by whether anyone
@@ -317,7 +317,7 @@ every document the Map routes to is either servable here or explicitly labelled 
 #### 3.2.3 Size Bound
 
 `document` returns a whole document, so it is the operation most able to blow a context budget — `sdk-manifest.json`,
-`usage-patterns.json` and `api-graph.json` are all on the servable set, and on a large package each can run to
+`usage-patterns.json` and `sdk-manifest.json` are both on the servable set, and on a large package each can run to
 hundreds of kilobytes. A capped router (§3.5) beside an uncapped bulk fetch is not "pointers, not dumps"; it is a
 pointer with an unbounded escape hatch beside it.
 
@@ -494,7 +494,8 @@ A consumer MUST NOT **state or act on** a count, size or completeness claim abou
 ### 3.6 `resolve`
 
 **Input:** `{ "package": "<import-name>", "symbol": "<dotted-name>" }` — `symbol` is a dotted qualified name in the
-same key space `api_index` and `api-graph.json` nodes use (e.g. `Greeter`, `Greeter.greet`).
+same key space `api_index` uses (e.g. `Greeter`, `Greeter.greet`), which is also the space a code index's
+symbol names project onto.
 
 **Payload:** `resolution` — whether the symbol exists in the installed package, **determined from its source**:
 
@@ -593,7 +594,22 @@ to save space. The filter selects *which* patterns, never *which parts of* a pat
 "direction": "<optional>" }` — `direction` is `out` (edges from the symbol), `in` (edges to it), or `both`
 (default). `depth` defaults to `1`.
 
-**Payload:** `graph` — the neighborhood of `symbol` in `api-graph.json`, as nodes and the edges connecting them:
+**Payload:** `graph` — the neighborhood of `symbol`, as nodes and the edges connecting them.
+
+**Source (0.7.3):** the precomputed code index the wheel declares in `sdk-manifest.json` `code_index` — SCIP,
+under `.dist-info/` (Miri Wheel Extensions §5.5). `api-graph.json` was the previous source and is withdrawn.
+
+**The operation is OPTIONAL and a surface that cannot serve it says so, in the envelope.** Where no index is
+declared, `graph` returns `present: false` with a reason, exactly as any absent document does. It is never
+synthesized from `api_index`: a name-keyed index cannot express an edge, and inventing one would put a guess
+behind a field a consumer uses to plan a change.
+
+**Why this is the right place for a format a consumer cannot read.** The index is protobuf, and a decoder is a
+real dependency — measured, reading it whole costs more than reading the source, while one symbol's entry is
+22x cheaper than opening the file it lives in. A *surface* is a server: it can afford the decoder, and it
+answers in the envelope's JSON. So the asymmetry lands where it is cheap and the consumer keeps a JSON-only
+contract. A consumer that has only the wheel still reads `api_index` directly and loses nothing it had before;
+a consumer with a surface gains the thing `api_index` cannot give it, which is what relates to what.
 
 ```json
 {
@@ -609,11 +625,18 @@ to save space. The filter selects *which* patterns, never *which parts of* a pat
 }
 ```
 
-The audit row for `api-graph.json` claims it lets a consumer reason about blast radius and plan multi-file changes
-**"without loading all source"** — a claim its only previous access path defeated, since `document("api-graph.json")`
-loads the entire graph to answer a question about one symbol. On a small package that is cheap; on a large one the
-graph scales with the whole public surface, and the element's stated purpose is spent obtaining it. `graph` is what
-makes that claim true rather than aspirational.
+This operation exists because the claim it serves — reason about blast radius and plan a multi-file change
+**"without loading all source"** — was defeated by its own access path while the source was a shipped document:
+`document("api-graph.json")` loads the entire graph to answer a question about one symbol. On a small package
+that is cheap; on a large one the graph scales with the whole public surface and the purpose is spent obtaining
+it. Reading one symbol's neighborhood out of an index is what makes the claim true rather than aspirational,
+and it is the half of the case for carrying an index that does not depend on the consumer having a decoder.
+
+What the index adds over the withdrawn document is the part a consumer most needs and a name-keyed graph never
+had: a **signature**, so an edge can say that `transfer` still exists and now takes a third argument. Of 270
+real API updates measured across eight Python libraries, 128 were modifications — a symbol keeping its name and
+changing shape — and those are precisely the changes that produce code mixing the old and new API in one file,
+because the name still resolves and the call is wrong.
 
 **`cap` bounds the answer; `depth` bounds the walk, and the cap wins.** A traversal that would exceed `cap` before
 reaching the requested `depth` MUST stop at the cap and set `truncated: true`. It MUST NOT silently reduce `depth` to
@@ -794,7 +817,7 @@ A derived view is **absent when its parent document is absent**:
 |---|---|
 | `api-index` | `sdk-manifest.json` |
 | `patterns` | `usage-patterns.json` |
-| `graph` | `api-graph.json` |
+| `graph` | the declared code index (`sdk-manifest.json` `code_index`) |
 
 In each case the response is `ok: true`, `present: false`, **no payload key**, and a `reason`.
 

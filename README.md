@@ -90,7 +90,7 @@ following — it occupies the gap between them:
 
 ## Project Status
 
-The Miri Standard is at **version 0.7.1**, in its **Incubation** phase (see `MATURITY.md`). It is an early,
+The Miri Standard is at **version 0.7.2**, in its **Incubation** phase (see `MATURITY.md`). It is an early,
 unratified draft: the shape of the standard is still moving, and its benefits to agents are design goals rather than
 measured results. The check definitions and JSON Schemas are published as an installable package — see
 [Downloads](https://miri-whl.github.io/downloads.html) — so a team reads one definition rather than cloning at a

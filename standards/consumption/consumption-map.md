@@ -629,7 +629,7 @@ generator's code — the "an author who builds strictly to the documents writes 
   the fields would mean every future metadata element
   silently arrives unguarded until someone remembers to add it here, which is how this class of bug is normally
   shipped. The paths in 0.3-draft are `api_index`'s `file`,
-  `api-graph` nodes' `file`/`module`, `test-patterns`' `source_file`. These are **publisher-authored strings**, and a
+  `test-patterns`' `source_file`, and `code_index`'s `path`. These are **publisher-authored strings**, and a
   consumer that opens one is acting on untrusted input. Before dereferencing any such pointer a consumer MUST resolve
   it against the package's own root, take the fully resolved path, and confirm the result is a regular file
   **physically inside that root** — rejecting symbolic links, absolute paths, and traversal sequences. A pointer that
@@ -737,8 +737,9 @@ failure:
 
 1. **Element → task.** Every element the standard defines MUST be reachable by at least one read-step in §3, or be
    marked **reserved**. This keeps the standard from accreting elements nothing ever reads. It was applied to
-   `api-graph.json` during review, which survived by being given a defined consumption role (§3.2 step 4); an element
-   that cannot be given one is a removal candidate.
+   `api-graph.json` during review, which survived then by being given a defined consumption role (§3.2 step 4)
+   and was **withdrawn at 0.7.3** when that role turned out to be servable from a published index instead — the
+   rule working as intended, one release later than the first application of it.
 2. **Task → element.** Every task in §3 MUST have at least one element that answers it, and — conversely — **a
    question a developer demonstrably asks, with no element to answer it, is a gap the audit MUST record** as a row
    with no element rather than leaving it invisible.
@@ -756,7 +757,7 @@ outcome, and no clause of this standard depends on them.
 | --- | --- | --- | --- |
 | `sdk-manifest.json` (`api_index` + caller params) | "What exists, where, and what does it take?" | Routing (name → purpose → file) and a starting point for surface verification before writing a call | Agent greps serially, or invents plausible symbols that do not exist |
 | `usage-patterns.json` | "How do calls compose in practice?" | Idiomatic sequences from real examples/tests, complexity-labeled — a matching pattern instead of one derived from signatures. Carries **both halves** of usage guidance: `explanation.*` for what to do, `antipatterns` for the author-declared ways to get it wrong | Calls chained in orders the package never intended; misuse that still type-checks |
-| `api-graph.json` | "What relates to what?" | The map to `api_index`'s phone book: extends/returns/uses edges for reasoning about blast radius and planning multi-file changes without loading all source | Structure discovered file by file — context burned on archaeology, relationships guessed |
+| Code index (`code_index`, *optional*) | "What relates to what, and did it change shape?" | The map to `api_index`'s phone book: extends/returns/uses edges **with signatures**, for reasoning about blast radius and planning multi-file changes without loading all source. Read one symbol at a time through `graph` (Discovery Contract §6) rather than whole, so the saving is real; a consumer without a decoder keeps using `api_index` and loses nothing it had | Structure discovered file by file — context burned on archaeology, relationships guessed. Worse for the half of API change that keeps a name and alters a signature, which a name-keyed index cannot see at all |
 | `lifecycle.json` | "Is this alive, and whom do I ask?" | Decision-time trust: support status, advisory *pointers*, update check — before building on the package | Health assumed; integration against an abandoned or advisory-laden dependency |
 | `migration-guide.json` + deprecation inventory | "What changed, and what replaces what?" | Structured `{surface, removed_in, replacement}` for mechanical cross-reference against the consumer's call sites | Upgrades by prose changelog or trial-and-error; deprecated surfaces linger until removal breaks them |
 | `AGENT_EXAMPLES.json` + `examples/` (quickstart) | "Show me working code" | A runnable learning path (MIRI-PY-015 gates it). **(F) only** — `AGENT_EXAMPLES.json` lives in `.dist-info/` and `examples/` is package source, so neither is servable; `usage-patterns.json` is the served path to working code | Agent learns from snippets that may never have run |

@@ -412,44 +412,26 @@ Use migration-guide.json for breaking changes and new features.
 - Reference common imports for suggestions
 ```
 
-### 4.5 api-graph.json (Optional)
+### 4.5 api-graph.json (Withdrawn at 0.7.3)
 
-**Purpose**: Relationship graph between API components, derived from source — inheritance, return types, and call
-sites — for advanced agent reasoning.
+**Status: withdrawn.** A wheel MUST NOT be required to ship this document and a consumer MUST NOT expect it.
+The heading is kept so §4.6 and §4.7 do not renumber and every citation of them still resolves.
 
-Only structure that can be **evidenced from the source** is represented: each node carries its kind, each edge carries
-a declared relationship. Scored or inferred values (a node's importance/centrality, a relationship's usage frequency)
-and synthesized usage `workflows` are **not** part of this contract — a generator cannot derive them from the AST and
-MUST NOT invent them. This keeps api-graph.json a factual projection of the code, consistent with the standard's
-"declare sources, not verdicts" principle.
+`api-graph.json` carried a name and a kind per node, and edges with a declared relationship. What it could not
+carry is the thing a consumer most needs: a signature, a position, an identity that survives a rename, or any
+way to tell whether a symbol **changed shape** between two releases. Of 270 real API updates measured across
+eight Python libraries, 128 were modifications — symbols that kept their name and changed — and a graph keyed
+on names is blind to all of them.
 
-**Schema**:
+Replaced by two things that already existed or were cheaper to add:
 
-```json
-{
-  "$schema": "https://miri-whl.github.io/schemas/api-graph-v1.json",
-  "version": "1.0",
-  "generated_at": "2026-08-15T14:02:07Z",
-  "nodes": {
-    "DatabaseClient": { "type": "class" },
-    "QueryBuilder": { "type": "class" },
-    "QueryResult": { "type": "class" }
-  },
-  "edges": [
-    {
-      "from": "DatabaseClient",
-      "to": "QueryResult",
-      "relationship": "returns",
-      "methods": ["query", "execute"]
-    },
-    {
-      "from": "QueryBuilder",
-      "to": "DatabaseClient",
-      "relationship": "uses"
-    }
-  ]
-}
-```
+- **Structure a consumer reads**: `sdk-manifest.json` `api_index`, which is JSON, which every consumer can
+  parse, and whose `signature` field is what MIRI-PY-043 compares across releases.
+- **Structure a tool queries**: a precomputed index in a published format, declared in `sdk-manifest.json`
+  `code_index` — see [Miri Wheel Extensions §5.5](miri-python-wheel-extensions.md) and MIRI-PY-045 (SHOULD).
+
+`schemas/api-graph-v1.json` stays published and frozen. A wheel that already ships the document is not
+non-conforming for carrying it; nothing scores it either way, and MIRI-PY-010 records where the obligation went.
 
 ### 4.6 lifecycle.json (Required)
 
