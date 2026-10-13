@@ -10,14 +10,14 @@ The producer standards specify what an artifact ships. The [Discovery Contract](
 a surface serves it. The [Consumption Map](consumption-map.md) specifies what a consumer reads, in what order, for
 which task. None of them specifies **what causes the reading to start**.
 
-That gap is not cosmetic. The Discovery Contract's binding is *pull*: an agent must decide to ask before adding a
-dependency, and nothing in the ecosystem makes it. A conformant producer, a conformant surface and a conformant
-consumer can coexist with metadata that is never read, and every score in the standard stays green. The standard
-cannot presently tell a working integration from an unused one.
+The Discovery Contract's binding is *pull*: an agent must decide to ask before adding a
+dependency, and nothing in the ecosystem makes it. A producer, a surface and a consumer can each pass every check
+while the metadata is never read, and every score in the standard stays green: nothing scores whether it was
+actually used.
 
 This document specifies the missing half: an **event contract** naming the observable moments at which each map task
 becomes actionable, what a conforming integration owes its caller at those moments, and what it must never do. It
-carries one binding — Claude Code — as §6, in the same way the Discovery Contract carries MCP as its §6.
+carries one binding, Claude Code, as §6.
 
 ## Table of Contents
 
@@ -67,8 +67,8 @@ Three primitives already exist and are not reinvented here:
 | What to read for a given task | [Consumption Map §3](consumption-map.md) — the six tasks |
 
 This contract therefore adds exactly two things: a **vocabulary of events**, and a **payload key** for what comes
-back. Everything else is reuse, which is the point — a third transport or a parallel response format would be two
-more things for two implementations to diverge on.
+back. Everything else is reuse: a third transport or a parallel response format would be two more things for two
+implementations to diverge on.
 
 ## 3. The Event Contract
 
@@ -91,8 +91,8 @@ one does not answer the other.
 | `runtime.error` | an error naming an installed package is observed | [§3.4](consumption-map.md) diagnosing | SHOULD |
 | `test.author` | a test touching a package is about to be written | [§3.6](consumption-map.md) tests | SHOULD |
 
-**`package.replaced` reads both of its tasks, and the order matters.** Take [Map §3.1](consumption-map.md) first —
-`list`, then `patterns`, then the surface — because the question *what is here now* has to be answered before any
+`package.replaced` reads both of its tasks, and the order matters. Take [Map §3.1](consumption-map.md) first —
+`list`, then `patterns`, then the surface, because the question *what is here now* has to be answered before any
 judgment about it means anything. Then [Map §3.5](consumption-map.md), because the artifact is new bytes and the
 previous verdict was about the old ones.
 
@@ -103,7 +103,7 @@ bytes changing, and `identity.purl` will not have moved
 
 Two things this trigger is **not**. It is not a verification: where no attestation is present the standard binds
 nothing about an artifact's contents, so re-reading a hostile artifact yields fresher hostile metadata and a consumer
-MUST NOT present the re-read as a check having passed. And it is not a diff — the event says the artifact was
+MUST NOT present the re-read as a check having passed. And it is not a diff: the event says the artifact was
 replaced, never what changed. A consumer that read the surface earlier in the session holds that comparison itself;
 the contract stays stateless and does not pretend to remember.
 
@@ -124,7 +124,7 @@ does locally.
 a dependency is added it is not installed, so it ships nothing a local surface can read: no `agent-metadata/`, no
 `lifecycle.json`, no successor whose namespace could be checked. [Map §3.5](consumption-map.md)'s read-order has no
 subject, and the trigger
-correctly finds nothing every time — for exactly the case that motivated requiring it. Requiring a kind that is
+correctly finds nothing every time, for exactly the case that motivated requiring it. Requiring a kind that is
 structurally silent buys a conformance obligation and no safety.
 
 It becomes REQUIRED when a **registry-side surface** exists, which the Discovery Contract does not define today. The
@@ -154,7 +154,7 @@ requiring two is close to zero.
 ```
 
 - **`phase`** is `before` or `after`, describing whether the action that produced the event has landed.
-  `runtime.error`, `dependency.add` and `package.replaced` are necessarily `after` — the first because the error has
+  `runtime.error`, `dependency.add` and `package.replaced` are necessarily `after`: the first because the error has
   happened, the other two because the artifact must be installed for there to be anything to read. Every other kind
   is `before`.
 
@@ -162,7 +162,7 @@ requiring two is close to zero.
   the trigger point was "before the dependency exists — the only moment before it does". That is unsatisfiable: a
   package that is not yet installed ships nothing a local surface can read, so there is no `lifecycle.json` to
   consult until the install lands. A conforming binding therefore fires it **after the install and before any code
-  is written against it**, which is still before the decision that is expensive to reverse — an install is undone
+  is written against it**, which is still before the decision that is expensive to reverse, and an install is undone
   with an uninstall; a codebase written against a package is not. A genuinely pre-install trigger requires a
   registry-side surface, which is a different contract than the one this standard defines, and the schema permits
   `before` so that such a surface is not forbidden in advance.
@@ -221,7 +221,7 @@ the envelope's rules verbatim** rather than restating them — `make consistency
 map sections and `level` to `must`/`should`, couples payload and absence in both directions, requires any
 successful response to state `present`, and denies the host-control shapes §4.4 governs.
 
-Three consequences are worth stating. An empty `findings` array is **rejected**, so a binding cannot satisfy §4.1 by
+An empty `findings` array is **rejected**, so a binding cannot satisfy §4.1 by
 emitting one. A publisher's `priority: "critical"` cannot reach `level` even if a consumer passed it through
 unexamined. And a response carrying `findings` must assert `present: true`, so a caller branching on `ok`/`present`
 can never take neither branch.
@@ -245,7 +245,7 @@ required `why_this_span`, and not something the gate checks.
 
 ### 4.1 Silence Is the Existing Absence Shape
 
-A trigger with nothing to report MUST answer with the §4.2 absent shape — `ok: true`, `present: false`, a `reason`,
+A trigger with nothing to report MUST answer with the §4.2 absent shape: `ok: true`, `present: false`, a `reason`,
 and no payload key. It MUST NOT emit an empty `findings` array, and MUST NOT emit prose confirming that it checked.
 
 The shape is §4.2's; the *meaning* is narrower, and conflating them would be a mistake. In the Discovery Contract
@@ -254,19 +254,19 @@ may be because the package ships no metadata, or because it ships metadata conta
 event. A consumer MUST NOT read a trigger's `present: false` as evidence about what the package ships; that question
 is `list`'s to answer, and the presence-only rule ([Consumption Map §4](consumption-map.md)) applies unchanged.
 
-Reusing the shape is still right — a caller branching on `ok`/`present` needs no new code path. What a trigger
+Reusing the shape is still right, because a caller branching on `ok`/`present` needs no new code path. What a trigger
 response deliberately does **not** do is distinguish the two causes mechanically. `reason` is free text for humans
 and never a machine field ([Discovery Contract §4.2](discovery-contract.md)), and adding a machine-readable cause
 here would contradict that rule for the convenience of a caller that does not need it: a consumer wanting to know
 what a package ships asks `list`, which is the operation whose answer that is. A trigger reports what it found, not
 an inventory of what exists.
 
-**The contract response and what a host emits are two layers, and §4.1 governs only the first.** A trigger's
+The contract response and what a host emits are two layers, and §4.1 governs only the first. A trigger's
 *answer* is the absent envelope — that is what a golden asserts against, and what makes a binding testable with no
 host at all (§7). What a **host adapter** does with an absent envelope is the binding document's business, and for
 most hosts the right answer is to emit nothing at all.
 
-That distinction is not a technicality. In Claude Code a hook's stdout enters the agent's context, so an adapter
+In Claude Code a hook's stdout enters the agent's context, so an adapter
 that printed the absent envelope on every manifest edit would be announcing *checked, nothing found* in JSON —
 which is precisely the context tax this section forbids, arrived at by obeying its letter. The host's own mechanism
 for silence is exit 0 with no output. A conforming Claude Code adapter therefore receives the absent envelope from
@@ -291,7 +291,7 @@ The binding's job at MUST level is to ensure the finding **reaches the point whe
 
 Observably, and this is what a suite asserts: drive the binding with an event whose task yields a `must`-level
 finding, and **the action that produced the event still completes**. Together with §4.4 — exit zero, envelope only,
-no host control key — that is the whole test. "Did not block" is not a claim about the binding's intent; it is a
+no host control key. That is the whole test. "Did not block" is not a claim about the binding's intent; it is a
 claim about whether the host's action ran, which is observed at the host boundary like any other.
 
 ### 4.3 The Publisher Does Not Control the Trigger
@@ -314,19 +314,20 @@ with two problems produces two.
 An earlier version of this section listed those last two among the forbidden set. That made the rule
 **unsatisfiable**: every finding is derived from a shipped field, so a consumer obeying it literally could never
 report anything, and `MIRI-CONSUMER-051` fired on the behavior the `E3` golden mandates. The error was treating the
-*outcome of the read* as though it were the *decision to read*. It is recorded rather than quietly corrected
+*outcome of the read* as though it were the *decision to read*. It is recorded here
 because the two are easy to conflate and the conflation is invisible until someone tries to implement both.
 
-**The evidence that a trigger fired is the absent envelope.** §4.1 already requires a trigger that reads and finds
+The evidence that a trigger fired is the absent envelope. §4.1 already requires a trigger that reads and finds
 nothing to answer with `ok: true`, `present: false` and a `reason` rather than staying silent — and that is what
 makes this clause observable. Drive a consumer against a package carrying an attention bid and against a clean one:
 both must produce a *response*. One that produces findings for the first and **nothing at all** for the second did
-not read the second; it was summoned. **Silence is the violation, not the absence of findings.**
+not read the second; it was summoned. A trigger that produces no response at all has not read the package, and
+that is what this clause checks.
 
 The *content* of a finding — its `summary`, its `quote`, the purl it names — is derived from the metadata by
 design, and is governed separately below.
 
-**Publisher influence over content is permitted; over `level` it is not.** A finding's prose comes from the served
+Publisher influence over content is permitted; over `level` it is not. A finding's prose comes from the served
 document — that is the whole point of reporting it — but a shipped field MUST NOT determine a finding's `level`,
 because `level` is what decides whether a caller may proceed. A package that could mark its own finding `should`
 would be grading its own exam, and one that could mark an unrelated finding `must` would be blocking a competitor.
@@ -334,8 +335,8 @@ would be grading its own exam, and one that could mark an unrelated finding `mus
 
 Every item in the [Agent Metadata](../python/miri-agent-metadata-specification.md) threat model concerns **what the
 metadata says**: narrative files inject, `api_index` can lie, execution is not sandboxed, provenance anchors trust.
-This is the first concerning **what the metadata makes happen**. Content and control are different axes, and a
-package that can demand the agent's attention has a denial-of-context channel that no existing rule closes.
+This is the first concerning **what the metadata makes happen**. A package that can demand the agent's attention
+has a denial-of-context channel that no existing rule closes.
 
 ### 4.4 Output Is Data, Including Its Shape
 
@@ -357,7 +358,7 @@ event itself — and `unavailable-vehicle` covers it. No new reason is added.
 ## 4.6 Worked Example: What a Trigger Actually Does
 
 The three documents compose, and this is the chain end to end. A trigger names a **task**; the task's read-order
-names **operations**; the operations are served by the **surface**. Nothing here is new machinery — the point of the
+names **operations**; the operations are served by the **surface**. Nothing here is new machinery: the point of the
 example is that there is none.
 
 `dependency.add` for `greet_adversarial`, whose task is [§3.5 security and trust](consumption-map.md):
@@ -389,14 +390,14 @@ Two other tasks, to show the shape holds:
 
 `graph` appears in no REQUIRED trigger's read-order. That is worth stating rather than leaving to inspection: it
 serves §3.2 scaffolding, whose trigger is SHOULD and which the Claude Code binding does not implement (§6.2). A
-binding that never calls `graph` is not deficient — it has no trigger that reaches it.
+binding that never calls `graph` is not deficient; it has no trigger that reaches it.
 
-**What the binding adds is the first line and the last.** Everything between them already existed and was already
-specified; the gap this document closes is that nothing caused the first line to happen.
+The binding adds the first line and the last. Everything between them already existed and was already specified;
+nothing caused the first line to happen.
 
 ## 5. What a Binding Document Specifies
 
-By analogy with [Discovery Contract §6](discovery-contract.md), and no more than this:
+Mirroring [Discovery Contract §6](discovery-contract.md):
 
 1. The **host**, named.
 2. The **mapping** from each supported `kind` to an observable moment in that host.
@@ -438,8 +439,8 @@ lifecycle events in `settings.json`, receiving JSON on stdin.
 | `runtime.error` | `PostToolUse`, matcher `Bash` | command output contains a traceback naming an installed package |
 | `test.author` | `PreToolUse`, matcher `Edit\|Write` | the target path matches the project's test discovery configuration |
 
-**`package.replaced`'s recognizer keys on the session, not on the single command.** An earlier wording was "the
-command installed a distribution that was **already installed**" — which misses the sequence
+`package.replaced`'s recognizer keys on the session, not on the single command. An earlier wording was "the
+command installed a distribution that was **already installed**", which misses the sequence
 [§9.6](../python/lifecycle-security-metadata.md) actually describes, `pip uninstall greet && pip install ./greet.whl`
 as two calls, because at install time the distribution is not installed. It also fired on `pip install requests`
 against an already-satisfied requirement, where nothing was replaced at all. Both are the failure §6.2 forbids in
@@ -489,7 +490,7 @@ A conforming binding **omits these and says so**. It does not fire them approxim
 
 That is a general rule, not a note about this host: a binding MUST NOT map a trigger to an observable moment that
 fires at materially different times than §3.1 specifies. Reporting a different event under a contract kind's name is
-worse than omitting the kind, because a caller cannot tell the two apart — the omission is visible in the binding
+worse than omitting the kind, because a caller cannot tell the two apart. The omission is visible in the binding
 document (§5 item 3) and the approximation is not. Where a host's nearest signal is close but not equivalent, the
 binding says so and omits it.
 
@@ -498,8 +499,8 @@ binding says so and omits it.
 `PreToolUse` in this host **can** deny the tool call. This binding MUST NOT use that capability (§4.2). Findings are
 written to the hook's stdout as attributed data and reach the agent as context; the tool call proceeds.
 
-That the host offers a veto the contract forbids is worth stating plainly: the constraint is on the binding, not on
-the host, and a reviewer checking this binding should confirm the denial path is absent rather than merely unused.
+The host offers a veto this contract forbids. The constraint is on the binding, not on the host, so a reviewer
+checking this binding should confirm the denial path is absent rather than merely unused.
 
 ### 6.4 Transport
 
@@ -544,8 +545,7 @@ the author of its acceptance criteria.
 
 They are the `E*` files in [`examples/fixtures/expected/`](../../examples/fixtures/expected/), and every event and
 every response in them is validated against `agent-event-v1` and `agent-findings-v1` by `make validate-fixtures`. A
-golden that does not itself validate is worse than no golden, because it hands an implementer a target the schema
-will reject.
+golden that does not itself validate hands an implementer a target the schema will reject.
 
 | Trace | Clause | What it pins |
 |---|---|---|
@@ -560,8 +560,8 @@ will reject.
 
 `E6` is the one to notice when reading the set: every other trace drives the adversarial arm and asks whether the
 consumer *resists* what the metadata claims. `E6` drives the conforming arm and asks whether it *uses* what the
-metadata declares. A suite made entirely of adversarial traces cannot tell a careful consumer from an inert one —
-which is the same defect `MIRI-CONSUMER-041` itself carried until 0.5.0.
+metadata declares. A suite made entirely of adversarial traces cannot tell a careful consumer from an inert one.
+`MIRI-CONSUMER-041` carried that same defect until 0.5.0.
 
 `E3` is what makes the trigger-forcing case discriminating, and the discriminator is **the absent envelope versus
 silence** rather than findings versus no findings. `A13` alone asserts only that output does not echo the bid, which

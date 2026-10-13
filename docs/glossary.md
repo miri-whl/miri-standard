@@ -1,12 +1,12 @@
 # Glossary
 
-Every term this standard defines, and a few it deliberately does not. Where a term has a normative definition, the
-entry says where that definition lives — this page explains, it does not define, and a disagreement between the two
-is a defect in this page.
+Every term this standard defines, and a few it deliberately does not: `purl`, SBOM and OSV are used here as their
+own specifications define them. Where a term has a normative definition, the entry says where that definition
+lives. This page explains, it does not define, and a disagreement between the two is a defect in this page.
 
-The vocabulary grew across four documents and two years, so several terms have close neighbors that mean different
-things. Those pairs are the ones worth reading: **absent and error**, **task and trigger**, **binding and hook**,
-**level and severity**, **not-applicable and forfeited**.
+Several terms have close neighbors that mean different things, and those pairs are where the vocabulary is easiest
+to get wrong: **absent and error**, **task and trigger**, **binding and hook**, **level and severity**,
+**not-applicable and forfeited**.
 
 ## The three actors
 

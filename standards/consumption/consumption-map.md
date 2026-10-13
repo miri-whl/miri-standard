@@ -150,7 +150,8 @@ reference tool. It is the prohibitions that keep a consumer honest, and no claus
 
 ## 3. The Task-to-Document Map
 
-Six tasks, each a read-order plus a set of prohibitions. The routing is the substance of this document.
+Six tasks, each a read-order plus a set of prohibitions. The read-order decides which operations a surface-only
+consumer can complete and which it must refuse.
 
 Each task also has a **trigger** — the observable moment at which it becomes actionable. A trigger is what a task
 answers *when*, as a vehicle (§1.1) answers *how* and the read-order answers *what*. The triggers are specified in
