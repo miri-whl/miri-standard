@@ -217,6 +217,15 @@ because the obligation existed; see `scoring-v1.json` `conformance.coverage` for
 
 ## Verifying
 
+**Reachable** ([Linter Checklist §
+Reachability](../standards/python/linter-checklist.md)) — the property a path must have for a check to be
+satisfied: the installed import package can open it, which in practice means
+`importlib.resources.files(<pkg>).joinpath(<path>)` resolves to a file. The near neighbor is **present**, and the
+distinction is the whole point — a member routed through the PEP 427 `.data` scheme is present in the archive,
+listed in `RECORD`, and installed to `<venv>/examples/`, detached from the package, where nothing that needs it can
+open it. Six checks depend on this and, until 0.7.4, one said so while two said the opposite ("present in the built
+wheel"). Absent and orphaned also take opposite remedies: write the file, or move the one you wrote.
+
 **Fixture** ([`examples/fixtures/`](../examples/fixtures/README.md)) — one variant of a single trivial artifact,
 built from one template, differing from its siblings **only** in shipped metadata. Every `.py` is verified
 **byte-identical** across the source-sharing variants, so any difference in behavior is attributable to the metadata
