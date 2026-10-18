@@ -11,6 +11,75 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.7.4 — unreleased
+
+### Fixed
+
+- **"Reachability" is now stated once, normatively, instead of being re-derived by every implementer.** Six checks
+  require a file to live inside an installed import package — `006`, `014`, `015`, `037`, `038`, and `014`'s T3
+  clause — and exactly one of them said so. A grep of all 45 definitions finds `import package` in `MIRI-PY-006`
+  alone.
+
+  **Two checks said the opposite.** `MIRI-PY-014` required `examples/quickstart.py` *"present in the built wheel"*
+  and fired when it was *"absent from the built wheel"* — archive presence, which is the reading the new clause
+  excludes. An implementer following that text literally produced the defect; they would have had to contradict the
+  check to be correct. Both clauses are corrected, and the clause in the checklist preamble now governs all six.
+
+  Reported by the miri-py team, who implemented the defect twice three weeks apart — the second time in
+  `MIRI-PY-006`, whose own text already carried the rule. That is how a rule living in one check's prose fails to
+  reach the rest. Measured on two wheels from one source tree with byte-identical Python and placement the only
+  difference, the checks separating a working wheel from a broken one went from 1 to 9 once they scoped correctly.
+
+  A wheel routing `examples/` or `agent-metadata/` through the PEP 427 `.data` scheme installs those files to
+  `<venv>/examples/`, detached from the package, where `importlib.resources` cannot reach them. The files exist and
+  are listed in `RECORD`. Nothing that needs them can open them.
+
+- **Remediation text must distinguish absent from orphaned.** The two have opposite fixes — write the file, or move
+  the one you already wrote — and a check failing on reachability SHOULD name the path the file actually shipped
+  at. miri-py shipped the right verdict with the wrong diagnosis and a panel caught the fix card telling a producer
+  who *had* written a quickstart to write another.
+
+- **`docs/glossary.md` gains Reachable**, whose near neighbor is *present* and whose distinction is the entire
+  defect.
+
+- **A dead citation.** `scanrook.io` returns 502 at the root, so both links to it in
+  `update-and-vulnerability-signaling.md` had stopped resolving. Replaced with NIST IR 7696, *CPE Name Matching
+  Specification 2.3* — and the sentence reworded rather than the URL swapped underneath it, because the old link
+  was cited for CPE matching being *unreliable* and the NIST document specifies how matching *works*. The
+  unreliability claim now rests on the mechanism (a one-to-one comparison of two well-formed names presumes the
+  name is known, and a stripped binary does not carry it) plus `cve-bin-tool`'s documented byte-signature
+  fallback, which was already cited beside it.
+
+- **A release job that would publish a tag from any branch.** 0.7.3 was first tagged on a feature
+  branch and published: the release was real — wheel, fixture pack, hash in the index — and built from
+  a tree `main` did not contain, including work from this version that had not been reviewed. Correcting it
+  meant deleting a published artifact ten minutes old, which is the act `MIRI-CONSUMER-052` exists to
+  forbid; it is recorded here because an exception nobody writes down is indistinguishable from the
+  defect. The wheel at digest `7d5acd05…` no longer resolves; `0.7.3` is now `235591bb…`, built from
+  `f97b547` on `main`. `publish-checks.yml` now refuses a tag that `main` does not contain, which is
+  the check that would have turned this into a failed run rather than a published one.
+
+### Changed
+
+- **The pages a visitor reads lost their AI-voice tells.** The published site was run through an
+  editorial panel for the word choices and sentence shapes readers associate with machine-written
+  text: first the three visitor-facing pages, then all 143, then `agent-integration-contract` alone.
+  The repeated habit was **manufactured closure** — a tidy sentence sealing a section while making no
+  further claim. *"That is the whole of it"*, *"That gap is not cosmetic"*, *"It promises no magic
+  beyond that"*, and the epigram *"Silence is the violation, not the absence of findings"* are gone;
+  so are five bold topic-sentence openers, two phrases praising the writing rather than making a
+  claim, and 14 em dashes standing in for a colon or a full stop.
+
+  Two rewrites a reader will notice: the landing page closed by mirroring the *Beggars in Spain*
+  quote (*"gaps where information ought to go"* → *"the standard fills the gaps"*) and now states what
+  a wheel omits; `origin-story` repeated that same line nearly verbatim one click away. No meaning
+  changed anywhere.
+
+  Of 124 check pages, the sweep found one finding. The voice problem was in the hand-written
+  narrative documents, and `agent-integration-contract` held a quarter of it.
+
+No check changed weight, level or intent.
+
 ## 0.7.3 — unreleased
 
 `api-graph.json` is withdrawn, and `MIRI-PY-010` with it. A wheel need not ship the document and a consumer

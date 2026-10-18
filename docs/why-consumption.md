@@ -4,9 +4,9 @@ Versions 0.1 and 0.2 specified what an artifact **ships**. From 0.3 the standard
 **consumes** it — and this page is the argument for why that half had to exist. Per-release detail lives in the
 [changelog](../CHANGELOG.md); the reasoning here does not change from one version to the next.
 
-That is the whole of it. A package could score Gold and help no agent, because nothing in the standard said how the
-metadata was supposed to reach a decision, what to read for a given task, or what it means to consume it correctly.
-The consumption suite closes that loop with four documents, a fixture set, and thirty-six numbered checks.
+A package could score Gold and help no agent, because nothing in the standard said how the metadata was supposed to
+reach a decision, what to read for a given task, or what it means to consume it correctly. Four documents, a fixture
+set and thirty-six numbered checks make correct consumption verifiable.
 
 ## The documents
 
@@ -57,7 +57,7 @@ a convention: any difference a consumer shows between variants is attributable t
   as a clean bill of health, a link-local SSRF target, and a deprecation redirecting onto a package in a namespace
   the publisher does not own.
 
-Two of those cases carry a **paired control**, which is the part worth borrowing. The redirect is paired with a
+Two of those cases carry a **paired control**. The redirect is paired with a
 legitimate same-namespace migration, and a dynamically-served symbol is paired with a statically-defined one.
 Without the controls, both checks are passable by a consumer that simply refuses to act — and refusing every
 migration is not detecting an attack, just as reporting everything unverified is not caution.
@@ -76,10 +76,8 @@ A consumer that collapses either asymmetry is wrong in a specific, predictable w
 ## What this version does not claim
 
 Nothing here asserts that consuming this metadata improves agent outcomes. That is an empirical question with a
-pre-registered experiment attached, and the specification deliberately stays on the mechanism side of it. The
-specification makes
-the experiment *possible* — it could not run without a defined consumption contract — but it does not anticipate the
-result.
+pre-registered experiment attached; this specification defines the mechanism the experiment needs, not its result.
+The experiment could not run without a defined consumption contract.
 
 Two scope decisions are stated rather than left to be discovered: the contract answers only for the **installed**
 version, so choosing a package before installing it and asking what breaks on a future upgrade are both out of scope

@@ -2,10 +2,10 @@
 
 ## What Miri Is
 
-The Miri Standard makes software artifacts legible to AI agents and the tools that vet them. It defines structured
-metadata — carried *inside* the artifact, offline and version-locked to the code — that declares a package's identity,
-where to check it for advisories, its support and deprecation status, and, optionally, a machine-readable map of its
-API and examples.
+An agent deciding whether to call a package can read, from the installed artifact alone, what the package is, where
+to check it for advisories, whether it is still supported, and which of its functions are deprecated. That metadata
+is carried *inside* the artifact, offline and version-locked to the code, and optionally extends to a
+machine-readable map of the API and its examples.
 
 Its most defensible layer is small and hand-authorable: **Miri Core**, the identity, security, and lifecycle signaling
 a well-maintained package can adopt in a day. A `lifecycle.json` that ships in the wheel looks like this:
@@ -39,8 +39,9 @@ pieces hold it back.
 
 Packages have the same flaw. A wheel carries the code an agent needs but not the machine-readable context around it —
 its stable identity, its advisory sources, whether a function is deprecated and what replaced it. The Miri Standard
-fills those gaps. The name is a metaphor for exactly one claim: an artifact that completes its own missing information.
-It promises no magic beyond that.
+puts that context inside the wheel: a `lifecycle.json` an agent reads without a network call, a migration guide
+derived from the code's own deprecation markers. The name stands for one claim and no more — an artifact that
+completes its own missing information.
 
 ## A Note on the Name
 

@@ -1,12 +1,12 @@
 # Glossary
 
-Every term this standard defines, and a few it deliberately does not. Where a term has a normative definition, the
-entry says where that definition lives — this page explains, it does not define, and a disagreement between the two
-is a defect in this page.
+Every term this standard defines, and a few it deliberately does not: `purl`, SBOM and OSV are used here as their
+own specifications define them. Where a term has a normative definition, the entry says where that definition
+lives. This page explains, it does not define, and a disagreement between the two is a defect in this page.
 
-The vocabulary grew across four documents and two years, so several terms have close neighbors that mean different
-things. Those pairs are the ones worth reading: **absent and error**, **task and trigger**, **binding and hook**,
-**level and severity**, **not-applicable and forfeited**.
+Several terms have close neighbors that mean different things, and those pairs are where the vocabulary is easiest
+to get wrong: **absent and error**, **task and trigger**, **binding and hook**, **level and severity**,
+**not-applicable and forfeited**.
 
 ## The three actors
 
@@ -216,6 +216,15 @@ verification for the check at all (`not_implemented`, which must name a `blocker
 because the obligation existed; see `scoring-v1.json` `conformance.coverage` for the five driver clauses.
 
 ## Verifying
+
+**Reachable** ([Linter Checklist §
+Reachability](../standards/python/linter-checklist.md)) — the property a path must have for a check to be
+satisfied: the installed import package can open it, which in practice means
+`importlib.resources.files(<pkg>).joinpath(<path>)` resolves to a file. The near neighbor is **present**, and the
+distinction is the whole point — a member routed through the PEP 427 `.data` scheme is present in the archive,
+listed in `RECORD`, and installed to `<venv>/examples/`, detached from the package, where nothing that needs it can
+open it. Six checks depend on this and, until 0.7.4, one said so while two said the opposite ("present in the built
+wheel"). Absent and orphaned also take opposite remedies: write the file, or move the one you wrote.
 
 **Fixture** ([`examples/fixtures/`](../examples/fixtures/README.md)) — one variant of a single trivial artifact,
 built from one template, differing from its siblings **only** in shipped metadata. Every `.py` is verified

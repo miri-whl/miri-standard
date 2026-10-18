@@ -107,7 +107,7 @@ flowchart LR
     DET -.->|"absence is the<br/>answer itself"| N1
 ```
 
-The distinction is load-bearing rather than taxonomic. A derived view is **capped**, so a symbol missing from an
+The distinction decides what a consumer may conclude. A derived view is **capped**, so a symbol missing from an
 `api-index` response may simply be past the cap — which is why `resolve`, a determination, exists to settle symbol
 existence and why no consumer may settle it from index membership (§3.5).
 

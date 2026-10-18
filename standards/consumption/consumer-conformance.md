@@ -9,9 +9,9 @@
 The [Discovery Contract](discovery-contract.md) defines how metadata reaches an agent; the
 [Consumption Map](consumption-map.md) defines what the agent reads and what it must not do with it. This document
 defines what a **conformant consumer** is: **eighteen** numbered checks whose IDs run from `MIRI-CONSUMER-001` to
-`MIRI-CONSUMER-052`. The numbering is **sparse by design** — IDs are grouped in tens by category and are permanent,
-so the range is an address space, never a count, and gaps are room for later checks rather than missing ones —
-weighted to 100, verified by **driving a consumer against fixtures and observing its output**.
+`MIRI-CONSUMER-052`. The numbering is **sparse by design**: IDs are grouped in tens by category and are permanent,
+so the range is an address space, never a count, and gaps are room for later checks rather than missing ones. The
+checks are weighted to 100 and verified by **driving a consumer against fixtures and observing its output**.
 
 It also states plainly what a consumer check *cannot* verify. Several obligations in the contract bind the surface,
 not the consumer, and a profile that quietly scored a consumer on them would be measuring the wrong program — those

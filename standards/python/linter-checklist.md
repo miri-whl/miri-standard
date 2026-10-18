@@ -135,6 +135,34 @@ Two profiles let a package adopt Miri incrementally:
 
 The two profiles share one check corpus and one weighting; Core is a named subset, not a separate standard.
 
+## Reachability
+
+**Every path a check requires of a wheel is relative to an installed import package, and is satisfied only when
+the installed package can open it** — in practice, when
+`importlib.resources.files(<import package>).joinpath(<path>)` resolves to a file. A member that installs outside
+every import package, including any member routed through the PEP 427 `.data` scheme, does **not** satisfy a check
+that requires that path, regardless of its presence in the archive or in `RECORD`.
+
+This is stated once here rather than repeated in each check, and it governs every check that requires a path:
+`MIRI-PY-006`, `014`, `015`, `037`, `038`, and `014`'s T3 clause (the join withdrawn `MIRI-PY-016` performed).
+Added at 0.7.4 and changing no check's weight, level or intent.
+
+**Why it needed saying.** It was not merely unstated — two checks said the opposite. `MIRI-PY-014` required
+`examples/quickstart.py` *"present in the built wheel"* and fired when it was *"absent from the built wheel"*, which
+is archive presence, the reading this clause excludes. An implementer following that text literally produced the
+defect; they would have had to contradict the check to be correct. Reported by the miri-py team, who implemented it
+twice three weeks apart — the second time in `MIRI-PY-006`, whose own text already said "under any import package",
+which is how a rule that lives in one check's prose fails to reach the rest.
+
+A wheel that routes `examples/` or `agent-metadata/` through `.data` installs those files to `<venv>/examples/`,
+detached from the package, where `importlib.resources` cannot reach them and no consumer will look. The files exist
+and are listed. Nothing that needs them can open them.
+
+**Remediation text must distinguish absent from orphaned.** The two have opposite fixes: a producer who shipped
+nothing has to write the file; a producer whose file installs out of reach has already written it and has to move
+it. A check failing on reachability SHOULD name the path the file actually shipped at, because telling a producer
+who wrote a quickstart to write a quickstart sends them looking for a file that is already there.
+
 ## The Checks
 
 ### A. Packaging Baseline (4 points)

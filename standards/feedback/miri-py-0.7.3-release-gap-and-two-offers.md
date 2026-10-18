@@ -20,7 +20,7 @@ generated from the canonical check definitions" in the footer.
 
 There is no `0.7.3` tag and no `0.7.3` release:
 
-```
+```text
 $ gh api repos/miri-whl/miri-standard/tags --jq '.[].name'
 0.7.2
 0.7.1
@@ -126,7 +126,7 @@ change".
 We built that arm to test our own implementation, and it is yours if you
 want it. Three arms, in your pack's layout:
 
-```
+```text
 data/baseline-1.0.0/     sdk-manifest.json  changelog.json
 data/reshaped-1.1.0/     sdk-manifest.json  changelog.json
 data/announced-1.1.0/    sdk-manifest.json  changelog.json

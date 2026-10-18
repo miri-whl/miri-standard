@@ -12,7 +12,7 @@ conditional: false
 conformance_tier: T1
 tiers:
   T0:
-  - '`examples/quickstart.py` is present in the built wheel and `py_compile` succeeds on it'
+  - '`examples/quickstart.py` is reachable from an installed import package - `importlib.resources.files(<pkg>).joinpath("examples/quickstart.py")` resolves to a file - and `py_compile` succeeds on it. Presence in the archive is NOT sufficient: a member routed through the PEP 427 `.data` scheme installs to `<venv>/examples/`, detached from the package, where no consumer will look (see the checklist''s Reachability clause)'
   T1:
   - 'Every import in quickstart.py resolves against the wheel''s own package or its Requires-Dist, and every attribute path it takes on the package (`Client.fetch`, `example_sdk.connect`) names a key in `sdk-manifest.json` `api_index`'
   T2:
@@ -34,7 +34,10 @@ rationale: Miri Wheel Extensions §5.1 names examples/quickstart.py as the one r
   synthesizes the install-to-first-result path from prose and signatures, which is exactly the guessing this standard exists
   to remove.
 fires_when:
-- examples/quickstart.py is absent from the built wheel
+- examples/quickstart.py is absent from the wheel, or present in the archive but installs outside every import
+  package - a `.data`-routed member satisfies neither this clause nor any other path requirement. A finding here
+  MUST name where the file actually shipped, because a producer who wrote a quickstart and placed it wrong needs
+  to move it rather than write another
 - METADATA Agent-Quickstart-File names a path that does not exist in the wheel
 - quickstart.py exists but never imports the package it ships in, or contains no executable statements (empty stub)
 remediation:

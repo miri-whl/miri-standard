@@ -6,12 +6,13 @@
   <div class="hero-text">
     {{ m.spec_header('The Miri Standard',
                      [('Status', '🚧 incubation'), ('Version', site.version)],
-                     'Multi-language packaging standards that make software artifacts — Python wheels, command-line
-                      tools, eventually Go modules and Rust crates — legible to AI agents: structured metadata,
-                      identity and vulnerability signaling, and lifecycle contracts.') }}
+                     'Packaging standards that let an AI agent read an installed artifact instead of guessing at it:
+                      what the package is, where to ask whether it is vulnerable, and what it has deprecated. Python
+                      wheels and command-line tools today, Go modules and Rust crates later.') }}
     <p>Named for Miranda Serena Sharifi of <em>Beggars in Spain</em>, whose thought-strings had
     <em>"structural flaws from the beginning, gaps where information ought to go."</em>
-    Packages have the same flaw; the standard fills the gaps.
+    A wheel ships the code and not the context around it: its identity, its advisory sources, what it has
+    deprecated and what replaced it. This standard puts that context inside the artifact.
     <a href="origin.html">Read the origin story →</a></p>
   </div>
   {{ m.avatar(root, 'green', 152, framed=true) }}
