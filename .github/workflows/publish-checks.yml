@@ -41,6 +41,23 @@ jobs:
       - name: Install dependencies
         run: pip install pyyaml jsonschema build
 
+      # A tag is cut from whatever branch happens to be checked out, and nothing here checked that the
+      # tagged commit is one `main` contains. 0.7.3 was first published from a feature branch: the
+      # release was real - wheel, fixture pack, hash in the index - and built from a tree that existed
+      # nowhere on main, including unreviewed work belonging to the next version. Replacing it meant
+      # deleting a published artifact, which is the thing MIRI-CONSUMER-052 exists to forbid. One
+      # ancestry check refuses the run instead.
+      - name: Refuse to publish a tag that is not on main
+        if: github.event_name == 'push'
+        run: |
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "::error::$GITHUB_REF_NAME points at $GITHUB_SHA, which origin/main does not contain."
+            echo "::error::Tag a commit that is on main, or merge the branch first."
+            exit 1
+          fi
+          echo "$GITHUB_REF_NAME is on main"
+
       - name: Gate the tree before building from it
         run: |
           make validate

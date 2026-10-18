@@ -50,6 +50,34 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
   name is known, and a stripped binary does not carry it) plus `cve-bin-tool`'s documented byte-signature
   fallback, which was already cited beside it.
 
+- **A release job that would publish a tag from any branch.** 0.7.3 was first tagged on a feature
+  branch and published: the release was real — wheel, fixture pack, hash in the index — and built from
+  a tree `main` did not contain, including work from this version that had not been reviewed. Correcting it
+  meant deleting a published artifact ten minutes old, which is the act `MIRI-CONSUMER-052` exists to
+  forbid; it is recorded here because an exception nobody writes down is indistinguishable from the
+  defect. The wheel at digest `7d5acd05…` no longer resolves; `0.7.3` is now `235591bb…`, built from
+  `f97b547` on `main`. `publish-checks.yml` now refuses a tag that `main` does not contain, which is
+  the check that would have turned this into a failed run rather than a published one.
+
+### Changed
+
+- **The pages a visitor reads lost their AI-voice tells.** The published site was run through an
+  editorial panel for the word choices and sentence shapes readers associate with machine-written
+  text: first the three visitor-facing pages, then all 143, then `agent-integration-contract` alone.
+  The repeated habit was **manufactured closure** — a tidy sentence sealing a section while making no
+  further claim. *"That is the whole of it"*, *"That gap is not cosmetic"*, *"It promises no magic
+  beyond that"*, and the epigram *"Silence is the violation, not the absence of findings"* are gone;
+  so are five bold topic-sentence openers, two phrases praising the writing rather than making a
+  claim, and 14 em dashes standing in for a colon or a full stop.
+
+  Two rewrites a reader will notice: the landing page closed by mirroring the *Beggars in Spain*
+  quote (*"gaps where information ought to go"* → *"the standard fills the gaps"*) and now states what
+  a wheel omits; `origin-story` repeated that same line nearly verbatim one click away. No meaning
+  changed anywhere.
+
+  Of 124 check pages, the sweep found one finding. The voice problem was in the hand-written
+  narrative documents, and `agent-integration-contract` held a quarter of it.
+
 No check changed weight, level or intent.
 
 ## 0.7.3 — unreleased
