@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% import '_macros.html' as m %}
-{% block title %}Downloads — Miri Standard{% endblock %}
+{% block title %}Downloads{% endblock %}
 {% block content %}
 {{ m.spec_header('Downloads', [('Version', site.version), ('Host', 'GitHub Releases')],
    'The standard as installable artifacts. Every link below is computed from the release version, so what
@@ -21,7 +21,7 @@
 {% endfor %}
 <div class="card wide">
   <div class="card-title">Source at this version</div>
-  <p>The repository as tagged — specifications, schemas, check definitions, fixtures and tools.</p>
+  <p>The repository as tagged: specifications, schemas, check definitions, fixtures and tools.</p>
   <p class="mono filename"><a href="{{ site.github }}/archive/refs/tags/{{ site.version }}.tar.gz">{{ site.version }}.tar.gz</a> ·
      <a href="{{ site.github }}/tree/{{ site.version }}">browse</a></p>
 </div>
@@ -33,19 +33,20 @@ things let you check it without trusting the host.</p>
   <li><span class="principle">The file hash.</span> The index carries the wheel's
   <span class="mono">sha256</span>, so <span class="mono">pip install --index-url</span> verifies what it downloads;
   <span class="mono">sha256sum -c SHA256SUMS</span> checks it out of band. Two builds of one tag on one machine
-  produce identical bytes — entry timestamps are fixed at write time — but the wheel is <em>not</em> reproducible
+  produce identical bytes, because entry timestamps are fixed at write time. The wheel is <em>not</em> reproducible
   across setuptools versions, which are unpinned, so a rebuild months later may differ.</li>
-  <li><span class="principle">The pin.</span> Inside the wheel, <span class="mono">manifest.json</span> carries
-  <span class="mono">checks_commit_sha</span> — the full 40-character commit, never a tag, because a tag is a movable
-  label — and <span class="mono">content_sha256</span> over every definition and schema in sorted order. Recompute it
+  <li><span class="principle">The wheel pins its own source.</span> Inside the wheel, <span class="mono">manifest.json</span> carries
+  <span class="mono">checks_commit_sha</span> (the full 40-character commit, never a tag, because a tag is a movable
+  label) and <span class="mono">content_sha256</span> over every definition and schema in sorted order. Recompute it
   from the source tree at that commit and it must match.</li>
-  <li><span class="principle">Provenance.</span> The release job attests build provenance for the wheel
+  <li><span class="principle">The build attests its provenance.</span> The release job records it for the wheel
   (<span class="mono">gh attestation verify</span>).</li>
 </ol>
 
 <h2>JSON Schemas</h2>
-<p>Each schema declares its own <span class="mono">$id</span> — <span class="mono">{{ site.site_url }}/schemas/…</span> —
-and that address is where a validator dereferencing a <span class="mono">$ref</span> or a
+<p>Each schema declares its own <span class="mono">$id</span> at
+<span class="mono">{{ site.site_url }}/schemas/…</span>, and that address is where a validator dereferencing a
+<span class="mono">$ref</span> or a
 <span class="mono">$schema</span> pointer will look, so the first link is the canonical one. The second is the same
 file in the repository at this version, for reading with history. Both ship inside the wheel under
 <span class="mono">schemas/</span>.</p>

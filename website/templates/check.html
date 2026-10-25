@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% import '_macros.html' as m %}
-{% block title %}{{ check.id }} — {{ check.name }}{% endblock %}
+{% block title %}{{ check.id }}: {{ check.name }}{% endblock %}
 {% block content %}
-{{ m.spec_header(check.id ~ ' — ' ~ check.name,
+{{ m.spec_header(check.id ~ ': ' ~ check.name,
                  [('Schema', 'check-v1'), ('Status', 'canonical'), ('Added', check.added_in)],
                  check.short_description | codeish) }}
 
@@ -42,7 +42,7 @@
 <h2>Tiers</h2>
 <p class="muted">Weight is earned as a cumulative schedule; the obligation is satisfied at <strong>{{ check.conformance_tier }}</strong>. Tiers above it price weight only.</p>
 <dl class="meta">
-  {% for tier, clauses in check.tiers.items() %}<dt>{{ tier }}{% if tier == check.conformance_tier %} — conformance{% endif %}</dt>
+  {% for tier, clauses in check.tiers.items() %}<dt>{{ tier }}{% if tier == check.conformance_tier %} (conformance tier){% endif %}</dt>
   <dd><ul class="plain">{% for c in clauses %}<li>{{ c | codeish }}</li>{% endfor %}</ul></dd>{% endfor %}
 </dl>
 {% endif %}

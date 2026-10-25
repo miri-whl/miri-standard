@@ -29,38 +29,32 @@
   {% endfor %}
 </div>
 
-<p class="lede">Want the definitions, not the pages? Every check and schema ships as one installable package,
-pinned to the commit it was built from — <a href="downloads.html">Downloads →</a></p>
+<p class="lede">Every check and schema ships as one installable package, pinned to the commit it was built from.
+<a href="downloads.html">Downloads →</a></p>
 
 <h2>The model</h2>
 <p>Each <span class="principle">requirement</span> in a specification is verified by a
 <span class="principle">check</span>; each check failure instance is a
 <span class="principle">violation</span>. Two scores follow. The <span class="principle">conformance score</span> is
-additive — fixed weights summing to 100, any failing MUST caps at 74 — and comparable across independent linters.
+additive and comparable across independent linters: weights are fixed, they sum to 100, and any failing MUST caps
+the score at 74.
 The <span class="principle">health score</span> is the severity-graded magnitude of what is wrong, computed from
 canonical severities and violation units. Populations are reported, never scored.</p>
 
 <h2>Principles</h2>
 <ul class="plain">
-<li><span class="principle">Declare sources, not verdicts.</span> Artifacts declare identity (purl) and advisory
-sources; consumers compute verdicts at call time.</li>
-<li><span class="principle">Reuse the existing stack.</span> Identity is purl; advisories are OSV records; SBOMs
-follow PEP 770 and CycloneDX/SPDX.</li>
-<li><span class="principle">Same shape for open source and private.</span> Private artifacts differ only in values,
-never in structure.</li>
-<li><span class="principle">Schema as data, derived outputs.</span> One source generates human docs and machine
-metadata.</li>
-<li><span class="principle">Deprecation coherence.</span> Markers, changelog, and removals must agree; no silent
-removals.</li>
+<li><span class="principle">Declare sources, not verdicts.</span> Artifacts declare identity (purl) and advisory sources; consumers compute verdicts at call time.</li>
+<li><span class="principle">Reuse the existing stack.</span> Identity is purl; advisories are OSV records; SBOMs follow PEP 770 and CycloneDX/SPDX.</li>
+<li><span class="principle">Same shape for open source and private.</span> Private artifacts differ only in values, never in structure.</li>
+<li><span class="principle">Schema as data, derived outputs.</span> One source generates human docs and machine metadata.</li>
+<li><span class="principle">Deprecation coherence.</span> Markers, changelog, and removals must agree; no silent removals.</li>
 <li><span class="principle">Citation trail.</span> Every normative statement cites the standard it derives from.</li>
 </ul>
 
 <h2>Resources</h2>
 <ul class="plain">
-<li><a href="{{ site.github }}">miri-standard on GitHub</a> — specifications, schemas, and the check definitions</li>
-<li><a href="{{ site.github }}/tree/main/standards/python">Python wheel standards</a> ·
-    <a href="{{ site.github }}/tree/main/standards/cli">CLI standards</a></li>
-<li><a href="{{ site.github }}/tree/main/schemas">JSON Schemas</a> — <span class="mono">check-v3</span>,
-    <span class="mono">lifecycle-v1</span>, <span class="mono">sdk-manifest-v1</span>, …</li>
+<li><a href="{{ site.github }}">miri-standard on GitHub</a>: specifications, schemas, and the check definitions</li>
+<li><a href="{{ site.github }}/tree/main/standards/python">Python wheel standards</a> · <a href="{{ site.github }}/tree/main/standards/cli">CLI standards</a></li>
+<li><a href="{{ site.github }}/tree/main/schemas">JSON Schemas</a>: <span class="mono">check-v3</span>, <span class="mono">lifecycle-v1</span>, <span class="mono">sdk-manifest-v1</span>, …</li>
 </ul>
 {% endblock %}

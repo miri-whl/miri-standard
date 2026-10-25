@@ -2,7 +2,7 @@
 {% import '_macros.html' as m %}
 {% block title %}{{ meta.title }} checks{% endblock %}
 {% block content %}
-{{ m.spec_header(meta.title ~ ' — check definitions',
+{{ m.spec_header(meta.title ~ ' check definitions',
                  [('Checks', checks | length), ('Levels', musts ~ ' MUST · ' ~ (checks | length - musts) ~ ' SHOULD'), ('Weights', 'Σ = 100')]) }}
 <p class="lede">Each requirement is verified by a check; each check failure instance is a violation.
 Conformance score = Σ weights of passing checks; any failing MUST caps the score at 74. Severity and violation
@@ -22,18 +22,17 @@ the <a href="{{ site.github }}/blob/main/{{ meta.checklist }}">checklist table</
 <tr class="cat"><td colspan="6">{{ row.category }} · {{ row.points }} points</td></tr>
 {% else %}
 {% set d = row.check %}
-{# A withdrawn check keeps its page and its ID forever, so it keeps its row — but it must not read as
-   live. Before this, MIRI-PY-016 had rendered here as a MUST worth 2 points since 0.6.0: the level and
-   weight a definition carries are the ones it had when withdrawn, and the index printed them without
-   qualification. A site that presents a withdrawn obligation as current is the same defect the checks
-   themselves are written to catch. #}
+{# A withdrawn check keeps its page and its ID forever, so it keeps its row, and it must not read as live.
+   MIRI-PY-016 had rendered here as a MUST worth 2 points since 0.6.0: a definition carries the level and
+   weight it had when withdrawn, and the index printed both without qualification. A site that presents a
+   withdrawn obligation as current is the defect the checks themselves are written to catch. #}
 {% set gone = d.status == 'withdrawn' %}
 <tr class="rowlink{% if gone %} withdrawn{% endif %}" data-href="{{ d.id }}.html" data-level="{{ 0 if d.level == 'MUST' else 1 }}" data-sev="{{ sev_order.index(d.severity.default) + 1 }}" data-weight="{{ 0 if gone else d.weight }}"{% if gone %} data-withdrawn="1"{% endif %}>
   <td class="id"><a href="{{ d.id }}.html">{{ d.id }}</a></td>
   <td><a class="rowname" href="{{ d.id }}.html">{{ d.name }}</a>{% if gone %} {{ m.badge('eol', 'withdrawn ' + (d.withdrawn_in or '')) }}{% else %}{% for r in d.requirements or [] %} {{ m.tag(r) }}{% endfor %}{% endif %}</td>
-  <td>{% if gone %}—{% else %}{{ m.level_badge(d.level) }}{% endif %}</td>
-  <td>{% if gone %}—{% else %}{{ m.badge(sev_tone[d.severity.default], d.severity.default) }}{% endif %}</td>
-  <td class="num">{% if gone %}—{% else %}{{ d.weight }}{% endif %}</td>
+  <td>{% if gone %}<span class="muted">n/a</span>{% else %}{{ m.level_badge(d.level) }}{% endif %}</td>
+  <td>{% if gone %}<span class="muted">n/a</span>{% else %}{{ m.badge(sev_tone[d.severity.default], d.severity.default) }}{% endif %}</td>
+  <td class="num">{% if gone %}<span class="muted">n/a</span>{% else %}{{ d.weight }}{% endif %}</td>
   <td>{{ d.short_description | codeish }}</td>
 </tr>
 {% endif %}
