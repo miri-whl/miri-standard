@@ -13,19 +13,20 @@ severity:
   default: HIGH
   violation_unit: each branch taken on free-text rather than on a machine field
 short_description: Branches on `ok`/`present`, never on `reason` text
-long_description: The envelope carries two machine booleans and one free-text field. This check verifies the consumer's
-  behavior is driven by the booleans and is unaffected by the wording of `reason`.
+long_description: The envelope carries two machine booleans, `ok` and `present`, and one free-text field, `reason`.
+  The consumer's behavior has to follow the booleans and stay the same when only the wording of `reason` changes.
+  Reporting the `adversarial` package as failed or absent fails the check.
 rationale: '`reason` is explicitly not a machine field. A consumer that string-matches it breaks the moment a surface
-  rewords a message, and — more seriously — becomes steerable by any text a publisher can influence. The adversarial
-  fixture writes the surface''s own discriminators into a publisher document, so a consumer that reads signals out
-  of content rather than out of the envelope reports a live package as failed or absent.'
+  rewords a message. More seriously, that consumer becomes steerable by any text a publisher can influence. The
+  adversarial fixture writes the surface''s own discriminators into a publisher document. A consumer that reads
+  signals out of content instead of out of the envelope then reports a live package as failed or absent.'
 fires_when:
 - Driven against `adversarial`, the consumer reports the package as failed or absent
 - The consumer's behavior changes when `reason` wording changes while `ok`/`present` are held constant
 remediation:
 - Branch only on `ok` and `present`; treat `reason` as display text
 - Parse the envelope before the payload, and never search the payload for envelope keys
-suggested_fix: Branch only on `ok` and `present`; treat `reason` as display text
+suggested_fix: Decide on `ok` and `present` alone
 references:
 - title: Discovery Contract §4.2
   url: discovery-contract.md

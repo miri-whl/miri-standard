@@ -14,14 +14,16 @@ severity:
   violation_unit: each index/template mismatch
   population_unit: all entries in TEMPLATES.json plus all template files on disk
 short_description: '`TEMPLATES.json` entries ↔ template files; placeholders documented'
-long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
-  This check verifies: `TEMPLATES.json` entries ↔ template files; placeholders documented.'
-rationale: 'Templates are copied verbatim into consumer projects, so their defects replicate: an index entry pointing at
-  a file the wheel does not contain breaks scaffolding at the moment of use, and a token that appears in a template body
-  but not in its `placeholders` map ships as a literal `YOUR_API_KEY`-style string into generated code — failing at runtime
-  or getting committed as-is. The §4.4 schema exists so agents can substitute placeholders mechanically; every token the
-  map omits is a substitution the agent cannot perform. Coherence is verified in both directions, like the example index
-  (MIRI-PY-016).'
+long_description: 'TEMPLATES.json and the `templates/` directory agree in both directions. Each `templates.<id>.file`
+  exists in the installed package, and each file under `templates/` other than `__init__.py` has an entry.
+  A placeholder token in a template body appears in that entry''s `placeholders` map with a `description`
+  and an `example`.'
+rationale: 'Templates are copied verbatim into consumer projects, and their defects replicate. An index
+  entry pointing at a file the wheel does not contain breaks scaffolding at the moment of use. A token
+  that appears in a template body but not in its `placeholders` map ships into generated code as a literal
+  `YOUR_API_KEY`-style string. That string then fails at runtime or gets committed as-is. The §4.4 schema
+  exists so that agents can substitute placeholders mechanically. Every token the map omits is a substitution
+  the agent cannot perform. Coherence is verified in both directions, as for the example index (MIRI-PY-016).'
 fires_when:
 - A `templates.<id>.file` path in TEMPLATES.json has no corresponding file in the installed package
 - A file under `templates/` (other than `__init__.py`) has no TEMPLATES.json entry

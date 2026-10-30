@@ -13,23 +13,24 @@ severity:
   default: HIGH
   violation_unit: each failure reported without a machine-readable code
 short_description: 'Reports failure as `ok: false` with a coded `error` object'
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Reports failure as `ok:
-  false` with a coded `error` object.'
+long_description: 'Discovery Contract §4.3 defines the error envelope. A failure has to return `ok: false` with
+  a top-level `error` object whose `code` is one of the §4.3 codes, and whose `retryable` is present and false for
+  a failure the identical call can never resolve.'
 examples:
   violation: '{"schema_version": "1", "ok": false, "error": "package not found"}'
   compliant: "{\"schema_version\": \"1\", \"ok\": false, \"package\": \"nope\",\n \"error\": {\"code\": \"PACKAGE_NOT_INSTALLED\"\
     , \"retryable\": false}}"
 rationale: A consumer branches on `error.code` to decide whether to retry, re-ask, or stop. Prose alone forces string
-  matching, which breaks on rewording and cannot be tested. The contract reuses the CLI §2.6 envelope so one error
-  vocabulary spans the standard.
+  matching, a method that breaks on rewording and cannot be tested. The contract reuses the CLI §2.6 envelope so
+  one error vocabulary spans the standard.
 fires_when:
 - 'A failure returns without `ok: false`, or without a top-level `error` object'
 - '`error.code` is absent, or is not one of the codes defined in §4.3'
 - '`error.retryable` is absent, or is true for a failure the identical call can never resolve'
 remediation:
 - 'Return `ok: false` with `error: {code, retryable}` using the §4.3 codes'
-- Set `retryable` true only for transient conditions — never for a request the caller must change
-suggested_fix: 'Return `ok: false` with `error: {code, retryable}` using the §4.3 codes'
+- Set `retryable` true only for transient conditions and never for a request the caller must change
+suggested_fix: Use the coded §4.3 error envelope for every failure
 references:
 - title: Discovery Contract
   url: discovery-contract.md

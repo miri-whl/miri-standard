@@ -16,17 +16,18 @@ severity:
   violation_unit: each surface removed without grace
   population_unit: all surfaces removed since the previous release
 short_description: Deprecated surfaces function for ≥1 minor release before removal
-long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
-  a dead-end error strands every consumer working from stale knowledge. This check verifies: Deprecated surfaces function
-  for ≥1 minor release before removal.'
-rationale: 'Spec §7.3 requires at least one minor release in which the deprecated surface still functions while warning
-  on stderr and carrying its `lifecycle` block, following the Kubernetes deprecation policy — the only shipped CLI-specific
-  policy, whose rules 5a/5b require deprecated GA CLI elements of admin-facing components to keep functioning for 6 months
-  or 1 release and of user-facing components for 12 months or 2 releases. The floor exists because an agent CLI''s consumers
-  sync on release cadence: skill files regenerated per release, vendored `--describe` snapshots, pinned automations all
-  need one release in which the old surface works while announcing its end. `kubectl get --export` had a four-release runway
-  (deprecated 1.14, removed 1.18) and its removal still broke Helm chart generation and CI backup pipelines — one minor
-  release is the minimum, not a comfortable target.'
+long_description: 'Using the previous release, the check confirms that each surface removed in this release appeared with
+  `lifecycle.status: deprecated` in an earlier release where it still functioned. The check also fails when a `lifecycle`
+  block sets `removed_in` in the same minor series as `deprecated_since`, or when a `changelog --since` entry deprecates
+  and removes a surface in one release.'
+rationale: CLI Spec §7.3 requires at least one minor release in which the deprecated surface still functions while warning
+  on stderr and carrying its `lifecycle` block. It follows the Kubernetes deprecation policy, the only shipped CLI-specific
+  policy. Its rules 5a and 5b require deprecated GA CLI elements to keep functioning for 6 months or 1 release in admin-facing
+  components and for 12 months or 2 releases in user-facing ones. The floor exists because an agent CLI's consumers sync
+  on release cadence. Skill files regenerated per release, vendored `--describe` snapshots, and pinned automations all need
+  one release in which the old surface works while announcing its end. `kubectl get --export` had a four-release runway
+  (deprecated 1.14, removed 1.18), and its removal still broke Helm chart generation and CI backup pipelines. One minor
+  release is the minimum, and a comfortable runway is longer.
 fires_when:
 - 'Diffing the previous release''s `--describe` against the current one: a surface removed in this release never appeared
   with `lifecycle.status: deprecated` in a release where it still functioned'

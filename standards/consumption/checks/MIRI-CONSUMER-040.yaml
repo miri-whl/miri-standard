@@ -12,11 +12,13 @@ severity:
   default: MINOR
   violation_unit: each emitted antipattern not surfaced to the caller
 short_description: Surfaces a `correctness`/`security` antipattern before emitting matching code
-long_description: This check verifies that where the package declares a known-wrong usage and the consumer emits
-  code matching it, the consumer says the author flagged it.
-rationale: Antipatterns are the author's statement of how callers actually get this surface wrong — the guidance
-  least recoverable from signatures and most likely to be absent from a model's priors. Silently reproducing one
-  is the exact failure the element was added to prevent.
+long_description: When the consumer emits code matching a declared `wrong_code` of severity `correctness` or `security`,
+  it has to surface the author's warning with it. The match is a construction-site match per Consumption Map §3.2
+  on the parsed syntax tree. Where the suite cannot parse the emitted code, the check is forfeited and reported
+  instead of passed on a text comparison.
+rationale: Antipatterns are the author's statement of how callers get this surface wrong in practice. That guidance
+  is the least recoverable from signatures and the most likely to be absent from a model's priors. Silently reproducing
+  one is the failure the element was added to prevent.
 fires_when:
 - 'The suite can parse the emitted code into a syntax tree and a construction-site match per Consumption Map 3.2
   is present, yet the consumer emitted the matching code without surfacing the antipattern. Where the suite cannot
@@ -27,7 +29,7 @@ fires_when:
 remediation:
 - Read each pattern whole and check emitted code against declared antipatterns before returning it
 - Where the code matches, surface the author's `why` alongside it
-suggested_fix: Read each pattern whole and check emitted code against declared antipatterns before returning it
+suggested_fix: Check emitted code against declared antipatterns and surface any match
 references:
 - title: Consumption Map §3.2
   url: consumption-map.md

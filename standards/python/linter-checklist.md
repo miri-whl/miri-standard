@@ -7,7 +7,7 @@
 ## Purpose
 
 The explicit, numbered list of every check a Miri-conformance linter runs against a Python wheel, with the standard each
-check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-043`); the
+check derives from and a scoring weight. Linter projects implement checks by number (`MIRI-PY-001` … `MIRI-PY-045`); the
 weights sum to exactly **100**, so a wheel's Miri score is the sum of the weights of its passing checks over the weights
 of the checks that **applied** — see the Scoring Model below, which is not simply a total out
 of 100 when checks are excluded or forfeited.
@@ -28,7 +28,7 @@ of 100 when checks are excluded or forfeited.
   free, and a mature artifact that had genuinely deprecated something had to earn the same points. Two scores of 75
   meant different things and could not be compared, which is the one thing a score exists to allow. Found by scoring
   a real CLI, where 20 of 100 points were awarded for never having deprecated anything.
-- **First releases are not penalized.** The previous-release checks (MIRI-PY-030, 034) are *conditional*: a first
+- **First releases are not penalized.** The previous-release checks (MIRI-PY-009, 030, 034, 043) are *conditional*: a first
   release has no prior release to diff against, so they are not applicable and leave the denominator — a first
   release is scored on what it can be scored on, and can still reach Gold. Note the precedence rule above: this holds
   where the linter can **establish** that no prior release exists. Where it merely cannot reach one, it cannot
@@ -289,8 +289,8 @@ This table is the human rendering of the same data; the YAML files are authorita
 
 - Report each check by its stable ID (`MIRI-PY-NNN`); IDs are never renumbered — retired checks are marked *withdrawn*
   and their weight redistributed in a new minor version of this checklist.
-- Checks declaring `previous-release` in their definition's `requirements` (currently MIRI-PY-030 and 034 alone —
-  029/031 are computable from the current wheel) need the prior release; linters SHOULD fetch it via the declared
+- Checks declaring `previous-release` in their definition's `requirements` (currently MIRI-PY-009, 030, 034 and 043;
+  029 and 031 are computable from the current wheel) need the prior release; linters SHOULD fetch it via the declared
   `update_check` endpoint and degrade to *skipped (weight forfeited, reported)* when unavailable. The `requirements`
   field in each check definition is the authoritative list of such constraints and their fixed skip reasons.
 - Linter output is schematized: the score computation follows [`scoring-v1.json`](../../schemas/scoring-v1.json) and

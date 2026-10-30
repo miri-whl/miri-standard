@@ -13,14 +13,14 @@ severity:
   default: HIGH
   violation_unit: the support declaration
 short_description: '`support.status` `deprecated`/`eol` ⇒ `replacement` present'
-long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
-  and agents can trust the surface they see. This check verifies: `support.status` `deprecated`/`eol` ⇒ `replacement` present.'
-rationale: 'Spec §3.2 requires `replacement` whenever status is deprecated or eol, because a deprecation without a successor
-  tells consumers only to leave, with no destination — the workflow the tool served still exists, and every consumer must
-  rediscover where it went. The rule follows the converged deprecation vocabulary in which the marker always carries the
-  forward path (PEP 702''s @deprecated message, Rust''s #[deprecated(note)], RFC 9745''s deprecation link relation), delivered
-  here through --describe — the one channel that reaches frozen-weights consumers at call time. lifecycle-v1.json encodes
-  the same constraint as a conditional requirement.'
+long_description: When `support.status` is "deprecated" or "eol", `support.replacement` has to be present and non-null.
+  Its value has to be a well-formed purl or a subcommand path in an absorbing CLI.
+rationale: 'CLI Spec §3.2 requires `replacement` whenever status is deprecated or eol. A deprecation without a successor
+  tells consumers to leave and gives them no destination. The workflow the tool served still exists, and every consumer
+  must rediscover where it went. The rule follows the converged deprecation vocabulary in which the marker always carries
+  the forward path: PEP 702''s @deprecated message, Rust''s #[deprecated(note)], and RFC 9745''s deprecation link relation.
+  Here it is delivered through `--describe`, the one channel that reaches frozen-weights consumers at call time. The lifecycle-v1.json
+  schema encodes the same constraint as a conditional requirement.'
 fires_when:
 - '`support.status` is "deprecated" or "eol" while `support.replacement` is null or absent'
 - '`replacement` is present but is neither a well-formed purl nor a subcommand path in an absorbing CLI'

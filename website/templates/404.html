@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+{% import '_macros.html' as m %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+{{ m.spec_header('Page not found', []) }}
+<p class="lede">There is no page at this address. Check pages live at
+<span class="mono">/checks/&lt;target&gt;/&lt;ID&gt;.html</span>, for example
+<a href="/checks/python/MIRI-PY-001.html">MIRI-PY-001</a>.</p>
+<p><a href="/index.html">Go to the overview</a> or <a href="/glossary.html">look a term up in the glossary</a>.</p>
+{% endblock %}

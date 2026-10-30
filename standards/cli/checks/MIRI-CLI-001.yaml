@@ -13,15 +13,15 @@ severity:
   default: MEDIUM
   violation_unit: each violating option form
 short_description: '`-` short options, `--` terminator, options-before-operands accepted'
-long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
-  invisible or hangs silently in a non-interactive context. This check verifies: `-` short options, `--` terminator, options-before-operands
-  accepted.'
-rationale: 'POSIX XBD §12.2 is the one option grammar every shell user, script, and agent already knows: Guideline 5 permits
-  grouping no-argument options behind a single `-`, Guideline 9 has options precede operands, and Guideline 10 reserves
-  `--` as the end-of-options delimiter. An agent composes invocations from that shared grammar, not from the tool''s private
-  one, so a parser that rejects `-ab` bundling or ignores `--` makes conventionally correct commands fail — and a missing
-  `--` terminator makes operands that begin with `-` (a file literally named `-rf`, a branch named `--force`) impossible
-  to pass safely at all.'
+long_description: 'The parser is driven with the four forms POSIX XBD §12.2 defines: grouped no-argument options (`-ab`),
+  the `--` terminator, `-o value` beside its attached form `-ovalue`, and options placed before operands. Any of these
+  parsed differently from §12.2 is a violation.'
+rationale: POSIX XBD §12.2 is the one option grammar every shell user, script, and agent already knows. Guideline 5 permits
+  grouping no-argument options behind a single `-`, and Guideline 9 has options precede operands. Guideline 10 reserves
+  `--` as the end-of-options delimiter. An agent composes invocations from that shared grammar instead of from the tool's
+  private one. A parser that rejects `-ab` bundling or ignores `--` makes conventionally correct commands fail. Without
+  a working `--` terminator, an operand that begins with `-` (a file named `-rf`, a branch named `--force`) cannot be passed
+  safely at all.
 fires_when:
 - A grouped invocation `-ab` is rejected while `-a -b` is accepted, for options taking no argument
 - An operand placed after `--` is parsed as an option (or `--` itself is reported as an unknown option)
@@ -32,8 +32,8 @@ remediation:
   getopt_long)
 - 'Add parser conformance tests covering the three §12.2 trouble spots: `-ab` bundling, the `--` terminator, and `-o value`/`-ovalue`
   equivalence'
-- If the tool must deviate (single-dash long options, ordered operands), declare the deviation in `--describe` rather than
-  leaving it discoverable only by failure
+- If the tool must deviate (single-dash long options, ordered operands), declare the deviation in `--describe` so that
+  callers do not discover it by failure
 examples:
   violation: '$ tool -ab target/          # -a and -b are both valid no-arg flags
 
@@ -51,7 +51,7 @@ examples:
     $ echo $?
 
     0'
-suggested_fix: Follow POSIX XBD §12.2 option syntax, including the -- terminator.
+suggested_fix: Follow POSIX XBD §12.2 option syntax, including the `--` terminator.
 references:
 - title: POSIX XBD §12.2
   url: https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/V1_chap12.html

@@ -13,26 +13,27 @@ severity:
   default: HIGH
   violation_unit: the support declaration
 short_description: '`support.status` in enum; `deprecated`/`eol` ⇒ `replacement` present'
-long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
-  inventoried in metadata, and never resolved by silent removal. This check verifies: `support.status` in enum; `deprecated`/`eol`
-  ⇒ `replacement` present.'
-rationale: 'nose is the terminal state this check prevents: its final release (1.3.7, June 2015) carried no machine-readable
-  abandonment signal, so it stayed quietly installable for years until Python 3.10 moved `collections.Callable` and 3.11
-  removed `inspect.getargspec`, breaking it at import time — and nothing in its metadata ever pointed consumers at nose2
-  or pytest. PEP 792 status markers can now say `archived` at the index, but PEP 792 deliberately defines no successor field;
-  `support.replacement` in lifecycle.json is the channel Miri adds for exactly that gap. A `deprecated` or `eol` status
-  without a replacement tells consumers to leave without saying where to go, so agents keep generating code against the
-  dying package and the status accelerates nothing.'
+long_description: 'The `support.status` in lifecycle.json is one of `active`, `maintenance`, `deprecated`,
+  or `eol`. A `deprecated` or `eol` status needs a non-empty `support.replacement`, and any replacement
+  given parses as a purl.'
+rationale: 'The nose test runner shows the end state this check prevents. Its final release (1.3.7, June
+  2015) carried no machine-readable abandonment signal, and it stayed quietly installable for years. It
+  broke at import time when Python 3.10 moved `collections.Callable` and 3.11 removed `inspect.getargspec`.
+  Nothing in its metadata ever pointed consumers at nose2 or pytest. PEP 792 status markers can now mark
+  a project `archived` at the index, but PEP 792 deliberately defines no successor field. Miri adds `support.replacement`
+  in lifecycle.json to fill that gap. A `deprecated` or `eol` status without a replacement tells consumers
+  to leave without saying where to go. Agents keep generating code against the dying package, and the
+  status accelerates nothing.'
 fires_when:
 - '`support.status` in lifecycle.json is not one of `active`, `maintenance`, `deprecated`, `eol`'
 - '`support.status` is `deprecated` or `eol` while `support.replacement` is null, absent, or empty'
 - '`support.replacement` is present but does not parse as a purl (`pkg:` scheme)'
 remediation:
-- Set `support.replacement` to the successor's purl (e.g. `pkg:pypi/example-successor`) in the same release that flips status
-  to `deprecated` or `eol` (Lifecycle §4.3)
+- Set `support.replacement` to the successor's purl (e.g. `pkg:pypi/example-successor`) in the same release
+  that flips status to `deprecated` or `eol` (Lifecycle §4.3)
 - If no successor exists yet, hold status at `maintenance` until one does
-- Validate lifecycle.json against `lifecycle-v1.json` in CI — the schema enforces the status/replacement pairing so the
-  incoherent combination cannot ship
+- Validate lifecycle.json against `lifecycle-v1.json` in CI. The schema enforces the status/replacement
+  pairing and keeps the incoherent combination from shipping
 examples:
   violation: "lifecycle.json:\n  \"support\": {\"status\": \"eol\", \"eol_date\": \"2026-06-30\", \"replacement\": null}\n\
     # agents learn the package is dead but not what supersedes it — migration stalls on the dying package"

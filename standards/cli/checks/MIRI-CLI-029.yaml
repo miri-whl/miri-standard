@@ -12,14 +12,15 @@ conditional: false
 severity:
   default: HIGH
   violation_unit: the changelog surface
-short_description: '`changelog --since <v> --json` implemented'
-long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
-  passive, and honest offline. This check verifies: `changelog --since <v> --json` implemented.'
+short_description: '`changelog --since <v> --json` is implemented'
+long_description: '`changelog --since <v> --json` has to exist and exit 0 for every version in the published release history.
+  Its stdout has to be a JSON document grouped per release between `<v>` and the current version. Rejecting a valid prior
+  version, or ignoring the bound and dumping the full history, fails the check.'
 rationale: '`check-update` says only *that* the tool moved; `changelog --since` says *what* moved. It is the recovery primitive
-  for consumers whose knowledge froze at an older release — frozen weights can never read release notes, and a skill file
-  is only as fresh as its last regeneration (landscape §3.1). Without it, an agent returning after three releases rediscovers
-  surface changes by trial and error: construct from stale knowledge, hit an error, retry with hallucinated variants — the
-  silent degradation loop in which no bug report is ever filed.'
+  for consumers whose knowledge froze at an older release. Frozen weights can never read release notes, and a skill file
+  is only as fresh as its last regeneration (Landscape and Prior Art §3.1). Without it, an agent returning after three releases
+  rediscovers surface changes by trial and error. It constructs from stale knowledge, hits an error, and retries with hallucinated
+  variants. That is the silent degradation loop in which no bug report is ever filed.'
 fires_when:
 - no `changelog` subcommand exists, or `changelog --since <v> --json` exits non-zero for a version that exists in the published
   release history
@@ -27,10 +28,10 @@ fires_when:
 - output is not a JSON document on stdout grouped per release between `<v>` and the current version
 remediation:
 - Implement `changelog --since <version> --json` per §5.2, emitting one entry per release between `<version>` and `current`
-- Derive it from the same schema-as-data struct that generates `--help` and `--describe` (§2.3) — a mechanical diff of the
-  schema between releases, never hand-written notes
-- Validate accepted `--since` values against the same release manifest `check-update` consults, so every published version
-  is accepted
+- Derive it from the same schema-as-data struct that generates `--help` and `--describe` (§2.3) as a mechanical diff of
+  the schema between releases, never as hand-written notes
+- Validate accepted `--since` values against the same release manifest `check-update` consults; every published version
+  is then accepted
 examples:
   violation: |-
     $ acme-cli changelog --since 3.0.0 --json

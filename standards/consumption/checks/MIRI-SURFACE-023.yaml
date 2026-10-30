@@ -13,18 +13,20 @@ severity:
   default: CRITICAL
   violation_unit: each network request derived from a served document
 short_description: 'Fetches nothing: never resolves a URL found in a served document'
-long_description: 'Surface obligation from the Discovery Contract §9.2. Split from MIRI-SURFACE-022 in 0.3-draft:
-  import-free discovery and fetch-nothing are different prohibitions with different failure modes and different
-  evidence, and bundling them meant a surface failing only one still failed a check that could not say which.'
+long_description: Discovery Contract §9.2 forbids the surface to resolve, fetch, or issue any network request to
+  a URL appearing in or derived from a served document, and to enrich, annotate, or validate a response with the
+  result. Contacting an advisory or update-check endpoint while answering any §3 operation also fails the check.
+  Import-freedom is scored separately by MIRI-SURFACE-022, because the two prohibitions have different failure
+  modes and different evidence.
 examples:
   violation: 'requests.get(doc["update_check"]["url"])  # to annotate the response with "latest version"'
   compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true,\n \"document\": {\"update_check\": {\"\
     url\": \"http://169.254.169.254/…\"}}}\n# relayed verbatim, never dereferenced"
-rationale: 'A surface that resolves a publisher-declared URL turns publisher-controlled data into server-side requests
-  — the SSRF exposure the producer standard guards, relocated into the query surface itself. The adversarial fixture
-  points `update_check.url` at the cloud-metadata address precisely so this is testable: a conformant surface serves
-  that value unchanged and never dereferences it. Separating it from import-freedom matters because the two are
-  caught by different fixtures — an import canary cannot detect a fetch.'
+rationale: A surface that resolves a publisher-declared URL turns publisher-controlled data into server-side requests.
+  That is the SSRF exposure the producer standard guards, relocated into the query surface itself. The adversarial
+  fixture points `update_check.url` at the cloud-metadata address so this is testable. A conformant surface serves
+  that value unchanged and never dereferences it. The two prohibitions are caught by different fixtures, and an
+  import canary cannot detect a fetch.
 fires_when:
 - The surface resolves, fetches, or issues any network request to a URL appearing in or derived from a served document
 - The surface enriches, annotates, or validates a response using the result of such a request
@@ -32,7 +34,7 @@ fires_when:
 remediation:
 - Serve declared URLs as opaque strings; resolving them is the consumer's act under the §9.2 guard
 - Assert in tests that answering every operation issues no outbound connection
-suggested_fix: Serve declared URLs as opaque strings; resolving them is the consumer's act under the §9.2 guard
+suggested_fix: Serve declared URLs as opaque strings and never fetch them
 references:
 - title: Discovery Contract
   url: discovery-contract.md

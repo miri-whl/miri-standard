@@ -26,8 +26,10 @@ page: an implementer who stops trusting the text stops implementing it.
     stating", "which is the point".
 
 **Allowed, because they are technical here:** `harness` (a scoring harness is a named thing in this project; pass
-`--allow harness`). Add a term to the allow list rather than deleting it from the rules, and only when it names
-something the standard defines.
+`--allow harness`), and **honest degradation**, the defined name of a consumer check category (MIRI-CONSUMER-001 to
+003) and a term in the consumption specs. The checker skips that phrase and still flags every other "honest". Add
+a term to the allow list rather than deleting it from the rules, and only when it names something the standard
+defines.
 
 ## 2. Banned constructions
 
@@ -43,6 +45,7 @@ something the standard defines.
 | **Participle tail** | "…, ensuring every alert is actionable." | Make it a sentence with a subject, or cut it. |
 | **Templated sentences across pages** | the same "becomes an export" line on ten vertical pages | Write each page for its own reader. |
 | **Stacked hedges** | "can potentially help" | Pick one, or none. |
+| **Revision history in a spec** | "An earlier version of this paragraph said 'two exceptions'" | Put the history in the CHANGELOG and state the rule as it is now. |
 
 ## 3. Specifications are different
 

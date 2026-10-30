@@ -16,15 +16,15 @@ severity:
   violation_unit: each public interface in the measured delta with no changelog entry
   population_unit: all public interfaces in the api_index delta against the previous release
 short_description: 'Every interface in the measured API delta appears in `releases[0]` (*conditional*: needs a prior release)'
-long_description: 'Deprecation must be marked in code, inventoried in metadata, and never resolved by silent removal; the
-  same discipline applies to every measurable change. This check verifies: every public interface added to, removed from,
-  or changed in `sdk-manifest.json` `api_index` since the previous release is named in a `releases[0]` entry''s `symbols`.
-  MIRI-PY-030 covers removals against migration-guide.json; this check covers the whole delta against the changelog, so an
-  artifact that measurably changed cannot ship a changelog that says nothing.'
-rationale: An API-diff tool detects that the surface changed; nothing cross-checks the change against what the producer declared.
-  The delta is the same previous-release compare 0.5.0 already requires for MIRI-PY-030, and off-the-shelf tooling emits it
-  as typed breakage objects (griffe), so the join costs a set difference. It is the check that turns a changelog from a courtesy
-  into a claim a linter can falsify.
+long_description: 'Between the previous release and this one, every public interface added to, removed
+  from, or changed in `sdk-manifest.json` `api_index` (by `type` or signature) is named in a `releases[0]`
+  entry''s `symbols`. MIRI-PY-030 covers removals against migration-guide.json. This check covers the
+  whole delta against the changelog, and an artifact that measurably changed cannot ship a changelog that
+  says nothing.'
+rationale: An API-diff tool detects that the surface changed, but nothing cross-checks the change against
+  what the producer declared. The delta comes from the same previous-release comparison that MIRI-PY-030
+  already requires. Off-the-shelf tooling such as griffe emits it as typed breakage objects, and the join
+  then costs one set difference. This check makes the changelog a claim that a linter can falsify.
 fires_when:
 - 'Comparing against the previous release (requirement: `previous-release`): an `api_index` key present in one release and
   absent from the other is named in no `releases[0]` entry''s `symbols`'

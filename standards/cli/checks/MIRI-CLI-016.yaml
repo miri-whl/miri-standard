@@ -13,16 +13,17 @@ severity:
   default: CRITICAL
   violation_unit: the identity declaration
 short_description: '`identity.purl` present, well-formed, matches distribution channel'
-long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
-  and agents can trust the surface they see. This check verifies: `identity.purl` present, well-formed, matches distribution
-  channel.'
-rationale: 'Every scanner runs the same loop — build inventory, normalize to purl, compare against OSV affected ranges —
-  so the purl is the single join key that makes vulnerability and currency verdicts computable; a CLI without one falls
-  back to CPE matching, where vendor/product strings must be guessed from binary names and internal tools are simply invisible.
-  The type must match the distribution channel because advisory records attach to registry-native names: an npm-distributed
-  tool declaring pkg:generic never joins against records filed under its npm name. Spec §3.1 therefore requires
-  an OSV-joinable purl type where the channel has one (pkg:npm, pkg:pypi, pkg:cargo, pkg:golang), reserving pkg:generic with a repository_url
-  qualifier for direct binary distribution or channels OSV does not index (such as Homebrew).'
+long_description: '`identity.purl` has to be present in `--describe` and pass purl grammar, with a `pkg:` scheme, a type,
+  a name, and an `@version` segment. Its type has to match the real install channel, and a `pkg:generic` purl needs a
+  `repository_url` qualifier that locates the release source.'
+rationale: 'Every scanner runs the same loop: build inventory, normalize to purl, compare against OSV affected ranges.
+  The purl is therefore the single join key that makes vulnerability and currency verdicts computable. A CLI without
+  one falls back to CPE matching. In CPE matching, vendor and product strings must be guessed from binary names, and
+  internal tools are invisible. The type must match the distribution channel because advisory records attach to registry-native
+  names. An npm-distributed tool declaring pkg:generic never joins against records filed under its npm name. CLI Spec
+  §3.1 therefore requires an OSV-joinable purl type where the channel has one (pkg:npm, pkg:pypi, pkg:cargo, pkg:golang).
+  It reserves pkg:generic with a repository_url qualifier for direct binary distribution or channels OSV does not index
+  (such as Homebrew).'
 fires_when:
 - '`identity.purl` is absent from the --describe output'
 - The value fails purl grammar — no `pkg:` scheme, missing type or name, or no `@version` segment

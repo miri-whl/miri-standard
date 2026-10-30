@@ -14,23 +14,23 @@ severity:
   violation_unit: each incomplete lifecycle block
   population_unit: all surfaces carrying a lifecycle block
 short_description: '`deprecated_since` and `removed_in`/`replacement` populated'
-long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers
-  with a dead-end error strands every consumer working from stale knowledge. This check verifies: `deprecated_since`
-  and `removed_in`/`replacement` populated.'
-rationale: 'The two-phase shape carries a citation trail rather than invention (§6.1): `deprecated_since` is the
-  CLI analogue of RFC 9745''s `Deprecation` header marking that the phase has begun, `removed_in` of RFC 8594''s
-  `Sunset` header marking when the surface stops working, and `replacement` follows PEP 702''s `@deprecated`, GraphQL''s
-  `@deprecated(reason:)`, and Java''s `@Deprecated(since, forRemoval)`. A block carrying only `deprecated_since`
-  is half a contract: consumers know to leave, but neither when the door closes nor where to go — so migration can
-  be neither scheduled nor automated.'
+long_description: 'A `lifecycle` block with `status: "deprecated"` has to populate `deprecated_since` and at least
+  one of `removed_in` and `replacement`. Each populated field also has to be usable: `removed_in` a valid version,
+  `replacement` a non-empty string.'
+rationale: The two-phase shape follows a citation trail instead of inventing one (§6.1). `deprecated_since` is the
+  CLI analogue of RFC 9745's `Deprecation` header and marks that the phase has begun. `removed_in` is the analogue
+  of RFC 8594's `Sunset` header and marks when the surface stops working. `replacement` follows PEP 702's `@deprecated`,
+  GraphQL's `@deprecated(reason:)`, and Java's `@Deprecated(since, forRemoval)`. A block carrying only `deprecated_since`
+  is half a contract. Consumers know to leave but learn neither when the door closes nor where to go. Migration
+  can then be neither scheduled nor automated.
 fires_when:
 - 'a `lifecycle` block with `status: "deprecated"` lacks `deprecated_since`'
 - neither `removed_in` nor `replacement` is populated on a deprecated surface
 - populated fields are unusable — `removed_in` is not a valid version, or `replacement` is an empty string
 remediation:
 - Populate `deprecated_since` with the release that introduced the deprecation
-- Populate `removed_in` honoring the §7.3 grace period (at least one minor release in which the surface still functions)
-  and `replacement` with the successor surface — which must exist in the current `--describe` (§6.3-3)
+- Populate `removed_in` honoring the §7.3 grace period (at least one minor release in which the surface still functions),
+  and populate `replacement` with a successor surface present in the current `--describe` (§6.3-3)
 - Add a `migration` URL when the replacement alone does not capture the behavioral change
 - Validate lifecycle blocks against the introspection schema in release CI so incomplete blocks fail before shipping
 examples:

@@ -13,14 +13,15 @@ severity:
   default: MINOR
   violation_unit: each decoration leak
 short_description: Honors `NO_COLOR`; detects non-TTY and drops decoration
-long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
-  invisible or hangs silently in a non-interactive context. This check verifies: Honors `NO_COLOR`; detects non-TTY and
-  drops decoration.'
+long_description: Output is captured with the stream redirected, and again with `NO_COLOR` set to a non-empty value. ESC
+  bytes (0x1b), SGR color sequences, or spinner and progress frames (`\r` redraws, cursor-movement sequences) in that output
+  are violations.
 rationale: 'NO_COLOR (no-color.org, the informal standard dating from 2018) and isatty-based TTY detection are the two established
-  contracts for switching decoration off; adoption spans the mainstream — Node.js honors `NO_COLOR` alongside `NODE_DISABLE_COLORS`,
-  and no-color.org maintains a long registry of conforming software. Agents always consume the piped form, where decoration
-  is corruption: a value captured as `\x1b[32mok\x1b[0m` fails an equality check against `ok`, spinner redraw frames splice
-  `\r`-separated garbage into captured logs, and the failures are silent because the bytes are invisible in a terminal transcript.'
+  contracts for switching decoration off. Adoption spans the mainstream: Node.js honors `NO_COLOR` alongside `NODE_DISABLE_COLORS`,
+  and no-color.org maintains a long registry of conforming software. Agents always consume the piped form. In piped output,
+  decoration is corruption. A value captured as `\x1b[32mok\x1b[0m` fails an equality check against `ok`, and spinner redraw
+  frames splice `\r`-separated garbage into captured logs. These failures are silent because the bytes are invisible in
+  a terminal transcript.'
 fires_when:
 - ESC bytes (0x1b) appear on stdout or stderr when the stream is not a TTY
 - '`NO_COLOR` is set (any non-empty value) but SGR color sequences are still emitted'

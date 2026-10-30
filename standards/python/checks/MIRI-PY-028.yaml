@@ -15,16 +15,18 @@ severity:
   population_unit: all interfaces listed as deprecated in migration-guide.json
 short_description: Every interface listed as deprecated carries `@deprecated`; decorator message names replacement
   + removal version
-long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in
-  code, inventoried in metadata, and never resolved by silent removal. This check verifies: Every interface listed
-  as deprecated carries `@deprecated`; decorator message names replacement + removal version.'
+long_description: 'Every function, class, method, or overload listed in migration-guide.json `deprecations`
+  carries a PEP 702 `@deprecated` decorator. The decorator message names the replacement interface and
+  the planned removal version. Module-level attributes and constants are exempt and are deprecated through
+  a module `__getattr__` instead (MIRI-PY-035).'
 rationale: 'The PEP 702 `@deprecated` decorator (`warnings.deprecated` on Python ≥3.13, `typing_extensions.deprecated`
-  ≥4.5 earlier) is the one marking mechanism that reaches every consumer class at once: static type checkers and
-  IDEs flag call sites without executing code, the runtime emits `DeprecationWarning` under PEP 565 semantics, and
-  §6.2 derives the machine-readable inventory from it at build time. A deprecation recorded only in a changelog
-  is invisible to type checkers; one expressed only as `warnings.warn` in the function body is invisible statically
-  — each leaves at least one consumer class calling the interface until it vanishes. Without the replacement and
-  removal version in the message, the warning says stop but not what to do instead or by when.'
+  ≥4.5 earlier) is the one marking mechanism that reaches every consumer class at once. Static type checkers
+  and IDEs flag call sites without executing code. The runtime emits `DeprecationWarning` under PEP 565
+  semantics, and §6.2 derives the machine-readable inventory from the decorator at build time. A deprecation
+  recorded only in a changelog is invisible to type checkers. One expressed only as `warnings.warn` in
+  the function body is invisible to static analysis. Either way, at least one consumer class keeps calling
+  the interface until it vanishes. Without the replacement and removal version in the message, the warning
+  tells the caller to stop without saying what to use instead or by when.'
 fires_when:
 - A function, class, method, or overload listed in `migration-guide.json` `deprecations` carries no `@deprecated`
   decorator (neither `warnings.deprecated` nor `typing_extensions.deprecated`); module-level attributes and constants
@@ -33,12 +35,12 @@ fires_when:
 - A decorator message names no replacement interface
 - A decorator message names no planned removal version
 remediation:
-- 'Apply the marker: `from warnings import deprecated` on ≥3.13, `from typing_extensions import deprecated` below
-  (dual-import via a compatibility shim if the package supports both)'
-- Write the message as replacement plus deadline, e.g. `@deprecated("Use connect() instead; legacy_connect() will
-  be removed in 3.0.0")`
-- Keep the marked implementation working through the PEP 387-shaped grace period (§6.1) — the marker announces removal,
-  it does not perform it
+- 'Apply the marker: `from warnings import deprecated` on ≥3.13, `from typing_extensions import deprecated`
+  below (dual-import via a compatibility shim if the package supports both)'
+- Write the message as replacement plus deadline, e.g. `@deprecated("Use connect() instead; legacy_connect()
+  will be removed in 3.0.0")`
+- Keep the marked implementation working through the PEP 387-shaped grace period (§6.1). The marker announces
+  removal and does not perform it
 examples:
   violation: "# migration-guide.json lists legacy_connect() as deprecated, but the code reads:\ndef legacy_connect(host:\
     \ str) -> Connection:\n    return connect(host)  # no marker: IDEs, type checkers, runtime all silent"

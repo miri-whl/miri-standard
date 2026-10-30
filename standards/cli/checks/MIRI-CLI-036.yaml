@@ -16,16 +16,16 @@ severity:
   violation_unit: each deprecation absent from the changelog
   population_unit: all deprecated surfaces (per --describe and the changelog)
 short_description: Every deprecation appears in `changelog --since` of the deprecating release
-long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
-  a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecation appears in
-  `changelog --since` of the deprecating release.'
-rationale: 'Spec §6.3-1 requires every deprecation to appear in the `changelog --since` output of the release that introduced
-  it, because `changelog --since` is the primitive an agent runs to ask what moved after being away — if a deprecation is
-  missing there, the consumer who diligently checks still walks into the removal. No existing tooling verifies this coherence:
-  towncrier-style CI bots enforce that an entry exists, and API-diff tools (cargo-semver-checks, griffe, japicmp) detect
-  changes without cross-checking them against declared lifecycle state. In a conforming implementation the property holds
-  by construction, since `--describe` and `changelog` derive from one schema struct (§2.3); the check exists to catch drift
-  where either is hand-maintained.'
+long_description: A surface whose `lifecycle.deprecated_since` is release X has to appear by name among the deprecated entries
+  of `changelog --since <release before X> --json`. With the `previous-release` capability, every deprecation found across
+  successive `--describe` outputs has to be among the changelog's deprecated entries.
+rationale: CLI Spec §6.3-1 requires every deprecation to appear in the `changelog --since` output of the release that introduced
+  it. `changelog --since` is the primitive an agent runs to ask what moved after being away. If a deprecation is missing
+  there, the consumer who checks diligently still walks into the removal. No existing tooling verifies this coherence. Towncrier-style
+  CI bots enforce that an entry exists, and API-diff tools (cargo-semver-checks, griffe, japicmp) detect changes without
+  cross-checking them against declared lifecycle state. In a conforming implementation `--describe` and `changelog` derive
+  from one schema struct (§2.3), and the property holds by construction. The check exists to catch drift where either is
+  hand-maintained.
 fires_when:
 - A surface whose `lifecycle.deprecated_since` is release X does not appear among the deprecated entries of `changelog --since
   <release before X> --json`
@@ -38,7 +38,7 @@ remediation:
   divergence is impossible by construction
 - 'Where the changelog is hand-maintained, add a CI diff: extract surfaces newly carrying `lifecycle.status: deprecated`
   between release N-1 and N, and assert each appears in `changelog --since <N-1> --json` under the N entry'
-- Backfill any missing entry in a patch release before the removal ships, so `changelog --since` becomes truthful for consumers
+- Backfill any missing entry in a patch release before the removal ships; `changelog --since` is then truthful for consumers
   catching up later
 examples:
   violation: |-

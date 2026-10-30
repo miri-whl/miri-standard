@@ -13,25 +13,25 @@ severity:
   default: MEDIUM
   violation_unit: the introspection document
 short_description: Top-level `schema_version` is independent of the release version
-long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
-  and agents can trust the surface they see. This check verifies: the top-level `schema_version` is a genuine wire-contract
-  version, not a restatement of the release version.'
-rationale: 'The wire schema and the product move on different clocks: Docker''s agent CLI stamps "schema_version": "1" on
-  every payload precisely so the product can reach 2.0 without the contract moving, and Terry Li''s envelope pattern versions
-  the envelope because the envelope shape is the API (landscape §2.3, §3.3-1). A schema_version that merely mirrors the
-  release version destroys the signal in both directions: a consumer pinning it must either treat every routine release
-  as a contract break or learn nothing when the payload genuinely breaks mid-series. Per CLI Spec §3.1, schema_version is
-  a top-level field, not nested in identity; MIRI-CLI-010 verifies its presence, this check verifies its independence.'
+long_description: The top-level `schema_version` in `--describe` has to be a wire-contract version of its own. A value identical
+  to `identity.version` that moves in lockstep with releases fails the check. A missing policy stating which changes bump
+  `schema_version` also fails it.
+rationale: 'The wire schema and the product move on different clocks. Docker''s agent CLI stamps "schema_version": "1" on
+  every payload so the product can reach 2.0 without the contract moving. Terry Li''s envelope pattern versions the envelope
+  because the envelope shape is the API (Landscape and Prior Art §2.3, §3.3-1). A schema_version that mirrors the release
+  version destroys the signal in both directions. A consumer pinning it must either treat every routine release as a contract
+  break or learn nothing when the payload breaks mid-series. Per CLI Spec §3.1, schema_version is a top-level field and
+  is not nested in identity. MIRI-CLI-010 verifies its presence; this check verifies its independence.'
 fires_when:
 - The top-level `schema_version` in `--describe` is identical to `identity.version` and moves in lockstep with releases
 - No documented policy states which changes bump the top-level `schema_version`
 remediation:
-- Declare a small independent contract version (e.g. "1") as the top-level `schema_version`, separate from the release
-  version in `identity.version`, and stamp the same value on every JSON payload (MIRI-CLI-010)
-- 'Document the bump policy: it increments only on breaking payload changes — removed or renamed fields, changed types or
-  semantics — never on releases that leave the shape intact'
+- Declare a small independent contract version (e.g. "1") as the top-level `schema_version`, separate from the release version
+  in `identity.version`, and stamp the same value on every JSON payload (MIRI-CLI-010)
+- 'Document the bump policy: it increments only on breaking payload changes (removed or renamed fields, changed types or
+  semantics) and never on releases that leave the shape intact'
 - Record each bump as a wire-schema change in `changelog --since` output (§5.2), and consider serving prior shapes via --schema-version
-  pinning (landscape §3.3-6)
+  pinning (Landscape and Prior Art §3.3-6)
 examples:
   violation: '{"schema_version": "3.4.1", "identity": {"version": "3.4.1"}}
 

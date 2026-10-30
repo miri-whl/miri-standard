@@ -23,16 +23,17 @@ tiers:
 severity:
   default: MEDIUM
   violation_unit: the examples directory
-short_description: '`examples/quickstart.py` present'
-long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
-  lesson at machine speed. This check verifies: `examples/quickstart.py` present. Since 0.6.0 it is TIERED: presence is
-  T0 and earns a fraction of the weight, never all of it; the index/file join that MIRI-PY-016 performed until its
-  withdrawal is this check''s T3 clause, and 016''s weight moved here with it.'
-rationale: Miri Wheel Extensions §5.1 names examples/quickstart.py as the one required example and §9.1.1 makes its presence
-  the floor of basic conformance; the enhanced METADATA field Agent-Quickstart-File points to it by path. It is the first
-  artifact an agent executes to confirm its model of the API before generating integration code — in its absence the agent
-  synthesizes the install-to-first-result path from prose and signatures, which is exactly the guessing this standard exists
-  to remove.
+short_description: 'The wheel ships `examples/quickstart.py`'
+long_description: 'The quickstart, `examples/quickstart.py`, installs inside an import package of the
+  wheel, imports the package it ships in, and contains executable statements. Any path named by `Agent-Quickstart-File`
+  in METADATA exists in the wheel. The check is tiered: presence is T0 and earns a fraction of the weight,
+  never all of it. Its T3 clause is the index/file join that MIRI-PY-016 performed before that check was
+  withdrawn.'
+rationale: Miri Wheel Extensions §5.1 names examples/quickstart.py as the one required example, and §9.1.1
+  makes its presence the floor of basic conformance. The enhanced METADATA field Agent-Quickstart-File
+  points to it by path. It is the first artifact an agent executes to confirm its model of the API before
+  generating integration code. Without it, the agent guesses the install-to-first-result path from prose
+  and signatures.
 fires_when:
 - examples/quickstart.py is absent from the wheel, or present in the archive but installs outside every import
   package - a `.data`-routed member satisfies neither this clause nor any other path requirement. A finding here
@@ -41,12 +42,12 @@ fires_when:
 - METADATA Agent-Quickstart-File names a path that does not exist in the wheel
 - quickstart.py exists but never imports the package it ships in, or contains no executable statements (empty stub)
 remediation:
-- 'Add examples/quickstart.py demonstrating the minimal install-to-first-result flow: import, configure, one call, printed
-  result'
-- Keep it dependency-light — nothing beyond the package's own Requires-Dist; move auth, error, and async flows to authentication.py,
-  error_handling.py, and async/ per §5.1
-- 'Register it in AGENT_EXAMPLES.json with complexity "beginner" and set Agent-Quickstart-File: examples/quickstart.py in
-  the enhanced METADATA'
+- 'Add examples/quickstart.py demonstrating the minimal install-to-first-result flow: import, configure,
+  one call, printed result'
+- 'Keep it dependency-light: nothing beyond the package''s own Requires-Dist. Move auth, error, and async
+  flows to authentication.py, error_handling.py, and async/ per §5.1'
+- 'Register it in AGENT_EXAMPLES.json with complexity "beginner" and set Agent-Quickstart-File: examples/quickstart.py
+  in the enhanced METADATA'
 examples:
   violation: "Wheel contents:\n  example_sdk/agent-metadata/sdk-manifest.json\n  example_sdk/examples/advanced.py\n  METADATA:\
     \ Agent-Quickstart-File: examples/quickstart.py  <- points at a file the wheel does not contain"

@@ -13,15 +13,17 @@ severity:
   default: CRITICAL
   violation_unit: the package
 short_description: Directory exists in the package
-long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
-  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Directory
-  exists in the package.'
-rationale: 'Wheel Extensions §3.1.2 places agent-metadata/ inside the import package specifically so a plain `pip install`
-  delivers it and `importlib.resources` can read it with no network access; it is the root the entire Miri surface hangs
-  from, and without it an agent is back to the linear README-and-guesswork path the standard exists to eliminate. The characteristic
-  failure is packaging, not authorship, and it is silent: setuptools ships only `*.py` unless package-data names the JSON
-  files, and hatchling''s default file selection excludes git-ignored paths — which build-time-generated metadata usually
-  is — so the directory exists in the repository, vanishes from the built wheel, and nothing warns.'
+long_description: 'The built wheel needs an `agent-metadata/` directory inside an import package, confirmed
+  against RECORD and the archive listing. The directory holds at least one of the files the specification
+  defines (sdk-manifest.json, usage-patterns.json, lifecycle.json, and the others), and each file is readable
+  rather than zero-byte or undecodable.'
+rationale: 'Wheel Extensions §3.1.2 places agent-metadata/ inside the import package so that a plain `pip
+  install` delivers it and `importlib.resources` can read it with no network access. The directory is
+  the root of the entire Miri surface. Without it, an agent falls back to reading the README and guessing.
+  The usual failure is a packaging one, and it is silent. By default setuptools ships only `*.py` unless
+  package-data names the JSON files. Hatchling''s default file selection excludes git-ignored paths, and
+  build-time-generated metadata is usually git-ignored. The directory then exists in the repository but
+  not in the built wheel, and nothing warns.'
 fires_when:
 - No `agent-metadata/` directory exists under any import package in the wheel (checked against RECORD and the archive listing)
 - The directory exists but contains none of the files the specification defines (sdk-manifest.json, usage-patterns.json,

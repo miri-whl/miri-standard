@@ -14,13 +14,15 @@ severity:
   violation_unit: each unmarked destructive operation
   population_unit: all mutating commands in --describe
 short_description: Destructive operations flagged as such in `--describe`
-long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
-  marked, and safe to repeat. This check verifies: Destructive operations flagged as such in `--describe`.'
-rationale: 'An agent cannot weigh a risk it cannot see: a `purge` whose `--describe` entry is indistinguishable from a `tag`
-  gets retried and parallelized with ordinary-write caution. Agent-First CLI principle 16 (signal danger — guardrails over
-  good luck) and desk''s `--capabilities` output, which enumerates per service which commands are destructive, exist so
-  that a policy layer is possible at all — a harness can require human confirmation or a dry run before destructive calls
-  only if destructiveness is machine-readable rather than implied by prose or a verb name.'
+long_description: 'A command that irrecoverably deletes or overwrites data has to carry a structured destructive marking
+  (e.g. `destructive: true`) in its `--describe` entry. Prose in the help text alone does not count. Commands that destroy
+  data in fixtures, or whose names signal it (`purge`, `destroy`, `reset`, `rm`), fail when they are unmarked while other
+  commands in the same binary are marked.'
+rationale: 'An agent cannot weigh a risk it cannot see. A `purge` whose `--describe` entry is indistinguishable from a `tag`
+  gets retried and parallelized with ordinary-write caution. Agent-First CLI principle 16 (signal danger: guardrails over
+  good luck) exists so that a policy layer is possible at all. The `--capabilities` output of desk serves the same purpose.
+  It lists the destructive commands of each service. A harness can require human confirmation or a dry run before destructive
+  calls only if destructiveness is machine-readable instead of implied by prose or a verb name.'
 fires_when:
 - 'A command that irrecoverably deletes or overwrites data carries no structured destructive marking (e.g. `destructive:
   true`) in its `--describe` entry'
@@ -31,8 +33,8 @@ remediation:
 - 'Add `destructive: true` to the command''s schema-as-data definition so `--describe` and `--help` both derive it (§2.3)'
 - Require an explicit `--force` (or `--yes`) for marked commands when stdin is not a TTY, exiting with a structured `CONFIRMATION_REQUIRED`
   error otherwise
-- Audit the full surface for destruction paths — delete, purge, destroy, reset, and any overwrite of user data — and mark
-  each, pairing the marking with `--dry-run` support (MIRI-CLI-039)
+- Audit the full surface for destruction paths (delete, purge, destroy, reset, and any overwrite of user data), mark each
+  one, and pair the marking with `--dry-run` support (MIRI-CLI-039)
 examples:
   violation: '--describe:
 

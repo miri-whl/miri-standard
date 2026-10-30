@@ -13,14 +13,15 @@ severity:
   default: HIGH
   violation_unit: the changelog document
 short_description: '`changelog.json` `releases[0].version` equals the wheel''s version (*conditional*: document present)'
-long_description: 'Agents working from frozen model weights cannot read changelogs; the machine-readable one must describe
-  the release it ships in. This check verifies: whenever `changelog.json` ships, its newest entry is the wheel''s own version.
-  A changelog whose newest entry describes an earlier release is not thin, it is lying about currency — which is why this
-  check''s obligation sits at currency rather than at existence.'
-rationale: 'This single rule would have caught the incident that produced the freshness contract: fixes shipped, changelog
-  untouched, downstream never told. It is the cheapest join in the standard — one string against one string — and it is decidable
-  with nothing but the wheel. Stamp drift (MIRI-PY-011) catches a document generated at the wrong time; version silence catches
-  one generated at the right time about the wrong release, which no timestamp can see.'
+long_description: 'When `changelog.json` ships, the check requires `releases[0].version` to parse as PEP
+  440 and to equal the wheel''s METADATA version. A changelog whose newest entry describes an earlier
+  release misstates the package''s currency. This check''s obligation therefore sits at currency rather
+  than at existence.'
+rationale: 'This rule alone would have caught the incident behind the freshness contract. Fixes shipped
+  while the changelog stayed untouched, and downstream was never told. It is the cheapest join in the
+  standard (one string against one string), and it is decidable with nothing but the wheel. Stamp drift
+  (MIRI-PY-011) catches a document generated at the wrong time. Version silence catches a document generated
+  at the right time about the wrong release. No timestamp check can see that case.'
 fires_when:
 - '`changelog.json` is present and `releases[0].version`, parsed as PEP 440, is not equal to the wheel''s version from METADATA'
 - '`releases[0].version` does not parse as PEP 440 at all'

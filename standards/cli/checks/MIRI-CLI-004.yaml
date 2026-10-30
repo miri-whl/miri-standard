@@ -14,12 +14,13 @@ severity:
   violation_unit: each subcommand without help
   population_unit: all subcommands in --describe
 short_description: '`<cli> <sub> --help` works for every subcommand'
-long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
-  invisible or hangs silently in a non-interactive context. This check verifies: `<cli> <sub> --help` works for every subcommand.'
+long_description: Every subcommand listed in `--describe` or the root help is invoked as `<cli> <sub> --help`. Each has
+  to exit 0 with non-empty usage text specific to that subcommand. An unknown-flag error, a non-zero exit, a copy of the
+  root usage text, or placeholder output is a violation.
 rationale: Agents discover a command tree incrementally, one `--help` at a time (clig.dev's per-subcommand help recommendation
-  exists for exactly this walk). A subcommand without help is a dead end that forces the agent to guess flags against the
-  live tool — and for a mutating subcommand, guessing means learning the interface by side effect. Because help must derive
-  from the same schema as the definition itself (CLI Spec §2.3), a missing subcommand help is also a symptom that the surface
+  exists for this walk). A subcommand without help is a dead end that forces the agent to guess flags against the live
+  tool. For a mutating subcommand, guessing means learning the interface by side effect. Help has to derive from the same
+  schema as the definition itself (CLI Spec §2.3). A missing subcommand help is therefore also a sign that the surface
   is hand-maintained and already drifting.
 fires_when:
 - For any subcommand listed in `--describe` or the root help, `<cli> <sub> --help` exits non-zero or reports an unknown
@@ -32,7 +33,7 @@ remediation:
   set
 - 'Add a CI loop: enumerate subcommands from `--describe` and assert `<cli> <sub> --help` exits 0 with non-empty, subcommand-specific
   stdout'
-- For nested trees, verify the walk at every depth (`<cli> <sub> <subsub> --help`), not just the first level
+- For nested trees, verify the walk at every depth (`<cli> <sub> <subsub> --help`) as well as at the first level
 examples:
   violation: '$ tool deploy --help
 

@@ -14,19 +14,22 @@ requirements:
 - previous-release
 severity:
   default: MEDIUM
-  violation_unit: migration-guide.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
-short_description: Present for any non-initial release; validates; and reports the measured delta rather than nothing
-long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
-  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: present
-  for any non-initial release; validates against migration-guide-v1.json; and, on a release whose api_index measurably
-  differs from the previous one, reports a non-empty delta rather than an all-zeros guide that describes no migration
-  at all.'
-rationale: 'A coding agent''s knowledge of an API is frozen at its training cutoff, and the effect is measured, not hypothetical:
-  empirical studies of LLM code completion report deprecated-API usage rates of 25-38% across eight popular Python libraries,
-  because the model writes for version N-1 against an installed version N. migration-guide.json is the machine-readable
-  delta that closes this gap at generation time, and per Agent Metadata §4.3 its `deprecations` MUST be derived from the
-  code''s PEP 702 `@deprecated` markers, so the guide cannot drift from what the interpreter itself warns about. A non-initial
-  release that ships without one strands every frozen-knowledge consumer with no structured path forward.'
+  violation_unit: migration-guide.json failing schema validation (counted per file as 0 or 1 so that counts
+    are comparable across validators)
+short_description: Present for any non-initial release, schema-valid, and non-empty when the API measurably
+  changed
+long_description: 'Every release after the first ships `agent-metadata/migration-guide.json`, valid against
+  migration-guide-v1.json. Its `to_version` equals the wheel''s version, and its `from_version` names
+  a published prior release line. Every `deprecations` entry needs id, deprecated and replacement. On
+  a release whose `api_index` measurably differs from the previous release''s, an all-zeros guide that
+  describes no migration fails.'
+rationale: 'A coding agent''s knowledge of an API is frozen at its training cutoff. Empirical studies
+  of LLM code completion report deprecated-API usage rates of 25-38% across eight popular Python libraries.
+  The model writes for version N-1 against an installed version N. The `migration-guide.json` document
+  is the machine-readable delta that closes this gap at generation time. Per Agent Metadata §4.3, its
+  `deprecations` MUST be derived from the code''s PEP 702 `@deprecated` markers. The guide therefore cannot
+  drift from what the interpreter itself warns about. A non-initial release that ships without one strands
+  every frozen-knowledge consumer with no structured path forward.'
 fires_when:
 - The wheel is not the project's first release and `agent-metadata/migration-guide.json` is absent
 - The document fails migration-guide-v1.json validation (any of from_version, to_version, migration_type, generated_at,

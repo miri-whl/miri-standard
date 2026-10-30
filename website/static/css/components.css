@@ -257,3 +257,7 @@ article.prose :is(h2, h3)[id] { scroll-margin-top: var(--space-8); }
   font-weight: var(--weight-semibold); color: var(--gold-700); }
 .sidenav .version .what { font-size: var(--text-xs); color: var(--text-muted); }
 .sidenav .version:hover .what { color: var(--gold-700); }
+
+/* A withdrawn check keeps its page; this note says first that nothing on it is current. */
+.withdrawn-note { border: 1px solid var(--border-hairline); background: var(--surface-inset);
+  padding: var(--space-3) var(--space-4); margin: 0 0 var(--space-4); }

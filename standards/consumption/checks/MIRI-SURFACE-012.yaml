@@ -12,11 +12,11 @@ severity:
   default: HIGH
   violation_unit: each malformed document served, repaired, or reported as absent
 short_description: Reports a document it cannot parse as `METADATA_UNREADABLE`, never absent or repaired
-long_description: Surface obligation from the Discovery Contract (4.2). Scoped to READABILITY — whether the bytes
-  parse — and deliberately not to validity. A document that parses is relayed verbatim whatever its schema says,
-  because 3.2 specifies `document` as serving the named document verbatim, and because a surface that gated on
-  validity would refuse the adversarial fixtures that ten of the fifteen consumer checks are driven against, disabling
-  the consumer profile in order to enforce a property the producer checklist already enforces at build time.
+long_description: This obligation from Discovery Contract §4.2 covers READABILITY, meaning whether the bytes parse,
+  and leaves schema validity out of its scope. A document that parses is relayed verbatim whatever its schema
+  says, because §3.2 specifies `document` as serving the named document verbatim. Gating on validity would also
+  refuse the adversarial fixtures that ten of the eighteen consumer checks are driven against, and the consumer
+  profile would be disabled to enforce a property the producer checklist already enforces at build time.
 examples:
   violation: '{"ok": true, "present": false, "reason": "no lifecycle.json"}
 
@@ -24,15 +24,16 @@ examples:
   compliant: "{\"schema_version\": \"1\", \"ok\": false, \"package\": \"greet_malformed\", \"name\": \"lifecycle.json\"\
     ,\n \"error\": {\"code\": \"METADATA_UNREADABLE\", \"retryable\": false}}"
 rationale: A document that fails to parse is neither absent nor fine. Reporting it absent tells a consumer the
-  package ships nothing, which is false and hides a real problem; repairing or partially serving it invents publisher
-  content, which is worse. The honest answer is that the document exists and could not be read.
+  package ships nothing. That statement is false and hides a real problem. Repairing or partially serving the
+  document is worse, because it invents publisher content. The correct answer is that the document exists and
+  could not be read.
 fires_when:
 - A document that fails to parse is reported as absent
 - The surface repairs, re-serializes, or partially serves a document it could not parse
 remediation:
 - 'Return `ok: false` with `METADATA_UNREADABLE` and identify the document'
-- Never attempt recovery — a partially parsed document is publisher content the publisher did not write
-suggested_fix: 'Return `ok: false` with `METADATA_UNREADABLE` and identify the document'
+- Never attempt recovery; a partially parsed document is publisher content the publisher did not write
+suggested_fix: Answer an unparsable document with `METADATA_UNREADABLE`
 references:
 - title: Discovery Contract
   url: discovery-contract.md

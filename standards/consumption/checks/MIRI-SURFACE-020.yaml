@@ -13,24 +13,25 @@ severity:
   default: CRITICAL
   violation_unit: each document served from outside the servable set
 short_description: Serves only the closed servable set; refuses anything else
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Serves only the closed servable
-  set; refuses anything else.'
+long_description: Discovery Contract §3.2.1 defines a closed servable set for `document`. A request for a name outside
+  that set, or absent from the package's `list.documents`, has to be refused with `DOCUMENT_NOT_SERVABLE`. Serving
+  the file (`prompt-templates.md`, `README.md`) or returning a filesystem error fails the check.
 examples:
   violation: document(name="prompt-templates.md") -> the file contents
   compliant: "{\"schema_version\": \"1\", \"ok\": false, \"package\": \"greet_miri\",\n \"error\": {\"code\": \"\
     DOCUMENT_NOT_SERVABLE\", \"retryable\": false}}"
-rationale: The servable set is closed on a stated principle — only schema-governed documents are servable, and no
-  free-form natural-language document ever is — because prose is the highest-risk payload a publisher controls and
-  a document with no schema has no property a consumer can verify before it reaches a model's context. A surface
-  that extends the set reopens the injection channel refusing prompt-templates.md was meant to close.
+rationale: The servable set is closed on a stated principle. Only schema-governed documents are servable, and no
+  free-form natural-language document ever is. Prose is the highest-risk payload a publisher controls. A document
+  with no schema has no property a consumer can verify before it reaches a model's context. A surface that extends
+  the set reopens the injection channel that refusing prompt-templates.md was meant to close.
 fires_when:
 - A request for `prompt-templates.md`, `README.md`, or any document outside §3.2.1's set returns the file
 - A name absent from the package's `list.documents` is served
 - The surface returns a filesystem error rather than `DOCUMENT_NOT_SERVABLE`
 remediation:
 - Check the requested name against the closed set before touching the filesystem
-- Return `DOCUMENT_NOT_SERVABLE` for anything else — never the file, never a filesystem error
-suggested_fix: Check the requested name against the closed set before touching the filesystem
+- Return `DOCUMENT_NOT_SERVABLE` for anything else instead of the file or a filesystem error
+suggested_fix: Serve only the closed set; answer anything else with `DOCUMENT_NOT_SERVABLE`
 references:
 - title: Discovery Contract
   url: discovery-contract.md

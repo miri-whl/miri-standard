@@ -133,6 +133,21 @@ def slugify(text):
     return re.sub(r"\s+", "-", t)
 
 
+def _list_items(lines, marker):
+    """Join a list's hard-wrapped continuation lines onto their item.
+
+    The sources wrap at 120 columns, and each wrapped line used to become its own <li>: the changelog
+    rendered 473 bullet fragments, and emphasis spanning a line break never closed.
+    """
+    items = []
+    for line in lines:
+        if re.match(marker, line) or not items:
+            items.append(re.sub(marker, "", line).strip())
+        else:
+            items[-1] += " " + line.strip()
+    return items
+
+
 def _md_blocks(text, out, toc=None):
     for block in re.split(r"\n\s*\n", text):
         lines = [l for l in block.split("\n") if l.strip()]
@@ -170,10 +185,10 @@ def _md_blocks(text, out, toc=None):
             quote = " ".join(l.lstrip().lstrip(">").strip() for l in lines)
             out.append(f"<blockquote>{md_inline(quote)}</blockquote>")
         elif re.match(r"^\s*[-*] ", lines[0]):
-            items = "".join(f"<li>{md_inline(re.sub(r'^\s*[-*] ', '', l))}</li>" for l in lines)
+            items = "".join(f"<li>{md_inline(i)}</li>" for i in _list_items(lines, r"^\s*[-*] "))
             out.append(f"<ul>{items}</ul>")
         elif re.match(r"^\s*\d+\. ", lines[0]):
-            items = "".join(f"<li>{md_inline(re.sub(r'^\s*\d+\. ', '', l))}</li>" for l in lines)
+            items = "".join(f"<li>{md_inline(i)}</li>" for i in _list_items(lines, r"^\s*\d+\. "))
             out.append(f"<ol>{items}</ol>")
         else:
             out.append(f"<p>{md_inline(' '.join(l.strip() for l in lines))}</p>")
@@ -196,16 +211,41 @@ def load_checks(meta):
 
 
 def category_rows(checks):
-    """Interleave category header rows with check rows for the index table."""
-    rows, last = [], None
-    for c in checks:
-        d = c["doc"]
-        if d["category"] != last:
-            last = d["category"]
-            pts = sum(x["doc"]["weight"] for x in checks if x["doc"]["category"] == last)
-            rows.append({"category": last, "points": pts})
-        rows.append({"check": d})
+    """Group check rows under one header per category, in order of first appearance.
+
+    Rows used to follow ID order with a header at every category change, so a category whose IDs
+    are not contiguous printed its header, with its full total, two or three times. Points count
+    active checks only: a withdrawn check keeps its last weight in its YAML as history.
+    """
+    order = list(dict.fromkeys(c["doc"]["category"] for c in checks))
+    rows = []
+    for cat in order:
+        members = [c["doc"] for c in checks if c["doc"]["category"] == cat]
+        pts = sum(d["weight"] for d in members if d.get("status", "active") == "active")
+        rows.append({"category": cat, "points": pts})
+        rows.extend({"check": d} for d in members)
     return rows
+
+
+def active(docs):
+    return [d for d in docs if d.get("status", "active") == "active"]
+
+
+def spec_href(ref, meta, rendered, github, root):
+    """Where a check's reference points: the rendered site page when there is one, else GitHub.
+
+    A `spec` reference is relative to the suite directory, the parent of the checks folder. The
+    template used to build the URL from the target name, and consumer and surface live in
+    standards/consumption/, so every one of their spec links returned 404.
+    """
+    if ref["type"] == "external":
+        return ref["url"]
+    path, _, frag = ref["url"].partition("#")
+    rel = (REPO / meta["dir"]).parent.joinpath(path).resolve().relative_to(REPO).as_posix()
+    suffix = f"#{frag}" if frag else ""
+    if rel in rendered:
+        return f"{root}{rendered[rel]}{suffix}"
+    return f"{github}/blob/main/{rel}{suffix}"
 
 
 def main():
@@ -281,13 +321,34 @@ def main():
     for sch in sorted((REPO / "schemas").glob("*.json")):
         shutil.copy(sch, schemas_out / sch.name)
 
+    # Output names for the rendered documents, computed before the check pages so a check's spec
+    # reference can point at the page on this site rather than at GitHub.
+    specs = site.get("specs", [])
+    # Output names default to the source basename, which two suites can collide on: both the Python and
+    # the CLI suite ship a production-map.md. An entry may set `slug:` to disambiguate. Collisions are a
+    # hard error rather than a silent overwrite: the losing page would simply vanish from the site.
+    rendered = {sp["source"]: (sp["slug"] + ".html") if sp.get("slug")
+                else pathlib.Path(sp["source"]).name.replace(".md", ".html") for sp in specs}
+    collisions = collections.Counter(rendered.values())
+    dupes = {name: [s for s, r in rendered.items() if r == name]
+             for name, n in collisions.items() if n > 1}
+    if dupes:
+        raise SystemExit("site.yaml: two specs render to the same page; add a `slug:` to one of them:\n" +
+                         "\n".join(f"  {name} <- {sources}" for name, sources in dupes.items()))
+    rendered.update({"CHANGELOG.md": "changelog.html", "docs/glossary.md": "glossary.html",
+                     "docs/why-consumption.md": "why-consumption.html", "docs/origin-story.md": "origin.html"})
+
     targets = {}
+    pages = ["index.html", "downloads.html", "origin.html", "why-consumption.html", "changelog.html",
+             "glossary.html"] + [rendered[sp["source"]] for sp in specs]
     for target, meta in site["targets"].items():
         checks = load_checks(meta)
-        musts = sum(1 for c in checks if c["doc"]["level"] == "MUST")
+        live = active([c["doc"] for c in checks])
+        musts = sum(1 for d in live if d["level"] == "MUST")
         ids = [c["doc"]["id"] for c in checks]
         targets[target] = {
             "meta": meta, "checks": [c["doc"] for c in checks], "musts": musts,
+            "active": len(live), "withdrawn": len(checks) - len(live),
             # Ranges come from the real IDs: a target's numbering need not be contiguous
             # (consumer runs 001–042 across 15 checks), so a count is not a range.
             "first_id": ids[0], "last_num": ids[-1].rsplit("-", 1)[1],
@@ -298,38 +359,43 @@ def main():
         ctx = {"site": site, "root": "../../", "active": f"checks/{target}/index.html",
                "meta": meta, "sev_tone": SEV_TONE, "sev_order": SEV_ORDER}
         (d / "index.html").write_text(env.get_template("checks_index.html").render(
-            **ctx, checks=[c["doc"] for c in checks], musts=musts, rows=category_rows(checks)))
+            **ctx, checks=[c["doc"] for c in checks], musts=musts, n_active=len(live),
+            n_withdrawn=len(checks) - len(live), rows=category_rows(checks),
+            description=f"All {len(live)} {meta['title'].lower()} checks in the Miri Standard, with level, "
+                        f"severity and weight."))
+        pages.append(f"checks/{target}/index.html")
         for i, c in enumerate(checks):
             doc = c["doc"]
+            pages.append(f'checks/{target}/{doc["id"]}.html')
             (d / f'{doc["id"]}.html').write_text(env.get_template("check.html").render(
                 **ctx, target=target, check=doc,
+                schema_name=pathlib.Path(doc.get("$schema", "check-v3.json")).stem,
+                ref_hrefs=[spec_href(r, meta, rendered, site["github"], "../../") for r in doc["references"]],
+                description=f'{doc["id"]}: {doc["short_description"]}'.replace("`", ""),
                 sev_num=SEV_ORDER.index(doc["severity"]["default"]) + 1,
                 prev_id=checks[i - 1]["doc"]["id"] if i > 0 else None,
                 next_id=checks[i + 1]["doc"]["id"] if i + 1 < len(checks) else None))
 
+    def doc_md(rel):
+        return rewrite_links((REPO / rel).read_text(), (REPO / rel).resolve(), rendered, site["github"])
+
     (out / "index.html").write_text(env.get_template("home.html").render(
-        site=site, root="", active="index.html", targets=targets))
+        site=site, root="", active="index.html", targets=targets,
+        description="Packaging standards that let an AI agent read an installed Python wheel or CLI instead of "
+                    "guessing: its identity, where to check it for advisories, and what it has deprecated."))
     (out / "downloads.html").write_text(env.get_template("downloads.html").render(
         site=site, root="", active="downloads.html",
-        schema_files=sorted(p.name for p in (REPO / "schemas").glob("*.json"))))
+        schema_files=sorted(p.name for p in (REPO / "schemas").glob("*.json")),
+        description=f"Download the Miri Standard {site['version']} check definitions wheel, the fixture suites "
+                    "and the JSON Schemas, and verify what you downloaded."))
     (out / "origin.html").write_text(env.get_template("origin.html").render(
         site=site, root="", active="origin.html",
-        body=md_to_html((REPO / "docs/origin-story.md").read_text())))
+        body=md_to_html(doc_md("docs/origin-story.md")),
+        description="Why a packaging standard for AI agents is named after Miranda Serena Sharifi of "
+                    "Nancy Kress's Beggars in Spain."))
     # Specification documents rendered as site pages. Until 0.3 the site rendered only
     # check pages, so the specifications themselves — the actual deliverable — existed
     # on the site as outbound GitHub links and nothing else.
-    specs = site.get("specs", [])
-    # Output names default to the source basename, which two suites can collide on: both the Python and
-    # the CLI suite ship a production-map.md. An entry may set `slug:` to disambiguate. Collisions are a
-    # hard error rather than a silent overwrite — the losing page would simply vanish from the site.
-    rendered = {sp["source"]: (sp["slug"] + ".html") if sp.get("slug")
-                else pathlib.Path(sp["source"]).name.replace(".md", ".html") for sp in specs}
-    collisions = collections.Counter(rendered.values())
-    dupes = {name: [s for s, r in rendered.items() if r == name]
-             for name, n in collisions.items() if n > 1}
-    if dupes:
-        raise SystemExit("site.yaml: two specs render to the same page — add a `slug:` to one of them:\n" +
-                         "\n".join(f"  {name} <- {sources}" for name, sources in dupes.items()))
     for sp in specs:
         src = REPO / sp["source"]
         md = rewrite_links(src.read_text(), src.resolve(), rendered, site["github"])
@@ -343,9 +409,10 @@ def main():
             site=site, root="", active=rendered[sp["source"]],
             page_title=sp["title"], page_heading=sp["title"],
             page_meta=[("Document", sp["source"]), ("Status", sp.get("status", "Draft"))],
-            page_lede=sp.get("lede"), body=body, toc=toc))
+            page_lede=sp.get("lede"), body=body, toc=toc,
+            description=f'{sp["title"]}: {sp.get("lede", "")}'.strip(": ")))
 
-    wn = md_to_html((REPO / "docs/why-consumption.md").read_text())
+    wn = md_to_html(doc_md("docs/why-consumption.md"))
     # Drop the source H1: the page header supplies the title, so rendering both duplicates it.
     wn = re.sub(r"^\s*<h1>.*?</h1>", "", wn, count=1, flags=re.S)
     (out / "why-consumption.html").write_text(env.get_template("prose.html").render(
@@ -353,8 +420,9 @@ def main():
         page_title="Why consumption",
         page_heading="Why the standard has a consumption half",
         page_meta=[("Document", "docs/why-consumption.md")],
-        page_lede="0.1 and 0.2 specified what an artifact ships. 0.3 specifies how an agent consumes it.",
-        body=wn))
+        body=wn,
+        description="Why the Miri Standard specifies how an agent consumes package metadata as well as what "
+                    "a package ships."))
 
     # The changelog is rendered from the repository's CHANGELOG.md rather than a site-only copy,
     # so the release notes a reader sees are the ones the repository actually keeps.
@@ -366,9 +434,9 @@ def main():
         site=site, root="", active="changelog.html",
         page_title="Changelog", page_heading="Changelog",
         page_meta=[("Document", "CHANGELOG.md"), ("Current version", site["version"])],
-        page_lede="What each release delivered, and what a version number promises. "
-                  "A patch release contains bug fixes and clarifications only.",
-        body=cl, toc=[h for h in cl_toc if h["level"] == 2]))
+        page_lede="What each release delivered, and what a version number promises.",
+        body=cl, toc=[h for h in cl_toc if h["level"] == 2],
+        description="Release notes for the Miri Standard: what changed for implementers in each version."))
 
     gl_md = rewrite_links((REPO / "docs/glossary.md").read_text(),
                           (REPO / "docs/glossary.md").resolve(), rendered, site["github"])
@@ -378,8 +446,19 @@ def main():
         site=site, root="", active="glossary.html",
         page_title="Glossary", page_heading="Glossary",
         page_meta=[("Document", "docs/glossary.md"), ("Version", site["version"])],
-        page_lede="Every term this standard defines, and a few it deliberately does not.",
-        body=gl, toc=gl_toc))
+        body=gl, toc=gl_toc,
+        description="Every term the Miri Standard defines, with a link to where each one is normatively "
+                    "defined."))
+
+    # A 404 page, a sitemap and robots.txt: search engines and link previews had nothing to go on.
+    (out / "404.html").write_text(env.get_template("404.html").render(
+        site=site, root="/", active="", description="Page not found."))
+    base = site["site_url"].rstrip("/")
+    (out / "sitemap.xml").write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+        "".join(f"  <url><loc>{base}/{pg}</loc></url>\n" for pg in pages) + "</urlset>\n")
+    (out / "robots.txt").write_text(f"User-agent: *\nAllow: /\nSitemap: {base}/sitemap.xml\n")
 
     n = sum(len(t["checks"]) for t in targets.values())
     print(f"site generated: {out} — {n} check pages + {len(targets)} indexes + "

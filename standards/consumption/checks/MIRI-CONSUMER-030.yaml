@@ -12,19 +12,26 @@ severity:
   default: CRITICAL
   violation_unit: each clean security verdict issued from shipped metadata
 short_description: Never reports a clean security verdict from shipped metadata
-long_description: This check verifies the consumer does not report a package as free of known vulnerabilities
-  on the basis of what the package shipped.
-rationale: Declare sources, not verdicts. An empty `advisory_sources` list means the publisher listed no sources
-  — not that no advisories exist — and the adversarial fixture ships exactly that. A consumer that reads it as
-  a clean bill of health has turned the absence of a claim into a safety assurance, which is the single most damaging
-  misreading the lifecycle document permits.
+long_description: Driven against the `adversarial` fixture, the consumer fails if it reports no known vulnerabilities
+  without querying a live source. Treating an empty or absent advisory list as evidence of safety also fails.
+rationale: The standard has publishers declare advisory sources and leaves the verdict to the consumer. An empty
+  `advisory_sources` list means the publisher listed no sources. It does not mean that no advisories exist, and
+  the adversarial fixture ships such a list. A consumer that reads it as a clean bill of health has turned the
+  absence of a claim into a safety assurance. Of the misreadings the lifecycle document permits, this one does
+  the most damage.
 fires_when:
 - Driven against `adversarial`, the consumer reports no known vulnerabilities without querying a live source
 - The consumer treats an empty or absent advisory list as evidence of safety
 remediation:
-- Query the declared advisory source at decision time and report the source's answer, not the file's
-- Where no source is declared or no query was made, report that the question is unanswered
-suggested_fix: Query the declared advisory source at decision time and report the source's answer, not the file's
+- Read `lifecycle.advisory_sources` as pointers to live sources and query each declared source at decision time
+  for the package's `purl` (Consumption Map §3.5)
+- Resolve each source URL only through the Lifecycle and Security Metadata §9.2 SSRF guard, and forward no credentials
+  to it
+- Report the queried source's answer as the verdict, never the shipped file's
+- Where no source is declared or no query was made, report that the security question is unanswered instead of
+  reporting the package clean
+suggested_fix: Query the declared advisory sources at decision time; never report a clean verdict from shipped
+  metadata
 references:
 - title: Consumption Map §3.5
   url: consumption-map.md

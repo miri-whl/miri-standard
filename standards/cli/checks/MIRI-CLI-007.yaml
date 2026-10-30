@@ -13,15 +13,15 @@ severity:
   default: MINOR
   violation_unit: each composability failure
 short_description: Handles SIGPIPE cleanly; accepts stdin where input is expected
-long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
-  invisible or hangs silently in a non-interactive context. This check verifies: Handles SIGPIPE cleanly; accepts stdin
-  where input is expected.'
-rationale: 'Pipelines are how a CLI''s output becomes the next tool''s input, and the classic failure is documented in Python''s
-  own signal docs: piping to `head(1)` sends SIGPIPE when the reader closes early, which unhandled Python surfaces as a
-  `BrokenPipeError: [Errno 32] Broken pipe` traceback (Rust similarly ignores SIGPIPE at startup, turning the same event
-  into a panic on write). The consumer already got its data, but stderr fills with a crash report and the exit status reads
-  as failure — so `set -e` scripts abort and agents burn turns diagnosing a phantom error. Refusing stdin has the mirror
-  cost: output must detour through temp files instead of composing.'
+long_description: '`<cli> list | head -1` has to leave stderr free of tracebacks, panics, and crash reports, and the closed
+  pipe has to end the process cleanly (a plain SIGPIPE death, shell status 141, is acceptable). A command that consumes
+  input also has to accept it on stdin, either bare or through the `-` operand.'
+rationale: 'Pipelines are how a CLI''s output becomes the next tool''s input. Python''s own signal docs document the classic
+  failure. Piping to `head(1)` sends SIGPIPE when the reader closes early. Unhandled, Python surfaces it as a `BrokenPipeError:
+  [Errno 32] Broken pipe` traceback. Rust ignores SIGPIPE at startup, and the same event becomes a panic on write. The consumer
+  already got its data. Stderr still fills with a crash report, and the exit status reads as failure. Scripts running under
+  `set -e` abort, and agents burn turns diagnosing a phantom error. Refusing stdin has the mirror cost: output must detour
+  through temp files instead of composing.'
 fires_when:
 - '`<cli> list | head -1` leaves a traceback, panic message, or crash report on stderr'
 - The tool's exit after a closed pipe reflects an internal crash rather than clean termination (a plain SIGPIPE death, shell

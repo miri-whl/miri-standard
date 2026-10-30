@@ -26,11 +26,15 @@
      <a href="{{ site.github }}/tree/{{ site.version }}">browse</a></p>
 </div>
 
+<h2>Install from the index</h2>
+<p>The site also serves a package index, so pip can fetch and verify the wheel in one step:</p>
+<p class="mono filename">pip install --index-url {{ site.site_url }}/simple/ miri-standard-checks</p>
+
 <h2>Verify what you downloaded</h2>
 <p>A definitions package is a supply-chain root: reweight one MUST to zero and every wheel passes. Three
 things let you check it without trusting the host.</p>
 <ol class="plain">
-  <li><span class="principle">The file hash.</span> The index carries the wheel's
+  <li><span class="principle">The file hash.</span> The index above carries the wheel's
   <span class="mono">sha256</span>, so <span class="mono">pip install --index-url</span> verifies what it downloads;
   <span class="mono">sha256sum -c SHA256SUMS</span> checks it out of band. Two builds of one tag on one machine
   produce identical bytes, because entry timestamps are fixed at write time. The wheel is <em>not</em> reproducible
@@ -43,7 +47,7 @@ things let you check it without trusting the host.</p>
   (<span class="mono">gh attestation verify</span>).</li>
 </ol>
 
-<h2>JSON Schemas</h2>
+<h2 id="json-schemas">JSON Schemas</h2>
 <p>Each schema declares its own <span class="mono">$id</span> at
 <span class="mono">{{ site.site_url }}/schemas/…</span>, and that address is where a validator dereferencing a
 <span class="mono">$ref</span> or a
@@ -60,7 +64,8 @@ file in the repository at this version, for reading with history. Both ship insi
 <p>Nothing on this page is uploaded by hand. A release tag pushes to
 <span class="mono">{{ site.artifacts[0].workflow }}</span>, which runs the same validators the repository gates on
 (<span class="mono">make validate</span>, <span class="mono">make consistency</span>), builds the wheel with
-<span class="mono">{{ site.artifacts[0].built_by }}</span>, scores it with the reference linter, attests it, and
-attaches it to the release for that tag. The repository stays the source of truth; this is a derived output, like
+<span class="mono">{{ site.artifacts[0].built_by }}</span>, attests it, and attaches it to the release for that tag.
+When the reference linter is available to the build, the job also scores the wheel and fails the release on a low
+score. The linter is in development and not yet public. The repository stays the source of truth; this is a derived output, like
 this site.</p>
 {% endblock %}

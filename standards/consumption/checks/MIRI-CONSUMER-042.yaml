@@ -13,18 +13,18 @@ severity:
   default: LOW
   violation_unit: each whole-document retrieval reported as a scoped answer
 short_description: Never presents a whole-document retrieval as though a derived view had been used
-long_description: Budget preference, graded separately from the correctness MUSTs. Restated as an output claim because
-  which operation a consumer called is a request-side fact the profile's verification model cannot observe (§2);
-  what it can observe is the claim the consumer makes about what it read.
-rationale: This is a budget preference, not a correctness rule, and is graded separately as such. Retrieving a large
-  document to use one part of it is the behavior the derived views were added to make unnecessary.
+long_description: This budget preference is graded separately from the correctness MUSTs. It is stated as an output
+  claim because the operation a consumer called is a request-side fact the profile's verification model cannot observe
+  (§2), while the consumer's claim about what it read is observable. Claiming a filtered or routing view for a whole-document
+  retrieval, or presenting a document's full contents as a scoped answer, fails the check.
+rationale: The derived views were added so that a consumer need not retrieve a large document to use one part of
+  it. The check concerns that budget and is graded apart from the correctness rules.
 fires_when:
 - The consumer's output claims a filtered or routing view was used when the whole document was retrieved
 - The consumer reports a document's full contents as though they were a scoped answer to the question asked
 remediation:
 - Use `api-index`, `patterns`, or `graph` where the question is a routing, pattern, or relationship question
-suggested_fix: Use `api-index`, `patterns`, or `graph` where the question is a routing, pattern, or relationship
-  question
+suggested_fix: Answer scoped questions from a derived view
 references:
 - title: Discovery Contract §3.2.3
   url: discovery-contract.md

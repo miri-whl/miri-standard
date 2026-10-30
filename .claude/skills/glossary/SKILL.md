@@ -28,7 +28,7 @@ as derived from the normative documents, never as a second place where meaning i
    decide.
 2. **A defined term with no link** to where it is normatively defined. Every `**Term** —` entry must reach its
    home in one click, because a reader who needs the rule rather than the explanation should not have to search.
-3. **A stale check count or ID range.** `MIRI-CONSUMER` runs 001–051 across seventeen checks; both numbers are
+3. **A stale check count or ID range.** `MIRI-CONSUMER` runs 001–052 across eighteen checks; both numbers are
    asserted against the files.
 
 It does **not** check whether an explanation subtly misstates the rule it links to. That is a reading, and it is
@@ -39,7 +39,7 @@ consistent.
 
 Follow the shape the existing entries use, because it is doing work:
 
-Bold term, then a parenthesised markdown link to where it is normatively defined, then an em dash, then one
+Bold term, then a parenthesised markdown link to where it is normatively defined, then a colon, then one
 sentence of what it is — followed by the thing a reader actually needs, which is usually *why* it is that way or
 what it is confused with.
 

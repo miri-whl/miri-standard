@@ -15,30 +15,30 @@ severity:
   default: HIGH
   violation_unit: each removed surface with a dead-end error
   population_unit: all surfaces removed since the previous release
-short_description: 'Invoking a removed surface yields the structured error (code, `retryable: false`, `suggestions`) — not
-  a generic parse failure'
-long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
-  a dead-end error strands every consumer working from stale knowledge. This check verifies: Invoking a removed surface
-  yields the structured error (code, `retryable: false`, `suggestions`) — not a generic parse failure.'
-rationale: 'When kubectl v1.18 removed `get --export`, invocations answered with a bare unknown-flag parse error — a dead
-  end that broke Helm template generation and backup pipelines with nothing pointing at the successor. For an agent working
-  from stale weights, the dead end triggers the blind-retry loop of landscape §3.1: hallucinated variants, an eventual silent
-  workaround, and no bug report ever filed. The structured tombstone — stable `code`, `retryable: false`, non-empty `suggestions`
-  — converts that permanent failure into a one-turn recovery, which is why it is the single highest-value behavior for frozen-weights
-  consumers.'
+short_description: 'Invoking a removed surface yields the structured error (code, `retryable: false`, `suggestions`) instead
+  of a generic parse failure'
+long_description: 'Each surface present in the previous release''s `--describe` and absent from the current one is invoked.
+  The answer has to be a JSON error on the machine channel with a stable `error.code`, `retryable: false`, and a non-empty
+  `suggestions` array naming the replacement. A usage dump, "unrecognized arguments", or "unknown flag" fails the check.'
+rationale: 'When kubectl v1.18 removed `get --export`, invocations answered with a bare unknown-flag parse error. That dead
+  end broke Helm template generation and backup pipelines. Nothing in it pointed at the successor. For an agent working
+  from stale weights, the dead end triggers the blind-retry loop of Landscape and Prior Art §3.1: hallucinated variants,
+  an eventual silent workaround, and no bug report ever filed. The structured tombstone (stable `code`, `retryable: false`,
+  non-empty `suggestions`) turns that permanent failure into a one-turn recovery. For frozen-weights consumers it is the
+  highest-value behavior a CLI can offer.'
 fires_when:
 - for a surface present in the previous release's `--describe` but absent from the current one, invoking it yields a generic
   parse failure (usage dump, "unrecognized arguments", "unknown flag") instead of a JSON error on the machine channel
 - 'the error emitted lacks a stable `error.code`, `retryable: false`, or a non-empty `suggestions` array naming the replacement'
 remediation:
-- 'Keep removed surfaces registered in the schema-as-data source as tombstones (`status: "removed"`) rather than deleting
-  their entries, so the parser still recognizes them'
-- 'Route tombstone hits to the §6 structured error: `{"schema_version": "1", "ok": false, "error": {"code": "FLAG_REMOVED", "flag": ..., "removed_in":
-  ..., "retryable": false, "suggestions": [...]}}`'
+- 'Keep removed surfaces registered in the schema-as-data source as tombstones (`status: "removed"`) instead of deleting
+  their entries; the parser then still recognizes them'
+- 'Route tombstone hits to the §6 structured error: `{"schema_version": "1", "ok": false, "error": {"code": "FLAG_REMOVED",
+  "flag": ..., "removed_in": ..., "retryable": false, "suggestions": [...]}}`'
 - Derive `suggestions` from the tombstone's `lifecycle.replacement` field so the guidance cannot drift from the surface
-  that actually exists (§6.3-3)
+  that exists (§6.3-3)
 - 'Add the §6.3-4 verification to release CI: invoke every surface removed since the prior release and assert the structured
-  error, not a usage dump'
+  error instead of a usage dump'
 examples:
   violation: '$ acme-cli get --export
 

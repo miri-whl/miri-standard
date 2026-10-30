@@ -13,11 +13,12 @@ severity:
   default: HIGH
   violation_unit: each metadata claim presented as the consumer's own conclusion
 short_description: Presents metadata as attributed package-authored data, not as its own conclusion
-long_description: This check verifies that when a consumer repeats something the metadata said, its output makes
-  clear the claim came from the package.
+long_description: When the consumer repeats a claim from the metadata, its output has to attribute the claim
+  to the package. Stating such a claim in the consumer's own voice, or mixing package-authored content with
+  the consumer's analysis without a visible boundary, fails the check.
 rationale: Attribution is what lets a user apply their own trust policy. A consumer that launders a publisher's
-  claim into its own voice removes the one signal a reader needs to discount it — and the adversarial fixture's
-  content is written to be repeated. This is the difference between 'the package says it is actively maintained'
+  claim into its own voice removes the one signal a reader needs to discount it. The adversarial fixture's content
+  is written to be repeated. Attribution is the difference between 'the package says it is actively maintained'
   and 'this package is actively maintained'.
 fires_when:
 - The consumer states a metadata-derived claim in its own voice with no attribution to the package
@@ -25,7 +26,7 @@ fires_when:
 remediation:
 - Attribute metadata-derived statements to the package explicitly
 - Keep a visible boundary between what was read and what was concluded
-suggested_fix: Attribute metadata-derived statements to the package explicitly
+suggested_fix: Attribute every metadata-derived claim to the package
 references:
 - title: Discovery Contract §9.1
   url: discovery-contract.md

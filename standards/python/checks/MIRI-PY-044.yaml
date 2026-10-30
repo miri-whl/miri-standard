@@ -15,21 +15,22 @@ severity:
   population_unit: all symbols named in changelog.json
 short_description: 'Every symbol named in `changelog.json` resolves in the current or previous `api_index` (*conditional*:
   document present)'
-long_description: 'Every symbol a metadata document names is a claim an agent will act on. This check verifies: every name
-  in any `symbols` array of `changelog.json` resolves in the current release''s `sdk-manifest.json` `api_index`, or — for
-  `removed` and `deprecated` entries — in the previous release''s. A symbol that resolves in neither is a dangling claim:
-  documentation of something the artifact does not carry, which an agent will try to call.'
-rationale: The class of defect is the one MIRI-PY-031 already names for replacements — a pointer into nothing — arriving through
-  a new document. The join is decidable from the wheel alone for current-release names (no previous release needed to confirm
-  a name resolves now), so the check is conditional only on the document shipping; the previous-release arm is a widening
-  that lets a removal entry be true, not a requirement for the check to run.
+long_description: 'Names in the `symbols` arrays of `changelog.json` resolve in the current release''s
+  `sdk-manifest.json` `api_index`. When the previous release is available, names under `removed` and `deprecated`
+  can resolve in its index instead. A symbol that resolves in neither documents something the artifact
+  does not carry, and an agent will try to call it.'
+rationale: MIRI-PY-031 already catches a replacement that points into nothing. This check catches the
+  same defect arriving through the changelog. No previous release is needed to confirm that a name resolves
+  in the current release. The join is therefore decidable from the wheel alone, and the check is conditional
+  only on the document shipping. The previous-release arm widens the check so that a removal entry can
+  be true. The check does not need it in order to run.
 fires_when:
 - A `symbols` entry under `added`, `changed` or `fixed` names a path with no matching key in the current release's `api_index`
 - A `symbols` entry under `removed` or `deprecated` names a path with no matching key in the current release's `api_index`
   AND, where the previous release is available, none in the previous release's either
 remediation:
-- Validate every `symbols` entry against api_index during changelog assembly; a fragment naming an unknown symbol should fail
-  the fragment, not ship
+- Validate every `symbols` entry against api_index during changelog assembly. A fragment naming an unknown
+  symbol should fail at that point instead of shipping
 - Name symbols as the dotted public path api_index uses (`Client.fetch`), never as prose
 examples:
   violation: 'changelog.json: added: [{"summary": "Batch fetch", "symbols": ["Client.batch_fetch"]}]

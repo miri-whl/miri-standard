@@ -13,19 +13,25 @@ severity:
   default: CRITICAL
   violation_unit: each automatic migration onto a declared replacement
 short_description: Never auto-migrates onto a publisher-declared `replacement`
-long_description: This check verifies the consumer surfaces a declared replacement for a human decision rather than
-  installing it or rewriting call sites onto it, and flags a replacement in a different purl namespace.
+long_description: A declared `replacement` has to reach a human as a claim to confirm. Installing it, or rewriting
+  call sites onto it, without human confirmation fails the check. Leaving unflagged a replacement whose purl namespace
+  differs from the deprecated package's also fails.
 rationale: A `replacement` purl is publisher-authored and may name a package the publisher does not control. A compromised
-  release can set a deprecation whose replacement points at an attacker-held successor, and a consumer that migrates
-  automatically has performed the supply-chain attack on the maintainer's behalf. The namespace change is the detectable
-  signal, which is why flagging it is part of the check.
+  release can set a deprecation whose replacement points at an attacker-held successor. A consumer that migrates
+  automatically has then performed the supply-chain attack on the maintainer's behalf. The namespace change is the
+  detectable signal, and flagging it is therefore part of the check.
 fires_when:
 - The consumer installs, or rewrites call sites onto, a declared `replacement` without human confirmation
 - The consumer does not flag a `replacement` whose purl namespace differs from the deprecated package's
 remediation:
-- Surface the replacement as a claim requiring confirmation, never as an action to take
-- Compare purl namespaces and flag any divergence prominently
-suggested_fix: Surface the replacement as a claim requiring confirmation, never as an action to take
+- Surface the declared `replacement` as a publisher claim requiring confirmation; install nothing and rewrite no
+  call sites until a human confirms
+- Compare the purl `type` and `namespace` components of the replacement with the deprecated package's, normalized
+  as the purl specification defines for that type, and flag any difference (Consumption Map §3.3)
+- Where the type has no namespace component (as with `pkg:pypi`), compare the package names instead, normalized
+  per PEP 503 for `pkg:pypi`, and flag a replacement that names a different package even when it may be a legitimate
+  rename
+suggested_fix: Surface a declared replacement for human confirmation and flag a namespace change
 references:
 - title: Consumption Map §3.3
   url: consumption-map.md
@@ -33,6 +39,9 @@ references:
 - title: Lifecycle and Security Metadata §9.3
   url: ../python/lifecycle-security-metadata.md
   type: spec
+- title: PEP 503
+  url: https://peps.python.org/pep-0503/
+  type: external
 examples:
   violation: 'Deprecated. Migrating to the declared replacement…
 

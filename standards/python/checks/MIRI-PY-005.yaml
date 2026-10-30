@@ -15,35 +15,38 @@ severity:
   default: MINOR
   violation_unit: the release
 short_description: Release carries index-hosted attestations (provenance)
-long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
-  baseline cannot carry trustworthy agent metadata. This check verifies: Release carries index-hosted attestations (provenance).
-  It applies only to open-source releases on a public index that supports PEP 740 provenance (e.g. PyPI); for private
-  or internal distribution the condition does not apply, and the check is excluded from both numerator and
-  denominator rather than scored as passing.'
-rationale: 'PEP 740 attestations bind each uploaded file to the exact source repository and CI workflow that built it; the
-  index verifies them against a Trusted Publisher identity and republishes them under the `provenance` key of the PEP 691
-  JSON API. PyPI has accepted attestations since 14 November 2024, and `pypa/gh-action-pypi-publish` generates them by default
-  under trusted publishing, so their absence is now a configuration choice rather than a tooling gap. The December 2024
-  ultralytics compromise showed both halves of the mechanism: malicious wheels reached PyPI through an injected GitHub Actions
-  workflow, and the release''s published provenance is what let responders reconstruct which workflow run produced the poisoned
-  artifacts. Note what this check does and does not reach: PEP 740 is the DISTRIBUTION mechanism - how an index receives,
-  verifies and republishes an attestation - while the attestation''s payload is an in-toto statement whose predicate is
-  typically SLSA build provenance (`https://slsa.dev/provenance/v1`), carrying `buildDefinition` and `runDetails` and a
-  `builder.id` the SLSA spec calls the sole determiner of the build level. This check asks whether provenance is published,
-  not what it says; an attestation whose predicate asserts nothing useful about the build still satisfies it. Verifying the
-  payload is a separate question, and deliberately not this check''s.'
+long_description: 'Every distribution file of the release, the sdist as well as the wheel, carries a PEP
+  740 attestation that the index publishes under the `provenance` key of its PEP 691 JSON API. The check
+  applies only to open-source releases on a public index that supports PEP 740 provenance, such as PyPI.
+  For private or internal distribution the condition does not apply, and the check is excluded from both
+  numerator and denominator instead of being scored as a pass.'
+rationale: 'PEP 740 attestations bind each uploaded file to the exact source repository and CI workflow
+  that built it. The index verifies them against a Trusted Publisher identity and republishes them under
+  the `provenance` key of the PEP 691 JSON API. PyPI has accepted attestations since 14 November 2024.
+  `pypa/gh-action-pypi-publish` generates them by default under trusted publishing, and their absence
+  is now a configuration choice rather than a tooling gap. The December 2024 ultralytics compromise showed
+  both halves of the mechanism. Malicious wheels reached PyPI through an injected GitHub Actions workflow,
+  and the release''s published provenance let responders reconstruct which workflow run produced the poisoned
+  artifacts. PEP 740 is the distribution mechanism: how an index receives, verifies and republishes an
+  attestation. The attestation''s payload is an in-toto statement whose predicate is typically SLSA build
+  provenance (`https://slsa.dev/provenance/v1`). That predicate carries `buildDefinition` and `runDetails`,
+  plus a `builder.id` that the SLSA spec calls the sole determiner of the build level. This check asks
+  whether provenance is published and does not read what it says. An attestation whose predicate asserts
+  nothing useful about the build still satisfies it. Verifying the payload is a separate question that
+  this check deliberately leaves alone.'
 fires_when:
 - 'The index named by `identity.registry`, queried via its PEP 691 JSON API (`Accept: application/vnd.pypi.simple.v1+json`),
   returns `"provenance": null` for the release''s files'
 - The declared registry is a public index and no PEP 740 attestation objects exist for any distribution file of the release
 - Attestations cover some files of the release but not others (e.g. the wheel is attested, the sdist is not)
 remediation:
-- Configure a Trusted Publisher for the project on PyPI (Manage project -> Publishing), scoped to the release workflow
-- Publish from CI with `pypa/gh-action-pypi-publish`, which generates and uploads attestations by default, or with `twine
-  upload --attestations`
+- Configure a Trusted Publisher for the project on PyPI (Manage project -> Publishing), scoped to the
+  release workflow
+- Publish from CI with `pypa/gh-action-pypi-publish` (it generates and uploads attestations by default)
+  or with `twine upload --attestations`
 - Revoke long-lived project API tokens once trusted publishing is in place
-- Verify after release that the `provenance` key in the index JSON is populated (the `pypi-attestations` tool can verify
-  the attestation chain)
+- Verify after release that the `provenance` key in the index JSON is populated (the `pypi-attestations`
+  tool can verify the attestation chain)
 examples:
   violation: "curl -H 'Accept: application/vnd.pypi.simple.v1+json' \\\n  https://pypi.org/simple/example-sdk/\n# files[]:\
     \ {\"filename\": \"example_sdk-2.1.0-py3-none-any.whl\",\n#           \"provenance\": null}\n# uploaded with a long-lived\

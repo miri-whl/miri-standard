@@ -12,12 +12,13 @@ severity:
   default: MEDIUM
   violation_unit: each truncated response treated as a complete surface
 short_description: Never treats a truncated `api-index` as the complete surface
-long_description: Capped responses carry `truncated`. This check verifies the consumer does not describe or reason
-  about a truncated response as though it were the package's whole surface.
+long_description: 'A response that carries `truncated: true` is partial, wherever the flag appears. Quoting, summarizing,
+  or answering from it as if it were whole fails the check, and so does claiming that a symbol dropped past the
+  cap does not exist. A `truncated: false` result after a `query` is complete only with respect to that filter
+  and cannot support a count, size, or completeness claim about the package''s surface.'
 rationale: The adversarial fixture pads its index so a real method falls past the cap. A consumer that reads the
-  capped response as complete concludes a genuine symbol does not exist — and a hostile publisher can therefore
-  hide any surface it likes simply by padding. Truncation is reported precisely so the consumer can know it is
-  seeing part of the picture.
+  capped response as complete concludes a genuine symbol does not exist. A hostile publisher can then hide any
+  surface it likes by padding. Truncation is reported so the consumer can know it is seeing part of the picture.
 fires_when:
 - 'Driven against a `document` response carrying `truncated: true`, the consumer presents the partial document
   as the whole one — quoting it, summarizing it, or answering from it without saying it was cut. This check is
@@ -31,8 +32,7 @@ fires_when:
 remediation:
 - Check `truncated` on every response and qualify any surface-level statement drawn from a truncated one
 - Narrow with `query`, or continue with `next_cursor`, rather than concluding from a partial answer
-suggested_fix: Check `truncated` on every response and qualify any surface-level statement drawn from a truncated
-  one
+suggested_fix: Qualify every statement drawn from a truncated response
 references:
 - title: Discovery Contract §3.5
   url: discovery-contract.md

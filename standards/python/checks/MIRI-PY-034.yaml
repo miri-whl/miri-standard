@@ -16,15 +16,17 @@ severity:
   violation_unit: each interface removed early
   population_unit: all interfaces removed since the previous release
 short_description: Deprecated interfaces survive ≥2 releases before removal
-long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in code,
-  inventoried in metadata, and never resolved by silent removal. This check verifies: Deprecated interfaces survive ≥2 releases
-  before removal.'
-rationale: 'PEP 387 fixes the floor this check enforces: a deprecation warning must appear in at least two minor versions
-  before the interface may be removed, with a five-year window preferred. The floor exists because consumers synchronize
-  on release cadence — a pinned dependency, a regenerated agent skill, a rebuilt CI image each observe one release at a
-  time, so a deprecate-in-N, remove-in-N+1 window means the first signal many consumers ever see is the breakage itself.
-  NumPy''s removal of the `np.float` aliases (warned from 1.20, removed in 1.24) still produced mass downstream `AttributeError`
-  failures despite a four-release window — evidence that two releases is a minimum, not a target.'
+long_description: 'Against the previous release, the check fails when a public interface removed from
+  the current sdk-manifest.json first appeared in a `deprecations` inventory only one release before its
+  removal. It also fails when a new `deprecations` entry sets `removal_version` to the release immediately
+  after the one that introduces the deprecation.'
+rationale: 'PEP 387 sets the floor this check enforces. A deprecation warning must appear in at least
+  two minor versions before the interface may be removed, and a five-year window is preferred. The floor
+  exists because consumers synchronize on release cadence. A pinned dependency, a regenerated agent skill,
+  and a rebuilt CI image each observe one release at a time. Under a deprecate-in-N, remove-in-N+1 window,
+  the first signal many consumers ever see is the breakage itself. NumPy warned about the `np.float` aliases
+  from 1.20 and removed them in 1.24. The removal still produced mass downstream `AttributeError` failures
+  despite a four-release window. The case shows that two releases is a minimum rather than a target.'
 fires_when:
 - 'Comparing against the previous release (requirement: `previous-release`): a public interface absent from the current
   sdk-manifest.json first appeared in a `deprecations` inventory only one release before its removal'

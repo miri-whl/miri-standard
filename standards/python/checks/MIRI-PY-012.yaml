@@ -14,15 +14,16 @@ severity:
   violation_unit: each file with a mismatched version
   population_unit: all files in agent-metadata/
 short_description: '`sdk_version` in every metadata file equals the wheel version'
-long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
-  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: `sdk_version`
-  in every metadata file equals the wheel version.'
-rationale: 'PEP 427 binds the version in a wheel''s filename to its dist-info METADATA and pip refuses wheels where the
-  two disagree; this check extends the same invariant to the agent-metadata surface. A manifest carrying a different sdk_version
-  means the agent is reading API documentation for a release it is not running: the specification''s own migration example
-  — execute() renamed to query() in 1.2.0 — shows how a 1.1.0 manifest inside a 1.2.0 wheel directs the agent to call a
-  method that no longer exists, and the resulting AttributeError points at the agent''s code, not at the stale metadata
-  that caused it.'
+long_description: 'The `sdk_version` in sdk-manifest.json equals the wheel''s METADATA Version byte for
+  byte. Every other agent-metadata field that carries the package version (the `@version` of lifecycle.json
+  `identity.purl`, migration-guide.json `to_version`) matches the same way. Strings that are canonically
+  equal but textually different, such as a 1.2.0 manifest in a 1.2 wheel, fail.'
+rationale: 'PEP 427 binds the version in a wheel''s filename to its dist-info METADATA, and pip refuses
+  wheels where the two disagree. This check extends the same invariant to the agent-metadata surface.
+  A manifest with a different sdk_version means the agent is reading API documentation for a release it
+  is not running. In the specification''s own migration example, execute() is renamed to query() in 1.2.0.
+  A 1.1.0 manifest inside a 1.2.0 wheel directs the agent to call a method that no longer exists. The
+  resulting AttributeError points at the agent''s code instead of the stale metadata that caused it.'
 fires_when:
 - sdk_version in sdk-manifest.json is not exactly (byte-for-byte) equal to the wheel's METADATA Version
 - any other agent-metadata file carrying the package version (the @version in lifecycle.json identity.purl, migration-guide.json

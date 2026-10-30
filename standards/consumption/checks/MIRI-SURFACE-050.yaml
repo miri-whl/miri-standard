@@ -13,21 +13,23 @@ severity:
   default: MEDIUM
   violation_unit: each binding that does not advertise a surface version
 short_description: Advertises the surface version at the normative path
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Advertises the surface version
-  at the normative path.'
+long_description: Discovery Contract §4.4 and §6.3 require the MCP binding to advertise the surface version as a
+  string at `capabilities.miri.surface_version` in the `initialize` result. A missing advertisement, or one conflated
+  with the transport protocol version or `serverInfo.version`, fails the check.
 examples:
   violation: '{"protocolVersion": "2024-11-05", "serverInfo": {"name": "miri", "version": "1.0"}}'
   compliant: "{\"protocolVersion\": \"2024-11-05\", \"capabilities\": {\"miri\": {\"surface_version\": \"1\"}},\n\
     \ \"serverInfo\": {\"name\": \"miri\", \"version\": \"1.0\"}}"
 rationale: The transport's protocol version names the transport, and `serverInfo.version` names the implementation.
-  Neither names the *contract*. Without a distinct surface version a client cannot negotiate the metadata contract
-  independently of the transport it happens to ride, which is the whole reason the contract is transport-agnostic.
+  Neither names the *contract*. Without a distinct surface version, a client cannot negotiate the metadata contract
+  independently of the transport it happens to ride. The contract is transport-agnostic so that this negotiation
+  is possible.
 fires_when:
 - '`initialize` advertises no surface version at the normative path'
 - The surface version is conflated with the transport protocol version or with `serverInfo.version`
 remediation:
 - Advertise the surface version at `capabilities.miri.surface_version` as a string
-suggested_fix: Advertise the surface version at `capabilities.miri.surface_version` as a string
+suggested_fix: Advertise the surface version in `initialize`
 references:
 - title: Discovery Contract
   url: discovery-contract.md

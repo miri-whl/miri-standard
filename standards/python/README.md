@@ -25,8 +25,10 @@ packaging ecosystem and how the Miri Standard extends it to enable enhanced agen
 - **[Implementation Guide](miri-implementation-guide.md)** - Practical guide to implementing Miri Standard in Python packages
 - **[Lifecycle and Security Metadata](lifecycle-security-metadata.md)** - Package identity (purl), advisory sources,
   update checks, and deprecation state for open source and private packages
-- **[Linter Checklist](linter-checklist.md)** - The 40 numbered checks (MIRI-PY-001…040) with standards references and
-  scoring weights summing to 100
+- **[Linter Checklist](linter-checklist.md)** - The 45 numbered checks (MIRI-PY-001…045; 43 active, 010 and 016
+  withdrawn) with standards references and scoring weights summing to 100
+- **[Agent Metadata Schemas](../../schemas/)** - JSON Schemas for `sdk-manifest.json`, `usage-patterns.json` and
+  `test-patterns.json`, published with each release
 - **[Check Definitions](checks/)** - One YAML file per check: canonical severity, violation unit, example,
   fix, and references — the machine-readable source of truth for linters
 - **[Production Map](production-map.md)** *(Draft)* - The dependency order among the metadata documents: what an
@@ -37,7 +39,6 @@ packaging ecosystem and how the Miri Standard extends it to enable enhanced agen
 
 ### Planned Specifications
 
-- **Agent Metadata Schema** *(Planned)* - JSON schemas for validation
 - **Example Structure Specification** *(Planned)* - Detailed example organization guidelines
 - **Build Tools Integration** *(Planned)* - Integration with setuptools, poetry, hatch
 

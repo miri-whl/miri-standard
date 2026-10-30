@@ -13,18 +13,17 @@ severity:
   default: LOW
   violation_unit: each unstable ordering or missing continuation token
 short_description: Offers cursor continuation and rejects an out-of-scope cursor
-long_description: 'Surface obligation from the Discovery Contract (3.5.1). A surface that truncates a listing it
-  can continue MUST return next_cursor, MUST accept that value to continue the same ordering, and MUST reject a
-  cursor whose scope has changed as INVALID_CURSOR rather than silently restarting. A surface that retains no
-  cursor state conforms by rejecting every cursor and emitting none; what it MUST NOT do is emit a token it will
-  not honor. Ordering itself is scored by MIRI-SURFACE-031.'
+long_description: Under Discovery Contract §3.5.1, a surface that truncates a listing it can continue MUST return
+  `next_cursor`, MUST accept that value to continue the same ordering, and MUST reject a cursor whose scope has changed
+  as `INVALID_CURSOR` instead of silently restarting. A surface that retains no cursor state conforms by rejecting
+  every cursor and emitting none, and it MUST NOT emit a token it will not honor. Ordering itself is scored by MIRI-SURFACE-031.
 examples:
   violation: 'truncated: true with next_cursor, then that cursor returns page one again'
   compliant: 'truncated: true with next_cursor, which returns the following entries in the same ordering'
 rationale: Continuation is what makes a capped surface completable in-band instead of forcing a consumer to guess
-  at what it did not see. The failure this catches is worse than absence. A cursor that silently restarts hands the
-  consumer page one labelled as page two, so it believes it has read the whole surface having read a prefix twice.
-  Rejecting a cursor is always safe; honoring one incorrectly is not.
+  at what it did not see. The failure this check catches is worse than absence. A cursor that silently restarts hands
+  the consumer page one labelled as page two. The consumer then believes it has read the whole surface when it has
+  read a prefix twice. Rejecting a cursor is always safe; honoring one incorrectly is not.
 fires_when:
 - A truncated response omits `next_cursor` where the surface can continue
 - A supplied `cursor` restarts the ordering rather than continuing it

@@ -1,11 +1,11 @@
 {% extends 'base.html' %}
 {% import '_macros.html' as m %}
-{% block title %}Miri Standard{% endblock %}
+{% block title %}Miri Standard: packaging metadata for AI agents{% endblock %}
 {% block content %}
 <div class="hero-row">
   <div class="hero-text">
     {{ m.spec_header('The Miri Standard',
-                     [('Status', '🚧 incubation'), ('Version', site.version)],
+                     [('Version', site.version)],
                      'Packaging standards that let an AI agent read an installed artifact instead of guessing at it:
                       what the package is, where to ask whether it is vulnerable, and what it has deprecated. Python
                       wheels and command-line tools today, Go modules and Rust crates later.') }}
@@ -18,16 +18,32 @@
   {{ m.avatar(root, 'green', 152, framed=true) }}
 </div>
 
+<h2>Start here</h2>
+<ul class="plain">
+<li><span class="principle">You publish a Python wheel.</span> The <a href="production-map.html">Production Map</a>
+says what to build first. Miri Core, 14 checks on identity, security and lifecycle, is the place to start.</li>
+<li><span class="principle">You ship a command-line tool.</span> The <a href="cli-production-map.html">CLI Production
+Map</a> orders the {{ targets.cli.active }} CLI checks by what depends on what.</li>
+<li><span class="principle">You build an agent or a tool that reads packages.</span> The
+<a href="consumption-map.html">Consumption Map</a> says what to read for each task and what never to conclude from
+it.</li>
+<li><span class="principle">You serve metadata to agents.</span> The <a href="discovery-contract.html">Discovery
+Contract</a> defines the eight read-only operations a server answers.</li>
+</ul>
+
 <div class="cardgrid">
   {% for target, data in targets.items() %}
   <div class="card">
     <div class="card-title">{{ data.meta.title }}</div>
-    <div class="mono stat">{{ data.checks | length }}<span class="stat-unit"> checks</span></div>
-    <p class="stat-sub">{{ data.musts }} MUST · {{ data.checks | length - data.musts }} SHOULD · weights Σ = 100</p>
-    <a class="mono stat-link" href="checks/{{ target }}/index.html">{{ data.first_id }}…{{ data.last_num }} →</a>
+    <div class="mono stat">{{ data.active }}<span class="stat-unit"> checks</span></div>
+    <p class="stat-sub">{{ data.musts }} MUST · {{ data.active - data.musts }} SHOULD · weights Σ = 100{% if data.withdrawn %} · {{ data.withdrawn }} withdrawn{% endif %}</p>
+    <a class="mono stat-link" href="checks/{{ target }}/index.html">All {{ data.active }} checks →</a>
   </div>
   {% endfor %}
 </div>
+<p class="muted">A <a href="glossary.html#the-three-actors">consumer</a> is a program that asks for metadata and then decides
+what to believe: an agent, a linter, a CLI. A <a href="glossary.html#the-three-actors">surface</a> is a program that serves
+metadata in answer to queries without deciding anything about it.</p>
 
 <p class="lede">Every check and schema ships as one installable package, pinned to the commit it was built from.
 <a href="downloads.html">Downloads →</a></p>
@@ -36,10 +52,10 @@
 <p>Each <span class="principle">requirement</span> in a specification is verified by a
 <span class="principle">check</span>; each check failure instance is a
 <span class="principle">violation</span>. Two scores follow. The <span class="principle">conformance score</span> is
-additive and comparable across independent linters: weights are fixed, they sum to 100, and any failing MUST caps
-the score at 74.
-The <span class="principle">health score</span> is the severity-graded magnitude of what is wrong, computed from
-canonical severities and violation units. Populations are reported, never scored.</p>
+the weight of the passing checks over the weight of the checks that applied. Weights are fixed and sum to 100 per
+target, any failing MUST caps the score at 74, and independent linters produce comparable scores.
+The <span class="principle">health score</span> grades how much is wrong, from each check's canonical severity and
+the number of violations it found.</p>
 
 <h2>Principles</h2>
 <ul class="plain">
@@ -55,6 +71,6 @@ canonical severities and violation units. Populations are reported, never scored
 <ul class="plain">
 <li><a href="{{ site.github }}">miri-standard on GitHub</a>: specifications, schemas, and the check definitions</li>
 <li><a href="{{ site.github }}/tree/main/standards/python">Python wheel standards</a> · <a href="{{ site.github }}/tree/main/standards/cli">CLI standards</a></li>
-<li><a href="{{ site.github }}/tree/main/schemas">JSON Schemas</a>: <span class="mono">check-v3</span>, <span class="mono">lifecycle-v1</span>, <span class="mono">sdk-manifest-v1</span>, …</li>
+<li><a href="downloads.html#json-schemas">JSON Schemas</a>: <span class="mono">check-v3</span>, <span class="mono">lifecycle-v1</span>, <span class="mono">sdk-manifest-v1</span>, …</li>
 </ul>
 {% endblock %}

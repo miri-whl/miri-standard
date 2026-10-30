@@ -13,22 +13,24 @@ severity:
   default: MEDIUM
   violation_unit: each response missing a top-level schema_version
 short_description: Stamps `schema_version` on every response
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Stamps `schema_version`
-  on every response.'
+long_description: Discovery Contract §4.1 reserves `schema_version` as an envelope field. Every response from
+  every operation has to carry it at the top level, and a `schema_version` nested inside the payload does not
+  count.
 examples:
   violation: '{"identity": {...}, "support": {...}}   # the raw document, no envelope'
   compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true, \"package\": \"weather_sdk\",\n \"document\"\
     : {\"identity\": {...}, \"support\": {...}}}"
-rationale: A consumer pins on `schema_version` to detect a wire-shape change. Without it a surface can alter its
-  envelope silently and every consumer built against the old shape misreads the new one with no signal that anything
-  moved. This is the same convention MIRI-CLI-010 enforces for producer tooling, applied to the query surface.
+rationale: A consumer pins on `schema_version` to detect a wire-shape change. Without it, a surface can alter
+  its envelope silently. Every consumer built against the old shape then misreads the new one with no signal that
+  anything moved. MIRI-CLI-010 enforces the same convention for producer tooling, and this check applies it to
+  the query surface.
 fires_when:
 - Any operation returns a response with no top-level `schema_version`
 - '`schema_version` is present but nested inside the payload rather than at the envelope''s top level'
 remediation:
 - Stamp the envelope in one shared code path so no operation can emit an unstamped response
 - Version it independently of the transport's protocol version and of any version field inside the payload
-suggested_fix: Stamp the envelope in one shared code path so no operation can emit an unstamped response
+suggested_fix: Stamp `schema_version` on every envelope
 references:
 - title: Discovery Contract
   url: discovery-contract.md

@@ -13,14 +13,15 @@ severity:
   default: HIGH
   violation_unit: the update surface
 short_description: '`check-update --json` returns the specified shape'
-long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
-  passive, and honest offline. This check verifies: `check-update --json` returns the specified shape.'
-rationale: 'No standard answers "is there a newer version of this binary": update-notifier polls the npm registry from a
-  detached child process, Azure CLI ships its own `az upgrade`, and Homebrew answers only for tools it installed — every
-  vendor a homegrown notifier against a homegrown endpoint that no agent or auditor can discover. `check-update --json`
-  replaces that zoo with one declared primitive whose `manifest` field names the endpoint consulted, making the check itself
-  auditable. Without it, an agent whose knowledge froze at 3.2.0 has no standard way to learn that 3.4.1 exists, let alone
-  that the gap is a security release.'
+long_description: In a healthy online environment, `<cli> check-update --json` has to be recognized, exit 0, and print a
+  single JSON document carrying `schema_version`, `current`, `latest`, `update_available`, and `urgency`. The `urgency`
+  value has to be one of `none`, `routine`, `recommended`, or `security`, and `current` has to match the binary's `--version`.
+rationale: No standard answers "is there a newer version of this binary". The update-notifier library polls the npm registry
+  from a detached child process. Azure CLI ships its own `az upgrade`, and Homebrew answers only for tools it installed.
+  Each vendor runs a homegrown notifier against a homegrown endpoint that no agent or auditor can discover. `check-update
+  --json` replaces that zoo with one declared primitive whose `manifest` field names the endpoint consulted. That field
+  makes the check itself auditable. Without it, an agent whose knowledge froze at 3.2.0 has no standard way to learn that
+  3.4.1 exists, let alone that the gap is a security release.
 fires_when:
 - '`<cli> check-update --json` is unrecognized or exits non-zero in a healthy online environment'
 - stdout is not a single JSON document, or lacks any of `schema_version`, `current`, `latest`, `update_available`, `urgency`

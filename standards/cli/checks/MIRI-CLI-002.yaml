@@ -13,15 +13,15 @@ severity:
   default: HIGH
   violation_unit: the --help behavior
 short_description: '`--help` prints to stdout, exits 0, never pages or blocks'
-long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
-  invisible or hangs silently in a non-interactive context. This check verifies: `--help` prints to stdout, exits 0, never
-  pages or blocks.'
-rationale: 'GNU Coding Standards §4.7 requires `--help` to print to stdout and exit successfully; help is also how an agent
-  learns a CLI at runtime, so it must work precisely in the non-interactive context where agents live. The canonical counterexample
-  is git, whose `git log --help` opens the man page in a pager — in CI or an agent harness that blocks on a dead terminal,
-  varies with `PAGER`, and emits terminal control codes, which is why `--no-pager` and `core.pager cat` are standing CI
-  folklore. Help on stderr or with a non-zero exit is equally corrosive: every wrapper that checks the exit code reads a
-  successful help request as a failure.'
+long_description: '`<cli> --help` is run with stdin closed and stdout redirected. It has to write non-empty help to stdout
+  and exit 0 without starting a pager or blocking on a read. Help on stderr, a non-zero exit, and an empty stdout are each
+  violations.'
+rationale: 'GNU Coding Standards §4.7 requires `--help` to print to stdout and exit successfully. Help is also how an agent
+  learns a CLI at runtime. It therefore has to work in the non-interactive context where agents run. Git is the canonical
+  counterexample: `git log --help` opens the man page in a pager. In CI or an agent harness that pager blocks on a dead
+  terminal, varies with `PAGER`, and emits terminal control codes. Those failures are why `--no-pager` and `core.pager cat`
+  are standing CI folklore. Help on stderr or with a non-zero exit is equally corrosive. Every wrapper that checks the exit
+  code reads a successful help request as a failure.'
 fires_when:
 - With stdin closed and stdout redirected, `<cli> --help` spawns a pager or the process blocks on a read
 - Help text is written to stderr instead of stdout

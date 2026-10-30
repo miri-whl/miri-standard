@@ -13,15 +13,17 @@ severity:
   default: CRITICAL
   violation_unit: each purl read from a publisher document rather than derived
 short_description: Derives `purl` from the installed distribution; never reads it from a document
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Derives `purl` from the
-  installed distribution; never reads it from a document.'
+long_description: Discovery Contract §4.1.1 makes the envelope `purl` surface-derived. The surface has to derive
+  it from the installed distribution and must never read it from a served document. Where the derived value and
+  `identity.purl` disagree, the derived value wins, and a response whose subject package did not resolve carries
+  no `purl`.
 examples:
   violation: 'purl = doc["identity"]["purl"]   # publisher-authored'
   compliant: 'purl = f"pkg:pypi/{dist.metadata[''Name'']}@{dist.version}"   # surface-derived'
-rationale: '`purl` is the input to a per-namespace trust policy, which makes it a security decision — and the one
+rationale: '`purl` is the input to a per-namespace trust policy and therefore a security decision. It is the one
   field in the envelope a publisher must not control. If the surface reads `identity.purl` out of lifecycle.json,
-  a package declaring `pkg:pypi/requests@2.31.0` inherits requests'' trust tier by simply saying so, forging a signal
-  inside the namespace §4 claims is un-forgeable.'
+  a package declaring `pkg:pypi/requests@2.31.0` inherits the trust tier of requests by declaring it. That forges
+  a signal inside the namespace §4 claims is un-forgeable.'
 fires_when:
 - The envelope `purl` is read from a served document rather than derived from the installed distribution
 - A disagreement between the derived value and `identity.purl` is resolved in the document's favor
@@ -30,7 +32,7 @@ remediation:
 - Derive `purl` from the installed distribution's own recorded name and version
 - Where `identity.purl` disagrees, serve the derived value and signal the mismatch as a tampering indicator
 - Omit `purl` entirely for PACKAGE_NOT_INSTALLED, AMBIGUOUS_PACKAGE and NOT_DISCOVERABLE
-suggested_fix: Derive `purl` from the installed distribution's own recorded name and version
+suggested_fix: Derive `purl` from the installed distribution only
 references:
 - title: Discovery Contract
   url: discovery-contract.md

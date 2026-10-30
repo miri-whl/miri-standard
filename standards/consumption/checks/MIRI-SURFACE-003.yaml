@@ -13,19 +13,19 @@ severity:
   default: HIGH
   violation_unit: each unreserved key emitted at the envelope's top level
 short_description: Emits only reserved keys at the top level
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Emits only reserved keys
-  at the top level.'
+long_description: The reserved-field table in Discovery Contract §4.1 is exhaustive. Any top-level key outside
+  it, including one the surface adds for its own purposes, fails the check.
 examples:
   violation: '{"schema_version": "1", "ok": true, "cache_hit": true, "document": {...}}'
   compliant: '{"schema_version": "1", "ok": true, "present": true, "document": {...}}'
-rationale: 'The un-forgeability argument needs the surface to own a *known, closed* key set. A surface that adds
-  its own extra top-level fields erodes that: a consumer cannot tell an unfamiliar key from a forged one, and the
-  reserved-field table stops being exhaustive in practice while still claiming to be.'
+rationale: The un-forgeability argument needs the surface to own a *known, closed* key set. A surface that adds
+  its own extra top-level fields erodes that set. A consumer cannot tell an unfamiliar key from a forged one, and
+  the reserved-field table stops being exhaustive in practice while still claiming to be.
 fires_when:
 - A response carries a top-level key outside the reserved set in §4.1
 remediation:
 - Emit only the reserved fields; put anything else inside the payload
-suggested_fix: Emit only the reserved fields; put anything else inside the payload
+suggested_fix: Keep the top level to the reserved keys
 references:
 - title: Discovery Contract
   url: discovery-contract.md

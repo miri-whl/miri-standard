@@ -17,14 +17,16 @@ severity:
   default: MINOR
   violation_unit: each index/file mismatch
   population_unit: all entries in AGENT_EXAMPLES.json plus all example files on disk
-short_description: '`AGENT_EXAMPLES.json` entries ↔ files on disk, both directions'
-long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
-  lesson at machine speed. This check verifies: `AGENT_EXAMPLES.json` entries ↔ files on disk, both directions.'
-rationale: AGENT_EXAMPLES.json (Miri Wheel Extensions §4.1) is how agents discover examples without directory-walking; the
-  index, not the filesystem, is the contract surface. An entry pointing at a missing file sends every consumer to a dead
-  path at machine speed, while an on-disk example with no entry is invisible however good it is. Because the index is build-generated,
-  a mismatch in either direction is deterministic evidence of a broken generation pipeline rather than a content judgment
-  call.
+short_description: '`AGENT_EXAMPLES.json` entries and files on disk match in both directions'
+long_description: 'This check was withdrawn in 0.6.0-draft, and its index/file join is now the T3 clause
+  of MIRI-PY-014. It required every `examples[*].file` path in AGENT_EXAMPLES.json to exist in the wheel
+  and every `*.py` file under examples/ other than `__init__.py` to have an index entry. Every example
+  id named in learning_paths, categories, prerequisites, or related had to exist in the examples map.'
+rationale: AGENT_EXAMPLES.json (Miri Wheel Extensions §4.1) is how agents discover examples without walking
+  directories, and the index is the contract surface they read. An entry pointing at a missing file sends
+  every consumer to a dead path at machine speed. An example on disk with no entry stays invisible however
+  good it is. Because the build generates the index, a mismatch in either direction is deterministic evidence
+  of a broken generation pipeline rather than a content judgment call.
 fires_when:
 - an examples[*].file path in AGENT_EXAMPLES.json does not exist in the wheel
 - a *.py file under examples/ (excluding __init__.py) has no entry in the index

@@ -15,16 +15,16 @@ weight: 1
 conditional: false
 severity:
   default: LOW
-  violation_unit: the wheel's code-index state (counted per wheel — 0 or 1 — because a wheel either offers a discoverable index or does not)
+  violation_unit: the wheel's code-index state (counted per wheel as 0 or 1, because a wheel either offers
+    a discoverable index or does not)
 short_description: A precomputed code index ships in the wheel and `sdk-manifest.json` declares where it is
-long_description: 'A wheel is the only thing an offline consumer has, so structure that would otherwise require
-  running an analyzer has to be precomputed and carried. This check verifies: an index is present, it is listed in
-  RECORD, and `sdk-manifest.json` `code_index` names its path and format so a consumer can discover it and decide
-  whether it can read it before opening it. What this check does NOT verify is that the index covers the public
-  surface: confirming coverage means decoding the index, and the standard declines to require a decoder of every
-  linter for the same reason it declines to require one of every consumer. Coverage is therefore a producer
-  obligation stated in Miri Wheel Extensions §5.5 and not a clause here - said plainly rather than implied, because
-  a presence-only check that reads as a coverage check is the vacuous pass this standard names elsewhere.'
+long_description: 'The wheel carries a precomputed code index under `.dist-info/`, listed in RECORD and
+  declared by `sdk-manifest.json` `code_index` with its path and a format from the schema''s closed set.
+  The declaration lets a consumer discover the index and decide whether it can read it before opening
+  it. An index file under `.dist-info/` that no `code_index` declares fails the check. The check does
+  not verify that the index covers the public surface. Confirming coverage means decoding the index, and
+  the standard declines to require a decoder of every linter for the same reason it declines to require
+  one of every consumer. Coverage is a producer obligation in Miri Wheel Extensions §5.5.'
 examples:
   violation: |
     greetlib-1.1.0.dist-info/
@@ -49,20 +49,21 @@ examples:
 
     A consumer reads `code_index`, sees a format it can or cannot decode, and falls back to
     `api_index` if it cannot - which is why the declaration matters more than the index.
-rationale: 'Coding agents write against the API they were trained on. Measured, not assumed: a benchmark of 270
-  real API updates across eight Python libraries (NumPy, Pandas, SciPy, scikit-learn, JAX, Keras, TensorFlow,
-  PyTorch) found 25.36% of generations ignored the update entirely, 16.4% used only the removed API, and 12.3%
-  mixed old and new APIs in one file. Supplying structured API documentation alongside the request raised the share
-  of generated code that executes from 42.55% to 66.36% - the largest single intervention measured, where
-  chain-of-thought prompting moved it 2.34 points. The study supplied that documentation by hand in a prompt; a
-  wheel can ship it, versioned with the code, with nobody assembling a context. 128 of those 270 updates were
-  MODIFICATIONS - symbols that kept their name and changed shape - which is the class a name-keyed index cannot
-  detect at all and the one that produces the mixed-API failure, because the name still resolves and the call is
-  wrong. A published index format also makes a release delta computable from two artifacts rather than declared:
-  signature-level identity is what MIRI-PY-043 compares and what a name set cannot express. Proposed by the miri-py
-  team, who measured the alternatives and published the negative result alongside the positive one - read whole, an
-  index costs more tokens than reading the source; queried for one symbol it is 22x cheaper. That asymmetry is why
-  this check asks for the index to be DECLARED rather than assumed readable.'
+rationale: 'Coding agents write against the API they were trained on. A benchmark of 270 real API updates
+  across eight Python libraries (NumPy, Pandas, SciPy, scikit-learn, JAX, Keras, TensorFlow, PyTorch)
+  found that 25.36% of generations ignored the update, 16.4% used only the removed API, and 12.3% mixed
+  old and new APIs in one file. Supplying structured API documentation alongside the request raised the
+  share of generated code that executes from 42.55% to 66.36%. That was the largest single intervention
+  measured. Chain-of-thought prompting moved the same figure by 2.34 points. The study supplied the documentation
+  by hand in a prompt. A wheel can ship the same documentation versioned with the code, and nobody has
+  to assemble a context. Of those 270 updates, 128 were modifications: symbols that kept their name and
+  changed shape. A name-keyed index cannot detect that class at all. It is also the class behind the mixed-API
+  failure, because the name still resolves and the call is wrong. A published index format also makes
+  a release delta computable from two artifacts instead of declared. MIRI-PY-043 compares signature-level
+  identity, and a name set cannot express it. The miri-py team proposed this check after measuring the
+  alternatives, and they published the negative result alongside the positive one. Read whole, an index
+  costs more tokens than reading the source. Queried for one symbol, it is 22x cheaper. That asymmetry
+  is why this check asks for the index to be declared rather than assumed readable.'
 fires_when:
 - The wheel ships no precomputed code index under `.dist-info/` and `sdk-manifest.json` carries no `code_index`
 - '`sdk-manifest.json` `code_index` names a path that is absent from the wheel, or present but unlisted in RECORD'
@@ -70,14 +71,14 @@ fires_when:
 - An index file is present under `.dist-info/` that no `code_index` pointer declares, so a consumer has no
   discoverable way to know it is there or what format it is in
 remediation:
-- Produce a SCIP index for the package at build time. The standard names the format and not the producer, exactly
-  as it names the wheel format and not the build backend
-- Reduce it before shipping - a full index measured 62% of a 1.87 MB wheel, where the same index with reference
-  occurrences removed measured 20% - and see Miri Wheel Extensions §5.5 for which sections a consumer needs
-- Write the index under `.dist-info/` beside the SBOM documents PEP 770 places there, so one convention covers
-  both precomputed artifacts
-- Declare it in `sdk-manifest.json` `code_index` with its path and format, and confirm the build listed it in
-  RECORD
+- Produce a SCIP index for the package at build time. The standard names the format but not the producer.
+  It treats the wheel format and the build backend the same way
+- Reduce it before shipping. A full index measured 62% of a 1.87 MB wheel, and the same index with reference
+  occurrences removed measured 20%. See Miri Wheel Extensions §5.5 for which sections a consumer needs
+- Write the index under `.dist-info/` beside the SBOM documents PEP 770 places there. One convention then
+  covers both precomputed artifacts
+- Declare it in `sdk-manifest.json` `code_index` with its path and format, and confirm the build listed
+  it in RECORD
 suggested_fix: Ship a reduced SCIP index under `.dist-info/` and declare its path and format in `code_index`.
 references:
 - title: Miri Wheel Ext. §5.5

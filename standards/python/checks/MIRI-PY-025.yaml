@@ -14,14 +14,13 @@ severity:
   violation_unit: each malformed SBOM purl
   population_unit: all components in the PEP 770 SBOM documents
 short_description: SBOM component purls are well-formed
-long_description: 'Vulnerability and currency verdicts are computed externally by joining declared identity against advisory
-  databases; a wheel that misdeclares identity or sources silently breaks that join. This check verifies: SBOM component
-  purls are well-formed.'
-rationale: 'SBOM components join against advisory and end-of-life data by purl (§3.2): scanners normalize each component
-  identifier and query with it. A component whose identifier fails purl parsing is not reported as an error — matching tools
-  skip what they cannot normalize — so the component silently drops out of every scan while the SBOM''s presence makes the
-  wheel look fully covered. One malformed purl converts MIRI-PY-024''s guarantee back into the phantom-dependency gap it
-  exists to close.'
+long_description: 'Each SBOM component in `.dist-info/sboms/` carries a purl that parses under the purl
+  specification grammar.'
+rationale: 'SBOM components join against advisory and end-of-life data by purl (§3.2). Scanners normalize
+  each component identifier and query with it. Matching tools skip what they cannot normalize. A component
+  whose identifier fails purl parsing therefore raises no error and drops out of every scan without a
+  trace. Meanwhile the SBOM''s presence makes the wheel look fully covered. One malformed purl reopens
+  the phantom-dependency gap that MIRI-PY-024 closes.'
 fires_when:
 - Any component in a `.dist-info/sboms/` document lacks a purl
 - Any component purl fails parsing under the purl specification grammar (`pkg:` scheme, type, name, optional version and

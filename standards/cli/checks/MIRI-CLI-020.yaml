@@ -13,13 +13,15 @@ severity:
   default: MEDIUM
   violation_unit: the support declaration
 short_description: '`support` present with valid `status`'
-long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
-  and agents can trust the surface they see. This check verifies: `support` present with valid `status`.'
-rationale: The support block is the one lifecycle statement the artifact carries directly — vendor-authored intent rather
-  than a computed verdict — and --describe is the only channel that reaches consumers at call time, including agents whose
-  frozen weights will never see the release note announcing maintenance mode (landscape §3.1). Its status vocabulary (active
-  / maintenance / deprecated / eol) is shared with the Python specification's support object, validated by lifecycle-v1.json,
-  and deliberately mappable onto the OASIS OpenEoX stages, so one reader covers every Miri artifact type.
+long_description: '`--describe` has to carry a top-level `support` block whose `status` is one of active, maintenance, deprecated,
+  or eol. The block also has to validate against the shared support shape in lifecycle-v1.json. A status written as free
+  text instead of the enum fails that validation.'
+rationale: The support block is the one lifecycle statement the artifact carries directly. It records vendor-authored intent
+  instead of a computed verdict. `--describe` is the only channel that reaches consumers at call time, including agents
+  whose frozen weights will never see the release note announcing maintenance mode (Landscape and Prior Art §3.1). The status
+  vocabulary (active / maintenance / deprecated / eol) is shared with the Python specification's support object and validated
+  by lifecycle-v1.json. It is also deliberately mappable onto the OASIS OpenEoX stages. One reader therefore covers every
+  Miri artifact type.
 fires_when:
 - --describe carries no top-level `support` block
 - '`support.status` is missing or outside the enum active / maintenance / deprecated / eol'
@@ -27,8 +29,8 @@ fires_when:
   of the enum)
 remediation:
 - 'Add a `support` block per CLI Spec §3.2: `status`, plus `supported_versions`, `eol_date`, `replacement`, and `security_policy`'
-- Source it from the same schema-as-data structure as the rest of --describe (§2.3), so a status change is one field edit
-  propagated to every output
+- Source it from the same schema-as-data structure as the rest of --describe (§2.3); a status change is then one field edit
+  that propagates to every output
 - Validate in CI against the shared shape, e.g. jsonschema.validate(describe["support"], lifecycle_schema["properties"]["support"])
 examples:
   violation: '$ acme --describe | jq .support

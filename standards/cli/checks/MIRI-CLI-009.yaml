@@ -13,14 +13,15 @@ severity:
   default: MEDIUM
   violation_unit: each inconsistent command
   population_unit: all commands in --describe
-short_description: The same flag (e.g. `--json`) selects it on every command — no per-command variants
-long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
-  turns. This check verifies: The same flag (e.g. `--json`) selects it on every command — no per-command variants.'
-rationale: 'The ecosystem''s own fragmentation shows the cost: kubectl selects JSON with `-o json`, docker with `--format
-  json`, and gh with `--json <fields>` — three grammars for one concept, so nothing an agent learns on one tool transfers
-  to the next. Inside a single CLI the same inconsistency is strictly worse (Chow, landscape §2.3): an agent that learned
-  `--json` on one command constructs it on the next, gets `unknown flag`, and from then on treats the whole tool as unreliable,
-  re-verifying every invocation it should have been able to generalize.'
+short_description: The same flag (e.g. `--json`) selects it on every command and has no per-command variants
+long_description: The flag that selects machine output has to be the same on every command and match the root flag recorded
+  in `--describe`. Different spellings across commands (`--json` on some, `--output json` or `--format=json` on others),
+  or subcommands that reject the root-level flag, are violations.
+rationale: 'The ecosystem''s own fragmentation shows the cost. Three tools use three grammars for one concept: `-o json`
+  in kubectl, `--format json` in docker, and `--json <fields>` in gh. Nothing an agent learns on one tool transfers to the
+  next. Inside a single CLI the same inconsistency does more damage (Chow, Landscape and Prior Art §2.3). An agent that
+  learned `--json` on one command constructs it on the next and gets `unknown flag`. From then on it treats the whole tool
+  as unreliable and re-verifies every invocation it should have been able to generalize.'
 fires_when:
 - Different commands select machine output with different flags (`--json` on some, `--output json` or `--format=json` on
   others)

@@ -1,10 +1,10 @@
 {
-  "trace": "E2 \u2014 the worked example of 4.6, end to end",
+  "trace": "E2: the worked example of 4.6, end to end",
   "clause": "Agent Integration Contract 4.6; Consumption Map 3.5",
   "checks": [
     "MIRI-CONSUMER-032"
   ],
-  "note": "The chain the contract claims composes: a trigger names a TASK, the task's read-order names OPERATIONS, the operations are served by the SURFACE. Nothing here is new machinery \u2014 that is the point of the example. `lifecycle` and `document` are two of the eight operations, called exactly as any other consumer calls them. A binding is a caller, not a new kind of surface.",
+  "note": "The chain the contract claims composes: a trigger names a TASK, the task's read-order names OPERATIONS, and the operations are served by the SURFACE. None of it is new machinery. `lifecycle` is one of the eight operations, called exactly as any other consumer calls it. A binding is a caller, not a new kind of surface.",
   "event": {
     "schema_version": "1",
     "kind": "dependency.add",
@@ -15,9 +15,9 @@
     }
   },
   "read_order": [
-    "1. lifecycle  \u2192 identity, support.status, advisory_sources, update_check",
-    "2. document   \u2192 migration-guide.json, where support.status is deprecated",
-    "3. (C) the consumer's own SSRF guard on any URL it resolves \u2014 never the surface's"
+    "1. lifecycle                  \u2192 support status and identity (purl)",
+    "2. lifecycle.advisory_sources \u2192 pointers to live sources, queried at decision time",
+    "3. lifecycle.update_check     \u2192 a pointer to a live check, not a cached answer"
   ],
   "expected_response": {
     "schema_version": "1",

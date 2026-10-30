@@ -3,13 +3,18 @@
 {% block title %}{{ check.id }}: {{ check.name }}{% endblock %}
 {% block content %}
 {{ m.spec_header(check.id ~ ': ' ~ check.name,
-                 [('Schema', 'check-v1'), ('Status', 'canonical'), ('Added', check.added_in)],
+                 [('Schema', schema_name), ('Status', check.status), ('Added', check.added_in)],
                  check.short_description | codeish) }}
 
+{% if check.status == 'withdrawn' %}
+<p class="withdrawn-note"><strong>Withdrawn in {{ check.withdrawn_in }}.</strong> This check no longer applies and
+carries no weight. Its ID is kept so old reports still resolve; nothing below is a current requirement.</p>
+{% endif %}
 <div class="badgerow">
   {{ m.level_badge(check.level) }}
   {{ m.badge(sev_tone[check.severity.default], 'severity ' ~ check.severity.default ~ ' · ' ~ sev_num) }}
-  {{ m.tag('weight ' ~ check.weight) }}
+  {{ m.tag('weight 0 (withdrawn)' if check.status == 'withdrawn' else 'weight ' ~ check.weight) }}
+  {% if check.scoring == 'gate' %}{{ m.tag('gate: weight 0; a failure means non-conforming') }}{% endif %}
   {% if check.conditional %}{{ m.tag('conditional') }}{% endif %}
   {% for r in check.requirements or [] %}{{ m.tag('requires ' ~ r) }}{% endfor %}
   {% for r in check.references %}{{ m.tag(r.title) }}{% endfor %}
@@ -73,13 +78,13 @@
 <h2>References</h2>
 <ul class="plain">
   {% for r in check.references %}
-  <li><a href="{{ r.url if r.type == 'external' else site.github ~ '/blob/main/standards/' ~ target ~ '/' ~ r.url }}">{{ r.title }}</a>{% if r.type == 'spec' %} <em>(spec)</em>{% endif %}</li>
+  <li><a href="{{ ref_hrefs[loop.index0] }}">{{ r.title }}</a>{% if r.type == 'spec' %} <em>(spec)</em>{% endif %}</li>
   {% endfor %}
 </ul>
 
 <p class="source-note">Source of truth:
 <a href="{{ check.urls.definition }}" class="mono">{{ check.id }}.yaml</a> ·
-schema <a href="{{ site.github }}/blob/main/schemas/check-v1.json" class="mono">check-v1.json</a> ·
+schema <a href="{{ site.github }}/blob/main/schemas/{{ schema_name }}.json" class="mono">{{ schema_name }}.json</a> ·
 canonical <a href="{{ check.urls.html }}" class="mono">{{ check.id }}.html</a></p>
 
 <div class="prevnext">

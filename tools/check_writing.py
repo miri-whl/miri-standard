@@ -23,7 +23,8 @@ from typing import Iterator, List, NamedTuple
 
 SUFFIXES = (".html", ".htm", ".md")
 
-DASH = re.compile(r"—|&mdash;|&#8212;|\s--\s|\s–\s|\s&ndash;\s")
+# A spaced hyphen (" - ") used as a dash counts too; the check YAMLs carried 28 of them unflagged.
+DASH = re.compile(r"—|&mdash;|&#8212;|\s--\s|\s–\s|\s&ndash;\s|(?<=\w)\s-\s(?=\w)")
 
 BANNED_WORDS = [
     "load-bearing", "load bearing", "delve", "delves", "delving", "leverage", "leverages",
@@ -37,6 +38,9 @@ BANNED_WORDS = [
     "at the end of the day", "honest", "honestly", "plainly", "is a permission",
 ]
 WORD_RE = re.compile(r"\b(?:" + "|".join(re.escape(w) for w in BANNED_WORDS) + r")\b", re.IGNORECASE)
+# Terms the standard defines that contain a banned word. "Honest degradation" names a consumer check category
+# (MIRI-CONSUMER-001 to 003) and a spec term, so it stays; every other "honest" is still flagged.
+DEFINED_TERMS = re.compile(r"\bhonest[- ]degradation\b", re.IGNORECASE)
 
 # Sentence-level heuristics: each is (label, pattern) applied to one sentence.
 CONSTRUCTIONS = [
@@ -79,6 +83,8 @@ def prose(text: str, is_html: bool, include_head: bool) -> str:
         text = re.sub(r"(<li>\s*<strong>[^<]{1,40})\.(</strong>)", r"\1:\2", text)
         # Alt text, titles and aria labels are read by people (and screen readers) too.
         text = re.sub(r'<[^>]*?\b(?:alt|title|aria-label)="([^"]*)"[^>]*>', lambda m: " " + m.group(1) + " ", text)
+        # Inline tags join the text around them ("miri<span>-</span>standard" is one word); block tags separate.
+        text = re.sub(r"</?(?:span|a|em|strong|b|i|sup|sub)\b[^>]*>", "", text, flags=re.I)
         text = re.sub(r"<[^>]+>", " ", text)
         return text
     text = re.sub(r"```.*?```", _blank, text, flags=re.S)
@@ -95,8 +101,11 @@ def check_file(path: Path, include_head: bool, allow: frozenset = frozenset()) -
             line = html.unescape(line)
         elif DASH.search(line):
             yield Hit(path, lineno, "em dash", line.strip())
+        defined = [m.span() for m in DEFINED_TERMS.finditer(line)]
         for match in WORD_RE.finditer(line):
             if match.group(0).lower() in allow:
+                continue
+            if any(a <= match.start() < b for a, b in defined):
                 continue
             yield Hit(path, lineno, f"banned word '{match.group(0).lower()}'", line.strip())
         for sentence in SENTENCE_SPLIT.split(re.sub(r"\s+", " ", line).strip()):

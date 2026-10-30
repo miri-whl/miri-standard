@@ -16,15 +16,16 @@ severity:
   violation_unit: each silently removed surface
   population_unit: all surfaces removed since the previous release
 short_description: Every removed surface was deprecated in ≥1 earlier release
-long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers with
-  a dead-end error strands every consumer working from stale knowledge. This check verifies: Every removed surface was deprecated
-  in ≥1 earlier release.'
-rationale: 'Spec §6.3-2 forbids removing any surface that was never published as deprecated. `kubectl get --export` announced
-  its removal four releases ahead and its disappearance in 1.18 still broke Helm chart template generation and CI/CD backup
-  pipelines; a silent removal grants dependents not even that chance. The failure mode with agent consumers is worse and
-  quieter: frozen model weights keep constructing the dead invocation forever, the agent hits an unrecognized-argument error,
-  retries hallucinated variants, and no bug report is ever filed — the maintainer never learns the interface degraded (landscape
-  §3.1).'
+long_description: 'Using the previous release, every subcommand or flag that has disappeared has to have appeared with `lifecycle.status:
+  deprecated` in some earlier release. A `changelog --since <previous>` entry that lists a removal with no matching deprecated
+  entry in any prior section also fails. A linter without access to a prior release skips with the fixed reason instead
+  of passing.'
+rationale: CLI Spec §6.3-2 forbids removing any surface that was never published as deprecated. `kubectl get --export` announced
+  its removal four releases ahead, and its disappearance in 1.18 still broke Helm chart template generation and CI/CD backup
+  pipelines. A silent removal grants dependents not even that chance. With agent consumers the failure is worse and quieter.
+  Frozen model weights keep constructing the dead invocation forever. The agent hits an unrecognized-argument error and
+  retries hallucinated variants. No bug report is ever filed, and the maintainer never learns the interface degraded (Landscape
+  and Prior Art §3.1).
 fires_when:
 - 'Diffing the previous release''s `--describe` against the current one: a subcommand or flag present before is absent now
   and never appeared with `lifecycle.status: deprecated` in any earlier release'
@@ -35,8 +36,8 @@ fires_when:
 remediation:
 - 'Reinstate the removed surface in a patch release, attaching a full `lifecycle` block (`status: deprecated`, `deprecated_since`,
   `removed_in`, `replacement`)'
-- Hold the §7.3 grace period — the surface functions and warns on stderr for at least one minor release — then remove it,
-  keeping the structured `FLAG_REMOVED` teaching error of §6 in place
+- Hold the §7.3 grace period (the surface functions and warns on stderr for at least one minor release), then remove it
+  and keep the structured `FLAG_REMOVED` teaching error of §6 in place
 - 'Gate releases in CI on the no-silent-removals diff: compare the release candidate''s `--describe` against the previous
   release''s and fail on any undeprecated disappearance'
 examples:

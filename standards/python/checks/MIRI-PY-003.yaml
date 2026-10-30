@@ -19,22 +19,23 @@ severity:
   default: HIGH
   violation_unit: the version string
 short_description: Version parses under the canonical scheme
-long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
-  baseline cannot carry trustworthy agent metadata. This check verifies: Version parses under the canonical scheme.'
-rationale: 'Version ordering is the substrate for every lifecycle comparison Miri specifies — `update_check` staleness,
-  advisory ranges, `removal_version` sanity (MIRI-PY-032) — and PEP 440 is the only scheme the ecosystem''s comparators
-  implement. The tolerance for anything else is gone: packaging 22.0 (December 2022) removed `LegacyVersion`, so setuptools
-  >= 66 and current pip raise `InvalidVersion` on non-conforming version strings, and a single such package can break tooling
-  for the whole environment that contains it. PEP 440 additionally forbids local version labels on public index servers,
-  and PyPI rejects uploads that carry them.'
+long_description: 'The `Version` in METADATA has to parse under PEP 440 (`packaging.version.Version`)
+  and agree with the version segment of the wheel filename. A local version label (`+...`) is a failure
+  when lifecycle.json declares a public registry.'
+rationale: 'Every lifecycle comparison Miri specifies depends on version ordering: `update_check` staleness,
+  advisory ranges, and `removal_version` sanity (MIRI-PY-032). PEP 440 is the only scheme the ecosystem''s
+  comparators implement. Release 22.0 of `packaging` (December 2022) removed `LegacyVersion`. Since then
+  setuptools >= 66 and current pip raise `InvalidVersion` on non-conforming version strings, and a single
+  such package can break tooling for the whole environment that contains it. PEP 440 also forbids local
+  version labels on public index servers, and PyPI rejects uploads that carry them.'
 fires_when:
 - The `Version` in METADATA fails `packaging.version.Version()` parsing (e.g. `v1.2-final`, `2024-06`, `1.0-SNAPSHOT`)
 - The version carries a local label (`+...`) while lifecycle.json declares a public registry
 - The wheel filename's version segment disagrees with the `Version` field
 remediation:
 - 'Adopt PEP 440 forms: `1.2.0`, `1.2.0rc1`, `1.2.0.post1`, `1.2.0.dev3`'
-- When versions derive from git tags, use setuptools-scm or hatch-vcs, which strip `v` prefixes and emit valid `.devN` forms
-  instead of raw `git describe` output
+- When versions derive from git tags, use setuptools-scm or hatch-vcs. Both strip `v` prefixes and emit
+  valid `.devN` forms instead of raw `git describe` output
 - Reserve local labels such as `2.1.0+internal.1` for private indexes; strip them before any public upload
 - Fail the build if `packaging.version.Version(version)` raises `InvalidVersion`
 examples:

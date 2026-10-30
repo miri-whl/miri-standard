@@ -22,13 +22,15 @@ severity:
   violation_unit: each example lacking error handling
   population_unit: all example files listed in AGENT_EXAMPLES.json
 short_description: Examples demonstrate the package's error/exception handling
-long_description: 'Embedded examples are the primary learning path for agents; an example that does not run teaches a wrong
-  lesson at machine speed. This check verifies: Examples demonstrate the package''s error/exception handling.'
-rationale: 'Miri Wheel Extensions §7.2.2 requires examples to include proper error handling because agents copy handling
-  structure verbatim into generated integrations. sdk-manifest.json already declares the package''s exception types and
-  recovery guidance (Agent Metadata §4.1 error_handling), but a declaration no example exercises never reaches generated
-  code: the agent reproduces the happy path it saw, and every downstream integration lets ConnectionError and its kin propagate
-  uncaught.'
+long_description: 'At least one example in AGENT_EXAMPLES.json guards a fallible call with try/except
+  or an equivalent, and the examples exercise the exception types that sdk-manifest.json declares in error_handling
+  or common_errors. When the manifest declares package exception types, examples/ includes an error-handling
+  example.'
+rationale: 'Miri Wheel Extensions §7.2.2 requires examples to include proper error handling because agents
+  copy handling structure verbatim into generated integrations. The sdk-manifest.json file already declares
+  the package''s exception types and recovery guidance (Agent Metadata §4.1 error_handling). A declaration
+  that no example exercises never reaches generated code. The agent reproduces the happy path it saw,
+  and every downstream integration lets ConnectionError and its kin propagate uncaught.'
 fires_when:
 - no example listed in AGENT_EXAMPLES.json contains a try/except (or equivalent guard) around a fallible call
 - none of the exception types declared in sdk-manifest.json error_handling or common_errors appears in any example's AST

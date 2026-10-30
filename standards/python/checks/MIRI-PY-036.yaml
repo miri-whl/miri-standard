@@ -15,18 +15,20 @@ severity:
   default: MEDIUM
   violation_unit: the discovery API surface
 short_description: Discovery functions work and `sdk-manifest.json` api_index resolves against the installed API surface
-long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
-  This check verifies: package-level discovery functions are importable and return coherent data, and every
-  `sdk-manifest.json` api_index entry resolves against the installed package.'
-rationale: 'The §6.1 functions (`get_examples_dir`, `get_agent_metadata`, `show_quickstart`, …) are the runtime entry point
-  to everything else the standard ships — the wheel-side equivalent of a CLI''s `--describe`; when they raise or return
-  paths that do not exist, agents fall back to guessing file locations by convention, the exact behavior the standard exists
-  to end. The characteristic failure is wheel-versus-source drift: the functions work in the developer''s checkout, but
-  the data directories were never declared as package data, so the built wheel omits them and `get_examples_dir()` returns
-  a path that exists nowhere after `pip install`. Only executing the functions against the installed wheel detects this
-  class. This check is also the one place the standard verifies that `sdk-manifest.json`''s api_index — the surface
-  agents generate code from — actually matches the installed package; a manifest listing methods the code lacks sends
-  agents straight to `AttributeError`, so the api_index must be checked against the real surface, not merely schema-valid.'
+long_description: 'The check installs the wheel into a clean venv and calls every §6.1 discovery function
+  from the package''s top-level namespace. Each has to return existing paths and data that agree with
+  the shipped files. Every `sdk-manifest.json` api_index entry has to resolve against the installed package
+  with a matching `inspect.signature`, and api_index has to exclude console-script entry points.'
+rationale: 'The §6.1 functions (`get_examples_dir`, `get_agent_metadata`, `show_quickstart`, …) are the
+  runtime entry point to everything else the standard ships. They are the wheel-side equivalent of a CLI''s
+  `--describe`. When they raise or return paths that do not exist, agents fall back to guessing file locations
+  by convention. The usual failure is drift between wheel and source. The functions work in the developer''s
+  checkout, but the data directories were never declared as package data. The built wheel omits them,
+  and `get_examples_dir()` returns a path that exists nowhere after `pip install`. Only executing the
+  functions against the installed wheel detects this class. This check is also the one place the standard
+  verifies that the api_index in `sdk-manifest.json`, the surface agents generate code from, matches the
+  installed package. A manifest listing methods the code lacks sends agents straight to `AttributeError`.
+  Schema validity cannot catch that, and the api_index has to be checked against the real surface.'
 fires_when:
 - Any §6.1 discovery function is absent from the package's top-level namespace after installing the wheel into a clean venv
 - Calling a discovery function raises, or returns a path that does not exist in the installed distribution
@@ -38,16 +40,17 @@ fires_when:
   CLI surface belongs in the CLI standard's `--describe`, not api_index, and MUST be excluded from it (Generation
   Invariant §5.4)
 remediation:
-- Implement each function as a thin reader over the installed files via `importlib.resources.files(...)`, never over remembered
-  build-tree paths
-- Declare `examples/`, `docs/`, `templates/`, and `agent-metadata/` as package data (`[tool.setuptools.package-data]` or
-  the build backend's equivalent) so they actually enter the wheel
-- 'Test the artifact, not the source tree: `pip install dist/*.whl` into a fresh venv in CI, call every §6.1 function, and
-  assert on the results'
-- Generate api_index from the package's actual importable surface (AST or introspection) at build time, and assert in CI
-  that every entry resolves after install — the manifest agents generate code from must not be able to lie
-- Exclude console-script entry points and the CLI command surface from api_index at generation time; the CLI is
-  described by the CLI standard's `--describe`, not this file (Generation Invariant §5.4)
+- Implement each function as a thin reader over the installed files via `importlib.resources.files(...)`,
+  never over remembered build-tree paths
+- Declare `examples/`, `docs/`, `templates/`, and `agent-metadata/` as package data (`[tool.setuptools.package-data]`
+  or the build backend's equivalent) so that they enter the wheel
+- 'Test the artifact, not the source tree: `pip install dist/*.whl` into a fresh venv in CI, call every
+  §6.1 function, and assert on the results'
+- Generate api_index from the package's importable surface (AST or introspection) at build time, and assert
+  in CI that every entry resolves after install. The manifest agents generate code from must not be able
+  to lie
+- Exclude console-script entry points and the CLI command surface from api_index at generation time; the
+  CLI is described by the CLI standard's `--describe`, not this file (Generation Invariant §5.4)
 examples:
   violation: '$ pip install weather_sdk-1.2.0-py3-none-any.whl
 

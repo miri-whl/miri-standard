@@ -13,16 +13,17 @@ severity:
   default: HIGH
   violation_unit: the release's composition data
 short_description: Standalone binary carries embedded module info or references a release SBOM
-long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
-  and agents can trust the surface they see. This check verifies: Standalone binary carries embedded module info or references
-  a release SBOM.'
-rationale: 'Only the Go toolchain makes binaries legible by default — the embedded module list behind `go version -m` is
-  what govulncheck, Trivy, and osv-scanner read. Every other standalone binary falls into CPE-guessing territory, where
-  vendor/product strings are inferred from file names and cve-bin-tool resorts to byte-signature detection of roughly 400
-  known components; a stripped binary with no SBOM reference can carry a statically linked OpenSSL with last month''s CVE
-  through every scanner in the pipeline unnoticed. cargo auditable shows the fix is cheap: a zlib-compressed JSON dependency
-  list in a `.dep-v0` linker section, under 4 kB, already consumed by cargo-audit (≥0.17.3), Trivy (≥0.31.0), and osv-scanner
-  (≥2.0.1).'
+long_description: This conditional check applies only to direct binary distribution, where `identity.purl` is `pkg:generic/`
+  with `repository_url`. Registry-distributed CLIs are excluded from both numerator and denominator. A binary in scope fails
+  when it yields no embedded module inventory (`go version -m` fails, no `.dep-v0` section, `build_info.embedded_modules`
+  absent or false) and `identity.sbom` is absent or does not resolve to a CycloneDX or SPDX document for the release.
+rationale: Only the Go toolchain makes binaries legible by default. The embedded module list behind `go version -m` is what
+  govulncheck, Trivy, and osv-scanner read. Every other standalone binary falls into CPE-guessing territory. There, vendor
+  and product strings are inferred from file names, and cve-bin-tool resorts to byte-signature detection of roughly 400
+  known components. A stripped binary with no SBOM reference can carry a statically linked OpenSSL with last month's CVE
+  through every scanner in the pipeline unnoticed. The cargo auditable tool shows the fix is cheap. It writes a zlib-compressed
+  JSON dependency list of under 4 kB into a `.dep-v0` linker section, already consumed by cargo-audit (≥0.17.3), Trivy (≥0.31.0),
+  and osv-scanner (≥2.0.1).
 fires_when:
 - '`identity.purl` indicates direct binary distribution (`pkg:generic/` with `repository_url`) — registry-distributed CLIs
   are out of scope and are excluded from both numerator and denominator, never scored as passing'

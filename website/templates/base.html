@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{% block title %}{% endblock %} · miri-standard</title>
+{% if description %}<meta name="description" content="{{ description }}">
+<meta property="og:description" content="{{ description }}">{% endif %}
+<meta property="og:title" content="{{ self.title() }} · Miri Standard">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Miri Standard">
+<meta property="og:image" content="{{ site.site_url }}/assets/miri-green.png">
+<meta name="twitter:card" content="summary">
 <link rel="icon" type="image/png" href="{{ root }}assets/miri-green.png">
 <link rel="stylesheet" href="{{ root }}style.css">
 </head>
@@ -19,8 +26,11 @@
 <main class="content"><div class="inner">
 {% block content %}{% endblock %}
 <div class="footer">
-  <span>miri-standard · {{ site.version }} · generated from the canonical check definitions</span>
-  <span><a href="{{ site.github }}/tree/main/schemas">schemas</a> · <a href="{{ site.github }}/tree/main/standards">specifications</a></span>
+  <span>miri-standard · {{ site.version }} · generated from the repository</span>
+  <span><a href="{{ site.github }}/tree/main/standards">specifications</a> ·
+    <a href="{{ site.github }}/tree/main/schemas">schemas</a> ·
+    <a href="{{ site.github }}/issues">issues</a> ·
+    <a href="{{ site.github }}/blob/main/LICENSE">MIT license</a></span>
 </div>
 </div></main>
 </div>

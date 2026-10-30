@@ -15,15 +15,18 @@ severity:
   default: HIGH
   violation_unit: the package
 short_description: Package imports and functions normally with all Miri metadata stripped
-long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
-  This check verifies: Package imports and functions normally with all Miri metadata stripped.'
-rationale: 'Miri''s adoption contract is that the metadata is purely additive (Wheel Ext. §8.1/§8.3): a consumer who has
-  never heard of the standard must see an ordinary wheel. The failure mechanism is import-time coupling — an `__init__.py`
-  that opens `agent-metadata/` files or imports discovery machinery eagerly turns a stripped, repackaged, or partially installed
-  wheel into an `ImportError` for every consumer, converting an enhancement into a hard dependency. Mature libraries treat
-  optional surfaces exactly this way: pandas routes optional engines through `import_optional_dependency`, which raises
-  only when the optional feature is actually used, so a missing pyarrow can never break `import pandas`. Miri metadata is
-  held to the same discipline.'
+long_description: 'The check deletes `agent-metadata/`, `docs/`, `examples/`, and `templates/` from an
+  installed copy and requires the package to import and its core functions to behave as before. Reading
+  Miri metadata at module import time fails it. Discovery functions that raise instead of returning their
+  documented degraded result when the metadata is absent also fail it.'
+rationale: 'Miri''s adoption contract is that the metadata is purely additive (Wheel Ext. §8.1/§8.3).
+  A consumer who has never heard of the standard must see an ordinary wheel. The failure mechanism is
+  import-time coupling. An `__init__.py` that opens `agent-metadata/` files or eagerly imports discovery
+  machinery turns a stripped, repackaged, or partially installed wheel into an `ImportError` for every
+  consumer. The enhancement has become a hard dependency. Mature libraries already treat optional surfaces
+  this way. In pandas, optional engines load through `import_optional_dependency`. That function raises
+  only when the optional feature is used, and a missing pyarrow can never break `import pandas`. Miri
+  metadata is held to the same discipline.'
 fires_when:
 - Importing the package fails, or its core (non-discovery) functions change behavior, after `agent-metadata/`, `docs/`,
   `examples/`, and `templates/` are deleted from an installed copy
@@ -32,11 +35,12 @@ fires_when:
 - With the metadata absent, discovery functions raise unhandled exceptions instead of returning the documented degraded
   result
 remediation:
-- Move all metadata reads inside the discovery functions; nothing Miri-related executes at module top level
-- 'Wrap the reads in failure-tolerant loading — `try: ... except (FileNotFoundError, ModuleNotFoundError): return None`
-  — and document the degraded return value'
-- Add a CI job that installs the wheel, deletes the Miri directories from site-packages, then imports the package and runs
-  the core test suite
+- Move all metadata reads inside the discovery functions; nothing Miri-related executes at module top
+  level
+- 'Wrap the reads in failure-tolerant loading (`try: ... except (FileNotFoundError, ModuleNotFoundError):
+  return None`) and document the degraded return value'
+- Add a CI job that installs the wheel, deletes the Miri directories from site-packages, then imports
+  the package and runs the core test suite
 examples:
   violation: '# weather_sdk/__init__.py
 

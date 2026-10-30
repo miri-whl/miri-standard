@@ -14,14 +14,14 @@ severity:
   violation_unit: each deprecated surface without a lifecycle block
   population_unit: all deprecated surfaces (per --describe and the changelog)
 short_description: Every deprecated flag/subcommand carries a `lifecycle` object
-long_description: 'Deprecation markers, the changelog, and actual removals must agree; a removed flag that answers
-  with a dead-end error strands every consumer working from stale knowledge. This check verifies: Every deprecated
-  flag/subcommand carries a `lifecycle` object.'
-rationale: '`kubectl get --export` was deprecated in v1.14 with well-documented release notes, and its v1.18 removal
-  still broke Helm chart template generation and CI backup pipelines — documentation-only deprecation fails even
-  for humans who could in principle read the notes. A frozen-weights consumer is structurally incapable of reading
-  them at all (landscape §3.1). The `lifecycle` block places the deprecation where every consumer already looks
-  at call time: the introspection output that live agents consult and that skill-file regeneration inherits (§2.3).'
+long_description: A surface that warns of deprecation on stderr, or is listed as deprecated in `changelog --since`
+  or the documentation, has to carry a `lifecycle` object in its `--describe` entry. That object's `status` has
+  to be "deprecated".
+rationale: '`kubectl get --export` was deprecated in v1.14 with well-documented release notes. Its v1.18 removal
+  still broke Helm chart template generation and CI backup pipelines. Documentation-only deprecation fails even
+  for humans who could in principle read the notes, and a frozen-weights consumer cannot read them at all (Landscape
+  and Prior Art §3.1). The `lifecycle` block places the deprecation where every consumer already looks at call
+  time. Live agents consult that introspection output, and skill-file regeneration inherits it (§2.3).'
 fires_when:
 - a surface emits a deprecation warning on stderr, or appears as deprecated in `changelog --since` or the documentation,
   but its `--describe` entry carries no `lifecycle` object

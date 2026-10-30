@@ -3,9 +3,10 @@
 {% block title %}{{ meta.title }} checks{% endblock %}
 {% block content %}
 {{ m.spec_header(meta.title ~ ' check definitions',
-                 [('Checks', checks | length), ('Levels', musts ~ ' MUST · ' ~ (checks | length - musts) ~ ' SHOULD'), ('Weights', 'Σ = 100')]) }}
+                 [('Checks', n_active ~ (' active · ' ~ n_withdrawn ~ ' withdrawn' if n_withdrawn else '')), ('Levels', musts ~ ' MUST · ' ~ (n_active - musts) ~ ' SHOULD'), ('Weights', 'Σ = 100')]) }}
 <p class="lede">Each requirement is verified by a check; each check failure instance is a violation.
-Conformance score = Σ weights of passing checks; any failing MUST caps the score at 74. Severity and violation
+The conformance score is the weight of the passing checks over the weight of the checks that applied, and any
+failing MUST caps it at 74. Severity and violation
 units are canonical and feed the magnitude-aware health score. The YAML definitions are authoritative;
 the <a href="{{ site.github }}/blob/main/{{ meta.checklist }}">checklist table</a> is the derived rendering.</p>
 

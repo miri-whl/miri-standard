@@ -15,13 +15,14 @@ severity:
   default: HIGH
   violation_unit: the urgency signal
 short_description: '`urgency: security` set when an advisory covers the running version'
-long_description: 'An agent that has been away for three releases must be able to ask what moved; update state must be queryable,
-  passive, and honest offline. This check verifies: `urgency: security` set when an advisory covers the running version.'
-rationale: '`urgency: "security"` is the field fleet policy gates on: §8.4 has CI images and agent harnesses refuse to run
-  a version covered by an open internal advisory, a gate that is only mechanical because the signal is structured. A `check-update`
-  that answers `routine` while `ACME-2026-0007` covers the running version demotes a security release to one nobody prioritizes.
-  The value must be computed by joining the running version against the declared advisory sources at response time — a hand-set
-  release label drifts the first time an advisory lands after the release is cut.'
+long_description: 'When a record in a declared authoritative advisory source lists the running version in its affected range,
+  `check-update` has to report `urgency: "security"`. While an update is reported available, the `advisories` array also
+  has to name the covering record.'
+rationale: '`urgency: "security"` is the field fleet policy gates on. CLI Spec §8.4 has CI images and agent harnesses refuse
+  to run a version covered by an open internal advisory. That gate is mechanical only because the signal is structured.
+  A `check-update` that answers `routine` while `ACME-2026-0007` covers the running version demotes a security release to
+  one nobody prioritizes. The value has to be computed at response time by joining the running version against the declared
+  advisory sources. A hand-set release label drifts the first time an advisory lands after the release is cut.'
 fires_when:
 - a record in a declared authoritative advisory source lists the running version in its affected range, but `check-update`
   reports `urgency` of `none`, `routine`, or `recommended`

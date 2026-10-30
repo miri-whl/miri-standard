@@ -16,16 +16,18 @@ severity:
   violation_unit: each silent deprecated interface
   population_unit: all PEP 702-marked interfaces in the package
 short_description: Importing/calling deprecated interfaces emits `DeprecationWarning`
-long_description: 'Agents working from frozen model weights cannot read changelogs; deprecation must be marked in
-  code, inventoried in metadata, and never resolved by silent removal. This check verifies: Importing/calling deprecated
-  interfaces emits `DeprecationWarning`.'
-rationale: 'Since PEP 565 (Python 3.7) the default filters display a `DeprecationWarning` only when it is triggered
-  by code running in `__main__`; inside imported libraries it is silent unless a test runner or `-W`/`-X dev` re-enables
-  it — and pytest surfaces warnings by default, which makes consumers'' CI the one channel that reliably reaches
-  people who read neither metadata nor type checkers. That channel carries nothing unless the warning is actually
-  emitted: a deprecation recorded only in a docstring, changelog, or migration-guide.json gives the filters nothing
-  to show. The PEP 702 decorator (`warnings.deprecated` on Python ≥3.13, `typing_extensions.deprecated` earlier)
-  closes both routes at once — static call-site flagging plus the runtime `DeprecationWarning` (Lifecycle §6.1).'
+long_description: 'The check calls or imports each interface listed in migration-guide.json `deprecations`
+  while recording warnings under `simplefilter("always")`, and requires a `DeprecationWarning` or a subclass
+  each time. A deprecation that exists only as docstring or comment text, with no PEP 702 decorator and
+  no `warnings.warn` on the executable path, fails it.'
+rationale: 'Since PEP 565 (Python 3.7), the default filters display a `DeprecationWarning` only when code
+  running in `__main__` triggers it. Inside imported libraries the warning is hidden unless a test runner
+  or `-W`/`-X dev` re-enables it. Because pytest surfaces warnings by default, consumers'' CI is the one
+  channel that reliably reaches people who read neither metadata nor type checkers. That channel carries
+  nothing unless the warning is actually emitted. A deprecation recorded only in a docstring, changelog,
+  or migration-guide.json gives the filters nothing to show. The PEP 702 decorator (`warnings.deprecated`
+  on Python ≥3.13, `typing_extensions.deprecated` earlier) covers both routes at once with static call-site
+  flagging and the runtime `DeprecationWarning` (Lifecycle §6.1).'
 fires_when:
 - Calling or importing an interface listed in migration-guide.json `deprecations` under `warnings.catch_warnings(record=True)`
   with `simplefilter("always")` captures no warning

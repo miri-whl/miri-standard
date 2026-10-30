@@ -13,22 +13,25 @@ severity:
   default: MINOR
   violation_unit: the build configuration
 short_description: '`pyproject.toml` with `[project]` table drives the build'
-long_description: 'Miri builds on the existing packaging standards rather than replacing them; a wheel that violates the
-  baseline cannot carry trustworthy agent metadata. This check verifies: `pyproject.toml` with `[project]` table drives
-  the build.'
-rationale: 'A setup.py is executed code: the only way to learn the metadata inside it is to run it, which is why static
-  analyzers, index scanners, and Miri''s own generators cannot see it — and why sdist installs remain an arbitrary-code-execution
-  point. PEP 621''s `[project]` table makes name, version, dependencies, and entry points readable by parsing one TOML file,
-  the same property the Miri build step relies on to generate agent-metadata/ without importing the package. PEP 517''s
-  `[build-system]` table lets any frontend build the wheel deterministically instead of guessing at a setup.py invocation.'
+long_description: 'The build is driven by `pyproject.toml`. Its `[project]` table declares name, version
+  and dependencies, and its `[build-system]` table declares `requires` and `build-backend`. Metadata that
+  only running setup.py or reading setup.cfg can reveal fails the check, as does a `dynamic` field with
+  no declared tool source.'
+rationale: 'A setup.py is executed code, and the only way to learn the metadata inside it is to run it.
+  Static analyzers, index scanners, and Miri''s own generators therefore cannot see that metadata, and
+  sdist installs remain an arbitrary-code-execution point. PEP 621''s `[project]` table makes name, version,
+  dependencies, and entry points readable by parsing one TOML file. The Miri build step relies on the
+  same property to generate agent-metadata/ without importing the package. PEP 517''s `[build-system]`
+  table lets any frontend build the wheel deterministically instead of guessing at a setup.py invocation.'
 fires_when:
 - The project ships no pyproject.toml, or pyproject.toml lacks a `[project]` table
 - Name, version, or dependencies are discoverable only by executing setup.py or reading setup.cfg
 - No `[build-system]` table declares `requires` and `build-backend`
 - '`[project]` marks a field `dynamic` without a declared tool source that supplies it'
 remediation:
-- Move name, version, dependencies, optional-dependencies, and entry points into `[project]` (PEP 621); if the version is
-  computed, declare `dynamic = ["version"]` backed by setuptools-scm or hatch-vcs rather than code in setup.py
+- Move name, version, dependencies, optional-dependencies, and entry points into `[project]` (PEP 621).
+  If the version is computed, declare `dynamic = ["version"]` backed by setuptools-scm or hatch-vcs rather
+  than code in setup.py
 - Declare `[build-system]` with `requires` and `build-backend` (PEP 517/518)
 - Keep setup.py only as an empty `setup()` shim if a legacy toolchain still requires one
 - Validate the file in CI with `validate-pyproject pyproject.toml`

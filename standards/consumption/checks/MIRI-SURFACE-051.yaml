@@ -13,22 +13,23 @@ severity:
   default: MEDIUM
   violation_unit: each served answer signalled as a transport protocol error
 short_description: Carries absence and error as tool results, never as protocol errors
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Carries absence and error
-  as tool results, never as protocol errors.'
+long_description: Discovery Contract §6.1 treats absence and coded errors as served answers. A §4.2 absence and
+  a §4.3 error envelope have to travel as ordinary tool results carrying the full envelope, and returning either
+  as a JSON-RPC error fails the check.
 examples:
   violation: '{"jsonrpc": "2.0", "error": {"code": -32602, "message": "no lifecycle.json"}}'
   compliant: '{"content": [{"type": "text", "text": "{\"schema_version\":\"1\",\"ok\":true,\"present\":false,…}"}]}'
-rationale: Absence and a coded error are both *served answers* — the surface did its job and is reporting a fact.
-  Sending either as a JSON-RPC protocol error puts them in a channel that carries no envelope, so the consumer loses
+rationale: 'Absence and a coded error are both *served answers*: the surface did its job and is reporting a fact.
+  Sending either as a JSON-RPC protocol error puts it in a channel that carries no envelope. The consumer loses
   `present`, `purl`, and the error code, and must infer from transport machinery what the contract took care to
-  state explicitly.
+  state explicitly.'
 fires_when:
 - A §4.2 absence is returned as a JSON-RPC error
 - A §4.3 error envelope is returned as a JSON-RPC error rather than as a tool result
 remediation:
 - Return absence and contract errors as ordinary tool results carrying the full envelope
 - 'Reserve protocol errors for malformed requests: unknown tool, schema-invalid input'
-suggested_fix: Return absence and contract errors as ordinary tool results carrying the full envelope
+suggested_fix: Return absence and errors as tool results
 references:
 - title: Discovery Contract
   url: discovery-contract.md

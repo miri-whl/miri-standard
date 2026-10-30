@@ -14,13 +14,14 @@ severity:
   violation_unit: each mutating command without dry-run
   population_unit: all mutating commands in --describe
 short_description: Every mutating command supports `--dry-run` with faithful simulation
-long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
-  marked, and safe to repeat. This check verifies: Every mutating command supports `--dry-run` with faithful simulation.'
-rationale: 'anc.dev makes `--dry-run` on every write operation one of its six MUST-level requirements, and Agent-First CLI
-  principle 10 (faithful dry run — simulation over approximation) names the fidelity half: a preview computed by a separate
-  code path drifts from the real behavior and is worse than no preview, because the agent trusts it. `terraform plan` is
-  the archetype — the plan is produced by the same graph walk that `apply` executes, which is what makes gating a pipeline
-  on plan output defensible; `aws s3 rm --dryrun` shows the operations that would be performed without running them. A mutating
+long_description: Every command marked mutating in `--describe` has to accept `--dry-run` or a declared equivalent. A dry
+  run has to leave observable state unchanged and report the same actions the real run performs. A dry-run path implemented
+  apart from the execution planner also fails, as static evidence of divergence.
+rationale: 'Among its six MUST-level requirements, anc.dev requires `--dry-run` on every write operation. Agent-First CLI
+  principle 10 (faithful dry run: simulation over approximation) names the fidelity half. A preview computed by a separate
+  code path drifts from the real behavior. It is worse than no preview because the agent trusts it. `terraform plan` is
+  the archetype: the plan is produced by the same graph walk that `apply` executes. That shared walk makes gating a pipeline
+  on plan output defensible. `aws s3 rm --dryrun` shows the operations that would be performed without running them. A mutating
   command without a faithful dry run forces every consumer, human or agent, to test in production.'
 fires_when:
 - A command marked mutating in `--describe` accepts no `--dry-run` flag (or a documented equivalent declared in the introspection
@@ -32,10 +33,10 @@ fires_when:
 - The dry-run path is implemented separately from the execution planner rather than sharing it (static evidence of divergence
   by construction)
 remediation:
-- Structure every write as plan-then-execute, and implement `--dry-run` as the shared planner with the execute step skipped
-  — the `terraform plan`/`apply` split
-- 'Emit the plan as JSON on stdout: the list of `{action, target}` pairs the real run would perform, so a harness can gate
-  on it'
+- Structure every write as plan-then-execute, and implement `--dry-run` as the shared planner with the execute step skipped,
+  as in the `terraform plan`/`apply` split
+- Emit the plan as JSON on stdout as the list of `{action, target}` pairs the real run would perform; a harness can then
+  gate on it
 - Declare dry-run support per command in the schema-as-data source so it surfaces in `--describe` (§2.3)
 - 'Verify fidelity in CI: fingerprint state, run `--dry-run`, assert the fingerprint is unchanged; then run for real and
   assert the performed actions equal the reported plan'

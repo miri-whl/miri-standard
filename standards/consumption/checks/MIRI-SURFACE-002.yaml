@@ -12,8 +12,10 @@ severity:
   default: CRITICAL
   violation_unit: each response whose payload shares the envelope namespace
 short_description: Nests the payload; never merges publisher bytes into the envelope
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Nests the payload; never
-  merges publisher bytes into the envelope.'
+long_description: Discovery Contract §4 gives the surface sole ownership of the response's top level. Publisher
+  bytes have to sit under the operation's payload key, with no payload key at the top level, no envelope field
+  injected into the payload, and no payload field hoisted out of it. The surface-authored `reason`, and any transport
+  message the binding emits for the surface, has to stay free of publisher-controlled text.
 examples:
   violation: '{"schema_version": "1", "ok": false, "error": {...}, "identity": {...}}
 
@@ -21,11 +23,11 @@ examples:
   compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true,\n \"document\": {\"ok\": false, \"\
     error\": {...}, \"identity\": {...}}}\n# the publisher's keys stay inside `document` and mean nothing to the\
     \ envelope"
-rationale: 'This is the clause the entire anti-forgery argument rests on. If publisher bytes are merged into the
-  top level rather than nested under a payload key, a package can write `ok`, `present` or `error` into its own
-  document and forge the surface''s signals — the adversarial fixture does exactly that. Wrapping also avoids
-  invalidating the document: the producer schemas set additionalProperties false, so injecting an envelope field
-  would make a conforming document non-conforming.'
+rationale: The entire anti-forgery argument rests on this clause. If publisher bytes are merged into the top level
+  instead of nested under a payload key, a package can write `ok`, `present`, or `error` into its own document
+  and forge the surface's signals. The adversarial fixture does this. Wrapping also keeps the document valid.
+  The producer schemas set additionalProperties false, and injecting an envelope field would make a conforming
+  document non-conforming.
 fires_when:
 - 'The surface copies publisher-controlled bytes into its own `reason` field — document contents, an echo of an
   offending line from a parser, or a path drawn from package data. `reason` is surface-authored: the permitted
@@ -40,9 +42,8 @@ fires_when:
 remediation:
 - 'Nest every payload under its operation''s payload key: `document`, `entries`, `packages`, `patterns`, `graph`,
   `resolution`'
-- Never mutate the payload document — relay the bytes as parsed, adding nothing and removing nothing
-suggested_fix: 'Nest every payload under its operation''s payload key: `document`, `entries`, `packages`, `patterns`,
-  `graph`, `resolution`'
+- Never mutate the payload document; relay the parsed bytes and add or remove nothing
+suggested_fix: Nest the payload under its key and keep publisher bytes out of the envelope
 references:
 - title: Discovery Contract
   url: discovery-contract.md

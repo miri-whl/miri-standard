@@ -13,14 +13,15 @@ severity:
   default: MINOR
   violation_unit: each unclean cancellation
 short_description: SIGINT/SIGTERM cleans up partial state before exit
-long_description: 'Agents retry, parallelize, and act without human review between steps; mutations must be previewable,
-  marked, and safe to repeat. This check verifies: SIGINT/SIGTERM cleans up partial state before exit.'
-rationale: 'Agent invocations are cancelled routinely — harness timeouts, user interrupts, scheduler preemption — so Agent-First
-  CLI principle 11 demands cleanup over corruption. The failure class is real: Terraform 1.1.0–1.1.2 contained a condition
-  where interrupting a run could write an empty state file (hashicorp/terraform #30266), turning a cancellation into loss
-  of the record of all managed infrastructure. Git shows the long-standing correct pattern: refs are updated by writing
-  a lockfile and atomically renaming it into place, so a killed process leaves at worst a stale `.lock` to remove — never
-  a half-written ref.'
+long_description: SIGINT or SIGTERM is sent during a mutation against a fixture. The tool has to leave no truncated or partially
+  written file, no residue that blocks a re-run, and no unreleased lock, and an immediate re-run has to succeed. Rewriting
+  state files in place (open, truncate, write) instead of writing a temporary and renaming it is static evidence of a violation.
+rationale: 'Harness timeouts, user interrupts, and scheduler preemption cancel agent invocations as a normal part of operation.
+  Agent-First CLI principle 11 therefore demands cleanup over corruption. Terraform 1.1.0–1.1.2 shows the failure class
+  is real: interrupting a run could write an empty state file (hashicorp/terraform #30266). A cancellation could then destroy
+  the record of all managed infrastructure. Git shows the long-standing correct pattern. It updates refs by writing a lockfile
+  and renaming it atomically into place. A killed process leaves at worst a stale `.lock` to remove and never a half-written
+  ref.'
 fires_when:
 - Sending SIGINT or SIGTERM during a mutation leaves a truncated or partially written file, temporary residue that blocks
   re-runs, or an unreleased lock
@@ -28,10 +29,10 @@ fires_when:
   static evidence that any interrupt window corrupts
 - A re-run after an interrupt fails or behaves differently because of leftovers from the cancelled run
 remediation:
-- Write new state to a temporary file in the destination directory, `fsync`, then `rename(2)` into place, so the visible
-  file is always the old version or the new one — never a mixture
-- 'Trap SIGINT/SIGTERM: complete or roll back the current atomic unit, remove temporaries, release locks, and exit via the
-  structured error channel with a `CANCELLED` code (conventionally exit status 130 for SIGINT)'
+- Write new state to a temporary file in the destination directory, `fsync` it, and `rename(2)` it into place; the visible
+  file is then always the whole old version or the whole new one
+- 'Catch SIGINT/SIGTERM: complete or roll back the current atomic unit, remove temporaries, release locks, and exit via
+  the structured error channel with a `CANCELLED` code (conventionally exit status 130 for SIGINT)'
 - 'Test cancellation in CI: repeatedly `kill -INT` the tool at random points during a mutation against a fixture, then assert
   the resulting state is either fully old or fully new and that an immediate re-run succeeds'
 examples:

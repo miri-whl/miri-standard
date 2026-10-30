@@ -14,24 +14,23 @@ severity:
   violation_unit: each polluted payload
   population_unit: all commands emitting JSON
 short_description: No ANSI codes, prose, or warnings mixed into stdout JSON
-long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
-  turns. This check verifies: No ANSI codes, prose, or warnings mixed into stdout JSON.'
-rationale: 'CLI Spec §2.5 reserves stdout for the JSON payload and sends all warnings to stderr, because the channels fail
-  differently: a warning on stderr is ignorable, but one stray notice printed into stdout makes the document unparseable
-  — `jq` aborts with `Invalid literal`, and every downstream consumer fails simultaneously the day the notice ships, not
-  the day the schema changes. This is the highest-blast-radius mistake available to a machine-output CLI precisely because
-  the trigger is routine (a deprecation notice, an update banner, a stray `print` in a logging path) while the failure is
-  total.'
+long_description: In JSON mode, stdout has to pass a strict JSON parse (`jq -e .`) and contain no ESC bytes. Update banners,
+  deprecation notices, or progress text before, after, or inside the JSON document are violations.
+rationale: 'CLI Spec §2.5 reserves stdout for the JSON payload and sends all warnings to stderr because the channels fail
+  differently. A warning on stderr is ignorable. One stray notice printed into stdout makes the document unparseable: `jq`
+  aborts with `Invalid literal`, and every downstream consumer fails at once. The failure starts on the day the notice
+  ships. No schema change is involved. This is the highest-blast-radius mistake available to a machine-output CLI. The
+  trigger is routine (a deprecation notice, an update banner, a stray `print` in a logging path), and the failure is total.'
 fires_when:
 - stdout of any JSON-mode invocation fails a strict JSON parse (`jq -e .` non-zero)
 - Prose lines — update banners, deprecation notices, progress text — precede, follow, or interleave the JSON document on
   stdout
 - ESC bytes (0x1b) appear inside stdout in JSON mode
 remediation:
-- Route every diagnostic through a channel that writes to stderr; audit logging configuration — many logging frameworks
-  default handlers to stdout
+- Route every diagnostic through a channel that writes to stderr; audit the logging configuration as well, because many
+  logging frameworks default their handlers to stdout
 - In JSON mode, write stdout exactly once, from the shared response envelope (one serialized document, then exit)
-- Keep decoration out of JSON mode entirely, independent of TTY state (see MIRI-CLI-005)
+- Keep decoration out of JSON mode regardless of TTY state (see MIRI-CLI-005)
 - 'Parse your own stdout in CI: for every command, `<cmd> --json | jq -e . >/dev/null` and assert the byte stream contains
   no 0x1b'
 examples:

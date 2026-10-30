@@ -13,19 +13,20 @@ severity:
   default: LOW
   violation_unit: the identity declaration
 short_description: '`identity.distribution` is `open-source` or `private`'
-long_description: 'A CLI must be able to say who it is and what it offers, so scanners can join it against advisory databases
-  and agents can trust the surface they see. This check verifies: `identity.distribution` is `open-source` or `private`.'
+long_description: The check reads `identity.distribution` from `--describe` and fails when the field is absent or holds
+  anything other than the exact string "open-source" or "private". Scanners need the value to decide whether the CLI Spec
+  §4 rule on empty public-OSV results applies.
 rationale: The declaration selects which security defaults apply. OSV's /v1/query returns an empty result both when a package
-  is known and clean and when the database has simply never heard of the name — so for a private CLI an empty public-OSV
-  response is silence, not clearance, and spec §4 forbids treating it as "not vulnerable" unless public OSV is explicitly
-  listed. A scanner can only apply that rule if the artifact states which population it belongs to; an undeclared distribution
+  is known and clean and when the database has never heard of the name. For a private CLI an empty public-OSV response
+  is therefore silence, not clearance. CLI Spec §4 forbids treating it as "not vulnerable" unless public OSV is explicitly
+  listed. A scanner can apply that rule only if the artifact states which population it belongs to. An undeclared distribution
   defaults private tools into a false clean bill.
 fires_when:
 - '`identity.distribution` is absent from --describe'
 - Its value is anything other than the exact strings "open-source" or "private"
 remediation:
-- Declare `distribution` in the build-time identity block; the value is structural, not per-install, so it belongs with
-  the version and purl constants
+- Declare `distribution` in the build-time identity block beside the version and purl constants; the value is a property
+  of the build and does not vary per install
 - For "private", pair the declaration with an osv-internal or osv-local advisory source (§8.2) so the §4 empty-result rule
   has an authoritative source to defer to
 examples:

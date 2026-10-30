@@ -13,8 +13,9 @@ severity:
   default: MEDIUM
   violation_unit: each ambiguous import name silently resolved to one distribution
 short_description: Emits one row per import package; errors rather than picking among ambiguous ones
-long_description: 'Surface obligation from the Discovery Contract. This check verifies: Emits one row per import
-  package; errors rather than picking among ambiguous ones.'
+long_description: Discovery Contract §3.1 requires `list` to emit one row per metadata-bearing import package,
+  each with its own `purl`, including when one distribution provides several. An import name provided by more than
+  one installed distribution has to produce an `AMBIGUOUS_PACKAGE` error instead of a silent choice.
 examples:
   violation: list() -> one row for a distribution providing two metadata-bearing packages
   compliant: "{\"schema_version\": \"1\", \"ok\": false,\n \"error\": {\"code\": \"AMBIGUOUS_PACKAGE\", \"retryable\"\
@@ -26,9 +27,9 @@ fires_when:
 - '`list` collapses several metadata-bearing import packages from one distribution into a single row'
 - An import name provided by more than one installed distribution is resolved to one without an error
 remediation:
-- Emit one `list` row per import package, each with its own purl
+- Emit one `list` row per import package and give each row its own purl
 - Return `AMBIGUOUS_PACKAGE` rather than choosing among candidates
-suggested_fix: Emit one `list` row per import package, each with its own purl
+suggested_fix: List each import package separately and refuse to guess among ambiguous ones
 references:
 - title: Discovery Contract
   url: discovery-contract.md

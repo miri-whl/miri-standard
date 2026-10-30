@@ -13,24 +13,24 @@ severity:
   default: MINOR
   violation_unit: the --version behavior
 short_description: Prints version to stdout, exits 0
-long_description: 'Agents drive CLIs through the same conventions humans and scripts rely on; a tool that breaks them is
-  invisible or hangs silently in a non-interactive context. This check verifies: Prints version to stdout, exits 0.'
+long_description: The first line of stdout has to be a parseable version token, either a bare version or `<name> <version>`,
+  and the command has to exit 0. Later lines such as copyright and license are allowed (GNU §4.7). Writing the version
+  to stderr, making a network call, or blocking before printing each fail the check.
 rationale: 'GNU Coding Standards §4.7 gives `--version` the same contract as `--help`: version to stdout, successful exit.
-  In this standard the string carries extra load: it is the value that MIRI-CLI-017 must match against `identity.version`
-  in `--describe`, and via the purl it is the join key for advisory lookups and `check-update` comparisons (CLI Spec §9-1).
-  A version printed to stderr, wrapped in prose, or gated behind a network call breaks the cheapest identity probe a scanner
-  or agent has.'
+  In this standard the string has two more jobs. MIRI-CLI-017 matches it against `identity.version` in `--describe`, and
+  through the purl it is the join key for advisory lookups and `check-update` comparisons (CLI Spec §9-1). A version printed
+  to stderr, wrapped in prose, or gated behind a network call breaks the cheapest identity probe a scanner or agent has.'
 fires_when:
 - '`--version` writes its output to stderr, or exits non-zero'
 - the first line of stdout is not a parseable version token — a bare version or `<name> <version>` (later lines such as
   copyright/license are allowed per GNU §4.7)
 - '`--version` performs a network call or blocks before printing'
 remediation:
-- Print a parseable version as the first line of stdout — a bare version or `<name> <version>`; later lines (copyright,
-  license) are allowed per GNU §4.7 — and exit 0
+- Print a parseable version (a bare version or `<name> <version>`) as the first line of stdout and exit 0; later lines
+  such as copyright and license are allowed per GNU §4.7
 - Derive the string from the same source of truth as `identity.version` in `--describe`, so the two cannot drift (CLI Spec
   §2.3)
-- Keep the version path offline and side-effect free; update information belongs to `check-update --json`, not `--version`
+- Keep the version path offline and side-effect free; update information belongs to `check-update --json` instead of `--version`
 examples:
   violation: "$ tool --version\n(stderr) tool v3.2.0 — a newer release may be available, see https://acme.example\n$ v=$(tool\
     \ --version); echo \"$v\"\n            # empty: the version never reached stdout\n$ echo $?\n1"

@@ -90,7 +90,7 @@ following — it occupies the gap between them:
 
 ## Project Status
 
-The Miri Standard is at **version 0.7.2**, in its **Incubation** phase (see `MATURITY.md`). It is an early,
+The Miri Standard is at **version 0.7.4**, in its **Incubation** phase (see `MATURITY.md`). It is an early,
 unratified draft: the shape of the standard is still moving, and its benefits to agents are design goals rather than
 measured results. The check definitions and JSON Schemas are published as an installable package — see
 [Downloads](https://miri-whl.github.io/downloads.html) — so a team reads one definition rather than cloning at a
@@ -100,11 +100,12 @@ commit.
 
 - Normative specifications for Python wheels and command-line tools, under `standards/`.
 - JSON Schemas for every metadata file and for the check-definition format, under `schemas/`.
-- 83 machine-readable check definitions (40 Python, 43 CLI) with assigned severities and weights.
+- 124 machine-readable check definitions with assigned severities and weights: 45 Python (43 active, 2 withdrawn),
+  43 CLI, 18 consumer and 18 surface.
 - Weighted linter checklists ([Python](standards/python/linter-checklist.md),
   [CLI](standards/cli/linter-checklist.md)), each summing to 100.
-- The **Miri Core** and **Miri Full** conformance profiles — Core is a 15-check hand-authorable subset, the recommended
-  adoption on-ramp.
+- The **Miri Core** and **Miri Full** conformance profiles. Core is a 14-check subset that can be written by hand, and
+  the recommended place to start.
 - A **security-considerations / threat model** for the metadata agents consume (metadata is untrusted data, never
   instructions) in the [lifecycle and security spec](standards/python/lifecycle-security-metadata.md).
 - A CLI `--describe` introspection schema ([`cli-describe-v1`](schemas/cli-describe-v1.json)) backing the CLI checks.
@@ -129,8 +130,8 @@ The Miri Standard is a specification, not a tool you install. To get oriented:
 
 - **Read the standard** — start with the [Python standards overview](standards/python/README.md) and the
   [lifecycle and security metadata spec](standards/python/lifecycle-security-metadata.md).
-- **Browse the checks** — the [Python linter checklist](standards/python/linter-checklist.md) lists all 40 numbered
-  checks with their weights and severities; each check's machine-readable definition lives under
+- **Browse the checks** — the [Python linter checklist](standards/python/linter-checklist.md) lists all 45 numbered
+  checks (43 active) with their weights and severities; each check's machine-readable definition lives under
   `standards/python/checks/`, and every check has a page on the [published site](https://miri-whl.github.io/).
 - **Validate an artifact** — the reference linter, miri-py, is in development; a pointer will be added here once it is
   published.
@@ -213,7 +214,7 @@ Committee and SIG leads will be established as a contributor community forms (se
 
 ## Contributing
 
-We welcome contributions from everyone! Here's how to get started:
+We welcome contributions from everyone. To contribute:
 
 1. **Read** our [Code of Conduct](CODE-OF-CONDUCT.md)
 2. **Review** the [Contributing Guidelines](CONTRIBUTING.md)

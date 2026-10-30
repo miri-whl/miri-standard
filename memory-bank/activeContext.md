@@ -1,8 +1,26 @@
 # Active Context
 
-_Last updated: 2026-09-26._
+_Last updated: 2026-10-30._
 
 ## Current focus
+
+**Unreleased: an editorial and errata pass across the site (2026-10-30).** A site audit found stale facts on the
+pages a visitor reads first, two template bugs (spec links on 36 consumer and surface check pages returned 404; every
+check page named `check-v1`) and hundreds of writing tells. The pass corrected them under `WRITING-RULES.md` without
+changing any check's ID, level, weight, category or `fires_when`, and without adding or removing an RFC 2119 keyword
+in a spec. Decisions taken in it:
+
+- Errata may correct wrong counts, citations, diagram labels and version stamps, recorded in the CHANGELOG.
+- _Honest degradation_ stays a defined term (category and glossary entry); `tools/check_writing.py` allows the phrase.
+- Revision history ("an earlier version said…") leaves normative text and lives in the CHANGELOG.
+- The Discovery Contract is 0.4.0-draft, recording the §3.8 additions released in 0.7.3.
+
+Still open: whether `fires_when` and tier clauses may get a dash-only edit (88 em dashes remain there and in
+`examples`); the Discovery Contract's `graph` OPTIONAL reading; a possible conflict between `MIRI-SURFACE-012` and
+Discovery Contract §3.2.1 on schema validation; and whether `api-graph.json`'s withdrawal as `graph`'s source is
+BREAKING for surfaces.
+
+### Before this pass
 
 **0.7.3 on `phase-0.7.3` — two commits, pushed, no PR yet.** 0.7.2 released 2026-09-24 with both artifacts and
 a working index entry; the live site shows 0.7.2.

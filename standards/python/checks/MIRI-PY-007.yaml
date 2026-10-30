@@ -19,18 +19,21 @@ tiers:
   - 'Every `quick_reference.primary_classes` and `key_methods` entry names a key present in `api_index`'
 severity:
   default: HIGH
-  violation_unit: sdk-manifest.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
+  violation_unit: sdk-manifest.json failing schema validation (counted per file as 0 or 1 so that counts
+    are comparable across validators)
 short_description: Present and validates against schema
-long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
-  schema-valid, and generated at build time so agents can consume it without parsing or guessing. This check verifies: Present
-  and validates against schema. Since 0.6.0 it is TIERED: schema validity is T0 (exists), and T1 (true) requires that
-  `common_imports` actually import — the manifest is a document an agent transcribes into code, so a line that is valid
-  JSON and not valid Python is a lie the schema cannot see.'
-rationale: 'Agent Metadata §4.1 defines sdk-manifest.json as the agent''s substitute for parsing source: quick_reference
-  for orientation, api_index for signatures, error_handling for recovery. Agents do not read it skeptically — an api_index
-  entry that omits its parameters, or a common_imports line naming a module that moved, is transcribed directly into generated
-  code, and the defect reproduces at machine speed across every consumer of the package instead of surfacing in one developer''s
-  editor. Schema validation at build time is the cheapest point to stop that class of error.'
+long_description: 'The wheel ships `agent-metadata/sdk-manifest.json`, and the file validates against
+  sdk-manifest-v1.json. Its `quick_reference` lists primary_classes, key_methods and common_imports. Its
+  `api_index` is non-empty, and every entry carries a `purpose` and an allowed `type`. The check is tiered.
+  Schema validity is T0 (exists), and T1 (true) requires that the `common_imports` lines actually import.
+  An agent transcribes the manifest into code, and the schema cannot see a line that is valid JSON but
+  not valid Python.'
+rationale: 'Agent Metadata §4.1 defines sdk-manifest.json as the agent''s substitute for parsing source:
+  quick_reference for orientation, api_index for signatures, error_handling for recovery. Agents do not
+  read it skeptically. An api_index entry that omits its parameters, or a common_imports line naming a
+  module that moved, goes directly into generated code. The defect then reproduces at machine speed across
+  every consumer of the package instead of surfacing in one developer''s editor. Schema validation at
+  build time is the cheapest point to stop that class of error.'
 fires_when:
 - '`agent-metadata/sdk-manifest.json` is absent from the wheel'
 - The document fails validation against sdk-manifest-v1.json (any of sdk_version, generated_at, miri_version, quick_reference,

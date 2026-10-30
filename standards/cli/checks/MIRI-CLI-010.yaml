@@ -14,20 +14,21 @@ severity:
   violation_unit: each payload missing schema_version
   population_unit: all commands emitting JSON
 short_description: Every JSON payload carries top-level `schema_version`
-long_description: 'Agents parse stdout; anything unstructured, inconsistent, or polluted forces guesswork and burns recovery
-  turns. This check verifies: Every JSON payload carries top-level `schema_version`.'
+long_description: Every JSON document on stdout has to carry a non-empty string `schema_version` at its top level, and a
+  `schema_version` nested inside another object does not count. The value stamped on command payloads also has to agree
+  with the top-level `schema_version` in `--describe`.
 rationale: 'CLI Spec §3.1 versions the wire schema independently of the release version because the two move on different
-  clocks (landscape §5): the product can reach 2.0 without the contract moving, and the contract can break at 1.4 with an
-  honest signal. `schema_version` on every payload is that signal — the shipped precedent is Docker''s Agent CLI, which
-  stamps `"schema_version": "1"` on every success document (landscape §3.3). Without the stamp, consumers cannot pin, negotiate,
-  or even detect a payload change: a renamed key simply starts producing nulls downstream, and the breakage arrives unannounced
-  and undiagnosable.'
+  clocks (Landscape and Prior Art §5). The product can reach 2.0 without the contract moving, and the contract can break
+  at 1.4 with a reliable signal. `schema_version` on every payload is that signal. The shipped precedent is Docker''s Agent
+  CLI. It stamps `"schema_version": "1"` on every success document (Landscape and Prior Art §3.3). Without the stamp, consumers
+  cannot pin, negotiate, or even detect a payload change. A renamed key starts producing nulls downstream, and the breakage
+  arrives unannounced and undiagnosable.'
 fires_when:
 - Any JSON document emitted on stdout lacks a top-level `schema_version` key
 - '`schema_version` is present but nested inside another object rather than top-level, or is empty/non-string'
 - 'The top-level `schema_version` in `--describe` disagrees with the value stamped on command payloads'
 remediation:
-- Emit every payload through a shared response envelope that stamps `schema_version` — one code path, so no command can
+- Emit every payload through a shared response envelope that stamps `schema_version`; with one code path, no command can
   forget it
 - Source the value from the same constant as the top-level `schema_version` in `--describe` (CLI Spec §3.1)
 - Bump it only on breaking payload changes, never in lockstep with the release version, and record bumps in `changelog --since`

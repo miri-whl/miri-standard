@@ -11,17 +11,20 @@ weight: 3
 conditional: true
 severity:
   default: HIGH
-  violation_unit: changelog.json failing schema validation (counted per file — 0 or 1 — so counts are comparable across validators)
+  violation_unit: changelog.json failing schema validation (counted per file as 0 or 1 so that counts
+    are comparable across validators)
 short_description: Present for any non-initial release; validates against changelog-v1.json (*conditional*)
-long_description: 'The agent-metadata directory is the wheel''s machine-readable surface; every file in it must be present,
-  schema-valid, and generated at build time. This check verifies: `changelog.json` is present for any non-initial release
-  and validates against changelog-v1.json. Conditional exactly as MIRI-PY-009: a first release has nothing to describe, and
-  requiring the document unconditionally would manufacture the empty-artifact class the freshness contract exists to kill.'
-rationale: 'The wheel metadata set records breaking changes in migration-guide.json and, until 0.6.0, had no home for what
-  was fixed. The originating incident: a maintainer shipped bug fixes with a silent changelog, and the downstream project
-  that had reported those bugs installed the fix and never learned it — every shipped document was present, schema-valid and
-  stamped in the build window, so no existing check could see it. Agent Metadata §4.7 defines the document; this check is
-  its presence and shape, and MIRI-PY-042 to 044 are the joins that make it mean something.'
+long_description: 'From the second release on, the wheel ships `agent-metadata/changelog.json`. The document
+  validates against changelog-v1.json and lists `releases` newest-first by PEP 440 version. It is conditional
+  in the same way as MIRI-PY-009. A first release has nothing to describe, and requiring the document
+  unconditionally would force it to ship an empty one. The freshness contract treats such empty artifacts
+  as defects.'
+rationale: 'The wheel metadata set records breaking changes in migration-guide.json. Without changelog.json
+  it has no place for what was fixed. The check comes from an incident in which a maintainer shipped bug
+  fixes with a silent changelog. The downstream project that had reported those bugs installed the fix
+  and never learned of it. Every shipped document was present, schema-valid, and stamped in the build
+  window. No existing check could see the gap. Agent Metadata §4.7 defines the document. This check covers
+  its presence and shape, and MIRI-PY-042 to 044 are the joins that give it meaning.'
 fires_when:
 - A previous release exists (the linter can establish one — MIRI-PY-030's condition) and `agent-metadata/changelog.json` is
   absent from the wheel
@@ -29,10 +32,11 @@ fires_when:
   entry without `summary`, an unknown key anywhere
 - '`releases` is not ordered newest-first by PEP 440 version'
 remediation:
-- 'Assemble `changelog.json` at build time from per-change fragments (towncrier-class tooling): a change lands with a fragment
-  or CI fails, and the release assembles the document'
+- Assemble `changelog.json` at build time from per-change fragments (towncrier-class tooling). A change
+  lands with a fragment or CI fails, and the release build assembles the document
 - 'Validate before packaging: `check-jsonschema --schemafile changelog-v1.json src/example_sdk/agent-metadata/changelog.json`'
-- Keep `deprecated` and `removed` entries in agreement with migration-guide.json; it remains the authoritative lifecycle record
+- Keep `deprecated` and `removed` entries in agreement with migration-guide.json; it remains the authoritative
+  lifecycle record
 examples:
   violation: "Wheel 1.2.0 agent-metadata/:\n  sdk-manifest.json  usage-patterns.json  migration-guide.json  lifecycle.json\n\
     \  # 1.1.0 exists on the index; no changelog.json — what 1.2.0 fixed is unrecorded"
