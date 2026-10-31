@@ -19,14 +19,14 @@ short_description: Every public interface removed since the prior release was li
 long_description: 'The check compares against the previous release. Every public interface present in
   the previous `sdk-manifest.json` and absent from the current one has to appear in an earlier release''s
   migration-guide.json `deprecations`.'
-rationale: 'A silent removal converts every dependent from working to broken with no machine-readable
-  warning. The first signal any consumer receives is `AttributeError` in production, and agents working
-  from frozen model weights keep generating calls to the vanished interface indefinitely. The reference
-  incident is kubectl''s `--export` flag. It was deprecated in v1.14 and removed in v1.18. At removal
-  it still broke CI pipelines and resource-cloning scripts, because the deprecation lived in a human-readable
-  warning that no automation consumed. A removal with no deprecation trail at all does more damage. Lifecycle
-  §6.4-2 exists because no ecosystem tool checks this. API-diff tools detect the removal but never cross-check
-  it against declared deprecations.'
+rationale: A silent removal converts every dependent from working to broken with no machine-readable warning.
+  The first signal any consumer receives is `AttributeError` in production, and agents working from frozen model
+  weights keep generating calls to the vanished interface indefinitely. The reference incident is kubectl's
+  `--export` flag. It was deprecated in v1.14 and removed in v1.18. At removal it still broke CI pipelines and
+  resource-cloning scripts, because the deprecation lived in a human-readable warning that no automation consumed.
+  A removal with no deprecation trail at all breaks the same consumers with even less warning. Lifecycle §6.4-2
+  exists because no ecosystem tool checks this. API-diff tools detect the removal but never cross-check it against
+  declared deprecations.
 fires_when:
 - A public interface present in the previous release's `sdk-manifest.json` is absent from the current release's
 - That interface appears in no earlier release's `migration-guide.json` `deprecations` array

@@ -12,9 +12,9 @@ severity:
   default: HIGH
   violation_unit: each emitted call to a symbol never confirmed by resolve
 short_description: Settles symbol existence with `resolve`, not index membership
-long_description: Before the consumer emits a call, or presents one as verified, a `resolve` result has to confirm
-  that the symbol exists. Driven against the `adversarial` fixture, a call to a symbol listed in `api_index` but
-  absent from the source fails the check.
+long_description: A call presented as verified needs a confirming `resolve` result. The check drives the consumer
+  against the `adversarial` fixture and fails it if it emits a call to a symbol listed in `api_index` but absent from
+  the source.
 rationale: '`api_index` is the publisher''s description of the surface and serves for routing; only the source
   settles whether a symbol exists. The adversarial fixture demonstrates the gap. Its index claims two symbols
   that exist nowhere in the source. A consumer that generates code from the index sends a caller straight to AttributeError.'

@@ -17,13 +17,12 @@ long_description: 'The identity block declares `distribution` as "open-source" o
   `registry` as an absolute http(s) URL of an installable index, never a project page or a placeholder.
   The two declarations agree. A private distribution cannot name https://pypi.org/simple/, and an open-source
   one cannot name an internal-only index.'
-rationale: 'The identity.distribution field selects which specification defaults apply: §4 for open source
-  or §5 for private. The identity.registry field names the index the artifact is published to. Comparing
-  declared origin against actual install origin is the dependency-confusion tell called out in §3.1, and
-  registry is the one field that makes that comparison possible. Public OSV queried for a private-only
-  name returns an empty result indistinguishable from "not vulnerable" (§5.1). A wheel that leaves distribution
-  undeclared therefore defaults its consumers into the one lookup that misleads them. No error reports
-  the mistake.'
+rationale: 'The identity.distribution field selects which specification defaults apply: §4 for open source or §5 for
+  private. The identity.registry field names the index the artifact is published to. Comparing declared origin against
+  actual install origin is the dependency-confusion tell called out in §3.1, and registry is the one field that makes
+  that comparison possible. Public OSV queried for a private-only name returns an empty result indistinguishable from
+  "not vulnerable" (§5.1). A wheel that leaves distribution undeclared defaults its consumers into the one lookup
+  that misleads them. No error reports the mistake.'
 fires_when:
 - identity.distribution is absent or not one of "open-source" / "private"
 - identity.registry is absent, not an absolute http(s) URL, or a placeholder value (e.g. "TBD")

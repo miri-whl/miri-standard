@@ -65,9 +65,9 @@
       "then": { "properties": { "phase": { "const": "after" } } }
     },
     {
-      "$comment": "§3.2 — only `runtime.error` and `dependency.add` may be `after`. runtime.error reports something that has happened; dependency.add is `after` because a not-yet-installed package is not readable by a local surface. Every other kind fires while its action is still a proposal. This was found by an implementer building the first binding: the schema previously required every REQUIRED kind to be `before` and so rejected the only behavior a local surface can produce.",
+      "$comment": "§3.2: only `runtime.error`, `dependency.add` and `package.replaced` may be `after`. runtime.error reports something that has happened. dependency.add and package.replaced are `after` because the artifact must be installed before a local surface can read it. Every other kind fires while its action is still a proposal.",
       "if": { "properties": { "phase": { "const": "after" } }, "required": ["phase"] },
-      "then": { "properties": { "kind": { "enum": ["runtime.error", "dependency.add"] } } }
+      "then": { "properties": { "kind": { "enum": ["runtime.error", "dependency.add", "package.replaced"] } } }
     },
     {
       "$comment": "§3.2 — an import name must match the Discovery Contract §3.0 grammar, so it can be passed to an operation without re-validation. A distribution name is constrained per PEP 503 instead, which is what a manifest actually contains.",

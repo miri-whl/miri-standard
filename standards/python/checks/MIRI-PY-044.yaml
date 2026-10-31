@@ -19,11 +19,11 @@ long_description: 'Names in the `symbols` arrays of `changelog.json` resolve in 
   `sdk-manifest.json` `api_index`. When the previous release is available, names under `removed` and `deprecated`
   can resolve in its index instead. A symbol that resolves in neither documents something the artifact
   does not carry, and an agent will try to call it.'
-rationale: MIRI-PY-031 already catches a replacement that points into nothing. This check catches the
-  same defect arriving through the changelog. No previous release is needed to confirm that a name resolves
-  in the current release. The join is therefore decidable from the wheel alone, and the check is conditional
-  only on the document shipping. The previous-release arm widens the check so that a removal entry can
-  be true. The check does not need it in order to run.
+rationale: MIRI-PY-031 already catches a replacement that points into nothing. This check catches the same defect
+  arriving through the changelog. The join is decidable from the wheel alone, because confirming that a name resolves
+  in the current release needs no previous release. The check is conditional only on the document shipping. The
+  previous-release arm widens the check so that a removal entry can be true. The check does not need it in order
+  to run.
 fires_when:
 - A `symbols` entry under `added`, `changed` or `fixed` names a path with no matching key in the current release's `api_index`
 - A `symbols` entry under `removed` or `deprecated` names a path with no matching key in the current release's `api_index`

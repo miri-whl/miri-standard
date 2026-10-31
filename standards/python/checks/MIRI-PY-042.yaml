@@ -13,10 +13,9 @@ severity:
   default: HIGH
   violation_unit: the changelog document
 short_description: '`changelog.json` `releases[0].version` equals the wheel''s version (*conditional*: document present)'
-long_description: 'When `changelog.json` ships, the check requires `releases[0].version` to parse as PEP
-  440 and to equal the wheel''s METADATA version. A changelog whose newest entry describes an earlier
-  release misstates the package''s currency. This check''s obligation therefore sits at currency rather
-  than at existence.'
+long_description: When `changelog.json` ships, the check requires `releases[0].version` to parse as PEP 440 and
+  to equal the wheel's METADATA version. A changelog whose newest entry describes an earlier release misstates the
+  package's currency. This check's obligation sits at currency rather than at existence.
 rationale: 'This rule alone would have caught the incident behind the freshness contract. Fixes shipped
   while the changelog stayed untouched, and downstream was never told. It is the cheapest join in the
   standard (one string against one string), and it is decidable with nothing but the wheel. Stamp drift

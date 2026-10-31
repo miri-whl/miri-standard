@@ -20,10 +20,10 @@ long_description: Discovery Contract §4.1.1 makes the envelope `purl` surface-d
 examples:
   violation: 'purl = doc["identity"]["purl"]   # publisher-authored'
   compliant: 'purl = f"pkg:pypi/{dist.metadata[''Name'']}@{dist.version}"   # surface-derived'
-rationale: '`purl` is the input to a per-namespace trust policy and therefore a security decision. It is the one
+rationale: Because `purl` is the input to a per-namespace trust policy, it is a security decision. It is the one
   field in the envelope a publisher must not control. If the surface reads `identity.purl` out of lifecycle.json,
   a package declaring `pkg:pypi/requests@2.31.0` inherits the trust tier of requests by declaring it. That forges
-  a signal inside the namespace §4 claims is un-forgeable.'
+  a signal inside the namespace §4 claims is un-forgeable.
 fires_when:
 - The envelope `purl` is read from a served document rather than derived from the installed distribution
 - A disagreement between the derived value and `identity.purl` is resolved in the document's favor

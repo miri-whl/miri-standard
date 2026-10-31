@@ -13,9 +13,9 @@ severity:
   default: HIGH
   violation_unit: each publisher-authored path dereferenced outside the package root
 short_description: Confines a publisher-authored path before dereferencing it
-long_description: Publisher-authored file pointers (`api_index.file`, graph node `file`, `source_file`) have to
-  be resolved and confined to the package root before the consumer opens them. Opening a path outside the root,
-  following a symbolic link out of the package, or accepting an absolute path or traversal sequence fails the check.
+long_description: Publisher-authored file pointers (`api_index.file`, graph node `file`, `source_file`) have to be
+  resolved and confined to the package root before the consumer opens them. A consumer that opens a path outside the
+  root, follows a symbolic link out of the package, or accepts an absolute path or traversal sequence does not pass.
   An escaping pointer is reported as malformed metadata.
 rationale: '`api_index.file`, graph node `file`, and `source_file` are all publisher-authored strings, and a pointer
   grants no permission. The adversarial fixture points one of them at a path outside the package. A consumer that

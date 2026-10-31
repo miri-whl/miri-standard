@@ -16,12 +16,12 @@ short_description: '`--help` prints to stdout, exits 0, never pages or blocks'
 long_description: '`<cli> --help` is run with stdin closed and stdout redirected. It has to write non-empty help to stdout
   and exit 0 without starting a pager or blocking on a read. Help on stderr, a non-zero exit, and an empty stdout are each
   violations.'
-rationale: 'GNU Coding Standards §4.7 requires `--help` to print to stdout and exit successfully. Help is also how an agent
-  learns a CLI at runtime. It therefore has to work in the non-interactive context where agents run. Git is the canonical
-  counterexample: `git log --help` opens the man page in a pager. In CI or an agent harness that pager blocks on a dead
-  terminal, varies with `PAGER`, and emits terminal control codes. Those failures are why `--no-pager` and `core.pager cat`
-  are standing CI folklore. Help on stderr or with a non-zero exit is equally corrosive. Every wrapper that checks the exit
-  code reads a successful help request as a failure.'
+rationale: 'GNU Coding Standards §4.7 requires `--help` to print to stdout and exit successfully. Help is also
+  how an agent learns a CLI at runtime. It has to work in the non-interactive context where agents run. Git is
+  the canonical counterexample: `git log --help` opens the man page in a pager. In CI or an agent harness that
+  pager blocks on a dead terminal, varies with `PAGER`, and emits terminal control codes. Those failures are why
+  `--no-pager` and `core.pager cat` are standing CI folklore. Help on stderr or with a non-zero exit is equally
+  corrosive. Every wrapper that checks the exit code reads a successful help request as a failure.'
 fires_when:
 - With stdin closed and stdout redirected, `<cli> --help` spawns a pager or the process blocks on a read
 - Help text is written to stderr instead of stdout

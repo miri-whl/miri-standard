@@ -132,7 +132,7 @@ other one.
 - Four of its eight checks additionally need a **previous release** (§3).
 
 `MIRI-CLI-038` also forbids a replacement that points at another deprecated or removed surface. Chains are resolved
-rather than merely present. The replacement targets must therefore be settled before the blocks that name them.
+rather than merely present. The replacement targets must be settled before the blocks that name them.
 
 ### Stage 5: Safety annotations
 
@@ -147,7 +147,7 @@ heaviest Safety check) and `MIRI-CLI-042` both draw their entire evaluation popu
 `population_unit: all mutating commands in --describe`. An author who defers the marking defers the population those
 two checks are scored over. `MIRI-CLI-039` then cannot be evaluated at all, and it does not pass.
 
-The ordering within Stage 5 is therefore check-imposed. The `mutating` marking (`MIRI-CLI-041`) precedes `--dry-run`
+The ordering within Stage 5 is check-imposed. The `mutating` marking (`MIRI-CLI-041`) precedes `--dry-run`
 (`MIRI-CLI-039`) and the idempotency guarantees (`MIRI-CLI-042`), because it defines what those two are about.
 `MIRI-CLI-040`'s `destructive` marker and `MIRI-CLI-043`'s signal handling are the only terminal obligations here: no
 check reads either. The `mutating` field, by contrast, feeds a weight-4 MUST check.
@@ -162,20 +162,21 @@ deprecated earlier). All five are MUST-level, and together they carry **14 of th
 
 A linter without access to a prior release **MUST skip these and report the skip** with the reason
 `previous_release_unavailable`, never pass them. Under the scoring model a forfeited check leaves both the numerator
-and the denominator. A first release is therefore scored over what could be evaluated. **A first CLI release cannot
-score 100 on a suite that includes them and should not appear to.**
+and the denominator ([checklist, Scoring Model](linter-checklist.md#scoring-model)). **A first CLI release is scored
+over the checks that could be evaluated, and on that basis it can reach 100 and Gold. Its report shows the smaller
+effective denominator and the skipped checks.**
 
-This is a sharper constraint than the wheel standard imposes: the Python checklist has four such checks and the CLI
-checklist has five. Four of the five (`033`, `035`, `036`, `037`) are Stage 4's, because a CLI's deprecation
-contract is a claim about *what the binary used to do*. A single release contains no evidence of that. The fifth,
-`MIRI-CLI-030`, belongs to the Update & Changelog category and is therefore Stage 3's.
+The previous-release constraint is sharper than the one the wheel standard imposes: the Python checklist has four
+such checks and the CLI checklist has five. Four of the five (`033`, `035`, `036`, `037`) are Stage 4's, because a
+CLI's deprecation contract is a claim about *what the binary used to do*. A single release contains no evidence
+of that. The fifth, `MIRI-CLI-030`, belongs to the Update & Changelog category and is therefore Stage 3's.
 
 One check requires **network**: `MIRI-CLI-028`, weight 2. A first release linted in an offline sandbox is therefore
 scored over 84 of the 100 weight.
 
 No CLI check declares the `execution` capability, because execution is the *baseline* analysis mode for this target.
 Static inspection is the baseline for wheels and local invocation is the baseline for CLIs. A check that runs the binary
-therefore declares nothing, while the equivalent wheel check must declare `execution` explicitly.
+declares nothing, while the equivalent wheel check must declare `execution` explicitly.
 
 ## 4. The Ungraded Requirement
 

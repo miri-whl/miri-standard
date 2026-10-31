@@ -13,17 +13,17 @@ severity:
   default: LOW
   violation_unit: the prompt-templates file
 short_description: '`prompt-templates.md`, if present, follows the specified structure'
-long_description: 'The check applies when `prompt-templates.md` ships. The file has to follow the §4.4
-  structure (Quick Start Prompts with code-generation, debugging, and migration templates) and cite only
-  metadata files the wheel ships. It has to use one placeholder syntax throughout and hold declarative
-  prompt text with no commands or imperative instructions for the agent to run.'
-rationale: 'The prompt-templates.md file provides prompt scaffolds that an agent fills in and reads as
-  data rather than as operating instructions (Lifecycle §9.4). Agent Metadata §4.4 defines its structure:
-  Quick Start Prompts for code generation, debugging, and migration, each cross-referencing the shipped
-  metadata files by name (usage-patterns.json pattern IDs, sdk-manifest.json signatures, migration-guide.json).
-  An integration that loads the file substitutes the `{placeholders}` and follows those references mechanically.
-  A file that lacks the expected sections, or cites metadata the wheel does not ship, degrades the very
-  integrations that opted into it. The file is optional, and the check applies only when it is present.'
+long_description: When `prompt-templates.md` ships, the check passes if the file follows the §4.4 structure (Quick
+  Start Prompts with code-generation, debugging, and migration templates), cites only metadata files the wheel
+  ships, uses one placeholder syntax throughout, and holds declarative prompt text with no commands or imperative
+  instructions for the agent to run. A wheel without the file passes.
+rationale: 'The prompt-templates.md file provides prompt scaffolds that an agent fills in and reads as data
+  rather than as operating instructions (Lifecycle §9.4). Agent Metadata §4.4 defines its structure: Quick Start
+  Prompts for code generation, debugging, and migration, each cross-referencing the shipped metadata files by
+  name (usage-patterns.json pattern IDs, sdk-manifest.json signatures, migration-guide.json). An integration
+  that loads the file substitutes the `{placeholders}` and follows those references mechanically. A file that
+  lacks the expected sections, or cites metadata the wheel does not ship, degrades the very integrations that
+  opted into it. The file is optional, and the check looks only at a file that ships.'
 fires_when:
 - '`prompt-templates.md` is present but lacks the §4.4 section structure (Quick Start Prompts with code-generation, debugging,
   and migration templates)'

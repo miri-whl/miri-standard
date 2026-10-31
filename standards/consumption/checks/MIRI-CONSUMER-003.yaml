@@ -15,7 +15,7 @@ severity:
 short_description: Branches on `ok`/`present`, never on `reason` text
 long_description: The envelope carries two machine booleans, `ok` and `present`, and one free-text field, `reason`.
   The consumer's behavior has to follow the booleans and stay the same when only the wording of `reason` changes.
-  Reporting the `adversarial` package as failed or absent fails the check.
+  Driven against `adversarial`, a consumer that reports the package as failed or absent does not pass.
 rationale: '`reason` is explicitly not a machine field. A consumer that string-matches it breaks the moment a surface
   rewords a message. More seriously, that consumer becomes steerable by any text a publisher can influence. The
   adversarial fixture writes the surface''s own discriminators into a publisher document. A consumer that reads

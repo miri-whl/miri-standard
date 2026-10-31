@@ -17,9 +17,10 @@ severity:
   population_unit: all surfaces removed since the previous release
 short_description: 'Invoking a removed surface yields the structured error (code, `retryable: false`, `suggestions`) instead
   of a generic parse failure'
-long_description: 'Each surface present in the previous release''s `--describe` and absent from the current one is invoked.
-  The answer has to be a JSON error on the machine channel with a stable `error.code`, `retryable: false`, and a non-empty
-  `suggestions` array naming the replacement. A usage dump, "unrecognized arguments", or "unknown flag" fails the check.'
+long_description: 'Each surface present in the previous release''s `--describe` and absent from the current one is
+  invoked. The answer has to be a JSON error on the machine channel with a stable `error.code`, `retryable: false`,
+  and a non-empty `suggestions` array naming the replacement. A generic parse failure in its place (a usage dump,
+  "unrecognized arguments", "unknown flag") does not pass.'
 rationale: 'When kubectl v1.18 removed `get --export`, invocations answered with a bare unknown-flag parse error. That dead
   end broke Helm template generation and backup pipelines. Nothing in it pointed at the successor. For an agent working
   from stale weights, the dead end triggers the blind-retry loop of Landscape and Prior Art §3.1: hallucinated variants,

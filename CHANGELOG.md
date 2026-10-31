@@ -13,14 +13,40 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
 
 ## Unreleased
 
-**For implementers:** No check changed ID, level, weight, category or `fires_when`. The Discovery Contract moves to
-0.4.0-draft to record the §3.8 additions that shipped in 0.7.3. One consumption golden (`E2`) has a corrected
-read-order, and its expected response is unchanged.
+**For implementers:** No check changed ID, level, weight, category or `fires_when`. A surface no longer validates a
+document against its schema before serving it, `package.replaced` events may carry `phase: after`, and
+`advisory_sources[].authoritative` has no schema default. The Discovery Contract moves to 0.4.0-draft. Golden `E2`
+has a corrected read-order, golden `E9` is new, and request case `schema_invalid_is_unreadable` is removed.
+
+### Changed (normative)
+
+- **Surfaces serve verbatim.** Discovery Contract §3.2.1 required a surface to validate a document against its schema
+  and answer `METADATA_UNREADABLE` when it failed. That contradicted §3.2, `MIRI-SURFACE-012` (narrowed to
+  readability in 0.3.1) and goldens `A1` and `A2`. A document that parses is now served as-is whatever its schema
+  says, and `METADATA_UNREADABLE` stays for a document that does not parse. The two MUSTs that required validation
+  are removed, and so is the `schema_invalid_is_unreadable` case in `examples/fixtures/expected/requests.json`.
+- **`reason` on a truncated response.** The Discovery Contract §4.1 table allowed `reason` only on absent responses,
+  while §3.2.3 lets a truncated `document` response carry one. The table and the envelope schema's description now
+  allow both.
+- **`package.replaced` fires `after`.** `agent-event-v1.json` allowed `phase: after` only for `runtime.error` and
+  `dependency.add`, so the event Agent Integration Contract §3.2 and §6.1 require failed validation. The schema now
+  accepts it, golden `E9` exercises it, and the fixture validator counts it among the five kinds the binding maps.
+- **`authoritative` is written out.** `lifecycle-v1.json` defaulted `advisory_sources[].authoritative` to true while
+  `MIRI-PY-021` fires when no entry carries `authoritative: true`. The default is removed, and Lifecycle and Security
+  Metadata says the field is written on every entry. Every fixture already wrote it.
+- **One shorthand MUST, stated once.** Discovery Contract §3 stated the shorthand rule twice; the bullet now points to
+  the fuller paragraph. Together with the validation change above, the Discovery Contract carries 79 MUSTs (was 82).
+- **Agent Integration §3.3** no longer lists the number of findings as unenforced. §4.3, `MIRI-CONSUMER-051` and golden
+  `E3` enforce it; what remains unenforced is that a publisher's bid must not raise the count.
+- **Consumption Map §3.3** says only the first row is an answer; the second is inconclusive.
+- **First releases.** Both Production Maps said a first release cannot score 100. It is scored over the checks that
+  could be evaluated, can reach 100 and Gold on that basis, and reports the smaller denominator, as both checklists'
+  scoring models say.
 
 ### Fixed
 
-- **Errata in the consumption specs.** Each correction makes the text agree with a rule stated elsewhere. No RFC 2119
-  keyword was added or removed.
+- **Errata in the consumption specs.** Each correction makes the text agree with a rule stated elsewhere. None adds
+  or removes an RFC 2119 keyword.
   - Discovery Contract: §3.2.3 named `sdk-manifest.json` twice; §10 called Consumer Conformance "forthcoming"; the
     §4.1 `package` row now names the `UNAUTHENTICATED` exception from §7.1; two implementation-status notes in §4.2
     and §6.3 were out of date and are removed. The abstract names the three programs the contract binds.
@@ -35,7 +61,16 @@ read-order, and its expected response is unchanged.
     capability arithmetic, names all four `previous-release` checks (`009`, `030`, `034`, `043`) and places
     `MIRI-PY-045` in Stage 2. The Python linter checklist names the same four.
   - Check definitions: `MIRI-SURFACE-012` counted fifteen consumer checks (eighteen); `MIRI-SURFACE-030`'s
-    suggested fix said `document` reports `cap` (it reports `max_bytes`).
+    suggested fix said `document` reports `cap` (it reports `max_bytes`). `MIRI-CONSUMER-032` gains a PEP 503
+    reference for the name normalization its fix steps now cite, and six `violation_unit` strings (`MIRI-PY-007`,
+    `008`, `009`, `010`, `041`, `045`) were reworded with the same counted unit.
+  - The consumption README said two programs and 16 surface checks (three and 18). The CLI Production Map now counts
+    four Python previous-release checks, and the Python checklist's ID range runs to `MIRI-PY-045`.
+- **Corrections to earlier entries of this changelog.** 0.7.3 and 0.7.4 are dated 2026-10-18 (both were headed
+  "unreleased"). 0.7.3 records that its wheel was rebuilt the same day under a new digest. The 0.7.3 introduction
+  lists the additions that patch carried. 0.7.4 counts five checks and one tier clause (it said six checks) and no
+  longer claims the site-wide writing pass found one finding on 124 pages. Its `MIRI-CONSUMER-052` sentence says what
+  that check forbids. Two statements that were true when written are put in the past tense (0.6.0, 0.5.0).
 - **The site.** Spec references on the 36 consumer and surface check pages returned 404; they now open the rendered
   spec. Check pages named schema `check-v1` while every definition declares `check-v3`. Withdrawn checks `MIRI-PY-010`
   and `MIRI-PY-016` rendered as live and now carry a withdrawn notice and weight 0. The home page and the Python index
@@ -105,11 +140,12 @@ only on a file the installed package can open, and a linter that tests archive p
 ### Changed
 
 - **An editorial pass removed manufactured closure from the published site.** A panel read the three visitor-facing
-  pages, then all 143, then `agent-integration-contract` alone, looking for tidy sentences that seal a section without
-  making a further claim. It removed *"That is the whole of it"*, *"That gap is not cosmetic"*, *"It promises no magic
-  beyond that"* and the epigram *"Silence is the violation, not the absence of findings"*. It also removed five bold
-  topic-sentence openers, two phrases praising the writing instead of making a claim, and 14 em dashes standing in for a
-  colon or a full stop. The removals were in the hand-written narrative documents, a quarter of them in
+  pages, then all 143, then `agent-integration-contract` alone, for the word choices and sentence shapes readers
+  associate with machine-written text. The repeated habit was manufactured closure: tidy sentences that seal a section
+  without making a further claim. It removed *"That is the whole of it"*, *"That gap is not cosmetic"*, *"It promises no
+  magic beyond that"* and the epigram *"Silence is the violation, not the absence of findings"*. It also removed five
+  bold topic-sentence openers, two phrases praising the writing instead of making a claim, and 14 em dashes standing in
+  for a colon or a full stop. The removals were in the hand-written narrative documents, a quarter of them in
   `agent-integration-contract`.
 
   The landing page closed by mirroring the *Beggars in Spain* quote (*"gaps where information ought to go"* → *"the
@@ -208,17 +244,17 @@ as sound.
   and `17` could not. `scores.earned` closes it: MUST be present when a tiered check contributed, optional otherwise.
 
   **`effective_denominator` stays an integer, deliberately.** miri-py emitted `56.57` there, found that it failed the
-  wire schema, and reported the two schemas as contradictory. That schema uses the word *denominator* for two
-  different things. The **share** denominator is one check's live shares; the **score** denominator is the sum of the
-  integer weights of every check that applied, and tier arithmetic never touches it. Widening the field to `number`
-  would have encoded the conflation and made two linters' denominators incomparable. The sentence in `scoring-v2` now
-  distinguishes them.
+  wire schema, and reported the two schemas as contradictory, with reason: `scoring-v2` used the word *denominator* for
+  two different things. The **share** denominator is one check's live shares; the **score** denominator is the sum of
+  the integer weights of every check that applied, and tier arithmetic never touches it. Widening the field to `number`,
+  the resolution miri-py preferred, would have encoded the conflation and made two linters' denominators incomparable.
+  The sentence in `scoring-v2` now distinguishes them.
 
 - **A tier the run cannot assess is not live for that run.** miri-py raised this right after implementing the fix above.
   Take a check whose obligation was assessed but whose tier *above* it could not be (T3 needing a capability the linter
   lacks). Three readings give an integral denominator, and they disagree. `scoring-v2` now settles it from a rule it
   already stated: a tier is live if it is declared, is not parked, **and is assessable by this run**. An unassessable
-  tier therefore leaves the check's share denominator the same way a parked tier does:
+  tier leaves the check's share denominator the same way a parked tier does:
 
   - a tier **at or below** `conformance_tier` that cannot be assessed means the check's own obligation went unassessed:
     the **check** forfeits, never passes, and for a MUST withdraws the grade;
@@ -690,7 +726,7 @@ to nothing, and a reader had to diff against 0.4.0 to reconstruct their own upgr
    under these. The standard does not tell you whether to retract or restate them; it tells you they changed.
 
 **Expected results that look wrong.** `MIRI-PY-015`, `036` and `040` are MUST-level, require `execution`, and are
-not conditional. A run without execution therefore forfeits three MUSTs, and every artifact reports
+not conditional. A run without execution forfeits three MUSTs, and every artifact reports
 `grade: undetermined` instead of a band. That is the correct answer, because a wheel's runtime behavior cannot be
 verified without running it. Do not "fix" it by suppressing forfeits in grading; run with `execution` available, or
 accept that a static-only run reports a score and no verdict.
@@ -719,7 +755,7 @@ it.)
   Raised from a maintainer's own workflow: developing a wheel means reinstalling at the same version many times an hour,
   because nobody bumps a version on every edit. It is a cache-invalidation problem *and* a trust problem, and the
   standard owed an answer to the trust half. §9.4 already says structured metadata is more dangerous than plain
-  documentation because it invites a consumer to lower its guard. Miri therefore raises the value of this attack.
+  documentation because it invites a consumer to lower its guard. Miri raises the value of this attack.
 
   The exposure is worst where §9.5's foundation is absent. PEP 740 attestation is the only field tying an artifact to
   an independent identity. `MIRI-PY-005` is network-gated and conditional, and a locally built wheel correctly carries
@@ -783,8 +819,8 @@ it.)
   cannot reach it even if a consumer passed it through unexamined. The schema cannot enforce that `level` was *derived*
   from the profile instead of copied, and the schema's own text states that limit.
 
-  Eight goldens, `E1` through `E8`, were authored from the specification instead of captured from an implementation. A
-  binding's author therefore cannot also be the author of its acceptance criteria. Every event validates against
+  Eight goldens, `E1` through `E8`, were authored from the specification instead of captured from an implementation.
+  That way a binding's author cannot also be the author of its acceptance criteria. Every event validates against
   `agent-event-v1` and every response against `agent-findings-v1` under `make validate-fixtures`; the gate is
   mutation-tested.
 
@@ -925,7 +961,7 @@ that adding the second Production Map exposed.
 
 - **Per-check revision history stays editorial** ([schemas/README.md](schemas/README.md)). `added_in` records birth and
   nothing records revision, by decision. Git is the revision record, and `checks_commit_sha` makes it addressable. The
-  difference between two reports is therefore a diff instead of a claim. A hand-maintained `changed_in` would fail the
+  difference between two reports is then a diff instead of a claim. A hand-maintained `changed_in` would fail the
   way `semantics_version` did: one global fact copied into 119 files becomes 119 statements that can each go stale.
 
 ## 0.4.0 (2026-09-06)
@@ -1052,7 +1088,7 @@ artifact (check `fires_when`, spec prose, schemas, and goldens), and each pair t
   the one normative wire format with no schema: every `MIRI-SURFACE` check validated a shape that existed only in prose.
 
   *Present on `main` but **not** part of the 0.3.1 release surface.* By the policy above, a schema is a
-  backward-compatible addition and therefore 0.4 material.
+  backward-compatible addition and belongs in 0.4.
 
 ## 0.3.0 (2026-08-28)
 
@@ -1077,7 +1113,7 @@ and a conformant metadata surface are.
 - **[Surface Conformance](standards/consumption/surface-conformance.md)**: 18 `MIRI-SURFACE` checks in six categories,
   ordered as the path a request takes through a surface.
 - **Fixtures**: ten variants built from one template, with every `.py` verified byte-identical across the
-  source-sharing ones. Any difference in a consumer's behavior is therefore attributable to the metadata alone. Fifteen
+  source-sharing ones. Any difference in a consumer's behavior comes from the metadata alone. Fifteen
   goldens cover attacks A1–A12.
 - **The site renders the specifications**, with diagrams, sticky outlines, and per-target check pages for all
   four targets.

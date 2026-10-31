@@ -103,7 +103,7 @@ that routes to two tasks. A replaced artifact raises two questions: what the sur
 be trusted. Answering one does not answer the other.
 
 **Event** ([`agent-event-v1.json`](../schemas/agent-event-v1.json)): the message a host sends when a trigger fires. The
-schema's root is **closed**. A host therefore cannot smuggle a file path, a diff, or the user's source into an event.
+schema's root is **closed**. A host cannot smuggle a file path, a diff, or the user's source into an event.
 
 **Binding** ([Discovery Contract §6](../standards/consumption/discovery-contract.md) binds MCP; [Agent Integration
 §5–6](../standards/consumption/agent-integration-contract.md) binds Claude Code): one host's implementation of
@@ -134,11 +134,10 @@ error**, is the surface's half of the rule. A consumer's honest degradation can 
 itself tells absent from failed ([Discovery Contract
 §4.2](../standards/consumption/discovery-contract.md#42-absence-is-not-error)).
 
-**Blast radius** ([Consumption Map
-§3.2](../standards/consumption/consumption-map.md#32-scaffolding-a-new-integration-generative), step 4): the symbols
-reachable from a symbol by the edges `graph` returns, which are what it extends, returns and uses. A truncated `graph`
-neighborhood is not the complete blast radius ([Discovery Contract
-§3.8](../standards/consumption/discovery-contract.md#38-graph)).
+**Blast radius** ([Discovery Contract §3.8](../standards/consumption/discovery-contract.md#38-graph)): the symbols
+reachable from a symbol along the edges `graph` returns, in either direction. A truncated `graph` neighborhood is not
+the complete blast radius. The Consumption Map reads it in [§3.2 step
+4](../standards/consumption/consumption-map.md#32-scaffolding-a-new-integration-generative).
 
 ## Checking
 
@@ -147,7 +146,7 @@ neighborhood is not the complete blast radius ([Discovery Contract
 and enters neither side of the conformance ratio. Failing it makes the artifact non-conforming. There are three,
 `MIRI-PY-001`, `002` and `003`. They are the wheel-structure and metadata checks an index enforces at upload. Every
 correctly built wheel passed them, and as measurements they separated nothing. A gate can only be a `MUST`. Its sole
-declared effect is non-conformance, and a SHOULD cannot cause non-conformance. A SHOULD gate would therefore be inert.
+declared effect is non-conformance, and a SHOULD cannot cause non-conformance. A SHOULD gate would be inert.
 
 Because a gate has weight 0, a failing gate leaves **no arithmetic trace**. A scorer that computes conformance from
 weights alone cannot see it. Its only representation is `must_failures` in
@@ -181,7 +180,7 @@ capped, to show its distance from conformance. Level is distinct from **severity
 measures how bad one violation is for health scoring. Level answers *may I proceed*; severity answers *how bad is this*.
 
 **Weight** ([Consumer Conformance §3](../standards/consumption/consumer-conformance.md)): a check's share of 100. Every
-target's active weights sum to exactly 100. Adding a check therefore means redistributing weight rather than
+target's active weights sum to exactly 100. Adding a check means redistributing weight rather than
 appending it.
 
 **Tiers** ([`check-v3.json`](../schemas/check-v3.json)): for a substance-bearing check, the cumulative schedule by which
@@ -235,7 +234,7 @@ second needs moving.
 
 **Fixture** ([`examples/fixtures/`](../examples/fixtures/README.md)): one variant of a single trivial artifact, built
 from one template. It differs from its siblings **only** in shipped metadata. Every `.py` is verified **byte-identical**
-across the source-sharing variants. Any difference in behavior is therefore attributable to the metadata and
+across the source-sharing variants. Any difference in behavior comes from the metadata and
 nothing else. That property makes a suite evidential rather than anecdotal. Three suites exist: the consumption fixtures
 (eleven `greet` wheels, driving a *consumer*), the `greetctl` fixtures (four variants, driving a *CLI linter*), and the
 `greetlib` wheel fixtures (nine wheels, driving a *wheel linter*).
@@ -275,7 +274,7 @@ consumer against **recorded** responses so the surface's code never runs.
 **purl** ([Discovery Contract §4.1](../standards/consumption/discovery-contract.md); [purl
 specification](https://github.com/package-url/purl-spec)): the package URL that joins an artifact to advisory data. A
 purl is **surface-derived**. It comes from the installed distribution's own record and never from a
-served document. A package that could declare its own purl could claim any namespace's trust.
+served document. A package that could declare its own purl could acquire any namespace's trust just by naming it.
 
 **SBOM** ([MIRI-PY-024](../standards/python/checks/MIRI-PY-024.yaml); [PEP 770](https://peps.python.org/pep-0770/)): the
 inventory of what an artifact *contains* beyond the code its package manager knows about. A wheel that vendors a native
@@ -296,7 +295,7 @@ provenance](https://slsa.dev/spec/v1.2/build-provenance)): a signed statement bi
 build that produced it. The **mechanism** and the **content** are separate and often confused. PEP 740 is how an index
 receives, verifies and republishes an attestation. SLSA provenance is what the attestation says: its `buildDefinition`,
 its `runDetails`, and a `builder.id`. Miri checks the first and not yet the second. An attestation that asserts nothing
-useful about the build therefore still satisfies `MIRI-PY-005`.
+useful about the build still satisfies `MIRI-PY-005`.
 
 **Attestation versus self-consistency** ([MIRI-PY-001](../standards/python/checks/MIRI-PY-001.yaml)): the boundary a
 conformance report must not blur. Checks computed *inside* an artifact prove that the artifact agrees with itself.

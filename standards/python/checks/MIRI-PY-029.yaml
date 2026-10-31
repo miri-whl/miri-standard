@@ -16,13 +16,12 @@ severity:
 short_description: Every PEP 702 marker appears in `migration-guide.json` `deprecations`
 long_description: 'An interface that carries a PEP 702 marker has a matching entry in migration-guide.json
   `deprecations`, and the entry''s `replacement` and `removal_version` agree with the decorator message.'
-rationale: 'PEP 702 markers are discoverable only by importing or type-checking the code, while agents
-  and scanners read metadata (§6.2). A marker that never reaches `migration-guide.json` splits the audience.
-  Developers in IDEs see the strikethrough, and every metadata-reading consumer keeps recommending the
-  deprecated interface up until the release that removes it. Lifecycle §6.2 therefore makes the decorators
-  the single source of truth and requires the JSON inventory to be derived at build time. Hand-maintained
-  inventories drift in this direction because adding a decorator and updating a JSON file are two edits
-  that nothing forces to happen together.'
+rationale: PEP 702 markers are discoverable only by importing or type-checking the code, while agents and scanners
+  read metadata (§6.2). A marker that never reaches `migration-guide.json` splits the audience. Developers in
+  IDEs see the strikethrough, and every metadata-reading consumer keeps recommending the deprecated interface
+  up until the release that removes it. Lifecycle §6.2 makes the decorators the single source of truth and requires
+  the JSON inventory to be derived at build time. Hand-maintained inventories drift in this direction because
+  adding a decorator and updating a JSON file are two edits that nothing forces to happen together.
 fires_when:
 - An interface carrying a PEP 702 marker has no matching entry in the `deprecations` array of `migration-guide.json`
 - A matching entry exists but its `replacement` or `removal_version` contradicts the decorator message

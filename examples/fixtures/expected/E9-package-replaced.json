@@ -1,0 +1,23 @@
+{
+  "trace": "E9: package.replaced fires after the install, across the miri/replaced pair",
+  "clause": "Agent Integration Contract 3.2, 6.1; Lifecycle and Security Metadata 9.6",
+  "checks": [
+    "MIRI-CONSUMER-052"
+  ],
+  "note": "The one trace whose event is `package.replaced`. The kind is `after` because the replacing artifact has to be installed before a local surface can read it, and agent-event-v1 accepts `after` for this kind. The consumer's side of the pair, re-deriving trust from the bytes installed now, is asserted by golden A14.",
+  "event": {
+    "schema_version": "1",
+    "kind": "package.replaced",
+    "phase": "after",
+    "subject": {
+      "package": "greet-miri",
+      "package_kind": "distribution",
+      "version": "1.0.0"
+    }
+  },
+  "assertions": {
+    "must": "Emit exactly one event of this shape after the second install in a session that installs the `miri` arm and then the `replaced` arm at the same version (Agent Integration Contract 6.1).",
+    "must_not": "Answer from a trust determination made about the previous bytes (MIRI-CONSUMER-052; golden A14)."
+  },
+  "why_this_case": "It is the only golden that carries a package.replaced event, so it is what makes agent-event-v1 and the contract's phase rule for this kind checkable."
+}

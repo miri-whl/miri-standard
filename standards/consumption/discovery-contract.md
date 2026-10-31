@@ -23,7 +23,7 @@ the generator that turns a project's `[tool.miri.consume]` declaration into harn
 [Consumer Conformance](consumer-conformance.md) scores the consumer's. Neither profile scores the generator's.
 
 This document specifies *mechanism* and makes no claim about benefit. The effect of decision-time consumption on agent
-outcomes is an empirical question for the pre-registered experiment, and no clause here asserts effectiveness.
+outcomes is an empirical question for a planned, pre-registered study, and no clause here asserts effectiveness.
 
 ## Table of Contents
 
@@ -60,7 +60,7 @@ it to MCP as the first transport.
 
 A consumer reading through vehicle 1 or 2 reads the producer documents directly and is governed by the producer
 standards. **This contract governs vehicle 3.** The [Consumption Map](consumption-map.md) labels each of its
-read-steps with the vehicle that supplies it. No reading order therefore depends on a document no operation can serve.
+read-steps with the vehicle that supplies it, so that no reading order depends on a document no operation can serve.
 
 ## 2. Design Principles
 
@@ -91,7 +91,7 @@ semantics; every response is wrapped in the §4 envelope.
 The eight operations fall into three kinds:
 
 - **Retrieval**: `document`, and its `lifecycle`/`migration-guide` shorthands. Returns a document **verbatim**. Each
-  shorthand MUST return exactly what `document` would for the same name.
+  shorthand is an alias for `document` (see the paragraph after the table).
 - **Derived views**: `api-index`, `patterns`, `graph`. Each projects **one large document** into a capped, filtered
   answer to a question a consumer asks, so the consumer need not read the whole file to find the part it needs.
 - **Determination**: `list`, `resolve`. The surface computes these answers from the environment rather than from any
@@ -255,7 +255,7 @@ remembered to list them:
 > `prompt-templates.md`, `README.md` and embedded prose docs.
 
 **One member is provisional.** `test-patterns.json` has a schema (`schemas/test-patterns-v1.json`) but no producer
-specification section and no gating check. It therefore does not yet satisfy the second half of the criterion. It is
+specification section and no gating check. It does not yet satisfy the second half of the criterion. It is
 marked **provisional**: servable, and flagged in the servable table, until the producer-side definition and its
 check land. A surface MAY serve a provisional document; a consumer MUST NOT treat its presence as evidence the producer
 standard requires it.
@@ -266,22 +266,22 @@ then not applied to its newest member is governed by whoever edited it last.
 The criterion exists because of injection. Free prose is the highest-risk payload a publisher controls, and a document
 with no schema and no check has no property a consumer can verify before putting it in a model's context.
 
-**The rationale holds only if validation happens, and validation is therefore normative.** A surface MUST validate a
-document against this standard's schema for that name before serving it. It MUST return `METADATA_UNREADABLE` for a
-document that is well-formed JSON but fails its schema. `METADATA_UNREADABLE` therefore covers schema-invalidity as
-well as malformed JSON.
+**Schema validity does not decide whether a document is served.** `document` serves the named document verbatim
+(§3.2). A document that parses is served as-is whatever its schema says, and `METADATA_UNREADABLE` (§4.3) is the
+answer for a document that does not parse. Schema validity is a producer property, and the producer checklist
+enforces it at build time.
 
-Validation does not make served content safe, and must not be read that way. **A schema constrains shape, never
-meaning.** `usage-patterns.json` can pass its schema with arbitrary prose in every string field, and the adversarial
-fixture does so. Validation gives a consumer field types and a guarantee that the document is the kind of thing it
-claims to be. It says nothing about what the strings say.
+Passing a schema does not make content safe. **A schema constrains shape, never meaning.** `usage-patterns.json` can
+pass its schema with arbitrary prose in every string field, and the adversarial fixture does so. A document that
+passes its schema has the field types and the shape of the document it claims to be. The schema says nothing about
+what the strings say.
 
 **Every string field of every served document is untrusted prose, and a consumer MUST treat it as such** regardless
-of which document it came from, whether that document passed validation, or how the field is named. Passing a schema
-is not a safety property and MUST NOT be relayed as one: a surface MUST NOT describe a validated document as
-"verified", "trusted", or "safe", because the only thing validation established is shape.
+of which document it came from, whether that document passes its schema, or how the field is named. Passing a schema
+is not a safety property and MUST NOT be relayed as one: a surface MUST NOT describe a document that passes its
+schema as "verified", "trusted", or "safe", because schema validity establishes only shape.
 
-Two consequences follow:
+The criterion has two consequences:
 
 - **`README.md` is not servable, and the inventory is surface-composed.** An agent that knows nothing else does not
   need a publisher-authored index: `list` (§3.1) already reports each package's `documents`, and the surface composes
@@ -323,7 +323,7 @@ every document the Map routes to is either servable here or explicitly labelled 
 
 #### 3.2.3 Size Bound
 
-`document` returns a whole document, and it is therefore the operation most able to exceed a context budget.
+Because `document` returns a whole document, it is the operation most able to exceed a context budget.
 `sdk-manifest.json` and `usage-patterns.json` are both on the servable set, and on a large package each can run to
 hundreds of kilobytes. A capped router (§3.5) beside an uncapped bulk fetch would break "pointers, not dumps",
 because the bulk fetch is an unbounded way around the cap.
@@ -398,7 +398,7 @@ supplies them. `signature` and `file` are **optional** because the producer's ca
 assume a `file` pointer or a `signature` is present.
 
 **`api-index` confirms presence; it can never prove absence.** A conformant surface MUST declare its `cap`, MUST set
-`truncated: true` when it drops entries, and MUST NOT return more than `cap` entries. A symbol may therefore be missing
+`truncated: true` when it drops entries, and MUST NOT return more than `cap` entries. A symbol may be missing
 from a response because it was capped out or filtered out by `query`. It follows that:
 
 - A consumer MUST NOT treat a truncated or filtered `api-index` response as the package's complete surface.
@@ -591,7 +591,7 @@ three-class sample SDK). The [Consumption Map](consumption-map.md) asks a consum
 about one pattern is the case §3.2.3 guards against.
 
 Filters compose (all supplied filters must match). `category` and `complexity` match exactly; `query` matches
-case-insensitively against `id`, `name`, and `description`, and **not** against `code`. A consumer therefore cannot
+case-insensitively against `id`, `name`, and `description`, and **not** against `code`. A consumer cannot
 use `query` to grep the package's source by proxy. Ordering, capping, truncation and continuation follow §3.5.1, with
 a default `cap` of **10**.
 
@@ -636,12 +636,12 @@ had before. A consumer with a surface gains what `api_index` cannot give it: how
 }
 ```
 
-This operation serves a claim: that a consumer can reason about blast radius (the symbols reachable from `symbol`
-along the graph's edges) and plan a multi-file change **"without loading all source"**. Retrieving a whole graph
-document defeats that claim, because it loads the entire graph to answer a question about one symbol. On a small
-package that is cheap. On a large one the graph scales with the whole public surface, and the purpose is spent
-obtaining it. Reading one symbol's neighborhood out of an index makes the claim true. That half of the case for
-carrying an index does not depend on the consumer having a decoder.
+The claim this operation serves is that a consumer can plan a multi-file change **"without loading all source"** by
+reasoning about `symbol` and its blast radius: the symbols reachable from `symbol` along the edges `graph` returns, in
+either direction. Retrieving a whole graph document defeats that claim, because it loads the entire graph to answer a
+question about one symbol. On a small package that is cheap. On a large one the graph scales with the whole
+public surface, and the purpose is spent obtaining it. Reading one symbol's neighborhood out of an index makes the
+claim true. That half of the case for carrying an index does not depend on the consumer having a decoder.
 
 The index carries the part a consumer most needs and a name-keyed graph never had: a **signature**. With it, an edge
 can say that `transfer` still exists and now takes a third argument. Of 270 real API updates measured across eight
@@ -689,10 +689,10 @@ They sit one level down, where they are data rather than signal. The surface doe
 the payload out of the top level, the only position from which a consumer would believe it.
 
 The envelope has a machine-readable form,
-[`discovery-envelope-v1.json`](../../schemas/discovery-envelope-v1.json). The miri-py team contributed it, derived
-from a working surface rather than from this prose. It encodes the conditional rules: a failure requires an `error`,
-a served response forbids one, an absence requires a `reason` and forbids every payload key, a `cap` requires its
-`truncated` flag, `graph` may not emit a cursor, and `list` may not carry `present`. A flat property list would
+[`discovery-envelope-v1.json`](../../schemas/discovery-envelope-v1.json). The miri-py team contributed it and
+derived it from a working surface rather than from this prose. It encodes the conditional rules: a failure requires an
+`error`, a served response forbids one, an absence requires a `reason` and forbids every payload key, a `cap` requires
+its `truncated` flag, `graph` may not emit a cursor, and `list` may not carry `present`. A flat property list would
 accept an absence carrying a payload and call it valid.
 
 Its root leaves `additionalProperties` **open** deliberately. A new operation implies a new payload key, and a closed
@@ -719,7 +719,7 @@ document". That is the absent-versus-failed collapse §4.2 prevents.
 | `package` | Whenever the request named one, **including on every error** except `UNAUTHENTICATED` (§7.1), echoed as received | The import name the answer is about |
 | `purl` | Where identity resolved (§4.1.1) | Surface-derived provenance (§9.1). On `INVALID_INPUT` and `INVALID_CURSOR` the surface MUST omit it: those errors are raised *before* the named package is looked up, so any purl would be invented rather than derived |
 | `name` | `document` and its shorthands. The shorthands echo the name they are fixed to (`lifecycle.json`, `migration-guide.json`), since a consumer that fanned several operations into one handler needs the answer to say what it is about | The document name the answer is about |
-| `reason` | Absent responses (§4.2) only. It **MUST be omitted whenever `ok` is `false`** | Free-text explanation for humans, and **never a machine field**. A failure explains itself through `error.code`, whose set is closed. Free text on the response a consumer is least likely to treat as hostile would reopen the injection channel §4.2 closes for absent responses, in the place it would be least noticed |
+| `reason` | Absent responses (§4.2), and a truncated `document` response (§3.2.3). It **MUST be omitted whenever `ok` is `false`** | Free-text explanation for humans, and **never a machine field**. A failure explains itself through `error.code`, whose set is closed. Free text on the response a consumer is least likely to treat as hostile would reopen the injection channel §4.2 closes for absent responses, in the place it would be least noticed |
 | `truncated` | `list`, `api-index`, `patterns`, `graph`, `document`. **Always present on these, and `false` when nothing was cut** | Whether the payload was cut (§3.2.3, §3.5.1). Never omitted as a shorthand for `false`: a consumer cannot distinguish an omitted `truncated` from a surface that does not implement capping, and the two warrant different trust |
 | `cap` | `list`, `api-index`, `patterns`, `graph` | The entry bound in force (§3.5.1) |
 | `max_bytes` | `document` and its shorthands | The serialized-size bound in force (§3.2.3) |
@@ -971,7 +971,7 @@ The MCP binding is read-only and MUST execute nothing on the artifact's behalf (
 
 #### 6.2.1 Installed Scope Only: What This Contract Does Not Answer
 
-Every operation in §3 resolves a package through the local import system (§5). **This contract therefore answers only
+Every operation in §3 resolves a package through the local import system (§5). **This contract answers only
 for the version currently installed.** Two questions a developer asks are **out of scope in this version**, and this
 section lists them so that a reader does not first meet them at an unanswerable read-step:
 
@@ -1000,7 +1000,7 @@ in which a client states what it supports, and the mechanism is detection rather
 A *consuming* project declares which context server serves its dependencies' metadata in a **`[tool.miri.consume]`**
 table in its `pyproject.toml`. TOML nests this table under the *producer* `[tool.miri]` table
 (Wheel Extensions §7.1.1), and the two roles keep separate key spaces. A project that both produces and consumes Miri
-metadata therefore never mixes them. From this declaration, tooling MAY generate agent-harness configuration
+metadata never mixes them. From this declaration, tooling MAY generate agent-harness configuration
 (e.g. an `.mcp.json`).
 
 Because a project file arrives with every `git pull` and is editable by any pull request, the declaration is a
@@ -1044,7 +1044,7 @@ transport = "stdio"  # OPTIONAL. One of: "stdio", "loopback" (defined below). De
 
 ### 7.1 Loopback Connection File
 
-An enumeration value a client cannot act on is not a contract. The `loopback` transport therefore specifies its
+An enumeration value a client cannot act on is not a contract. The `loopback` transport specifies its
 own rendezvous. A loopback server MUST write a **connection file** before accepting its first connection and MUST remove
 it on clean shutdown.
 
@@ -1109,12 +1109,12 @@ clear error. It MUST NOT scan ports, MUST NOT retry across ports, and MUST NOT f
 closed grammar exists to prevent a transport downgrade the operator did not ask for. A server MUST NOT reuse a token
 **across binds**: it generates a fresh token each time it begins listening on a socket (including a restart on the
 same port and a rebind after a dropped listener) and never persists or reloads a previous one. A stale connection
-file therefore cannot authenticate against a later server.
+file cannot authenticate against a later server.
 
 ## 8. Discovery Measurement
 
 A surface MAY record an append-only, JSONL **invocation log** (one entry per query) as instrumentation for the
-pre-registered experiment's organic-discovery question (H5: do agents reach the metadata at all, and by which
+organic-discovery question of a planned, pre-registered study (H5: do agents reach the metadata at all, and by which
 vehicle?). Where a surface logs, each entry carries:
 
 | Field | Meaning |

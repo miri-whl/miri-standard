@@ -13,9 +13,9 @@ severity:
   default: MEDIUM
   violation_unit: the introspection document
 short_description: Top-level `schema_version` is independent of the release version
-long_description: The top-level `schema_version` in `--describe` has to be a wire-contract version of its own. A value identical
-  to `identity.version` that moves in lockstep with releases fails the check. A missing policy stating which changes bump
-  `schema_version` also fails it.
+long_description: The top-level `schema_version` in `--describe` has to be a wire-contract version of its own. A value
+  identical to `identity.version` that moves in lockstep with releases is a violation, and so is the absence of a
+  documented policy stating which changes bump `schema_version`.
 rationale: 'The wire schema and the product move on different clocks. Docker''s agent CLI stamps "schema_version": "1" on
   every payload so the product can reach 2.0 without the contract moving. Terry Li''s envelope pattern versions the envelope
   because the envelope shape is the API (Landscape and Prior Art §2.3, §3.3-1). A schema_version that mirrors the release

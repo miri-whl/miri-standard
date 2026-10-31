@@ -6,13 +6,14 @@
 
 The [Discovery Contract](discovery-contract.md) says how a package's metadata *reaches* an agent. This document says
 what the agent *reads*, per task, and in what order. It is the teach-the-agent artifact a harness author embeds in a
-system prompt, a context server operationalizes, and the experiment's treatment arms encode. It separates a **normative
-core** (read-order and prohibitions, mechanically checkable against a reference consumer) from **informative
+system prompt, a context server operationalizes, and a planned study's treatment arms will encode. It separates a
+**normative core** (read-order and prohibitions, mechanically checkable against a reference consumer) from **informative
 heuristics**. It also audits every element the standard defines against one question: *what does consuming it buy the
 agent, and what goes wrong without it?*
 
-This document specifies mechanism and makes no claim about benefit. It defines correct consumption. The pre-registered
-experiment asks whether correct consumption improves agent outcomes, and no clause here asserts that it does.
+This document specifies mechanism and makes no claim about benefit. It defines correct consumption. Whether correct
+consumption improves agent outcomes is the question for a planned, pre-registered study, and no clause here asserts that
+it does.
 
 ## Table of Contents
 
@@ -81,7 +82,7 @@ exactly as **(S)** except that an absent answer is the expected case rather than
 
 A consumer MUST skip a step whose vehicle is unavailable to it and continue with the next; a skipped step is reported,
 never silently synthesized (§4). **(C)** is the one vehicle that is never unavailable, because it is the consumer's
-own workspace. A **(C)** step is therefore never skipped for want of a vehicle and may be skipped only as
+own workspace. A **(C)** step is never skipped for want of a vehicle and may be skipped only as
 `not-applicable`. The table lists **(C)** because the label records where the answer comes from. "From the caller's own
 project, not the dependency's" is the distinction that keeps a consumer from looking for its own call sites in someone
 else's metadata. Unavailability and inapplicability are **separate** grounds with separate reported reasons, and a
@@ -112,7 +113,7 @@ in §4). Such a consumer cannot perform those steps and is not expected to; they
 rule above. No **prohibition** and no **(S)** step depends on a vehicle a server-only consumer lacks.
 
 The qualifier "whose surface is a Python API" limits that guarantee. §4's CLI rule excludes command-line surfaces from
-`api_index`. For a package whose surface *is* a CLI, the step that establishes what the surface offers is therefore
+`api_index`. For a package whose surface *is* a CLI, the step that establishes what the surface offers is
 `--describe`, an **(X)** vehicle. A server-only consumer cannot complete the normative core for such a package, and MUST
 report the step as skipped with reason `unavailable-vehicle` (§4) rather than answering from the Python-side documents.
 Those documents describe a different surface.
@@ -181,10 +182,10 @@ flowchart LR
     end
     subgraph D["what each reads first"]
         direction TB
-        d1["list · usage-patterns"]
-        d2["usage-patterns · templates"]
+        d1["list · patterns"]
+        d2["patterns · templates"]
         d3["lifecycle · migration-guide"]
-        d4["patterns · antipatterns"]
+        d4["patterns · troubleshooting"]
         d5["lifecycle · advisory sources"]
         d6["test-patterns · api-index"]
     end
@@ -245,9 +246,9 @@ agent builds on the path the author verified rather than reconstructing one.
 2. **(F)** `templates/`: author-provided scaffolds coherent with the package idiom (MIRI-PY-038).
 3. **(S)** `resolve`: confirm that every symbol the scaffold will call exists in the installed package's source
    ([Discovery Contract §3.6](discovery-contract.md)). `api-index` routes; `resolve` settles.
-4. **(S)** `graph`: for a multi-file change, the symbols each touched symbol connects to, meaning what it extends,
-   returns and uses. A truncated neighborhood MUST NOT be read as the complete set of affected symbols ([Discovery
-   Contract §3.8](discovery-contract.md)).
+4. **(S)** `graph` for each touched symbol of a multi-file change, to read its blast radius: the symbols reachable from
+   `symbol` along the edges `graph` returns, in either direction. A truncated `graph` response MUST NOT be read as the
+   complete blast radius ([Discovery Contract §3.8](discovery-contract.md)).
 
 **Must not:**
 
@@ -279,24 +280,24 @@ agent builds on the path the author verified rather than reconstructing one.
   *Matching* is narrow, because a broad reading would make the rule undecidable. Emitted code **matches** a `wrong_code`
   when it calls **the same surface in the same shape**: the same callable, with the same argument arity, at the same
   construction site the `wrong_code` shows. The callable is compared by its **fully qualified dotted path as resolved at
-  the call site**. That path is `acme.Client.connect`, not the local name a specific import or alias gave it, and not
-  the bare attribute `connect`, which could belong to anything. Arity is the number of arguments **written at the call
-  site**, positional and keyword together, because that is what both the `wrong_code` and the emitted code exhibit. A
-  signature's defaults, `*args` and `**kwargs` do not enter into it, since the rule compares two call sites and not a
+  the call site** (for example `acme.Client.connect`), not by the local name a specific import or alias gave it, and not
+  by the bare attribute `connect`, which could belong to anything. Arity is the number of arguments **written at the
+  call site**, positional and keyword together, because that is what both the `wrong_code` and the emitted code exhibit.
+  A signature's defaults, `*args` and `**kwargs` do not enter into it, since the rule compares two call sites and not a
   call against a definition. **Construction site** is defined syntactically. Two calls share a construction site when
   the sequence of enclosing block constructs between the module or function body and the call is the same sequence of
   kinds, in the same order. The kinds are `loop`, `conditional`, `exception handler`, `context manager` and
   `comprehension`. `for`, `while`, and an async variant are all one `loop` kind; `except` and `finally` are both
   `exception handler`. Nesting depth and order matter; identifier names, iteration counts, and the conditions themselves
-  do not. A `wrong_code` that opens a connection inside a `for` body therefore matches emitted code that opens one
-  inside a `while` body. It does not match code that opens one once before the loop, and those antipatterns exist to
-  draw that distinction. The comparison is neither textual nor a semantic-equivalence judgment. Where a consumer cannot
+  do not. A `wrong_code` that opens a connection inside a `for` body matches emitted code that opens one inside
+  a `while` body. It does not match code that opens one once before the loop, and those antipatterns exist to draw
+  that distinction. The comparison is neither textual nor a semantic-equivalence judgment. Where a consumer cannot
   decide, the rule does not fire.
 
   The narrowness binds the **check author**, not the consumer. It is stated here, and not only in the check, because
-  this paragraph is where the definition lives. `MIRI-CONSUMER-040`'s `fires_when` clauses are written against the
-  construction-site definition above and no broader reading of it. A consumer is therefore never penalized for failing
-  to match code the definition does not cover. A conformance suite that flags a near-miss has exceeded the check.
+  this paragraph is where the definition lives. A consumer is never penalized for failing to match code the definition
+  does not cover, because `MIRI-CONSUMER-040`'s `fires_when` clauses are written against the construction-site
+  definition above and no broader reading of it. A conformance suite that flags a near-miss has exceeded the check.
 
   Deciding the match requires **parsing the code the consumer emitted**. The construction-site definition is syntactic,
   so the match is decidable, but only by a suite that can build a syntax tree of the output rather than matching text.
@@ -327,8 +328,8 @@ need it.
 
 2. **(S)** `migration-guide`: the structured `{surface, removed_in, replacement}` records and deprecation inventory for
    the transition **into the installed version**. The surface answers only for what is installed ([Discovery Contract
-   §6.2.1](discovery-contract.md)). A prospective "what breaks if I move to 1.5.0?" has no operation in 0.3 and MUST NOT
-   be answered from the shipped file.
+   §6.2.1](discovery-contract.md)). A prospective "what breaks if I move to 1.5.0?" has no operation in this version of
+   the Discovery Contract and MUST NOT be answered from the shipped file.
 3. **(C)** Cross-reference each record against the consumer codebase's **own call sites**. No Discovery Contract
    operation is involved or needed. The vehicle is the calling project's own source, which the consumer necessarily has
    because it is the thing being migrated. The consumer reads it with whatever mechanism it already uses to read the
@@ -346,8 +347,8 @@ need it.
    `package` as the name to resolve.
 
    `list` is capped like any listing ([Discovery Contract §3.5.1](discovery-contract.md)). A match found is conclusive,
-   but a match *not* found depends on how much of the listing was seen. There are three outcomes, and only the first two
-   are answers:
+   but a match *not* found depends on how much of the listing was seen. There are three outcomes, and only the first row
+   is an answer:
 
    | What `list` returns | Conclusion |
    |---|---|
@@ -403,7 +404,7 @@ need it.
 
   Where the type has no namespace, the comparison falls back to the **package name**, normalized per [PEP
   503](https://peps.python.org/pep-0503/) for `pkg:pypi` (lowercase; runs of `-`, `_` and `.` collapsed to a single
-  `-`). `Acme_SDK` and `acme-sdk` are therefore one package rather than a redirect. A replacement naming a *different*
+  `-`). `Acme_SDK` and `acme-sdk` are one package rather than a redirect. A replacement naming a *different*
   package is then flagged. That catches the attack. It also catches a legitimate rename, because in a namespace-less
   ecosystem **the metadata does not distinguish them**. The consumer flags, a human confirms, and `MIRI-CONSUMER-032`'s
   first clause already forbids auto-migrating without that confirmation. Suppressing the flag to avoid the false alarm
@@ -480,7 +481,7 @@ agent *whom to ask*; it never answers *on their behalf*.
 
 1. **(S?)** `test-patterns.json`: how the package's own suite exercises the surface being integrated, and which test
    doubles the package **ships** for consumers. This document is **provisional** ([Discovery Contract
-   §3.2.1](discovery-contract.md)) and a conforming package need not ship it. An absent response here is therefore the
+   §3.2.1](discovery-contract.md)) and a conforming package need not ship it. An absent response here is the
    expected case rather than a defect. §4's honest-degradation rule governs, and the remaining steps stand on their own.
    A consumer distinguishes the two absences by §1.1's rule. A `test-patterns.json` missing from `list`'s `documents`
    array is the *surface* declining to serve it, which says nothing about the package. A name present there answering
@@ -545,7 +546,7 @@ which failures it treats as expected. Prefer extending its idiom over inventing 
   they are claims about bytes. A `package.replaced` notice ([Agent Integration Contract
   §3.1](agent-integration-contract.md)) means the bytes changed while `identity.purl` did not move. A consumer still
   holding these facts from before the replacement does not have them; it has the previous artifact's. The exemption is
-  therefore keyed on the bytes read rather than on the session, and `MIRI-CONSUMER-052` voids the determination
+  keyed on the bytes read rather than on the session, and `MIRI-CONSUMER-052` voids the determination
   they supported. This is also the one interpretation rule no routed read-order can supply. `package.replaced` routes to
   §3.1 and §3.5, while whether a declared successor crosses a purl namespace is established in §3.3. A same-version
   replacement must not be routed to §3.3, because no version changed and there is no migration to cross-reference.
@@ -696,8 +697,8 @@ failure:
    rather than leaving it invisible.
 
 Direction 1 alone cannot find a missing element. A capability that was never defined has no row, so an audit that walks
-only the elements it already has passes over the gap. Testing ("how do I test my integration?") is the case that
-direction 2 records, and `test-patterns.json` (§3.6) is the element that answers it.
+only the elements it already has passes over the gap. Testing ("how do I test my integration?") was such a gap. It
+had no element until `test-patterns.json` (§3.6) answered it.
 
 The two right-hand columns are **informative**. They record the design intent for each element, not a measured outcome,
 and no clause of this standard depends on them.
@@ -706,7 +707,7 @@ and no clause of this standard depends on them.
 | --- | --- | --- | --- |
 | `sdk-manifest.json` (`api_index` + caller params) | "What exists, where, and what does it take?" | Routing (name → purpose → file) and a starting point for surface verification before writing a call | Agent greps serially, or invents plausible symbols that do not exist |
 | `usage-patterns.json` | "How do calls compose in practice?" | Idiomatic sequences from real examples/tests, complexity-labeled: a matching pattern instead of one derived from signatures. Carries **both halves** of usage guidance: `explanation.*` for what to do, `antipatterns` for the author-declared ways to get it wrong | Calls chained in orders the package never intended; misuse that still type-checks |
-| Code index (`code_index`, *optional*) | "What relates to what, and did it change shape?" | The structural complement to `api_index`'s name list: extends/returns/uses edges **with signatures**, for reasoning about what a change affects and planning multi-file changes without loading all source. Read one symbol at a time through `graph` (Discovery Contract §3.8) rather than whole, so the saving is real; a consumer without a decoder keeps using `api_index` and loses nothing it had | Structure discovered file by file, with context spent on reading source and relationships guessed. Worse for the half of API change that keeps a name and alters a signature, which a name-keyed index cannot see at all |
+| Code index (`code_index`, *optional*) | "What relates to what, and did it change shape?" | The structural complement to `api_index`'s name list: extends/returns/uses edges **with signatures**, for reasoning about a change's blast radius and planning multi-file changes without loading all source. Read one symbol at a time through `graph` (Discovery Contract §3.8) rather than whole, so the saving is real; a consumer without a decoder keeps using `api_index` and loses nothing it had | Structure discovered file by file, with context spent on reading source and relationships guessed. Worse for the half of API change that keeps a name and alters a signature, which a name-keyed index cannot see at all |
 | `lifecycle.json` | "Is this alive, and whom do I ask?" | Decision-time trust: support status, advisory *pointers*, update check, read before building on the package | Health assumed; integration against an abandoned or advisory-laden dependency |
 | `migration-guide.json` + deprecation inventory | "What changed, and what replaces what?" | Structured `{surface, removed_in, replacement}` for mechanical cross-reference against the consumer's call sites | Upgrades by prose changelog or trial-and-error; deprecated surfaces linger until removal breaks them |
 | `AGENT_EXAMPLES.json` + `examples/` (quickstart) | "Show me working code" | A runnable learning path (MIRI-PY-015 gates it). **(F) only**: `AGENT_EXAMPLES.json` lives in `.dist-info/` and `examples/` is package source, so neither is servable; `usage-patterns.json` is the served path to working code | Agent learns from snippets that may never have run |

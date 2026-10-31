@@ -12,9 +12,9 @@ severity:
   default: MEDIUM
   violation_unit: each warning on stdout
 short_description: Grace-period deprecation warnings never touch stdout
-long_description: A surface whose `lifecycle.status` is `deprecated` is invoked with the JSON output flag. Its
-  stdout has to remain a single parseable JSON document with no deprecation text in it. The warning itself has
-  to appear on stderr, and emitting it on neither channel fails the check.
+long_description: A surface whose `lifecycle.status` is `deprecated` is invoked with the JSON output flag. Its stdout
+  has to remain a single parseable JSON document with no deprecation text in it. The warning itself has to appear
+  on stderr. A tool that emits it on neither channel does not pass.
 rationale: 'CLI Spec §2.5 confines machine payloads to stdout and all deprecation and update warnings to stderr.
   The two channels have different consumers: stdout feeds a parser, and stderr feeds a diagnostician. A warning
   line prepended to a JSON payload fails every downstream `json.loads` and `jq` invocation at once. It fails for

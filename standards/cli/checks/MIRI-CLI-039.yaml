@@ -14,9 +14,9 @@ severity:
   violation_unit: each mutating command without dry-run
   population_unit: all mutating commands in --describe
 short_description: Every mutating command supports `--dry-run` with faithful simulation
-long_description: Every command marked mutating in `--describe` has to accept `--dry-run` or a declared equivalent. A dry
-  run has to leave observable state unchanged and report the same actions the real run performs. A dry-run path implemented
-  apart from the execution planner also fails, as static evidence of divergence.
+long_description: Every command marked mutating in `--describe` has to accept `--dry-run` or a declared equivalent.
+  A dry run has to leave observable state unchanged and report the same actions the real run performs. The check also
+  fails a dry-run path implemented apart from the execution planner, as static evidence of divergence.
 rationale: 'Among its six MUST-level requirements, anc.dev requires `--dry-run` on every write operation. Agent-First CLI
   principle 10 (faithful dry run: simulation over approximation) names the fidelity half. A preview computed by a separate
   code path drifts from the real behavior. It is worse than no preview because the agent trusts it. `terraform plan` is

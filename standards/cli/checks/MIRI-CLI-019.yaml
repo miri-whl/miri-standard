@@ -16,11 +16,12 @@ short_description: '`identity.distribution` is `open-source` or `private`'
 long_description: The check reads `identity.distribution` from `--describe` and fails when the field is absent or holds
   anything other than the exact string "open-source" or "private". Scanners need the value to decide whether the CLI Spec
   §4 rule on empty public-OSV results applies.
-rationale: The declaration selects which security defaults apply. OSV's /v1/query returns an empty result both when a package
-  is known and clean and when the database has never heard of the name. For a private CLI an empty public-OSV response
-  is therefore silence, not clearance. CLI Spec §4 forbids treating it as "not vulnerable" unless public OSV is explicitly
-  listed. A scanner can apply that rule only if the artifact states which population it belongs to. An undeclared distribution
-  defaults private tools into a false clean bill.
+rationale: The declaration selects which security defaults apply. OSV's /v1/query returns an empty result both
+  when a package is known and clean and when the database has never heard of the name. For a private CLI, an
+  empty public-OSV response means only that OSV has no record of the name. CLI Spec §4 forbids treating it as
+  "not vulnerable" unless public OSV is explicitly listed. A scanner can apply that rule only if the artifact
+  states which population it belongs to. An undeclared distribution defaults private tools into a false clean
+  bill.
 fires_when:
 - '`identity.distribution` is absent from --describe'
 - Its value is anything other than the exact strings "open-source" or "private"

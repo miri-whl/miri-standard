@@ -135,8 +135,10 @@ The advisory-source list has these semantics:
 
 - **Order is preference, not exclusivity.** Consumers SHOULD query every listed source and union the results — a hit
   from any authoritative source is a hit; the first entry is preferred for display and metadata.
-- **`authoritative` defaults to `true`** when omitted. A source marked `authoritative: false` covers only the package's
-  dependency tree, not advisories against the package itself (used for public OSV under a `private` package, §5).
+- **`authoritative` is written out on every entry.** A consumer does not infer authority from an omitted field, and
+  `MIRI-PY-021` requires at least one entry to carry `authoritative: true`. A source marked `authoritative: false`
+  covers only the package's dependency tree, not advisories against the package itself (used for public OSV under a
+  `private` package, §5).
 - **`osv-local` paths** resolve relative to the directory containing `lifecycle.json` (the wheel's `agent-metadata/`)
   when relative; absolute paths and `file:` URLs are used as given. An archive older than the consumer's freshness
   policy MUST be treated as unknown, never as "no advisories".

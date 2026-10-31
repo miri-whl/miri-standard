@@ -13,16 +13,15 @@ severity:
   default: HIGH
   violation_unit: the advisory_sources list
 short_description: '`distribution: private` does not rely solely on public OSV'
-long_description: 'The check applies when `identity.distribution` is `private` and requires at least one
-  `osv-internal` or `osv-local` advisory source. It also fails when every entry marked `authoritative:
-  true` is `type: osv` pointing at the public OSV endpoint.'
-rationale: 'OSV.dev answers `/v1/query` with an empty object both for a package with no known vulnerabilities
-  and for a package it has never heard of. For a name that exists only on an internal index, the public
-  endpoint therefore returns a clean result unconditionally and permanently. A private package whose only
-  authoritative source is public OSV has disabled its own vulnerability signal while passing every scan.
-  The 2021 dependency-confusion research (Birsan) also showed that routing internal package names through
-  public infrastructure discloses them to squatters. Lifecycle §5.1 therefore forbids treating public
-  OSV as authoritative for `distribution: private` packages.'
+long_description: 'For a `private` distribution, the check requires at least one `osv-internal` or `osv-local`
+  advisory source and fails when every entry marked `authoritative: true` is `type: osv` pointing at the public
+  OSV endpoint. A distribution that is not `private` passes.'
+rationale: 'OSV.dev answers `/v1/query` with an empty object both for a package with no known vulnerabilities and
+  for a package it has never heard of. For a name that exists only on an internal index, the public endpoint returns
+  a clean result unconditionally and permanently. A private package whose only authoritative source is public OSV
+  has disabled its own vulnerability signal while passing every scan. The 2021 dependency-confusion research (Birsan)
+  also showed that routing internal package names through public infrastructure discloses them to squatters. For both
+  reasons Lifecycle §5.1 forbids treating public OSV as authoritative for `distribution: private` packages.'
 fires_when:
 - '`identity.distribution` is `private` and every `advisory_sources` entry marked `authoritative: true` is `type: osv` pointing
   at the public OSV endpoint'

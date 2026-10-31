@@ -43,7 +43,7 @@ serve a document outside a closed set, or repair what it could not parse.
 ## 2. The Verification Model
 
 A surface, unlike a consumer, has a **specified output**. Every operation's response shape is fixed by §4 of
-the contract. Conformance can therefore be checked by issuing a request and inspecting the envelope that
+the contract. Conformance can be checked by issuing a request and inspecting the envelope that
 comes back. The check involves no judgment about phrasing and no assertion on natural language.
 
 Verification is a **driven suite**, like the consumer profile, but the assertions are exact:
@@ -68,7 +68,7 @@ The scoring model is identical to the sibling profiles' model, and one grading v
 - **Grade bands (conforming programs only)**: 90–100 **Gold** · 75–89 **Silver** · 50–74 **Bronze**.
 
 **In 0.3-draft every check in this profile is a MUST, and all 100 weight is MUST weight. The bands above are
-therefore unreachable: a conforming surface scores exactly 100, and a non-conforming one gets no grade at all.** This
+unreachable: a conforming surface scores exactly 100, and a non-conforming one gets no grade at all.** This
 section marks the bands unreachable so that no reader computes a Silver that can never occur. They exist for
 vocabulary parity with the producer checklists and will become live the first time this profile gains a SHOULD.
 
@@ -84,8 +84,8 @@ surface whose cursors do not work.
 
 **Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
 forfeited check is **excluded from both** the numerator and the denominator. It is removed from the calculation and
-is not counted as a failure. The score is computed over what was exercised, and forfeiting therefore cannot inflate
-or deflate it. The report MUST carry the forfeited count and the effective denominator beside the score. A forfeited
+is not counted as a failure. Because the score is computed over what was exercised, forfeiting cannot inflate or
+deflate it. The report MUST carry the forfeited count and the effective denominator beside the score. A forfeited
 **M** check means **conformance is undetermined**, and the report states it as undetermined, never as conforming and
 never as a failure.
 
@@ -107,7 +107,7 @@ flowchart TB
 
 The category letters follow the order of the tables below, and the figure follows the order of a request. That order
 matters because a boundary failure admits bytes that the later categories then wrap and provenance-stamp faithfully. A
-surface that serves a document outside the servable set has therefore already failed, however correct its envelope is.
+surface that serves a document outside the servable set has already failed, however correct its envelope is.
 
 ### A. Envelope Integrity (20 points)
 
@@ -181,12 +181,12 @@ the import canary, the `spoofed` identity document, the `consuming-project` decl
 
 `MIRI-SURFACE-041` (one row per import package, and `AMBIGUOUS_PACKAGE`) is a **MUST** that needs two distributions
 providing one import name. Its case is `ambiguous-a` and `ambiguous-b`: two distributions that both provide
-`greet_ambiguous`. The two share the template source, and the collision is therefore the only variable.
+`greet_ambiguous`. Because the two share the template source, the collision is the only variable.
 
 ## 5. Why These Are Not Consumer Checks
 
-It would be simpler to keep one profile. The split exists because the two programs fail differently, and a single
-score would obscure which one is broken.
+It would be simpler to keep one profile. The split exists because a consumer and a surface fail differently, and a
+single score would obscure which one is broken.
 
 A consumer emits no responses and cannot be held to the shape of one. A surface makes no decisions about what to
 call and cannot be held to the judgment a consumer exercises. Scoring them together would produce a number that

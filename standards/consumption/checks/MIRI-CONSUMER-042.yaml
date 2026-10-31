@@ -15,8 +15,8 @@ severity:
 short_description: Never presents a whole-document retrieval as though a derived view had been used
 long_description: This budget preference is graded separately from the correctness MUSTs. It is stated as an output
   claim because the operation a consumer called is a request-side fact the profile's verification model cannot observe
-  (§2), while the consumer's claim about what it read is observable. Claiming a filtered or routing view for a whole-document
-  retrieval, or presenting a document's full contents as a scoped answer, fails the check.
+  (§2), while the consumer's claim about what it read is observable. A consumer passes when it never claims a filtered
+  or routing view for a whole-document retrieval and never presents a document's full contents as a scoped answer.
 rationale: The derived views were added so that a consumer need not retrieve a large document to use one part of
   it. The check concerns that budget and is graded apart from the correctness rules.
 fires_when:

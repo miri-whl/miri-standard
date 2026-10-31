@@ -13,8 +13,8 @@ severity:
   default: HIGH
   violation_unit: each unreserved key emitted at the envelope's top level
 short_description: Emits only reserved keys at the top level
-long_description: The reserved-field table in Discovery Contract §4.1 is exhaustive. Any top-level key outside
-  it, including one the surface adds for its own purposes, fails the check.
+long_description: The reserved-field table in Discovery Contract §4.1 is exhaustive. A top-level key outside it is
+  a violation, including one the surface adds for its own purposes.
 examples:
   violation: '{"schema_version": "1", "ok": true, "cache_hit": true, "document": {...}}'
   compliant: '{"schema_version": "1", "ok": true, "present": true, "document": {...}}'

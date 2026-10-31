@@ -12,9 +12,9 @@ severity:
   default: MINOR
   violation_unit: each error without recovery hints
 short_description: Errors carry `retryable` and `suggestions`
-long_description: Error envelopes have to carry a `retryable` boolean that separates transient failures (timeout,
-  rate limit) from permanent ones (validation, auth, removed flag). They also need a non-empty `suggestions` array
-  derived from the failing context, and static boilerplate does not count.
+long_description: Error envelopes pass when they carry a `retryable` boolean that separates transient failures
+  (timeout, rate limit) from permanent ones (validation, auth, removed flag), and a non-empty `suggestions` array
+  derived from the failing context. Static boilerplate suggestions do not count.
 rationale: 'A bare error leaves an agent only blind retry, a strategy that loops on permanent failures and abandons
   transient ones. The `retryable` boolean is the classification that makes AWS SDK retry machinery work: throttling
   errors are retried with backoff, and validation errors are not. `suggestions` follows the shipped `desk` pattern

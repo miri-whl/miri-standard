@@ -227,6 +227,16 @@ def category_rows(checks):
     return rows
 
 
+def core_count(checklist):
+    """Count the Miri Core checks the Python checklist names, so the home page cannot drift from it."""
+    text = (REPO / checklist).read_text()
+    bullet = re.search(r"\*\*Miri Core\*\*(.*?)(?=\n- \*\*|\n\n)", text, re.S).group(1)
+    n = 0
+    for lo, hi in re.findall(r"MIRI-PY-(\d{3})(?:[–-](\d{3}))?", bullet):
+        n += int(hi) - int(lo) + 1 if hi else 1
+    return n
+
+
 def active(docs):
     return [d for d in docs if d.get("status", "active") == "active"]
 
@@ -361,8 +371,9 @@ def main():
         (d / "index.html").write_text(env.get_template("checks_index.html").render(
             **ctx, checks=[c["doc"] for c in checks], musts=musts, n_active=len(live),
             n_withdrawn=len(checks) - len(live), rows=category_rows(checks),
-            description=f"All {len(live)} {meta['title'].lower()} checks in the Miri Standard, with level, "
-                        f"severity and weight."))
+            description=f"The {len(live)} active Miri Standard checks for "
+                        f"{meta['title'] if meta['title'].startswith('Python') else meta['title'][0].lower() + meta['title'][1:]}"
+                        f", with level, severity and weight."))
         pages.append(f"checks/{target}/index.html")
         for i, c in enumerate(checks):
             doc = c["doc"]
@@ -371,7 +382,8 @@ def main():
                 **ctx, target=target, check=doc,
                 schema_name=pathlib.Path(doc.get("$schema", "check-v3.json")).stem,
                 ref_hrefs=[spec_href(r, meta, rendered, site["github"], "../../") for r in doc["references"]],
-                description=f'{doc["id"]}: {doc["short_description"]}'.replace("`", ""),
+                description=(f'Withdrawn in {doc["withdrawn_in"]}. ' if doc.get("status") == "withdrawn" else "")
+                + f'{doc["id"]}: {doc["short_description"]}'.replace("`", ""),
                 sev_num=SEV_ORDER.index(doc["severity"]["default"]) + 1,
                 prev_id=checks[i - 1]["doc"]["id"] if i > 0 else None,
                 next_id=checks[i + 1]["doc"]["id"] if i + 1 < len(checks) else None))
@@ -381,6 +393,7 @@ def main():
 
     (out / "index.html").write_text(env.get_template("home.html").render(
         site=site, root="", active="index.html", targets=targets,
+        core_count=core_count(site["targets"]["python"]["checklist"]),
         description="Packaging standards that let an AI agent read an installed Python wheel or CLI instead of "
                     "guessing: its identity, where to check it for advisories, and what it has deprecated."))
     (out / "downloads.html").write_text(env.get_template("downloads.html").render(

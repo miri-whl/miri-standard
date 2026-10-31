@@ -26,12 +26,11 @@ long_description: 'This check was withdrawn in 0.7.3-draft. It applied only when
   shipped, and then required the file to validate against api-graph-v1.json. Every edge needed `from`,
   `to` and `relationship`, and both edge endpoints and every workflow step had to name components present
   in `nodes`.'
-rationale: 'Consumers read `api-graph.json` for relationship reasoning: which classes cooperate and what
-  a workflow touches. Wrong data in it does more harm than no data. To a consumer, an edge whose `from`
-  or `to` names a node that does not exist reads the same as a real relationship. The agent then asserts
-  cooperation between components that were never connected. The file is optional, and an absent graph
-  degrades gracefully to manifest-only reasoning. A present but broken graph does more harm than none.
-  The check therefore validates only the file that ships.'
+rationale: 'Consumers read `api-graph.json` for relationship reasoning: which classes cooperate and what a workflow
+  touches. An agent reasons better from no graph than from a wrong one. To a consumer, an edge whose `from` or `to`
+  names a node that does not exist reads the same as a real relationship. The agent then asserts cooperation between
+  components that were never connected. The file is optional, and an absent graph degrades gracefully to manifest-only
+  reasoning. The check validates only a graph that ships, because only a present graph can mislead.'
 fires_when:
 - '`agent-metadata/api-graph.json` is present and fails api-graph-v1.json validation (version, nodes, or edges missing)'
 - An edge lacks `from`, `to`, or `relationship`, or either endpoint names a key absent from `nodes`

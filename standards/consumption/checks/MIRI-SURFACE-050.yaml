@@ -14,8 +14,8 @@ severity:
   violation_unit: each binding that does not advertise a surface version
 short_description: Advertises the surface version at the normative path
 long_description: Discovery Contract §4.4 and §6.3 require the MCP binding to advertise the surface version as a
-  string at `capabilities.miri.surface_version` in the `initialize` result. A missing advertisement, or one conflated
-  with the transport protocol version or `serverInfo.version`, fails the check.
+  string at `capabilities.miri.surface_version` in the `initialize` result. The check fails when the advertisement
+  is missing or conflated with the transport protocol version or `serverInfo.version`.
 examples:
   violation: '{"protocolVersion": "2024-11-05", "serverInfo": {"name": "miri", "version": "1.0"}}'
   compliant: "{\"protocolVersion\": \"2024-11-05\", \"capabilities\": {\"miri\": {\"surface_version\": \"1\"}},\n\

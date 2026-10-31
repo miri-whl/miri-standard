@@ -14,9 +14,9 @@ severity:
   violation_unit: each ambiguous command
   population_unit: all commands in --describe
 short_description: The read-vs-write nature of each command is determinable from `--describe`/`--help` alone
-long_description: Each command's `--describe` entry has to carry a machine-readable read/write field (`mutating`, `mode`,
-  or a declared equivalent), and the command name or `--help` has to make the direction clear. A command declared read-only
-  that writes when run against a fixture fails the check.
+long_description: Each command's `--describe` entry has to carry a machine-readable read/write field (`mutating`,
+  `mode`, or a declared equivalent), and the command name or `--help` has to make the direction clear. The field also
+  has to match behavior. A command declared read-only that writes when run against a fixture is a violation.
 rationale: As a MUST, anc.dev requires the read-vs-write distinction to be visible from the command name and `--help` alone.
   The read/write partition is the cheapest safety property a CLI can offer. Reads can be freely retried, parallelized,
   and run speculatively. Writes need the full apparatus of dry runs, idempotency, and confirmation. When a verb like `sync`

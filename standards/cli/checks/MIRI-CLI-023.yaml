@@ -13,14 +13,14 @@ severity:
   default: MEDIUM
   violation_unit: the advisory_sources list
 short_description: '`distribution: private` does not rely solely on public OSV'
-long_description: 'The check applies to a CLI whose `identity.distribution` is "private". It fails when public OSV (`type:
-  "osv"`) is the only kind of entry in `advisory_sources`, or the only authoritative one, and no `osv-internal` or `osv-local`
-  entry is present.'
-rationale: 'A public OSV query for a package the database has never seen returns an empty result. That response is byte-identical
-  to the one a healthy, advisory-free package gets. For a `distribution: "private"` CLI whose purl exists only inside the
-  organization, public OSV therefore always reads clean. For that reason CLI Spec §4 forbids consumers from treating an
-  empty public-OSV result as "not vulnerable" for private CLIs. A private CLI that lists public OSV as its only source ships
-  a security signal permanently stuck on green.'
+long_description: 'For a CLI whose `identity.distribution` is "private", the check fails when public OSV (`type:
+  "osv"`) is the only kind of entry in `advisory_sources`, or the only authoritative one, and no `osv-internal`
+  or `osv-local` entry is present. A CLI with any other distribution passes.'
+rationale: 'A public OSV query for a package the database has never seen returns an empty result. That response is
+  byte-identical to the one a healthy, advisory-free package gets. For a `distribution: "private"` CLI whose purl
+  exists only inside the organization, public OSV always reads clean. For that reason CLI Spec §4 forbids consumers
+  from treating an empty public-OSV result as "not vulnerable" for private CLIs. A private CLI that lists public OSV
+  as its only source ships a security signal permanently stuck on green.'
 fires_when:
 - '`identity.distribution` in the `--describe` output is `"private"`'
 - 'every `advisory_sources` entry has `type: "osv"` (public OSV.dev), or public OSV is the only entry marked `authoritative:

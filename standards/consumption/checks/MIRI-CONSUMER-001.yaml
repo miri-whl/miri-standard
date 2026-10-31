@@ -13,12 +13,12 @@ severity:
   violation_unit: each absent document reported as anything other than absent
 short_description: Reports an absent document as absent
 long_description: Driven against the `bare` fixture, the consumer has to state in its output that the requested
-  document is absent. Omitting the fact, filling the gap, or reporting the absence as an error (or an error as
-  an absence) fails the check.
+  document is absent. The check fails output that omits the fact, fills the gap, or reports the absence as an error
+  (or an error as an absence).
 rationale: The bare/miri comparison depends on this check. If a consumer answers the same way whether or not the
   metadata exists, the metadata did not produce the answer. The Discovery Contract ranks the absent-versus-failed
-  split as its most consequential clause. A consumer's handling of absence can be checked only if the consumer
-  reports the absence. No existing tool checks this because no existing tool defines a consumer.
+  split as its most consequential clause. A consumer's handling of absence can be checked only if the surface reports
+  absence distinctly from failure. No existing tool checks this because no existing tool defines a consumer.
 fires_when:
 - The consumer is driven against the `bare` fixture and its output does not state that the requested document
   is absent

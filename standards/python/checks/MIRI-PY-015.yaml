@@ -30,13 +30,13 @@ long_description: 'Each example listed in AGENT_EXAMPLES.json compiles and exits
   that holds only the built wheel and the dependencies its index entry declares. An example fails if it
   imports a module from outside the package''s Requires-Dist and its declared dependencies. One that needs
   live credentials fails unless a documented placeholder such as YOUR_API_KEY marks it.'
-rationale: 'Miri Wheel Extensions §7.2.2 requires every example to run without modification (credentials
-  excepted). Agents treat shipped examples as ground truth and reproduce them verbatim in generated code.
-  Wrong but plausible instructions propagate at machine speed. Lasso Security''s 2023–2024 research showed
-  LLMs repeatedly recommending the nonexistent huggingface-cli PyPI package. The proof-of-concept package
-  registered under that name drew tens of thousands of downloads and even appeared in Alibaba''s GraphTranslator
-  install instructions. A broken example inside the wheel seeds the same loop from a source agents are
-  told to trust, and it does more harm than no example at all.'
+rationale: Miri Wheel Extensions §7.2.2 requires every example to run without modification (credentials excepted).
+  Agents treat shipped examples as ground truth and reproduce them verbatim in generated code. Wrong but plausible
+  instructions propagate at machine speed. Lasso Security's 2023–2024 research showed LLMs repeatedly recommending
+  the nonexistent huggingface-cli PyPI package. The proof-of-concept package registered under that name drew tens
+  of thousands of downloads and even appeared in Alibaba's GraphTranslator install instructions. A broken example
+  inside the wheel seeds the same loop from a source agents are told to trust. A wheel with no example at all would
+  not mislead the agent this way.
 fires_when:
 - py_compile fails on any example listed in AGENT_EXAMPLES.json
 - an example exits nonzero or raises when executed in a clean venv containing only the built wheel plus the dependencies

@@ -65,7 +65,7 @@ file in the repository at this version, for reading with history. Both ship insi
 <span class="mono">{{ site.artifacts[0].workflow }}</span>, which runs the same validators the repository gates on
 (<span class="mono">make validate</span>, <span class="mono">make consistency</span>), builds the wheel with
 <span class="mono">{{ site.artifacts[0].built_by }}</span>, attests it, and attaches it to the release for that tag.
-When the reference linter is available to the build, the job also scores the wheel and fails the release on a low
-score. The linter is in development and not yet public. The repository stays the source of truth; this is a derived output, like
+When the reference linter is available to the build, the job also scores the wheel and stops the release if any MUST
+check fails. The linter is in development and not yet public. The repository stays the source of truth; this is a derived output, like
 this site.</p>
 {% endblock %}

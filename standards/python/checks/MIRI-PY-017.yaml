@@ -22,10 +22,10 @@ severity:
   violation_unit: each example lacking error handling
   population_unit: all example files listed in AGENT_EXAMPLES.json
 short_description: Examples demonstrate the package's error/exception handling
-long_description: 'At least one example in AGENT_EXAMPLES.json guards a fallible call with try/except
-  or an equivalent, and the examples exercise the exception types that sdk-manifest.json declares in error_handling
-  or common_errors. When the manifest declares package exception types, examples/ includes an error-handling
-  example.'
+long_description: The examples pass when at least one example in AGENT_EXAMPLES.json guards a fallible call with
+  try/except or an equivalent, and at least one exception type that sdk-manifest.json declares in error_handling
+  or common_errors appears in some example. When the manifest declares package exception types, they pass only if
+  examples/ includes an error-handling example.
 rationale: 'Miri Wheel Extensions §7.2.2 requires examples to include proper error handling because agents
   copy handling structure verbatim into generated integrations. The sdk-manifest.json file already declares
   the package''s exception types and recovery guidance (Agent Metadata §4.1 error_handling). A declaration

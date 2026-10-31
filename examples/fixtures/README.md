@@ -18,8 +18,8 @@ Eleven builds of one trivial package — **identical source, different shipped m
 consumer actually does when the metadata is absent, present, or hostile.
 
 > **Honesty constraint.** These fixtures demonstrate what is *available* to a consumer, never what is *achieved* by
-> one. Nothing here is evidence that consuming Miri metadata improves agent outcomes; that claim is gated on the
-> pre-registered experiment.
+> one. Nothing here is evidence that consuming Miri metadata improves agent outcomes; that claim waits for a
+> planned, pre-registered study.
 
 ## The variants
 

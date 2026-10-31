@@ -23,17 +23,18 @@ long_description: 'The consumer has to treat a trust determination as a statemen
   void: that its advisory sources were queried, that its replacement was judged legitimate, that its patterns carried
   no directive text. The reads that produced those verdicts have to run again against the new bytes before the consumer
   acts on them.'
-rationale: 'A purl as this standard requires it identifies a name and a version rather than a byte stream. Two different
-  artifacts can therefore carry the same `identity.purl`, and nothing in the standard detects it. Uninstalling a
-  distribution and installing different bytes at the same version moves no field a consumer would compare. The adversary
-  is the one Lifecycle and Security Metadata §9.1 already names: a package trustworthy when adopted and malicious
-  later. Here it arrives by a route that publishes nothing. Lifecycle and Security Metadata §9.4 explains why the
-  payoff is larger here than in plain documentation. Structured, authoritative-looking metadata invites a consumer
-  to lower its guard. An agent taught to read and act on it is a better target than one that was not. The exposure
-  is worst where the §9.5 foundation is absent. PEP 740 attestation is the only field tying an artifact to an independent
-  identity. It is network-gated and conditional, and a locally built wheel carries none. Local builds are also the
-  workflow where same-version replacement is routine, because a maintainer rebuilding cannot bump a version on every
-  edit. A consumer caching a verdict keyed on purl is caching on a key that does not identify what it read.'
+rationale: 'A purl as this standard requires it identifies a name and a version rather than a byte stream. Two
+  different artifacts can carry the same `identity.purl`, and nothing in the standard detects it. Uninstalling
+  a distribution and installing different bytes at the same version moves no field a consumer would compare. The
+  adversary is the one Lifecycle and Security Metadata §9.1 already names: a package trustworthy when adopted
+  and malicious later. Here it arrives by a route that publishes nothing. Lifecycle and Security Metadata §9.4
+  explains why the payoff is larger here than in plain documentation. Structured, authoritative-looking metadata
+  invites a consumer to lower its guard. An agent taught to read and act on it is a better target than one that
+  was not. The exposure is worst where the §9.5 foundation is absent. PEP 740 attestation is the only field tying
+  an artifact to an independent identity. It is network-gated and conditional, and a locally built wheel carries
+  none. Local builds are also the workflow where same-version replacement is routine, because a maintainer rebuilding
+  cannot bump a version on every edit. A consumer caching a verdict keyed on purl is caching on a key that does
+  not identify what it read.'
 fires_when:
 - The consumer is driven with a `package.replaced` event for a package it previously read, and reports a security,
   advisory, replacement or antipattern conclusion drawn from the earlier read rather than re-reading

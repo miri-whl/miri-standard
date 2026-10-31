@@ -1,37 +1,38 @@
 # Consumption Standards (v0.3)
 
-The producer standards (`standards/python/`, `standards/cli/`) define what an artifact must **ship**. This suite —
-new in **0.3-draft** — defines how an agent **consumes** what was shipped: how it discovers the metadata at decision
+The producer standards (`standards/python/`, `standards/cli/`) define what an artifact must **ship**. This suite,
+new in **0.3-draft**, defines how an agent **consumes** what was shipped: how it discovers the metadata at decision
 time, what it reads for a given task, and what a conformant consumer is. It closes the producer→consumer loop the
 first three review rounds kept flagging.
 
 The suite is deliberately disciplined: it specifies **mechanisms, never benefits**. Whether consuming this metadata
-improves agent outcomes is an empirical question with a pre-registered experiment attached; no normative text here
-asserts effectiveness. The consumption *mechanism* is nonetheless a prerequisite — the experiment cannot run without
-it, and the standard cannot say what makes the producer metadata worth shipping until the consumption contract exists.
+improves agent outcomes is an empirical question for a planned, pre-registered study, and no normative text here
+asserts effectiveness. The consumption *mechanism* is nonetheless a prerequisite. The study cannot run without it,
+and the standard cannot say what makes the producer metadata worth shipping until the consumption contract exists.
 
 ## Documents
 
-- [Discovery Contract](discovery-contract.md) — how a consumer obtains a package's MIRI metadata at decision time: a
-  transport-agnostic metadata-query contract, with an MCP context server as its first binding.
-- [Consumption Map](consumption-map.md) — the task-to-document reading contract: per agent task, what to read and in
-  what order, what not to do, and an audit of what every metadata element is for.
-- [Consumer Conformance](consumer-conformance.md) — what a conformant consumer is: 15 numbered `MIRI-CONSUMER`
-  checks weighted to 100, verified by **driving** a consumer against the fixtures rather than by inspecting an
-  artifact.
-- [Surface Conformance](surface-conformance.md) — what a conformant metadata-query surface is: 16 numbered
-- [Agent Integration Contract](agent-integration-contract.md) — the triggers that start a task, and the Claude Code binding.
-  `MIRI-SURFACE` checks weighted to 100. One profile per actor: the contract binds two programs that fail
-  differently, and a single score would not say which one is broken.
+- [Discovery Contract](discovery-contract.md): how a consumer obtains a package's MIRI metadata at decision time. It
+  is a transport-agnostic metadata-query contract whose first binding is an MCP context server.
+- [Consumption Map](consumption-map.md): the task-to-document reading contract. For each agent task it says what to
+  read, in what order, and what not to do. It also audits what every metadata element is for.
+- [Consumer Conformance](consumer-conformance.md): what a conformant consumer is. It defines 18 numbered
+  `MIRI-CONSUMER` checks weighted to 100 and verified by **driving** a consumer against the fixtures rather than by
+  inspecting an artifact.
+- [Surface Conformance](surface-conformance.md): what a conformant metadata-query surface is. It defines 18 numbered
+  `MIRI-SURFACE` checks weighted to 100. The contract binds three programs. The consumer and the surface each have a
+  profile because they fail differently, and a single score would not say which one is broken.
+- [Agent Integration Contract](agent-integration-contract.md): the triggers that start a
+  task, and the Claude Code binding.
 
 ## Fixtures
 
-[`examples/fixtures/`](../../examples/fixtures/) holds one trivial package built three ways — **identical source,
-different shipped metadata**: a `bare` variant (the honest-degradation baseline), a conforming `miri` twin, and an
-`adversarial` twin whose metadata forges envelope signals, claims symbols that do not exist, pads its index to defeat
-a cap, and carries injection text. Source identity is enforced mechanically by the build script, and
-`tools/validate_fixtures.py` asserts each attack is still live, so the checks written against them cannot quietly
-become vacuous.
+[`examples/fixtures/`](../../examples/fixtures/) holds one trivial package built three ways, with **identical source
+and different shipped metadata**: a `bare` variant (the baseline for honest degradation), a conforming `miri` twin,
+and an `adversarial` twin whose metadata forges envelope signals, claims symbols that do not exist, pads its index to
+defeat a cap, and carries injection text. The build script enforces source identity mechanically.
+Because `tools/validate_fixtures.py` asserts that each attack is still live, the checks written against them cannot
+quietly become vacuous.
 
 ## Origin
 

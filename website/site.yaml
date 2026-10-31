@@ -123,7 +123,7 @@ artifacts:
     filename: "miri-standard-fixtures-{version}.tar.gz"
     sums: SHA256SUMS
     what: >-
-      The three fixture suites (11 consumption variants, 4 CLI arms, 9 greetlib wheels) with their 40
+      The three fixture suites (11 consumption variants, 4 CLI arms, 9 greetlib wheels) with their 45
       goldens, the build recipes, and the validators and attribution graders that gate them. The wheel
       carries the rules; this carries what to run them against. Install the wheel alongside: the
       validators resolve check definitions and schemas from it rather than duplicating them.

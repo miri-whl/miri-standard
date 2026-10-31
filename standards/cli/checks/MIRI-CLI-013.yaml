@@ -14,9 +14,9 @@ severity:
   population_unit: all commands in --describe
 short_description: Failures emit JSON with a stable machine `error.code`
 long_description: 'An induced failure has to produce a JSON error payload on the machine channel with `ok: false`
-  and an `error.code` from the documented wire contract, and the same failure has to yield the same code each
-  time. An argument outside its documented type (an unparseable `--since` version, a path that cannot exist, a
-  value outside an enumerated set) has to be rejected with `VALIDATION` instead of reported as success.'
+  and the `error.code` that the documented wire contract assigns to that failure. An argument outside its documented
+  type (an unparseable `--since` version, a path that cannot exist, a value outside an enumerated set) has to be
+  rejected with `VALIDATION` instead of reported as success.'
 rationale: CLI Spec §6 makes the machine code the one stable surface of a failure. Prose wording is free to change
   between releases. An agent that branches on message text breaks silently the first time a sentence is reworded.
   The precedent is settled API practice. AWS service errors carry machine codes such as ThrottlingException that

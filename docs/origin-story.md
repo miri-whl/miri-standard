@@ -22,7 +22,7 @@ Its smallest layer can be written by hand: **Miri Core**, 14 checks on identity,
     "registry": "https://pypi.org/simple/"
   },
   "advisory_sources": [
-    { "type": "osv", "ecosystem": "PyPI", "url": "https://api.osv.dev/v1/query" }
+    { "type": "osv", "ecosystem": "PyPI", "url": "https://api.osv.dev/v1/query", "authoritative": true }
   ],
   "update_check": { "type": "pypi-json", "url": "https://pypi.org/pypi/weather-sdk/json" },
   "support": { "status": "active", "supported_versions": [">=1.0,<2.0"] }

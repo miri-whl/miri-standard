@@ -12,11 +12,11 @@ severity:
   default: HIGH
   violation_unit: each malformed document served, repaired, or reported as absent
 short_description: Reports a document it cannot parse as `METADATA_UNREADABLE`, never absent or repaired
-long_description: This obligation from Discovery Contract §4.2 covers READABILITY, meaning whether the bytes parse,
-  and leaves schema validity out of its scope. A document that parses is relayed verbatim whatever its schema
-  says, because §3.2 specifies `document` as serving the named document verbatim. Gating on validity would also
-  refuse the adversarial fixtures that ten of the eighteen consumer checks are driven against, and the consumer
-  profile would be disabled to enforce a property the producer checklist already enforces at build time.
+long_description: This obligation from Discovery Contract §4.3 covers READABILITY, meaning whether the bytes parse,
+  and leaves schema validity out of its scope. A document that parses is relayed verbatim whatever its schema says,
+  because §3.2 specifies `document` as serving the named document verbatim. Gating on validity would also refuse the
+  adversarial fixtures that ten of the eighteen consumer checks are driven against, and the consumer profile would
+  be disabled to enforce a property the producer checklist already enforces at build time.
 examples:
   violation: '{"ok": true, "present": false, "reason": "no lifecycle.json"}
 

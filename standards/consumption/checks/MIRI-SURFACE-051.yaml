@@ -13,9 +13,9 @@ severity:
   default: MEDIUM
   violation_unit: each served answer signalled as a transport protocol error
 short_description: Carries absence and error as tool results, never as protocol errors
-long_description: Discovery Contract §6.1 treats absence and coded errors as served answers. A §4.2 absence and
-  a §4.3 error envelope have to travel as ordinary tool results carrying the full envelope, and returning either
-  as a JSON-RPC error fails the check.
+long_description: Discovery Contract §6.1 treats absence and coded errors as served answers. A §4.2 absence and a
+  §4.3 error envelope have to travel as ordinary tool results carrying the full envelope. Neither one is ever returned
+  as a JSON-RPC error.
 examples:
   violation: '{"jsonrpc": "2.0", "error": {"code": -32602, "message": "no lifecycle.json"}}'
   compliant: '{"content": [{"type": "text", "text": "{\"schema_version\":\"1\",\"ok\":true,\"present\":false,…}"}]}'

@@ -17,12 +17,11 @@ short_description: Present and validates against schema
 long_description: 'Passing needs `agent-metadata/usage-patterns.json` with top-level version, generated_at
   and a non-empty `patterns` array. Every pattern carries id, name, description, complexity, category
   and code. A pattern id listed in `categories` or `learning_paths` has to be defined by some pattern.'
-rationale: 'Usage patterns exist so agents insert vetted idioms instead of re-deriving them. For that
-  reason usage-patterns-v1.json makes id, name, description, complexity, category, and code mandatory
-  for every pattern. Other documents key on the id. The usage_patterns arrays in sdk-manifest.json, the
-  affected_patterns in migration-guide.json, and prompt templates all reference patterns by id. An entry
-  with no stable id or no code body therefore breaks cross-referencing in every file that points at it
-  as well as in this one.'
+rationale: Usage patterns exist so agents insert vetted idioms instead of re-deriving them. For that reason
+  usage-patterns-v1.json makes id, name, description, complexity, category, and code mandatory for every pattern.
+  Other documents key on the id. The usage_patterns arrays in sdk-manifest.json, the affected_patterns in
+  migration-guide.json, and prompt templates all reference patterns by id. An entry with no stable id or no
+  code body breaks cross-referencing in every file that points at it as well as in this one.
 fires_when:
 - '`agent-metadata/usage-patterns.json` is absent'
 - The top level lacks version, generated_at, or patterns

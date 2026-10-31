@@ -13,15 +13,17 @@ severity:
   default: HIGH
   violation_unit: the advisory_sources list
 short_description: ≥1 valid entry in `advisory_sources`
-long_description: '`advisory_sources` in `--describe` has to hold at least one entry of type osv, osv-internal, or osv-local
-  with a `url`, and an "osv" entry also needs an `ecosystem`. Every entry authoritative for the artifact has to name an
-  ecosystem the artifact is distributed in, and at least one such entry is required unless `advisory_coverage` is `none`.
-  A `none` coverage requires `support.security_policy` instead.'
-rationale: Under Miri's first design principle (§2.1), the CLI declares where advisories live and consumers compute the
-  verdict at call time. `advisory_sources` is the pointer that every vulnerability answer about the tool passes through.
-  An empty or missing list opts the tool out of that join while the rest of `--describe` still looks compliant. The omission
-  is silent because OSV-style endpoints return an empty result for names they have never seen. That result is indistinguishable
-  from an audited clean bill. CLI Spec §4 therefore requires at least one entry of a valid type (osv, osv-internal, osv-local).
+long_description: '`advisory_sources` in `--describe` has to hold at least one entry, and every entry needs a type
+  of osv, osv-internal, or osv-local and a `url`. An "osv" entry also needs an `ecosystem`. At least one entry has
+  to be authoritative for the artifact unless `advisory_coverage` is `none`, and an authoritative entry that names
+  an ecosystem has to name one the artifact is distributed in. A `none` coverage requires `support.security_policy`
+  instead.'
+rationale: Under Miri's first design principle (§2.1), the CLI declares where advisories live and consumers compute
+  the verdict at call time. `advisory_sources` is the pointer that every vulnerability answer about the tool passes
+  through. An empty or missing list opts the tool out of that join while the rest of `--describe` still looks
+  compliant. The omission is silent because OSV-style endpoints return an empty result for names they have never
+  seen. That result is indistinguishable from an audited clean bill. CLI Spec §4 requires at least one entry of
+  a valid type (osv, osv-internal, osv-local).
 fires_when:
 - --describe carries no `advisory_sources`, or the array is empty
 - An entry's `type` is outside osv / osv-internal / osv-local, or its `url` is missing

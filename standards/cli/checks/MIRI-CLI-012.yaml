@@ -13,9 +13,9 @@ severity:
   default: MINOR
   violation_unit: each nondeterministic output
 short_description: Same inputs produce identically ordered output
-long_description: The same command is run twice with identical inputs and state, and the two outputs have to list the same
-  elements in the same order. Order that tracks map, hash, or directory-read iteration instead of a documented sort key
-  also fails the check, as does order that changes with `LC_ALL` or `LC_COLLATE`.
+long_description: The same command is run twice with identical inputs and state. It passes when both outputs
+  list the same elements in the same order, that order follows a documented sort key rather than map, hash,
+  or directory-read iteration, and changing `LC_ALL` or `LC_COLLATE` leaves it unchanged.
 rationale: 'Agent-First CLI principle 03 (deterministic ordering) exists because the commonest container types are nondeterministic
   by construction. Go''s runtime deliberately randomizes map iteration order. Python randomizes string hashing per process
   (PYTHONHASHSEED), and readdir() returns filesystem-dependent order. A CLI that serializes any of these directly emits

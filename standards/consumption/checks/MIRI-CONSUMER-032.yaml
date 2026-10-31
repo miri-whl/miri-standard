@@ -14,12 +14,12 @@ severity:
   violation_unit: each automatic migration onto a declared replacement
 short_description: Never auto-migrates onto a publisher-declared `replacement`
 long_description: A declared `replacement` has to reach a human as a claim to confirm. Installing it, or rewriting
-  call sites onto it, without human confirmation fails the check. Leaving unflagged a replacement whose purl namespace
-  differs from the deprecated package's also fails.
-rationale: A `replacement` purl is publisher-authored and may name a package the publisher does not control. A compromised
-  release can set a deprecation whose replacement points at an attacker-held successor. A consumer that migrates
-  automatically has then performed the supply-chain attack on the maintainer's behalf. The namespace change is the
-  detectable signal, and flagging it is therefore part of the check.
+  call sites onto it, requires human confirmation first. A replacement whose purl namespace differs from the
+  deprecated package's has to be flagged.
+rationale: A `replacement` purl is publisher-authored and may name a package the publisher does not control. A
+  compromised release can set a deprecation whose replacement points at an attacker-held successor. A consumer
+  that migrates automatically has then performed the supply-chain attack on the maintainer's behalf. The namespace
+  change is the detectable signal, and the check requires flagging it.
 fires_when:
 - The consumer installs, or rewrites call sites onto, a declared `replacement` without human confirmation
 - The consumer does not flag a `replacement` whose purl namespace differs from the deprecated package's

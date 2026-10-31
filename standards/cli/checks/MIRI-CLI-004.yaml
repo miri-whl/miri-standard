@@ -14,14 +14,14 @@ severity:
   violation_unit: each subcommand without help
   population_unit: all subcommands in --describe
 short_description: '`<cli> <sub> --help` works for every subcommand'
-long_description: Every subcommand listed in `--describe` or the root help is invoked as `<cli> <sub> --help`. Each has
-  to exit 0 with non-empty usage text specific to that subcommand. An unknown-flag error, a non-zero exit, a copy of the
-  root usage text, or placeholder output is a violation.
-rationale: Agents discover a command tree incrementally, one `--help` at a time (clig.dev's per-subcommand help recommendation
-  exists for this walk). A subcommand without help is a dead end that forces the agent to guess flags against the live
-  tool. For a mutating subcommand, guessing means learning the interface by side effect. Help has to derive from the same
-  schema as the definition itself (CLI Spec §2.3). A missing subcommand help is therefore also a sign that the surface
-  is hand-maintained and already drifting.
+long_description: Every subcommand listed in `--describe` or the root help is invoked as `<cli> <sub> --help`. A
+  subcommand passes when it exits 0 with non-empty usage text specific to it. An unknown-flag error, a non-zero
+  exit, a copy of the root usage text, or placeholder output is a violation.
+rationale: Agents discover a command tree incrementally, one `--help` at a time (clig.dev's per-subcommand help
+  recommendation exists for this walk). A subcommand without help is a dead end that forces the agent to guess flags
+  against the live tool. For a mutating subcommand, guessing means learning the interface by side effect. Help has
+  to derive from the same schema as the definition itself (CLI Spec §2.3). A missing subcommand help is also a sign
+  that the surface is hand-maintained and already drifting.
 fires_when:
 - For any subcommand listed in `--describe` or the root help, `<cli> <sub> --help` exits non-zero or reports an unknown
   flag

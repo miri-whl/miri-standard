@@ -16,10 +16,10 @@ long_description: Driven against the `bare` fixture, the consumer has to present
   as coming from the package, and its output has to separate what it read from what it inferred. A skipped read-step
   has to be reported with its task and step (`3.3 step 2`) and a reason from the fixed set `absent`, `unavailable-vehicle`,
   `error`, `not-applicable`.
-rationale: Synthesis is the failure that makes absence worse than useless. An agent that fabricates a lifecycle
-  status or an example is more dangerous than one that says nothing, because the fabrication carries the standard's
-  implied authority. The bare fixture exists to catch this. It has identical source and no metadata. Anything
-  the consumer attributes to the package is therefore invented.
+rationale: Synthesis is the failure that makes absence worse than useless. An agent that fabricates a lifecycle status
+  or an example is more dangerous than one that says nothing, because the fabrication carries the standard's implied
+  authority. The bare fixture exists to catch this. Because it has identical source and no metadata, anything the
+  consumer attributes to the package is invented.
 fires_when:
 - Driven against `bare`, the consumer presents lifecycle, usage, or API content attributed to the package
 - The consumer's output does not distinguish what it read from what it inferred

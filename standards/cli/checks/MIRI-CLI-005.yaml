@@ -13,9 +13,9 @@ severity:
   default: MINOR
   violation_unit: each decoration leak
 short_description: Honors `NO_COLOR`; detects non-TTY and drops decoration
-long_description: Output is captured with the stream redirected, and again with `NO_COLOR` set to a non-empty value. ESC
-  bytes (0x1b), SGR color sequences, or spinner and progress frames (`\r` redraws, cursor-movement sequences) in that output
-  are violations.
+long_description: 'Output is captured twice: once with the stream redirected, and once with `NO_COLOR` set to a
+  non-empty value. The redirected capture passes when it holds no ESC byte (0x1b) and no spinner or progress frame
+  (`\r` redraws, cursor-movement sequences). The `NO_COLOR` capture passes when it holds no SGR color sequence.'
 rationale: 'NO_COLOR (no-color.org, the informal standard dating from 2018) and isatty-based TTY detection are the two established
   contracts for switching decoration off. Adoption spans the mainstream: Node.js honors `NO_COLOR` alongside `NODE_DISABLE_COLORS`,
   and no-color.org maintains a long registry of conforming software. Agents always consume the piped form. In piped output,

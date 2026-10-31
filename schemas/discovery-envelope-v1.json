@@ -43,7 +43,7 @@
     },
     "reason": {
       "type": "string",
-      "description": "Free text for humans explaining an absence (\u00a74.2). Surface-authored: it MUST NOT carry publisher bytes, which would make it an injection channel wearing a human-readable label (MIRI-SURFACE-002). Consumers MUST NOT branch on it."
+      "description": "Free text for humans explaining an absence or a truncated `document` response (\u00a74.2, \u00a73.2.3). Surface-authored: it MUST NOT carry publisher bytes, which would make it an injection channel wearing a human-readable label (MIRI-SURFACE-002). Consumers MUST NOT branch on it."
     },
     "truncated": {
       "type": "boolean",

@@ -72,8 +72,7 @@
           },
           "authoritative": {
             "type": "boolean",
-            "default": true,
-            "description": "Whether this source is authoritative for advisories against the package itself (vs. its dependency tree only); defaults to true when omitted"
+            "description": "Whether this source is authoritative for advisories against the package itself (vs. its dependency tree only). Write it out on every entry: a consumer does not infer authority from an omitted field, and MIRI-PY-021 requires at least one entry with `authoritative: true`."
           }
         },
         "additionalProperties": false,

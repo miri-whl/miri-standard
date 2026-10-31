@@ -13,11 +13,11 @@ severity:
   default: CRITICAL
   violation_unit: each network request derived from a served document
 short_description: 'Fetches nothing: never resolves a URL found in a served document'
-long_description: Discovery Contract §9.2 forbids the surface to resolve, fetch, or issue any network request to
-  a URL appearing in or derived from a served document, and to enrich, annotate, or validate a response with the
-  result. Contacting an advisory or update-check endpoint while answering any §3 operation also fails the check.
-  Import-freedom is scored separately by MIRI-SURFACE-022, because the two prohibitions have different failure
-  modes and different evidence.
+long_description: Discovery Contract §9.2 forbids the surface to resolve, fetch, or issue any network request to a
+  URL appearing in or derived from a served document, and to enrich, annotate, or validate a response with the result.
+  The surface also contacts no advisory or update-check endpoint while answering any §3 operation. Import-freedom
+  is scored separately by MIRI-SURFACE-022, because the two prohibitions have different failure modes and different
+  evidence.
 examples:
   violation: 'requests.get(doc["update_check"]["url"])  # to annotate the response with "latest version"'
   compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": true,\n \"document\": {\"update_check\": {\"\
@@ -25,7 +25,7 @@ examples:
 rationale: A surface that resolves a publisher-declared URL turns publisher-controlled data into server-side requests.
   That is the SSRF exposure the producer standard guards, relocated into the query surface itself. The adversarial
   fixture points `update_check.url` at the cloud-metadata address so this is testable. A conformant surface serves
-  that value unchanged and never dereferences it. The two prohibitions are caught by different fixtures, and an
+  that value unchanged and never dereferences it. Fetching and importing are caught by different fixtures, and an
   import canary cannot detect a fetch.
 fires_when:
 - The surface resolves, fetches, or issues any network request to a URL appearing in or derived from a served document

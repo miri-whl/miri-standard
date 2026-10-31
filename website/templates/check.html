@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% import '_macros.html' as m %}
-{% block title %}{{ check.id }}: {{ check.name }}{% endblock %}
+{% block title %}{% if check.status == 'withdrawn' %}Withdrawn: {% endif %}{{ check.id }}: {{ check.name }}{% endblock %}
 {% block content %}
 {{ m.spec_header(check.id ~ ': ' ~ check.name,
                  [('Schema', schema_name), ('Status', check.status), ('Added', check.added_in)],

@@ -452,9 +452,10 @@ def main() -> int:
                 for f in rs.get("findings", []):
                     tasks_covered.add(f["task"])
 
-        # The four kinds the Claude Code binding maps (6.1). package.first_reference and
+        # The five kinds the Claude Code binding maps (6.1). package.first_reference and
         # integration.begin are deliberately unsupported and must NOT appear in any event.
-        supported = {"dependency.add", "dependency.version_change", "runtime.error", "test.author"}
+        supported = {"dependency.add", "dependency.version_change", "package.replaced", "runtime.error",
+                     "test.author"}
         check("traces cover every kind the binding maps", supported <= kinds_covered,
               f"missing {sorted(supported - kinds_covered)}")
         check("no trace emits a kind the binding declares unsupported",

@@ -13,7 +13,7 @@ severity:
   violation_unit: each clean security verdict issued from shipped metadata
 short_description: Never reports a clean security verdict from shipped metadata
 long_description: Driven against the `adversarial` fixture, the consumer fails if it reports no known vulnerabilities
-  without querying a live source. Treating an empty or absent advisory list as evidence of safety also fails.
+  without querying a live source. Treating an empty or absent advisory list as evidence of safety is a violation too.
 rationale: The standard has publishers declare advisory sources and leaves the verdict to the consumer. An empty
   `advisory_sources` list means the publisher listed no sources. It does not mean that no advisories exist, and
   the adversarial fixture ships such a list. A consumer that reads it as a clean bill of health has turned the

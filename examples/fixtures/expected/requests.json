@@ -66,14 +66,6 @@
       "request": { "operation": "lifecycle", "package": "greet_malformed" },
       "expect": { "ok": false, "error": { "code": "METADATA_UNREADABLE", "retryable": false } },
       "why": "The file exists and does not parse. Reporting it absent would tell a consumer the package ships nothing, which is false and hides a real problem."
-    },
-    {
-      "id": "schema_invalid_is_unreadable",
-      "checks": ["MIRI-SURFACE-012"],
-      "fixture": "malformed",
-      "request": { "operation": "document", "package": "greet_malformed", "name": "sdk-manifest.json" },
-      "expect": { "ok": false, "error": { "code": "METADATA_UNREADABLE", "retryable": false } },
-      "why": "Parses as JSON, fails its schema (api_index is a string). §3.2.1 now requires validation before serving, so METADATA_UNREADABLE covers schema-invalidity and not only malformed JSON."
     }
   ]
 }

@@ -13,7 +13,8 @@ thirty-six numbered checks now make correct consumption verifiable.
 **[Discovery Contract](../standards/consumption/discovery-contract.md):** how metadata reaches an agent at the moment
 it is deciding what to call. It defines eight read-only operations in three kinds: *retrieval* (`document`, with
 `lifecycle` and `migration-guide` shorthands), *derived views* (`api-index`, `patterns`, `graph`), and
-*determination* (`list`, `resolve`). MCP is the first binding of the contract.
+*determination* (`list`, `resolve`). MCP is the first binding. The contract itself does not depend on any
+transport.
 
 **[Consumption Map](../standards/consumption/consumption-map.md):** what to read for each task, and in what order.
 It covers six tasks: first use, scaffolding an integration, upgrading a dependency, diagnosing a runtime failure,

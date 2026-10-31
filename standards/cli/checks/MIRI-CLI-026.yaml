@@ -16,12 +16,12 @@ short_description: No implicit update check on normal invocations; nothing print
 long_description: Ordinary commands such as `<cli> list --json` are run and watched for update activity. A network request
   to a release manifest, registry, or notifier endpoint is a violation. Update text on stdout (or on stderr in non-interactive
   contexts) and a changed update-check cache or timestamp file are violations too.
-rationale: 'The default behavior of update-notifier is the cautionary pattern. Ordinary invocations spawn an unref''d child
-  that phones the npm registry on a daily interval, and opting out is left to the loose `NO_UPDATE_NOTIFIER` convention.
-  The user never requested that phone-home and cannot discover it from `--help`. Channel corruption is worse than the privacy
-  leak. An "update available" banner printed to stdout lands inside the JSON payload, and every downstream parser fails
-  at once (§2.5). CLI Spec §5.1 therefore makes the check passive: update state is consulted only when `check-update` is
-  explicitly invoked.'
+rationale: 'The default behavior of update-notifier is the cautionary pattern. Ordinary invocations spawn an unref''d
+  child that phones the npm registry on a daily interval, and opting out is left to the loose `NO_UPDATE_NOTIFIER`
+  convention. The user never requested that phone-home and cannot discover it from `--help`. Channel corruption is
+  worse than the privacy leak. An "update available" banner printed to stdout lands inside the JSON payload, and every
+  downstream parser fails at once (§2.5). CLI Spec §5.1 makes the check passive: update state is consulted only when
+  `check-update` is explicitly invoked.'
 fires_when:
 - an ordinary command (e.g. `<cli> list --json`) issues network requests to a release manifest, registry, or notifier endpoint
 - update or upgrade text appears on the stdout of any command other than `check-update`, or on stderr of ordinary commands

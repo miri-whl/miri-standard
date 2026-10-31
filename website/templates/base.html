@@ -6,7 +6,7 @@
 <title>{% block title %}{% endblock %} · miri-standard</title>
 {% if description %}<meta name="description" content="{{ description }}">
 <meta property="og:description" content="{{ description }}">{% endif %}
-<meta property="og:title" content="{{ self.title() }} · Miri Standard">
+<meta property="og:title" content="{{ self.title() }}{% if active != 'index.html' %} · miri-standard{% endif %}">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Miri Standard">
 <meta property="og:image" content="{{ site.site_url }}/assets/miri-green.png">

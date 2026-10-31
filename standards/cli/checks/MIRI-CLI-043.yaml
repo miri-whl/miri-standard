@@ -13,15 +13,16 @@ severity:
   default: MINOR
   violation_unit: each unclean cancellation
 short_description: SIGINT/SIGTERM cleans up partial state before exit
-long_description: SIGINT or SIGTERM is sent during a mutation against a fixture. The tool has to leave no truncated or partially
-  written file, no residue that blocks a re-run, and no unreleased lock, and an immediate re-run has to succeed. Rewriting
-  state files in place (open, truncate, write) instead of writing a temporary and renaming it is static evidence of a violation.
-rationale: 'Harness timeouts, user interrupts, and scheduler preemption cancel agent invocations as a normal part of operation.
-  Agent-First CLI principle 11 therefore demands cleanup over corruption. Terraform 1.1.0–1.1.2 shows the failure class
-  is real: interrupting a run could write an empty state file (hashicorp/terraform #30266). A cancellation could then destroy
-  the record of all managed infrastructure. Git shows the long-standing correct pattern. It updates refs by writing a lockfile
-  and renaming it atomically into place. A killed process leaves at worst a stale `.lock` to remove and never a half-written
-  ref.'
+long_description: SIGINT or SIGTERM is sent during a mutation against a fixture. The tool passes when it leaves no
+  truncated or partially written file, no residue that blocks a re-run, and no unreleased lock, and when a re-run
+  neither fails nor behaves differently because of leftovers from the cancelled run. Rewriting state files in place
+  (open, truncate, write) instead of writing a temporary and renaming it is static evidence of a violation.
+rationale: 'Harness timeouts, user interrupts, and scheduler preemption cancel agent invocations as a normal part
+  of operation. Agent-First CLI principle 11 demands cleanup over corruption. Terraform 1.1.0–1.1.2 shows the failure
+  class is real: interrupting a run could write an empty state file (hashicorp/terraform #30266). A cancellation could
+  then destroy the record of all managed infrastructure. Git shows the long-standing correct pattern. It updates refs
+  by writing a lockfile and renaming it atomically into place. A killed process leaves at worst a stale `.lock` to
+  remove and never a half-written ref.'
 fires_when:
 - Sending SIGINT or SIGTERM during a mutation leaves a truncated or partially written file, temporary residue that blocks
   re-runs, or an unreleased lock

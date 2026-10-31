@@ -23,7 +23,7 @@ tiers:
 severity:
   default: MEDIUM
   violation_unit: the examples directory
-short_description: 'The wheel ships `examples/quickstart.py`'
+short_description: '`examples/quickstart.py` is reachable from the installed import package'
 long_description: 'The quickstart, `examples/quickstart.py`, installs inside an import package of the
   wheel, imports the package it ships in, and contains executable statements. Any path named by `Agent-Quickstart-File`
   in METADATA exists in the wheel. The check is tiered: presence is T0 and earns a fraction of the weight,

@@ -17,10 +17,10 @@ short_description: Every `replacement` names a surface in the current `--describ
 long_description: Every `lifecycle.replacement` value has to resolve to a flag or subcommand path in the same binary's
   current `--describe`, and that surface must be neither deprecated nor removed itself. The `suggestions` of the
   structured removal error have to name surfaces present in `--describe` as well.
-rationale: The `replacement` field is read at the moment a consumer's old invocation stopped working. CLI Spec §6.3-3
-  therefore requires it to name a surface present in the current `--describe`. A pointer at a flag that was renamed
-  before shipping, mistyped, or never built sends the migrating consumer into a second failure. That failure is
-  worse than the first because the consumer followed the tool's own instruction to get there. In a conforming implementation
+rationale: CLI Spec §6.3-3 requires the `replacement` field to name a surface present in the current `--describe`,
+  because a consumer reads it at the moment its old invocation stopped working. A pointer at a flag that was renamed
+  before shipping, mistyped, or never built sends the migrating consumer into a second failure. That failure is worse
+  than the first because the consumer followed the tool's own instruction to get there. In a conforming implementation
   the property holds by construction (§2.3, one schema struct). The check catches hand-maintained replacement strings
   that nothing ever resolved.
 fires_when:

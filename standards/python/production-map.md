@@ -8,9 +8,10 @@
 
 The [Consumption Map](../consumption/consumption-map.md) gives a consumer an ordered model of six tasks. Each task is
 a sequence of read-steps, and each step is labelled with the vehicle that supplies it. The producer side has a
-[checklist](linter-checklist.md) of 45 numbered check definitions in six categories, scored additively, and 43 of them
-are active (`MIRI-PY-010` and `MIRI-PY-016` are withdrawn). It has no ordered model. No document says what an author
-does first, what depends on what, or which obligations cannot be evaluated yet.
+[checklist](linter-checklist.md) of 45 numbered check definitions in six categories, and 43 of them are active
+(`MIRI-PY-010` and `MIRI-PY-016` are withdrawn). A wheel's score is the sum of the weights of its passing checks over
+the weights of the checks that applied. Nothing on the producer side gives an ordered model. No document says what an
+author does first, what depends on what, or which obligations cannot be evaluated yet.
 
 An implementation team building both halves reported that asymmetry: *"the consumer side was straightforward
 because the Map told us the order; the author side we had to invent an order for, and nothing checks whether we
@@ -71,10 +72,12 @@ The manifest depends only on the source and Stage 0's version (`MIRI-PY-007`, `M
 depends on it**: `MIRI-PY-031` requires every `deprecations[].replacement` to name an interface present in the
 *new* manifest. Generating the guide first means writing replacements that cannot yet be checked.
 
-The code index is built from the same source, and the manifest declares it. `MIRI-PY-045` fires when `code_index`
-names a path that is absent from the wheel or unlisted in RECORD, and when an index file under `.dist-info/` has
-no `code_index` pointer. The index and its declaration are therefore settled together in this stage. No other
-producer check reads the index ([Wheel Extensions §5.5](miri-python-wheel-extensions.md)).
+The code index is built from the same source, and the manifest declares it. `MIRI-PY-045` fires when the wheel ships
+no precomputed code index under `.dist-info/` and `sdk-manifest.json` carries no `code_index`. It also fires when
+`code_index` names a path that is absent from the wheel or unlisted in RECORD, when `code_index.format` is outside the
+closed set the schema declares, and when an index file under `.dist-info/` has no `code_index` pointer
+([Wheel Extensions §5.5](miri-python-wheel-extensions.md)). The index and its declaration are settled together in
+this stage. No other producer check reads the index.
 
 ### Stage 3: Identity and history
 
@@ -84,8 +87,8 @@ producer check reads the index ([Wheel Extensions §5.5](miri-python-wheel-exten
 
 `migration-guide.json` is the most constrained document a wheel author produces, and it comes last in this stage for
 that reason. It needs Stage 1's markers (`MIRI-PY-028`, `MIRI-PY-029`), Stage 2's manifest (`MIRI-PY-031`) and Stage
-0's version (`MIRI-PY-032`). `MIRI-PY-032` requires every `removal_version` to exceed that version. For two of its
-obligations the guide also needs a previous release that may not exist (§3).
+0's version (`MIRI-PY-032`). `MIRI-PY-032` requires every `removal_version` to exceed that version. For three of its
+obligations (`MIRI-PY-009`, `030`, `034`) the guide also needs a previous release that may not exist (§3).
 
 ### Stage 4: Views over the surface
 
@@ -94,23 +97,24 @@ obligations the guide also needs a previous release that may not exist (§3).
 `usage-patterns.json` describes the surface Stage 2 declared. It is last in dependency order, and no *metadata
 document* is generated from it.
 
-Two checks still couple it to the rest of the wheel. `MIRI-PY-039` fires when a prompt template "references a
-metadata file the wheel does not ship (e.g. cites `api-graph.json` when none is present)", and `MIRI-PY-036` checks
-the discovery functions against the whole of `agent-metadata/`. An author who ships a template or a discovery function
-naming a Stage 4 document, and then does not generate it, fails both.
+Two checks couple it to the rest of the wheel. One of `MIRI-PY-039`'s `fires_when` clauses is "A template references
+a metadata file the wheel does not ship (e.g. cites migration-guide.json on a first release, or api-graph.json,
+withdrawn at 0.7.3)". `MIRI-PY-036` checks the discovery functions against the whole of `agent-metadata/`. An author
+who ships a template or a discovery function naming a Stage 4 document, and then does not generate it, fails both.
 
 ## 3. What Cannot Be Verified Yet
 
 Four checks require a **previous release** and are therefore not evaluable on a project's first one:
-`MIRI-PY-009` (`migration-guide.json` is present for any non-initial release and reports the measured delta),
-`MIRI-PY-030` (every public interface removed since the prior release was listed as deprecated in an earlier one),
-`MIRI-PY-034` (deprecated interfaces survive at least two releases before removal) and `MIRI-PY-043` (every interface
-in the measured API delta is named in the changelog's `releases[0]`).
+`MIRI-PY-009` (`migration-guide.json` is present for any non-initial release and is not empty when the API measurably
+changed), `MIRI-PY-030` (every public interface removed since the prior release was listed as deprecated in an earlier
+one), `MIRI-PY-034` (deprecated interfaces survive at least two releases before removal) and `MIRI-PY-043` (every
+interface in the measured API delta is named in the changelog's `releases[0]`).
 
 A linter without access to a prior release **MUST skip these and report the skip** with the reason
 `previous_release_unavailable`, never pass them. Under the scoring model a forfeited check leaves both the numerator
-and the denominator. A first release is therefore scored over what could be evaluated. **A first release cannot
-score 100 on a suite that includes them and should not appear to.**
+and the denominator ([checklist, Scoring Model](linter-checklist.md#scoring-model)). **A first release is scored over
+the checks that could be evaluated, and on that basis it can reach 100 and Gold. Its report shows the smaller
+effective denominator and the skipped checks.**
 
 Four checks require `execution` (`MIRI-PY-015`, `035`, `036`, `040`) and four require `network` (`MIRI-PY-005`,
 `009`, `026`, `027`). `MIRI-PY-009` also requires a previous release. These are capability gates rather than

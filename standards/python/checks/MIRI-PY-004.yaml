@@ -17,12 +17,12 @@ long_description: 'The build is driven by `pyproject.toml`. Its `[project]` tabl
   and dependencies, and its `[build-system]` table declares `requires` and `build-backend`. Metadata that
   only running setup.py or reading setup.cfg can reveal fails the check, as does a `dynamic` field with
   no declared tool source.'
-rationale: 'A setup.py is executed code, and the only way to learn the metadata inside it is to run it.
-  Static analyzers, index scanners, and Miri''s own generators therefore cannot see that metadata, and
-  sdist installs remain an arbitrary-code-execution point. PEP 621''s `[project]` table makes name, version,
-  dependencies, and entry points readable by parsing one TOML file. The Miri build step relies on the
-  same property to generate agent-metadata/ without importing the package. PEP 517''s `[build-system]`
-  table lets any frontend build the wheel deterministically instead of guessing at a setup.py invocation.'
+rationale: A setup.py is executed code, and the only way to learn the metadata inside it is to run it. Static
+  analyzers, index scanners, and Miri's own generators cannot see that metadata, and sdist installs remain an
+  arbitrary-code-execution point. PEP 621's `[project]` table makes name, version, dependencies, and entry points
+  readable by parsing one TOML file. The Miri build step relies on the same property to generate agent-metadata/
+  without importing the package. PEP 517's `[build-system]` table lets any frontend build the wheel deterministically
+  instead of guessing at a setup.py invocation.
 fires_when:
 - The project ships no pyproject.toml, or pyproject.toml lacks a `[project]` table
 - Name, version, or dependencies are discoverable only by executing setup.py or reading setup.cfg

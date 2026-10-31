@@ -16,10 +16,10 @@ severity:
   violation_unit: each silently removed surface
   population_unit: all surfaces removed since the previous release
 short_description: Every removed surface was deprecated in ≥1 earlier release
-long_description: 'Using the previous release, every subcommand or flag that has disappeared has to have appeared with `lifecycle.status:
-  deprecated` in some earlier release. A `changelog --since <previous>` entry that lists a removal with no matching deprecated
-  entry in any prior section also fails. A linter without access to a prior release skips with the fixed reason instead
-  of passing.'
+long_description: 'Using the previous release, every subcommand or flag that has disappeared has to have appeared
+  with `lifecycle.status: deprecated` in some earlier release. A removal listed in `changelog --since <previous>`
+  needs a matching deprecated entry in some prior release''s section. A linter without access to a prior release skips
+  with the fixed reason instead of passing.'
 rationale: CLI Spec §6.3-2 forbids removing any surface that was never published as deprecated. `kubectl get --export` announced
   its removal four releases ahead, and its disappearance in 1.18 still broke Helm chart template generation and CI/CD backup
   pipelines. A silent removal grants dependents not even that chance. With agent consumers the failure is worse and quieter.

@@ -17,11 +17,11 @@ short_description: All metadata files parse as strict UTF-8 JSON (no NaN/Infinit
 long_description: 'The agent-metadata JSON files pass a strict RFC 8259 parse. Their bytes are valid UTF-8
   with no byte-order mark, and their text contains no NaN, Infinity or -Infinity tokens, comments, trailing
   commas, or single-quoted strings.'
-rationale: RFC 8259 §6 forbids NaN and Infinity tokens, and §8.1 requires UTF-8 for JSON exchanged between
-  systems. Python's json.dump emits NaN by default (allow_nan=True). One unscrubbed float('nan') therefore
-  yields a file that the build wrote without complaint and that JSON.parse, serde_json, and Go's encoding/json
-  all reject. Because a strict parser fails the whole document, a single bad token degrades the consumer
-  from full metadata to none. Nothing in the package's own toolchain reports that downgrade.
+rationale: RFC 8259 §6 forbids NaN and Infinity tokens, and §8.1 requires UTF-8 for JSON exchanged between systems.
+  Python's json.dump emits NaN by default (allow_nan=True). One unscrubbed float('nan') yields a file that the build
+  wrote without complaint and that JSON.parse, serde_json, and Go's encoding/json all reject. Because a strict parser
+  fails the whole document, a single bad token degrades the consumer from full metadata to none. Nothing in the
+  package's own toolchain reports that downgrade.
 fires_when:
 - any agent-metadata/*.json fails a strict RFC 8259 parse (json.loads with parse_constant configured to raise)
 - a file contains NaN, Infinity, or -Infinity tokens

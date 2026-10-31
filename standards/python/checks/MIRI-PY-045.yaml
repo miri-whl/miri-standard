@@ -18,13 +18,13 @@ severity:
   violation_unit: the wheel's code-index state (counted per wheel as 0 or 1, because a wheel either offers
     a discoverable index or does not)
 short_description: A precomputed code index ships in the wheel and `sdk-manifest.json` declares where it is
-long_description: 'The wheel carries a precomputed code index under `.dist-info/`, listed in RECORD and
-  declared by `sdk-manifest.json` `code_index` with its path and a format from the schema''s closed set.
-  The declaration lets a consumer discover the index and decide whether it can read it before opening
-  it. An index file under `.dist-info/` that no `code_index` declares fails the check. The check does
-  not verify that the index covers the public surface. Confirming coverage means decoding the index, and
-  the standard declines to require a decoder of every linter for the same reason it declines to require
-  one of every consumer. Coverage is a producer obligation in Miri Wheel Extensions §5.5.'
+long_description: The wheel carries a precomputed code index under `.dist-info/`, listed in RECORD and declared
+  by `sdk-manifest.json` `code_index` with its path and a format from the schema's closed set. The declaration lets
+  a consumer discover the index and decide whether it can read it before opening it. An index file under `.dist-info/`
+  that no `code_index` declares does not pass. The check does not verify that the index covers the public surface.
+  Confirming coverage means decoding the index, and the standard declines to require a decoder of every linter for
+  the same reason it declines to require one of every consumer. Coverage is a producer obligation in Miri Wheel
+  Extensions §5.5.
 examples:
   violation: |
     greetlib-1.1.0.dist-info/

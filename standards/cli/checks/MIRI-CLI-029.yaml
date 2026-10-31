@@ -13,9 +13,9 @@ severity:
   default: HIGH
   violation_unit: the changelog surface
 short_description: '`changelog --since <v> --json` is implemented'
-long_description: '`changelog --since <v> --json` has to exist and exit 0 for every version in the published release history.
-  Its stdout has to be a JSON document grouped per release between `<v>` and the current version. Rejecting a valid prior
-  version, or ignoring the bound and dumping the full history, fails the check.'
+long_description: '`changelog --since <v> --json` has to exist and exit 0 for every version in the published release
+  history. Its stdout has to be a JSON document grouped per release between `<v>` and the current version. The check
+  also catches a `--since` that rejects a valid prior version, or ignores the bound and dumps the full history.'
 rationale: '`check-update` says only *that* the tool moved; `changelog --since` says *what* moved. It is the recovery primitive
   for consumers whose knowledge froze at an older release. Frozen weights can never read release notes, and a skill file
   is only as fresh as its last regeneration (Landscape and Prior Art §3.1). Without it, an agent returning after three releases

@@ -13,9 +13,10 @@ severity:
   default: MINOR
   violation_unit: the --version behavior
 short_description: Prints version to stdout, exits 0
-long_description: The first line of stdout has to be a parseable version token, either a bare version or `<name> <version>`,
-  and the command has to exit 0. Later lines such as copyright and license are allowed (GNU §4.7). Writing the version
-  to stderr, making a network call, or blocking before printing each fail the check.
+long_description: The first line of stdout has to be a parseable version token, either a bare version or `<name>
+  <version>`, and the command has to exit 0. Later lines such as copyright and license are allowed (GNU §4.7).
+  The check also fires when the version goes to stderr, or when the command makes a network call or blocks before
+  printing.
 rationale: 'GNU Coding Standards §4.7 gives `--version` the same contract as `--help`: version to stdout, successful exit.
   In this standard the string has two more jobs. MIRI-CLI-017 matches it against `identity.version` in `--describe`, and
   through the purl it is the join key for advisory lookups and `check-update` comparisons (CLI Spec §9-1). A version printed

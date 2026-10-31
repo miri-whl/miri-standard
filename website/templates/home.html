@@ -21,15 +21,18 @@
 <h2>Start here</h2>
 <ul class="plain">
 <li><span class="principle">You publish a Python wheel.</span> The <a href="production-map.html">Production Map</a>
-says what to build first. Miri Core, 14 checks on identity, security and lifecycle, is the place to start.</li>
+says what to build first. <a href="{{ site.github }}/blob/main/standards/python/linter-checklist.md#conformance-profiles">Miri
+Core</a>, {{ core_count }} checks on identity, security and lifecycle, is the place to start.</li>
 <li><span class="principle">You ship a command-line tool.</span> The <a href="cli-production-map.html">CLI Production
-Map</a> orders the {{ targets.cli.active }} CLI checks by what depends on what.</li>
+Map</a> says what a CLI author builds first, and which checks depend on which.</li>
 <li><span class="principle">You build an agent or a tool that reads packages.</span> The
 <a href="consumption-map.html">Consumption Map</a> says what to read for each task and what never to conclude from
 it.</li>
 <li><span class="principle">You serve metadata to agents.</span> The <a href="discovery-contract.html">Discovery
 Contract</a> defines the eight read-only operations a server answers.</li>
 </ul>
+<p class="muted">There is no public linter yet. The check definitions and the fixture suites to test one against are
+on <a href="downloads.html">Downloads</a>.</p>
 
 <div class="cardgrid">
   {% for target, data in targets.items() %}
@@ -52,8 +55,9 @@ metadata in answer to queries without deciding anything about it.</p>
 <p>Each <span class="principle">requirement</span> in a specification is verified by a
 <span class="principle">check</span>; each check failure instance is a
 <span class="principle">violation</span>. Two scores follow. The <span class="principle">conformance score</span> is
-the weight of the passing checks over the weight of the checks that applied. Weights are fixed and sum to 100 per
-target, any failing MUST caps the score at 74, and independent linters produce comparable scores.
+the weight of the passing checks over the weight of the checks that applied and could be assessed. Weights are fixed
+and sum to 100 per target, and any failing MUST caps the score at 74. Fixed weights are what let independent linters
+produce comparable scores.
 The <span class="principle">health score</span> grades how much is wrong, from each check's canonical severity and
 the number of violations it found.</p>
 

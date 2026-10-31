@@ -14,11 +14,16 @@ in a spec. Decisions taken in it:
 - _Honest degradation_ stays a defined term (category and glossary entry); `tools/check_writing.py` allows the phrase.
 - Revision history ("an earlier version said…") leaves normative text and lives in the CHANGELOG.
 - The Discovery Contract is 0.4.0-draft, recording the §3.8 additions released in 0.7.3.
+- A verification pass then compared before and after and found the rewrite had drifted in about 20 places (one false:
+  `MIRI-SURFACE-020`); all are corrected. Eight older contradictions were decided the same day: surfaces serve
+  verbatim (no schema validation); `reason` may appear on a truncated response; `package.replaced` fires `after` (schema
+  fixed, golden `E9`); `authoritative` has no schema default; one duplicated MUST merged; AIC §3.3 and Map §3.3
+  corrected; a first release can reach 100 over what applied.
 
-Still open: whether `fires_when` and tier clauses may get a dash-only edit (88 em dashes remain there and in
-`examples`); the Discovery Contract's `graph` OPTIONAL reading; a possible conflict between `MIRI-SURFACE-012` and
-Discovery Contract §3.2.1 on schema validation; and whether `api-graph.json`'s withdrawal as `graph`'s source is
-BREAKING for surfaces.
+Still open: a dash-only edit to `fires_when` and tier clauses (em dashes remain there and in `examples`); the `graph`
+OPTIONAL reading; `MIRI-CONSUMER-010` against `-011` for an adversarial symbol `resolve` reports as not-in-source;
+`MIRI-CONSUMER-050`'s absolute "any output" against Agent Integration §4.1's "for most hosts"; the CLI schema's
+`authoritative` default; whether `api-graph.json`'s withdrawal as `graph`'s source is BREAKING for surfaces.
 
 ### Before this pass
 

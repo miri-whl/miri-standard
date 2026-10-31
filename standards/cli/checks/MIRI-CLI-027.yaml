@@ -13,9 +13,9 @@ severity:
   default: MEDIUM
   violation_unit: the offline behavior
 short_description: 'Offline returns `update_available: null` with exit 0 instead of an error'
-long_description: '`check-update --json` is run with network egress blocked. It has to exit 0 with the §5.1 shape and `update_available:
-  null`. An error object, a non-zero exit, or a `true` or `false` value given without reaching the manifest (a stale cache
-  presented as live) fails the check.'
+long_description: '`check-update --json` is run with network egress blocked. It has to exit 0 with the §5.1 shape
+  and `update_available: null`. The check fails on an error object, a non-zero exit, or a `true` or `false` value
+  given without reaching the manifest (a stale cache presented as live).'
 rationale: 'Air-gapped fleets are a first-class deployment in the private-distribution story. CLI Spec §8.3 has them set
   `advisory_sources` to `osv-local` and expects `check-update` to degrade without failing. A `check-update` that exits non-zero
   when the manifest is unreachable makes correct scripts fail in the environments the standard is designed to serve. `update_available:

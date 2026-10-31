@@ -16,14 +16,13 @@ short_description: Wheels with non-Python components carry `.dist-info/sboms/`
 long_description: 'A wheel that contains native extensions, vendored shared libraries, or statically linked
   components carries a `.dist-info/sboms/` directory. Its documents cover every bundled library found
   in the wheel''s file inventory, and RECORD lists them.'
-rationale: 'Vendored native components are the phantom-dependency problem. Scanners working at the `pip`
-  level see only dist-info name and version. A wheel that statically bundles OpenSSL therefore exposes
-  real CVEs that no scan of the Python surface can find. This happens in ordinary releases. Version 38.0.3
-  of cryptography re-released its wheels solely to bundle OpenSSL 3.0.7 and resolve CVE-2022-3602/3786,
-  and 41.0.4 did the same for OpenSSL 3.1.3. Throughout, a consumer on the prior wheel showed a clean
-  `pip` inventory. PEP 770 (accepted 2025) closes the gap by placing SBOM documents in `.dist-info/sboms/`.
-  Scanners discover them there without any Miri-specific pointer. Lifecycle §3.2 makes them mandatory
-  exactly when non-Python components are bundled.'
+rationale: Vendored native components are the phantom-dependency problem. Scanners working at the `pip` level
+  see only dist-info name and version. A wheel that statically bundles OpenSSL exposes real CVEs that no scan
+  of the Python surface can find. This happens in ordinary releases. Version 38.0.3 of cryptography re-released
+  its wheels solely to bundle OpenSSL 3.0.7 and resolve CVE-2022-3602/3786, and 41.0.4 did the same for OpenSSL
+  3.1.3. Throughout, a consumer on the prior wheel showed a clean `pip` inventory. PEP 770 (accepted 2025) closes
+  the gap by placing SBOM documents in `.dist-info/sboms/`. Scanners discover them there without any Miri-specific
+  pointer. Lifecycle §3.2 makes them mandatory exactly when non-Python components are bundled.
 fires_when:
 - The wheel contains native extensions or vendored shared libraries (`.so`/`.pyd`/`.dylib` files, an auditwheel-style `<pkg>.libs/`
   directory, statically linked components declared by the build) but no `.dist-info/sboms/` directory

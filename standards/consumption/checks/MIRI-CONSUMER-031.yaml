@@ -16,10 +16,10 @@ long_description: Before the consumer fetches a URL taken from metadata, or hand
   capability, a subordinate agent, or a user-facing link, it has to apply the SSRF guard of Lifecycle and Security
   Metadata §9.2 or emit the URL inert. Plain HTTP, a private, link-local, or cloud-metadata destination, a redirect
   followed without re-validation, and credentials forwarded to a metadata-supplied endpoint are each violations.
-rationale: The adversarial fixture points `update_check` at the cloud metadata address. A consumer that fetches
-  it without the guard turns publisher-controlled data into a server-side request against its own infrastructure.
-  That request may return credentials to the caller. The contract makes the surface fetch nothing by design. This
-  obligation therefore has nowhere else to live.
+rationale: The adversarial fixture points `update_check` at the cloud metadata address. A consumer that fetches it
+  without the guard turns publisher-controlled data into a server-side request against its own infrastructure. That
+  request may return credentials to the caller. Because the contract makes the surface fetch nothing by design, this
+  obligation can live only in the consumer.
 fires_when:
 - The consumer fetches a metadata-supplied URL over plain HTTP, or one resolving to a private, link-local, or
   cloud-metadata address

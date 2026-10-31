@@ -14,9 +14,9 @@ severity:
   violation_unit: each blocking prompt
   population_unit: all commands in --describe
 short_description: No command blocks on a prompt when stdin is not a TTY
-long_description: Every command is run with stdin closed (`</dev/null`). A command that prints a prompt and blocks, or
-  blocks without printing anything, fails the check. A confirmation with no flag or environment equivalent recorded in
-  `--describe` also fails it.
+long_description: Every command is run with stdin closed (`</dev/null`), and each has to exit instead of blocking,
+  whether or not it prints a prompt first. Every confirmation also needs a flag or environment equivalent recorded
+  in `--describe`.
 rationale: 'A tool that prompts when stdin is not a TTY hangs silently. The agent never sees a question, only a stall that
   ends when the harness or CI timeout kills the job. The timeout error says nothing about the prompt that caused it. This
   failure class recurs in shipped tools: `pnpm dlx` hangs CI jobs on its build-scripts approval prompt (pnpm/pnpm#12108),

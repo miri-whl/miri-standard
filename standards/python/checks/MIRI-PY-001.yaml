@@ -19,22 +19,22 @@ severity:
   default: HIGH
   violation_unit: the wheel archive
 short_description: '`.dist-info/` with `METADATA`, `WHEEL`, `RECORD`; archive matches RECORD'
-long_description: 'A passing wheel has `METADATA`, `WHEEL` and `RECORD` in `.dist-info/`, and its archived
-  files and RECORD rows match one another by path, sha256 digest and size. RECORD entries cannot use md5
-  or sha1. Passing does not show that the wheel is the one its publisher built. RECORD travels inside
-  the archive it describes, and any tool that rewrites a file can rewrite RECORD in the same pass. The
-  check detects corruption, truncation and a post-build edit nobody tried to hide; it cannot detect a
-  deliberate one. Provenance is decided outside the artifact, against an attestation (MIRI-PY-005), a
-  digest published beside the release, or a lock digest the resolver enforces before the bytes are fetched.
-  A report that renders a pass as "verified" or "untampered" states a verdict its evidence cannot support.
-  That is the integrity form of the vulnerability claim this standard forbids everywhere else.'
-rationale: 'PEP 427 makes RECORD the wheel''s own integrity manifest. Every file except RECORD itself
-  MUST be listed with an sha256-or-better hash, and the spec directs installers to fail when a file is
-  absent from RECORD or hashed incorrectly. In practice pip has never enforced this at install time (pypa/pip#2752
-  has tracked the gap since 2015). A wheel modified after build by a patching script, a caching proxy
-  or a hand edit therefore installs without complaint. A conformance check is often the only point where
-  the mismatch surfaces. Every other Miri check also reads its inputs out of this archive. A wheel whose
-  RECORD disagrees with its contents cannot be trusted about anything else it declares.'
+long_description: A passing wheel has `METADATA`, `WHEEL` and `RECORD` in `.dist-info/`, and its archived files
+  and RECORD rows match one another by path, sha256 digest and size. RECORD entries cannot use md5 or sha1. Passing
+  does not show that the wheel is the one its publisher built. RECORD travels inside the archive it describes,
+  and any tool that rewrites a file can rewrite RECORD in the same pass. The check detects corruption, truncation
+  and a post-build edit nobody tried to hide; it cannot detect a deliberate one. Provenance is decided outside
+  the artifact, against an attestation (MIRI-PY-005), a digest published beside the release, or a lock digest
+  fixed before the fetch and enforced by the resolver. A report that renders a pass as "verified" or "untampered"
+  states a verdict its evidence cannot support. That is the integrity form of the vulnerability claim this standard
+  forbids everywhere else.
+rationale: PEP 427 makes RECORD the wheel's own integrity manifest. Every file except RECORD itself MUST be listed
+  with an sha256-or-better hash, and the spec directs installers to fail when a file is absent from RECORD or hashed
+  incorrectly. In practice pip has never enforced this at install time (pypa/pip#2752 has tracked the gap since
+  2015). A wheel modified after build by a patching script, a caching proxy or a hand edit installs without complaint.
+  A conformance check is often the only point where the mismatch surfaces. Every other Miri check also reads its
+  inputs out of this archive. A wheel whose RECORD disagrees with its contents cannot be trusted about anything
+  else it declares.
 fires_when:
 - '`.dist-info/` lacks any of `METADATA`, `WHEEL`, or `RECORD`'
 - RECORD lists a path absent from the archive, or the archive contains a file (other than RECORD and its signature companions)

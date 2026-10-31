@@ -14,8 +14,8 @@ severity:
   violation_unit: each not-in-source result reported as non-existence
 short_description: Never reports `not-in-source` as proof a symbol does not exist
 long_description: A `not-in-source` result from `resolve` is weak evidence, and the consumer has to report the symbol
-  as unverified. Stating that the symbol does not exist, or refusing to emit a call on that basis alone, fails the
-  check. A `module-unreadable` result is evidence of neither existence nor absence.
+  as unverified. The check fails a consumer that states the symbol does not exist, or that refuses to emit a call
+  on that basis alone. A `module-unreadable` result is evidence of neither existence nor absence.
 rationale: 'Static parsing cannot see a surface built at runtime: `__getattr__`, `setattr`, metaclasses, re-exports
   resolved on import. A consumer that treats `not-in-source` as proof of absence is wrong about every dynamically
   generated API. It would refuse correct calls against widely used libraries. The evidence is deliberately asymmetric,

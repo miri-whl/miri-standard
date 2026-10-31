@@ -16,12 +16,12 @@ short_description: '`support` present with valid `status`'
 long_description: '`--describe` has to carry a top-level `support` block whose `status` is one of active, maintenance, deprecated,
   or eol. The block also has to validate against the shared support shape in lifecycle-v1.json. A status written as free
   text instead of the enum fails that validation.'
-rationale: The support block is the one lifecycle statement the artifact carries directly. It records vendor-authored intent
-  instead of a computed verdict. `--describe` is the only channel that reaches consumers at call time, including agents
-  whose frozen weights will never see the release note announcing maintenance mode (Landscape and Prior Art §3.1). The status
-  vocabulary (active / maintenance / deprecated / eol) is shared with the Python specification's support object and validated
-  by lifecycle-v1.json. It is also deliberately mappable onto the OASIS OpenEoX stages. One reader therefore covers every
-  Miri artifact type.
+rationale: The support block is the one lifecycle statement the artifact carries directly. It records vendor-authored
+  intent instead of a computed verdict. `--describe` is the only channel that reaches consumers at call time,
+  including agents whose frozen weights will never see the release note announcing maintenance mode (Landscape
+  and Prior Art §3.1). The status vocabulary (active / maintenance / deprecated / eol) is shared with the Python
+  specification's support object and validated by lifecycle-v1.json so that one reader covers every Miri artifact
+  type. It is also deliberately mappable onto the OASIS OpenEoX stages.
 fires_when:
 - --describe carries no top-level `support` block
 - '`support.status` is missing or outside the enum active / maintenance / deprecated / eol'

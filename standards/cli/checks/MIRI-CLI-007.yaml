@@ -13,9 +13,9 @@ severity:
   default: MINOR
   violation_unit: each composability failure
 short_description: Handles SIGPIPE cleanly; accepts stdin where input is expected
-long_description: '`<cli> list | head -1` has to leave stderr free of tracebacks, panics, and crash reports, and the closed
-  pipe has to end the process cleanly (a plain SIGPIPE death, shell status 141, is acceptable). A command that consumes
-  input also has to accept it on stdin, either bare or through the `-` operand.'
+long_description: The tool passes when `<cli> list | head -1` leaves stderr free of tracebacks, panics, and crash
+  reports and the closed pipe ends the process cleanly (a plain SIGPIPE death, shell status 141, is acceptable). A
+  command that consumes input passes when it accepts that input on stdin, either bare or through the `-` operand.
 rationale: 'Pipelines are how a CLI''s output becomes the next tool''s input. Python''s own signal docs document the classic
   failure. Piping to `head(1)` sends SIGPIPE when the reader closes early. Unhandled, Python surfaces it as a `BrokenPipeError:
   [Errno 32] Broken pipe` traceback. Rust ignores SIGPIPE at startup, and the same event becomes a panic on write. The consumer

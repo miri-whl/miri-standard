@@ -104,7 +104,7 @@ re-read as a check having passed. The event is also not a diff: it says the arti
 consumer that read the surface earlier in the session holds that comparison itself, and the contract stays stateless.
 
 The frequency is the design constraint. A maintainer developing a wheel locally reinstalls at the same version many
-times an hour, because nobody bumps a version on every edit. This trigger therefore fires constantly and must be
+times an hour, because nobody bumps a version on every edit. This trigger fires constantly and must be
 **silent by default**: §4.1's absent envelope for every replacement that changed nothing a consumer had cached. Firing
 is host-observed and unconditional; whether there are `findings` is metadata-determined (§4.3). Without that separation
 this kind would be a context tax and a user would disable it (§4.1).
@@ -213,8 +213,8 @@ assert `present: true`, so a caller branching on `ok`/`present` can never take n
 **The schema does not enforce the following, listed in full** because naming one gap implies the rest are covered: that
 `level` was *derived* from the profile rather than copied; that `reason` carries no publisher bytes; that a consumer
 does not branch on `reason`; that `source` names a document the surface serves; that `quote` is bytes present in it;
-that `task` is the section that produced the finding; and that the *number* of findings is publisher-independent (§4.3
-names count as trigger behavior, and no `maxItems` expresses it). These are behavioral. `MIRI-CONSUMER-051` and the `E3`
+that `task` is the section that produced the finding; and that a publisher's attention bid does not raise the *number*
+of findings (§4.3 covers what the number does depend on). These are behavioral. `MIRI-CONSUMER-051` and the `E3`
 golden cover the first. `make validate-fixtures` checks `source`, `quote` and `level` against ground truth for
 every golden. The rest are unenforced today and are listed here so a reader does not assume otherwise.
 
@@ -284,7 +284,7 @@ fires because the host observed a change: a requirement was added, or a version 
 belongs to the host, and no shipped field participates in it. Once it has fired, the trigger reports what it derives
 from the metadata, because that is its entire function.
 
-A publisher therefore MUST NOT influence three things: **whether** the trigger reads at all, **which** `kind` was
+A publisher MUST NOT influence three things: **whether** the trigger reads at all, **which** `kind` was
 reported, and **what `level`** each finding carries.
 
 A publisher does legitimately influence two things: **whether** the response carries `findings`, and **how many**. A
@@ -430,8 +430,8 @@ the edit would correctly find nothing every time. The edit is the only moment at
 *and* has not yet happened, and it is also a moment at which there is nothing to read.
 
 The REQUIRED kind, `dependency.version_change`, keeps `PreToolUse` on the edit tools, and the asymmetry is deliberate.
-That is the only moment in this host at which a version change is observable **and** has not yet happened. Because the
-old version is installed, it is also the only one where something can be read before the change lands.
+The manifest edit is the only moment in this host at which a version change is observable **and** has not yet happened.
+Because the old version is installed, it is also the only one where something can be read before the change lands.
 
 A manifest carries **distribution** names, so for `dependency.version_change` this binding emits `subject.package_kind:
 "distribution"` and the name exactly as written. It does not attempt a distribution-to-import join, because the mapping
@@ -468,8 +468,8 @@ that and omits the kind.
 `PreToolUse` in this host **can** deny the tool call. This binding MUST NOT use that capability (§4.2). Findings are
 written to the hook's stdout as attributed data and reach the agent as context; the tool call proceeds.
 
-The host offers a veto this contract forbids. The constraint is on the binding, not on the host. A reviewer checking
-this binding should therefore confirm the denial path is absent rather than merely unused.
+The host offers a veto this contract forbids. Because the constraint is on the binding and not on the host, a reviewer
+checking this binding should confirm the denial path is absent rather than merely unused.
 
 ### 6.4 Transport
 
@@ -497,7 +497,7 @@ before this document; they are the three checks it adds, bringing the family to 
 - **No trust determination survives a replacement** ([Lifecycle and Security Metadata
   §9.6](../python/lifecycle-security-metadata.md), `MIRI-CONSUMER-052`): drive a `package.replaced` event across the
   `miri`/`replaced` pair, two artifacts at one purl, and assert the consumer re-derives rather than answering from the
-  determination it made about the previous bytes. Golden `A14`.
+  determination it made about the previous bytes. Goldens `A14` and `E9`.
 
 All three are drivable with the fixture set. The second needed one new adversarial element: a document carrying a field
 that attempts to force or amplify a trigger. The third needed the `replaced` arm, the only pairing in the set that
@@ -525,6 +525,7 @@ golden that does not itself validate hands an implementer a target the schema wi
 | `E6` | [Map §3.6](consumption-map.md) | The one trace whose subject is the **conforming** arm |
 | `E7` | §4.2, §4.4 | The host-boundary rules an envelope alone cannot express |
 | `E8` | §5 item 3, §6.2 | The kinds this binding omits rather than approximates |
+| `E9` | §3.2, §6.1 | The one trace whose event is `package.replaced`, fired `after` the replacing install |
 
 `E6` is the one to notice when reading the set. Every other trace drives the adversarial arm and asks whether the
 consumer *resists* what the metadata claims. `E6` drives the conforming arm and asks whether the consumer *uses* what

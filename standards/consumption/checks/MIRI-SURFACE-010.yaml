@@ -13,18 +13,18 @@ severity:
   default: CRITICAL
   violation_unit: each absence reported as an error or as a silent empty success
 short_description: 'Reports absence as `ok: true, present: false` and never as an error'
-long_description: 'Discovery Contract §4.2 makes a missing document a normal, successful answer, and a query
-  for a document the package does not ship has to return `ok: true` with `present: false`. Answering with `ok:
-  false` or an `error` object, with an empty success that lacks `present: false`, or with a document-returning
-  response that omits `present` fails the check.'
+long_description: 'Discovery Contract §4.2 makes a missing document a normal, successful answer, and a query for a
+  document the package does not ship has to return `ok: true` with `present: false`. The check fires on an `ok: false`
+  or `error` answer, on an empty success that lacks `present: false`, and on a document-returning response that omits
+  `present`.'
 examples:
   violation: '{"error": "no MIRI metadata for greet_bare"}   # is this absent, or did the lookup fail?'
   compliant: "{\"schema_version\": \"1\", \"ok\": true, \"present\": false, \"package\": \"greet_bare\",\n \"name\"\
     : \"lifecycle.json\", \"reason\": \"package ships no lifecycle.json\"}"
 rationale: Absence and failure mean different things, and a consumer must act differently on each. The reference
-  implementation currently conflates them. It returns absence as a success whose text is an ad hoc error object,
-  and the contract therefore names conforming this the first implementation task. A consumer's Honest Degradation
-  checks can be scored only if the surface draws the distinction first.
+  implementation currently conflates them. It returns absence as a success whose text is an ad hoc error object.
+  The contract names conforming this the first implementation task. A consumer's Honest Degradation checks can be
+  scored only if the surface draws the distinction first.
 fires_when:
 - 'A query for a document the package does not ship returns `ok: false` or an `error` object'
 - 'Absence is signalled by an empty success with no `present: false`'

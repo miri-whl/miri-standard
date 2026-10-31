@@ -14,9 +14,10 @@ severity:
   violation_unit: each unsafe retry path
   population_unit: all mutating commands in --describe
 short_description: Mutations support idempotency keys or optimistic-lock version guards
-long_description: At least one mutating command in `--describe` has to accept an idempotency key or an optimistic-lock version
-  guard. Two identical creates have to yield one resource, and repeating a call with the same key has to return the original
-  result. A conflicting concurrent update has to produce a distinct exit code or a structured conflict error.
+long_description: A CLI passes when at least one mutating command in `--describe` accepts an idempotency key or an
+  optimistic-lock version guard. The behavioral evidence passes when two identical creates yield one resource, a call
+  repeated with the same key returns the original result, and a conflicting concurrent update produces a distinct
+  exit code or a structured conflict error.
 rationale: Agents retry on timeout as a matter of course. Without protection, a retried create duplicates the resource and
   a retried update clobbers a concurrent change (the classic lost update). Stripe's `Idempotency-Key` is the canonical design.
   The server stores the first outcome per key for at least 24 hours and replays it on retry. A network-failed charge can

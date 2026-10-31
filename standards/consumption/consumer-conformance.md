@@ -10,7 +10,7 @@ The [Discovery Contract](discovery-contract.md) defines how metadata reaches an 
 [Consumption Map](consumption-map.md) defines what the agent reads and what it must not do with it. This document
 defines what a **conformant consumer** is: **eighteen** numbered checks whose IDs run from `MIRI-CONSUMER-001` to
 `MIRI-CONSUMER-052`. The numbering is **sparse by design**. IDs are grouped in tens by category and are permanent.
-The range is therefore an address space rather than a count, and each gap is room for a later check. The checks are
+The range is an address space rather than a count, and each gap is room for a later check. The checks are
 weighted to 100 and verified by **driving a consumer against fixtures and observing its output**.
 
 It also states what a consumer check *cannot* verify. Several obligations in the contract bind the surface rather
@@ -42,9 +42,9 @@ contain when driven against a known fixture. A consumer that never touches Miri 
 than non-conforming.
 
 Scope is decided by **observation rather than by claim**. A program is in scope for this profile when its output
-against the `miri` fixture differs from its output against the byte-identical `bare` fixture. Every `.py` file in
-`examples/fixtures/` is verified identical across variants. Only the metadata can therefore account for a difference.
-That difference *is* the consumption, and a suite can see it from outside. A program whose two outputs match consumed
+against the `miri` fixture differs from its output against the byte-identical `bare` fixture. Because every `.py` file
+in `examples/fixtures/` is verified identical across variants, only the metadata can account for a difference. That
+difference *is* the consumption, and a suite can see it from outside. A program whose two outputs match consumed
 nothing and is out of scope regardless of what its documentation says. A program whose outputs differ is in scope
 regardless of whether it advertises Miri support. Scope does not rest on advertised support because a suite cannot
 evaluate a marketing claim.
@@ -71,7 +71,7 @@ flowchart LR
 ```
 
 Every `.py` file is verified byte-identical across the variants. **Any difference in the consumer's output is
-therefore attributable to the metadata and nothing else.** That property lets a check be written against observable
+attributable to the metadata and nothing else.** That property lets a check be written against observable
 output rather than against a consumer's internals. It is also why the `adversarial` twin has to exist. A consumer
 that resists an attack and one that never looks are indistinguishable until something lies to them.
 
@@ -92,10 +92,10 @@ Two consequences follow, and both shape every check below:
 - **A check needs a fixture that exercises it.** A check with no executable case passes vacuously.
   The `Case` column in §5 names the fixture each check is driven against, and every check currently has one. Should a
   future check be added ahead of its fixture, its `Case` cell MUST read exactly **`none — not scorable`** and the check
-  MUST be reported as not scorable rather than credited. Without that literal value, each editor would invent a
-  phrasing, and a reader would have to judge which dashes and blanks mean "no case". One fixed string is greppable. A
-  `Case` cell that is empty or absent is therefore a defect in the table rather than a claim about the check, because
-  an empty cell implies coverage the profile does not have.
+  MUST be reported as not scorable rather than credited. The value is fixed so that one string is greppable. Without
+  it, each editor would invent a phrasing, and a reader would have to judge which dashes and blanks mean "no case".
+  A `Case` cell that is empty or absent is a defect in the table rather than a claim about the check, because an
+  empty cell implies coverage the profile does not have.
 
 ## 3. Scoring Model
 
@@ -126,8 +126,8 @@ question and reports the answer as though it decided this one.
 
 **Forfeits.** A check whose fixture cannot be driven is **forfeited and reported, never silently passed**. A
 forfeited check is **excluded from both** the numerator and the denominator. It is removed from the calculation and
-is not counted as a failure. The score is computed over what was exercised, and forfeiting therefore cannot inflate
-or deflate it. The report MUST carry the forfeited count and the effective denominator beside the score. A forfeited
+is not counted as a failure. Because the score is computed over what was exercised, forfeiting cannot inflate or
+deflate it. The report MUST carry the forfeited count and the effective denominator beside the score. A forfeited
 **M** check means **conformance is undetermined**, and the report states it as undetermined, never as conforming and
 never as a failure.
 
@@ -160,7 +160,7 @@ flowchart LR
     S -->|"reads bytes,<br/>executes nothing"| W
     G -.->|"configures<br/>the connection"| C
 
-    G --- GN["4 MUSTs<br/><b>unscored in Discovery<br/>Contract 0.3.1-draft</b>"]
+    G --- GN["4 MUSTs<br/><b>unscored by<br/>either profile</b>"]
     C --- CN["18 MIRI-CONSUMER<br/>checks · this document"]
     S --- SN["18 MIRI-SURFACE<br/>checks · surface conformance"]
 ```
@@ -171,13 +171,14 @@ both would obscure which of them is broken.
 
 The third program is the **harness-configuration generator**: the tool that reads a project's `[tool.miri.consume]`
 table and emits an `.mcp.json` or its equivalent. [Discovery Contract §7](discovery-contract.md) binds it with four
-rules, the four normative bullets of that section: honoring the closed grammar, rejecting a declaration carrying any
-unknown key, never auto-launching what it generates, and producing byte-identical output regardless of what the
-project's dependencies declare. If §7 gains a fifth, this count changes with it. The number is a claim about that
-section and is checked against it; it is not an independent tally. **None of the four is scored by either profile in
-Discovery Contract 0.3.1-draft.** That is an **open** gap rather than a decision. The surface obligations later in
-this section are a different case, because [Surface Conformance](surface-conformance.md) scores them. A reader
-counting obligations against checks will find the generator shortfall.
+rules, stated in §7's five bullets (the `server` and `transport` bullets together state the closed grammar): honoring
+the closed grammar, rejecting a declaration carrying any unknown key, never auto-launching what it generates, and
+producing byte-identical output regardless of what the project's dependencies declare. If §7 gains a fifth rule, this
+count changes with it. The number is a claim about that section and is checked against it; it is not an independent
+tally. **None of the four is scored by either profile.** That is an **open** gap rather than a decision. The surface
+obligations later in this section are a different case, because [Surface Conformance](surface-conformance.md)
+scores them. This section states the generator shortfall so that a reader counting obligations against checks
+finds it here.
 
 The gap is bounded and deliberate. A generator is a build-time tool with no wire contract and no request/response shape.
 It needs a third profile, driven against project trees rather than against fixture packages. Inventing that profile as a
@@ -299,11 +300,11 @@ via A14. The `bare` fixture drives `050`, and the A13 pairing drives `051`. `011
 outlier (A9), and `032` against the replacement redirect (A8). The suite is fully scorable. A report that cannot
 drive a case still forfeits it (§3), but no check is not scorable by construction.
 
-`MIRI-CONSUMER-041` is **conditional**. No producer check requires any package to ship `test-patterns.json`. A consumer
-could therefore be driven against a conforming wheel that ships none, or against one that ships it with an empty
+`MIRI-CONSUMER-041` is **conditional**. Because no producer check requires any package to ship `test-patterns.json`, a
+consumer could be driven against a conforming wheel that ships none, or against one that ships it with an empty
 `supported_test_doubles`. In either state the only way to satisfy the check is to present no double, and an inert
 consumer also presents none. An unconditional check could not tell a careful consumer from one that never looked. The
-check therefore scores only where a double is declared, and is excluded from both numerator and denominator otherwise.
+check scores only where a double is declared, and is excluded from both numerator and denominator otherwise.
 
 Two cases carry a **paired control**, and the pairing is the substance of the check rather than a nicety. A8 pairs the
 hostile redirect with a same-namespace migration in the `miri` twin. A consumer that refuses both has not detected the

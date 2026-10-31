@@ -17,11 +17,11 @@ short_description: The same flag (e.g. `--json`) selects it on every command and
 long_description: The flag that selects machine output has to be the same on every command and match the root flag recorded
   in `--describe`. Different spellings across commands (`--json` on some, `--output json` or `--format=json` on others),
   or subcommands that reject the root-level flag, are violations.
-rationale: 'The ecosystem''s own fragmentation shows the cost. Three tools use three grammars for one concept: `-o json`
-  in kubectl, `--format json` in docker, and `--json <fields>` in gh. Nothing an agent learns on one tool transfers to the
-  next. Inside a single CLI the same inconsistency does more damage (Chow, Landscape and Prior Art §2.3). An agent that
-  learned `--json` on one command constructs it on the next and gets `unknown flag`. From then on it treats the whole tool
-  as unreliable and re-verifies every invocation it should have been able to generalize.'
+rationale: 'The ecosystem''s own fragmentation shows the cost. Three tools use three grammars for one concept: `-o
+  json` in kubectl, `--format json` in docker, and `--json <fields>` in gh. Nothing an agent learns on one tool
+  transfers to the next. The cost is higher inside a single CLI (Chow, Landscape and Prior Art §2.3). An agent that
+  learned `--json` on one command constructs it on the next and gets `unknown flag`. From then on it treats the
+  whole tool as unreliable and re-verifies every invocation it should have been able to generalize.'
 fires_when:
 - Different commands select machine output with different flags (`--json` on some, `--output json` or `--format=json` on
   others)

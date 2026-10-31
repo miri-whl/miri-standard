@@ -17,12 +17,12 @@ long_description: '`identity.purl` has to be present in `--describe` and pass pu
   a name, and an `@version` segment. Its type has to match the real install channel, and a `pkg:generic` purl needs a
   `repository_url` qualifier that locates the release source.'
 rationale: 'Every scanner runs the same loop: build inventory, normalize to purl, compare against OSV affected ranges.
-  The purl is therefore the single join key that makes vulnerability and currency verdicts computable. A CLI without
-  one falls back to CPE matching. In CPE matching, vendor and product strings must be guessed from binary names, and
-  internal tools are invisible. The type must match the distribution channel because advisory records attach to registry-native
+  The purl is the single join key that makes vulnerability and currency verdicts computable. A CLI without one falls
+  back to CPE matching. In CPE matching, vendor and product strings must be guessed from binary names, and internal
+  tools are invisible. The type must match the distribution channel because advisory records attach to registry-native
   names. An npm-distributed tool declaring pkg:generic never joins against records filed under its npm name. CLI Spec
-  §3.1 therefore requires an OSV-joinable purl type where the channel has one (pkg:npm, pkg:pypi, pkg:cargo, pkg:golang).
-  It reserves pkg:generic with a repository_url qualifier for direct binary distribution or channels OSV does not index
+  §3.1 requires an OSV-joinable purl type where the channel has one (pkg:npm, pkg:pypi, pkg:cargo, pkg:golang). It
+  reserves pkg:generic with a repository_url qualifier for direct binary distribution or channels OSV does not index
   (such as Homebrew).'
 fires_when:
 - '`identity.purl` is absent from the --describe output'

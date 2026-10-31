@@ -16,11 +16,10 @@ severity:
 short_description: SBOM component purls are well-formed
 long_description: 'Each SBOM component in `.dist-info/sboms/` carries a purl that parses under the purl
   specification grammar.'
-rationale: 'SBOM components join against advisory and end-of-life data by purl (§3.2). Scanners normalize
-  each component identifier and query with it. Matching tools skip what they cannot normalize. A component
-  whose identifier fails purl parsing therefore raises no error and drops out of every scan without a
-  trace. Meanwhile the SBOM''s presence makes the wheel look fully covered. One malformed purl reopens
-  the phantom-dependency gap that MIRI-PY-024 closes.'
+rationale: SBOM components join against advisory and end-of-life data by purl (§3.2). Scanners normalize each
+  component identifier and query with it. Matching tools skip what they cannot normalize. A component whose identifier
+  fails purl parsing raises no error and drops out of every scan without a trace. Meanwhile the SBOM's presence
+  makes the wheel look fully covered. One malformed purl reopens the phantom-dependency gap that MIRI-PY-024 closes.
 fires_when:
 - Any component in a `.dist-info/sboms/` document lacks a purl
 - Any component purl fails parsing under the purl specification grammar (`pkg:` scheme, type, name, optional version and

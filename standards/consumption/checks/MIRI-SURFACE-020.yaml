@@ -13,9 +13,11 @@ severity:
   default: CRITICAL
   violation_unit: each document served from outside the servable set
 short_description: Serves only the closed servable set; refuses anything else
-long_description: Discovery Contract §3.2.1 defines a closed servable set for `document`. A request for a name outside
-  that set, or absent from the package's `list.documents`, has to be refused with `DOCUMENT_NOT_SERVABLE`. Serving
-  the file (`prompt-templates.md`, `README.md`) or returning a filesystem error fails the check.
+long_description: Discovery Contract §3.2.1 defines a closed servable set for `document`. A request for
+  a name outside that set has to be refused with `DOCUMENT_NOT_SERVABLE`, and a name absent from the package's
+  `list.documents` is never served. A servable name that the package does not ship gets the absent response
+  of §4.2, never `DOCUMENT_NOT_SERVABLE`. The check fires when the surface serves a file outside the set
+  (`prompt-templates.md`, `README.md`) or answers with a filesystem error.
 examples:
   violation: document(name="prompt-templates.md") -> the file contents
   compliant: "{\"schema_version\": \"1\", \"ok\": false, \"package\": \"greet_miri\",\n \"error\": {\"code\": \"\
