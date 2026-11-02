@@ -74,6 +74,28 @@ Regenerate against the 0.8.0 pin rather than letting it drift.
   delta that is empty, and only the second is an exclusion. They then found that the draft fix covered the declared
   case and stated the opposite for the default one.
 
+- **`comparison_not_possible`, a sixth `skip_reason`.** A forfeit meaning the inputs a comparison needed were
+  supplied and could not support it, which the closed set could not express. A previous release present but not
+  comparable, and an empty delta over an index whose collisions make it meaningless, were both being reported as
+  `previous_release_unavailable`, which states something false: the release was supplied and was readable. Raised by
+  the miri-py team, who were emitting the wrong reason knowingly for want of a right one. This is a consumer-side
+  wire change, and it ships in 0.8.0 rather than later because no `lint-report-v1` document exists outside this
+  project yet.
+
+- **`AGENT_EXAMPLES.json` has a schema, an instance, and a defined `dependencies` field.** Four active checks read
+  this document, `MIRI-PY-014`, `015`, `017` and `036`, worth 15 of 100 points, and it had no schema. The
+  implementation guide's generator emitted `examples` as an object keyed by example id with `categories` and
+  `learning_paths` beside it; the reference linter emits an array of `{file, path}` and has shipped that in released
+  wheels. Two incompatible shapes for one filename, with nothing to catch the divergence. `agent-examples-v1.json`
+  specifies the array, because it is what exists in artifacts and because `categories` and `learning_paths` duplicate
+  `usage-patterns-v1.json`, which already defines both. The guide is corrected to match, and the sample SDK now
+  ships an instance.
+
+  `version` is fixed at `"1.0"`, a value released wheels have carried with no definition behind it. `dependencies`
+  is specified as IMPORT names (`yaml`) and not requirement strings (`PyYAML>=6`), because the gap it closes is the
+  mapping between the two. Reported by the miri-py team, who found the field was not merely unpopulated but unread:
+  no generator wrote it and no linter consumed it, so `MIRI-PY-015`'s second clause had prose, no data and no code.
+
 - **§5.4 states what `api_index` is.** A routing map and not an inventory; membership never settles existence, which
   is what `resolve` is for (`MIRI-CONSUMER-010`); keys are dotted qualified names. Three passages already implied the
   first. None stated it.

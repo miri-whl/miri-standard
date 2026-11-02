@@ -1,0 +1,9 @@
+{
+  "version": "1.0",
+  "examples": [
+    {
+      "file": "quickstart.py",
+      "path": "weather_sdk/examples/quickstart.py"
+    }
+  ]
+}

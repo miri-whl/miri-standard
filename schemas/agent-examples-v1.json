@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://miri-whl.github.io/schemas/agent-examples-v1.json",
+  "title": "Miri Agent Examples Index (AGENT_EXAMPLES.json)",
+  "description": "The index of runnable examples a wheel ships, installed in the distribution's .dist-info directory (Agent Metadata §3.1). Added at 0.8.0, late: four active checks read this document (MIRI-PY-014, 015, 017 and 036, 15 of 100 points) and it had no schema, so two producers diverged without anything catching it. The implementation guide's generator emits `examples` as an object keyed by example id, with `categories` and `learning_paths` beside it; the reference linter emits the array below and has shipped it in released wheels. The array is specified here because it is what exists in artifacts, and because `categories` and `learning_paths` duplicate usage-patterns-v1.json, which already defines both. The guide is corrected to match.",
+  "type": "object",
+  "required": ["version", "examples"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "string",
+      "const": "1.0",
+      "description": "The document's own version, fixed at \"1.0\" for this schema. It has been emitted in released wheels with no definition behind it; this fixes the value rather than inventing a range nothing has used. A later shape gets a new schema version, which is the contract a consumer pins to."
+    },
+    "examples": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/example" },
+      "description": "Every example the wheel ships, in no significant order. MAY be empty only when the wheel ships no examples; an empty array beside a populated examples directory is a vacuous index."
+    }
+  },
+  "definitions": {
+    "example": {
+      "type": "object",
+      "required": ["file", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "file": {
+          "type": "string",
+          "pattern": "^[^/\\\\]+\\.py$",
+          "description": "The example's basename, which is how a consumer names it to `show_example` and how `list_examples()` reports it."
+        },
+        "path": {
+          "type": "string",
+          "pattern": "^[^/\\\\][^\\\\]*\\.py$",
+          "description": "The member's path inside the installed distribution, relative and POSIX-spelled, reachable inside an installed import package (the 0.7.4 reachability rule). A `.data`-routed member does not satisfy it. A path escaping the package root is malformed and a consumer MUST refuse it rather than open it (MIRI-CONSUMER-021); traversal is rejected by the linter, since JSON Schema cannot express it here."
+        },
+        "dependencies": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+          },
+          "description": "IMPORT names the example needs beyond the package itself and its `Requires-Dist`, such as `yaml` rather than `PyYAML>=6`. Import names and not requirement strings, because the gap this closes is exactly the mapping between the two: a requirement string reproduces the problem inside the artifact, where the check would have to solve it again. This is the field MIRI-PY-015's second clause reads. Omit it when the example needs nothing beyond the package and its declared dependencies; an empty array means the same and is permitted. Before 0.8.0 this field had no definition, no producer emitted it, and no linter read it, so that clause could not be implemented."
+        }
+      }
+    }
+  }
+}

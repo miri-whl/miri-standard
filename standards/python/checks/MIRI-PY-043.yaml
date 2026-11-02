@@ -50,7 +50,8 @@ long_description: 'Deprecation must be marked in code, inventoried in metadata, 
 
 
   Under the `requirements` precedence rule an unsettled condition is ignorance rather than scope, so cases 1 and 3
-  FORFEIT rather than being excluded, and for a MUST a forfeit withdraws the grade.
+  FORFEIT rather than being excluded, reported as `comparison_not_possible`, and for a MUST a forfeit withdraws the
+  grade.
 
 
   Raised by the miri-py team in two steps: first that a delta which cannot be measured is not the same as a delta

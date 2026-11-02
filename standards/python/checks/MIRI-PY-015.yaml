@@ -39,7 +39,10 @@ fires_when:
 - an example exits nonzero or raises when executed in a clean venv containing only the built wheel plus the dependencies
   its index entry declares
 - an example imports a module provided neither by the package's Requires-Dist nor by its AGENT_EXAMPLES.json dependencies
-  entry
+  entry. That entry holds IMPORT names (`yaml`), never requirement strings (`PyYAML>=6`), because the gap it closes is
+  the mapping between the two. It is decidable from the artifact alone and MUST NOT be settled by inspecting the
+  environment, which would make the verdict a function of what happens to be installed. Before 0.8.0 the field had no
+  schema, no producer emitted it and no linter read it, so this clause could not be implemented
 - an example needs live credentials but carries no documented placeholder (e.g. YOUR_API_KEY) marking it exempt from
   clean-venv execution
 remediation:
@@ -59,6 +62,9 @@ examples:
     \ wheel -> runs, exits 0"
 suggested_fix: Fix or guard the example; examples must run with only documented prerequisites.
 references:
+- title: Agent Examples schema (agent-examples-v1)
+  url: ../../schemas/agent-examples-v1.json
+  type: spec
 - title: Miri Wheel Ext. §7.2.2
   url: miri-python-wheel-extensions.md
   type: spec
