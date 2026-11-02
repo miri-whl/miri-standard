@@ -235,14 +235,14 @@ an index in a published format rather than one this standard maintains. The ID a
 | MIRI-PY-034 | S | Grace period | Deprecated interfaces survive ≥2 releases before removal (*conditional*: needs a prior release)| [PEP 387](https://peps.python.org/pep-0387/) / [Lifecycle §6.1](lifecycle-security-metadata.md) | 2 |
 | MIRI-PY-035 | S | Runtime warnings fire | Importing/calling deprecated interfaces emits `DeprecationWarning` (*conditional*: no deprecated surfaces to check)| [PEP 565](https://peps.python.org/pep-0565/) | 2 |
 | MIRI-PY-042 | M | Version silence | `changelog.json` `releases[0].version` equals the wheel's version (*conditional*: document present) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) | 3 |
-| MIRI-PY-043 | M | Uncovered delta | Every interface in the measured API delta appears in `releases[0]` (*conditional*: needs a prior release) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) / [Lifecycle §6.4-2](lifecycle-security-metadata.md) | 2 |
+| MIRI-PY-043 | M | Uncovered delta | Every interface in the measured API delta appears in `releases[0]` (*conditional*: needs a prior release; forfeits rather than excludes when `surface_coverage` is `declared`) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) / [Lifecycle §6.4-2](lifecycle-security-metadata.md) | 2 |
 | MIRI-PY-044 | M | Dangling claim | Every symbol named in `changelog.json` resolves in the current or previous `api_index` (*conditional*: document present) | [Agent Metadata §4.7](miri-agent-metadata-specification.md) | 2 |
 
 ### F. Discovery & Degradation (9 points)
 
 | # | Level | Check | What it verifies | Reference | Weight |
 |---|---|---|---|---|---|
-| MIRI-PY-036 | M | Discovery and manifest verification | Discovery functions work; `sdk-manifest` api_index resolves against the installed API surface | [Miri Wheel Ext. §6](miri-python-wheel-extensions.md) / [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
+| MIRI-PY-036 | M | Discovery and manifest verification | Discovery functions work; `sdk-manifest` api_index agrees with the installed API surface in both directions | [Miri Wheel Ext. §6](miri-python-wheel-extensions.md) / [Agent Metadata §4.1](miri-agent-metadata-specification.md) | 3 |
 | MIRI-PY-037 | S | Embedded docs present | `docs/` directory with API reference and troubleshooting | [Miri Wheel Ext. §5.3](miri-python-wheel-extensions.md) | 2 |
 | MIRI-PY-038 | S | Templates coherent | `TEMPLATES.json` entries ↔ template files; placeholders documented | [Miri Wheel Ext. §4.4](miri-python-wheel-extensions.md) | 1 |
 | MIRI-PY-039 | S | Prompt templates valid | `prompt-templates.md`, if present, follows the specified structure | [Agent Metadata §4.4](miri-agent-metadata-specification.md) | 1 |

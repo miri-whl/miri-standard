@@ -11,6 +11,73 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.8.0 — unreleased
+
+**BREAKING.** Seven `patternProperties` blocks gain `additionalProperties: false`. A key that matches no pattern was
+previously validated against nothing at all, so a vendored mirror will start refusing documents it used to accept.
+Regenerate against the 0.8.0 pin rather than letting it drift.
+
+### Fixed
+
+- **`api_index` keys could not express the key space the standard already defined.** The Discovery Contract defines
+  `resolve`'s input (§3.6) as a dotted qualified name *"in the same key space `api_index` uses (e.g. `Greeter`,
+  `Greeter.greet`)"*, and §3.5 repeats it for graph node keys. `sdk-manifest-v1.json` admitted only a bare Python
+  identifier. The schema never implemented the contract, and `api-graph-v1.json` had already been corrected for the
+  same defect in an earlier review while this file was left behind. The pattern is now the one api-graph has carried
+  since then, character for character.
+
+  Nobody noticed because the two defects hid each other. A dotted key matched no pattern, and with
+  `additionalProperties` unset it was validated against nothing, so it neither worked nor failed. Our own adversarial
+  fixture ships `Greeter.greet` carrying `"type": "method"`, a value outside the `api_component` enum, and reported
+  no error for it. `method` is now in that enum, matching api-graph's node kinds.
+
+- **Seven blocks accepted arbitrary content under a non-matching key.** `api_index`, `error_handling`,
+  `environment_variables`, `key_methods` and `parameters` in `sdk-manifest-v1.json`, and `categories` and
+  `learning_paths` in `usage-patterns-v1.json`. Each now carries `additionalProperties: false`.
+  `configuration.config_files` is left alone deliberately: its pattern is `.*`, which matches every key, so nothing
+  can escape it. Reported by the miri-py team, who found one of the seven and observed that silently ceasing to be
+  validated is worse than being refused.
+
+- **`MIRI-PY-036` only checked one direction.** It fired when an `api_index` entry failed to resolve against the
+  installed package, and had no clause for a public definition the package exposes and the index omits. An index
+  missing half its package passed cleanly, so the first signal of an incomplete manifest was a downstream consumer
+  failing to find a symbol that exists. The reverse-direction clause is added, scoped by `surface_coverage`.
+
+### Added
+
+- **`members` on `api_component`, for `module`-typed entries.** A name defined in many modules kept one entry in
+  total: a generated client whose 431 endpoint modules each define `sync` lost 438 of every 439, about 1,760
+  definitions in the case reported. Members nest the way a class's `key_methods` already do, so bare-name lookup is
+  unaffected and no existing consumer migrates. Flat `module.path:name` keys were proposed and declined, because
+  every consumer resolving a bare name today would have had to change and `resolve` would have needed an answer to
+  "which one".
+
+- **`surface_coverage` and `surface_scope` in `sdk-manifest-v1.json`.** A producer MAY describe a narrower surface,
+  and MUST declare it when it does. `surface_coverage` defaults to `complete` when omitted, so every manifest written
+  before 0.8.0 keeps its meaning; `declared` requires `surface_scope.exclude`. Modelled on `advisory_coverage` in
+  `cli-describe-v1.json`, which defaults to the strong claim and couples the weak one to the field that makes it
+  actionable.
+
+- **`MIRI-PY-043` forfeits unless the index's coverage was verified.** The delta is measured over `api_index`,
+  so a lossy or scoped index shrinks the population of the MUST that exists to catch silent removal, and symbols
+  outside it can be added or removed without the check firing. Where `surface_coverage` is `declared`, an empty delta
+  no longer settles whether the condition applies, and the existing `requirements` precedence rule already governs
+  that case: an unsettled condition is ignorance rather than scope, so the check forfeits, and a forfeited MUST
+  withdraws the grade.
+
+  **This was already wrong before 0.8.0, and the first draft of the fix left it wrong.** A claim of complete coverage
+  is a claim, not evidence. Under bare-name keying a name defined in several modules kept one entry, so a removal
+  inside the collided part produced an empty delta on an index that declared nothing. An empty delta now settles the
+  condition only where `MIRI-PY-036`'s reverse-direction clause verified coverage for that artifact; a claimed-complete
+  index whose coverage was never checked, including where `MIRI-PY-036` forfeited for want of `execution`, is
+  unsettled and forfeits. The distinction is the miri-py team's: a delta that cannot be measured is not the same as a
+  delta that is empty, and only the second is an exclusion. They then found that the draft fix covered the declared
+  case and stated the opposite for the default one.
+
+- **§5.4 states what `api_index` is.** A routing map and not an inventory; membership never settles existence, which
+  is what `resolve` is for (`MIRI-CONSUMER-010`); keys are dotted qualified names. Three passages already implied the
+  first. None stated it.
+
 ## 0.7.4 — unreleased
 
 ### Fixed

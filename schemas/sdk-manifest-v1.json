@@ -11,6 +11,15 @@
     "quick_reference",
     "api_index"
   ],
+  "allOf": [
+    {
+      "if": {
+        "required": ["surface_coverage"],
+        "properties": { "surface_coverage": { "const": "declared" } }
+      },
+      "then": { "required": ["surface_scope"] }
+    }
+  ],
   "properties": {
     "sdk_version": {
       "type": "string",
@@ -81,11 +90,31 @@
       "type": "object",
       "minProperties": 1,
       "patternProperties": {
-        "^[A-Za-z_][A-Za-z0-9_]*$": {
+        "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$": {
           "$ref": "#/definitions/api_component"
         }
       },
-      "description": "Index of all public API components"
+      "additionalProperties": false,
+      "description": "Index of the public API components a consumer can route to. Keys are dotted qualified names, in the key space the Discovery Contract's `resolve` (\u00a73.6) and `graph` (\u00a73.5) operations already share: `Greeter`, `Greeter.greet`, `api.tenants.list_tenants`. Before 0.8.0 this pattern admitted only a bare identifier, which contradicted that contract, and because `additionalProperties` was unset a dotted key was validated against nothing at all rather than refused. A `module`-typed entry carries its public members under `members`, so a name defined in many modules keeps one entry per module instead of one entry in total. This is a ROUTING map and not an inventory of every public definition: console-script entry points MUST be excluded (Agent Metadata \u00a75.4), and a producer MAY describe a narrower surface by declaring `surface_coverage`. Membership here never settles whether a symbol exists, which is what `resolve` is for (MIRI-CONSUMER-010)."
+    },
+    "surface_coverage": {
+      "type": "string",
+      "enum": ["complete", "declared"],
+      "description": "Whether `api_index` describes the whole importable surface or a producer-declared subset of it. Defaults to \"complete\" when omitted, so every manifest written before 0.8.0 keeps its meaning. \"declared\" states that the producer scoped the walk, and REQUIRES `surface_scope`, so a consumer reading an absent symbol can tell \"not in this package\" from \"not in the declared scope\". This distinction is also what lets a linter tell an empty delta from a delta it could not measure: against a complete surface an empty delta is an exclusion, and against a declared one it is a forfeit (MIRI-PY-043). Modelled on `advisory_coverage` in cli-describe-v1.json, which defaults to the strong claim and couples the weak one to the field that makes it actionable."
+    },
+    "surface_scope": {
+      "type": "object",
+      "required": ["exclude"],
+      "properties": {
+        "exclude": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string" },
+          "description": "The patterns excluded from `api_index`, relative to the installed package directory."
+        }
+      },
+      "additionalProperties": false,
+      "description": "What a declared surface left out. Required when `surface_coverage` is \"declared\" and meaningless otherwise, because a complete surface excluded nothing."
     },
     "error_handling": {
       "type": "object",
@@ -94,6 +123,7 @@
           "$ref": "#/definitions/error_info"
         }
       },
+      "additionalProperties": false,
       "description": "Common errors and their handling"
     },
     "configuration": {
@@ -106,6 +136,7 @@
               "type": "string"
             }
           },
+          "additionalProperties": false,
           "description": "Environment variables used by the SDK"
         },
         "config_files": {
@@ -133,9 +164,11 @@
           "enum": [
             "class",
             "function",
+            "method",
             "module",
             "constant"
-          ]
+          ],
+          "description": "The kind of component. `method` was added at 0.8.0 to match api-graph-v1.json's node kinds, which have carried it since the same dotted key space was adopted there: a method is addressable as a dotted key (`Greeter.greet`) and could not be typed before. A method reached through its class appears under that class's `key_methods` instead."
         },
         "purpose": {
           "type": "string",
@@ -160,7 +193,18 @@
             "^[a-z_][a-z0-9_]*$": {
               "$ref": "#/definitions/method_info"
             }
-          }
+          },
+          "additionalProperties": false
+        },
+        "members": {
+          "type": "object",
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*$": {
+              "$ref": "#/definitions/api_component"
+            }
+          },
+          "additionalProperties": false,
+          "description": "The public members of a `module`-typed entry, keyed by bare name. Added at 0.8.0 so that a name defined in many modules keeps one entry per module rather than one entry in total: a generated client whose 431 endpoint modules each define `sync` previously kept one. A consumer walks this the way MIRI-PY-031 already walks `key_methods`, so bare-name lookup is unaffected and no existing consumer migrates."
         },
         "usage_patterns": {
           "type": "array",
@@ -241,7 +285,8 @@
         "^[a-z_][a-z0-9_]*$": {
           "$ref": "#/definitions/parameter_info"
         }
-      }
+      },
+      "additionalProperties": false
     },
     "parameter_info": {
       "type": "object",
