@@ -25,6 +25,21 @@ reports is attributable to metadata rather than to code:
 Each arm is built into a real wheel because `miri score` takes a wheel, not a source tree: the
 checks read dist-info, RECORD and the installed layout, none of which exist before the build.
 """
+FORMATTING = '''"""greetlib.formatting — a second public module.
+
+Present only in the 0.8.0 surface arms. `surface_coverage`, `surface_scope` and a module entry's
+`members` all describe a surface spanning more than one file, so a single-module package cannot
+exercise them.
+"""
+
+__all__ = ["render"]
+
+
+def render(text: str, upper: bool = False) -> str:
+    """Return `text`, optionally upper-cased."""
+    return text.upper() if upper else text
+'''
+
 import base64
 import datetime
 import hashlib
@@ -163,6 +178,16 @@ def build(build_wheels: bool = True) -> int:
             text = text.replace('__all__ = ["greet", "farewell"]', '__all__ = ["greet"]')
             text = text[: text.index("def farewell")].rstrip() + "\n"
             init.write_text(text)
+
+        # The 0.8.0 surface arms need a SECOND module, because surface_coverage, surface_scope and
+        # `members` are all about a package whose public surface spans more than one file. A
+        # single-module package cannot exercise any of them. Adding the submodule to the shared
+        # template instead would leave every other arm's api_index incomplete, which is exactly what
+        # MIRI-PY-036's new reverse-direction clause fires on, so the three arms carry it alone.
+        surface_arm = arm.startswith(("scoped", "surface-gap", "members"))
+        if surface_arm:
+            source_differs = True
+            (pkg / "formatting.py").write_text(FORMATTING)
 
         # MIRI-PY-011 requires generated_at inside the build window (24 hours), so the stamps are
         # written HERE rather than committed. A committed stamp ages: every arm, including the

@@ -5,7 +5,7 @@
   "inputs": {
     "metadata/adversarial/lifecycle.json": "8259bcf4a053a70810151e514e0481fcb275db4e9f6256374a72ea67f4aadab1",
     "metadata/adversarial/migration-guide.json": "217f042dd88336a41d556b3be86df0d503648e67b298aa69e5e203c9cb9ca03d",
-    "metadata/adversarial/sdk-manifest.json": "da6fdc7fb684cbfa5dcbc2f5835b7ebe9077a27362e2556c3b068ad3ee1ef0a2",
+    "metadata/adversarial/sdk-manifest.json": "260866d9d28a934fc923123c0c9967225640c8913167377a0122b137e10df446",
     "metadata/adversarial/usage-patterns.json": "41a45ef8833639f8a83be93c123d6fb50529b7868819e727f1ed6dd326cb4ac3",
     "metadata/malformed/lifecycle.json": "b5176ebd2e8f1172615352625aab24fcee5e7fc02175d508f08ce8dfedc7b939",
     "metadata/malformed/sdk-manifest.json": "5016c0ae36a065678fb3999f41c15185dd0a2425ab62505c4539c54ee8d2df0e",

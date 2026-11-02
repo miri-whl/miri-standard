@@ -29,7 +29,16 @@ Regenerate against the 0.8.0 pin rather than letting it drift.
   Nobody noticed because the two defects hid each other. A dotted key matched no pattern, and with
   `additionalProperties` unset it was validated against nothing, so it neither worked nor failed. Our own adversarial
   fixture ships `Greeter.greet` carrying `"type": "method"`, a value outside the `api_component` enum, and reported
-  no error for it. `method` is now in that enum, matching api-graph's node kinds.
+  no error for it.
+
+  A draft of this release added `method` to that enum so the entry would validate. It was removed again before
+  release, on miri-py's argument: a test needing a shape is a weaker reason to bless it than a producer needing one,
+  their generator has never emitted a top-level method key, and `MIRI-PY-031` already resolves a method structurally
+  through `key_methods`. Two conforming documents for one package is a cost every consumer pays forever. A method is
+  therefore **not** a top-level entry; `Greeter.greet` remains something a consumer may ask `resolve` for, answered
+  by walking into `key_methods`. The adversarial fixture's A4 padding attack now buries the real `greet` instead,
+  which is what it needed all along. `api-graph-v1.json` keeps `method` among its node kinds, a different
+  vocabulary: a graph addresses what exists, this index routes to where it is described.
 
 - **Seven blocks accepted arbitrary content under a non-matching key.** `api_index`, `error_handling`,
   `environment_variables`, `key_methods` and `parameters` in `sdk-manifest-v1.json`, and `categories` and

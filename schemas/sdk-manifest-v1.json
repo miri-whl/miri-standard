@@ -95,7 +95,7 @@
         }
       },
       "additionalProperties": false,
-      "description": "Index of the public API components a consumer can route to. Keys are dotted qualified names, in the key space the Discovery Contract's `resolve` (\u00a73.6) and `graph` (\u00a73.5) operations already share: `Greeter`, `Greeter.greet`, `api.tenants.list_tenants`. Before 0.8.0 this pattern admitted only a bare identifier, which contradicted that contract, and because `additionalProperties` was unset a dotted key was validated against nothing at all rather than refused. A `module`-typed entry carries its public members under `members`, so a name defined in many modules keeps one entry per module instead of one entry in total. This is a ROUTING map and not an inventory of every public definition: console-script entry points MUST be excluded (Agent Metadata \u00a75.4), and a producer MAY describe a narrower surface by declaring `surface_coverage`. Membership here never settles whether a symbol exists, which is what `resolve` is for (MIRI-CONSUMER-010)."
+      "description": "Index of the public API components a consumer can route to. Keys are dotted qualified names, in the key space the Discovery Contract's `resolve` (\u00a73.6) and `graph` (\u00a73.5) operations address: `Greeter`, `api.tenants.list_tenants`. A method is addressed as `Greeter.greet` and RESOLVED by walking into the class entry's `key_methods`, so it is not a key of that spelling here. Before 0.8.0 this pattern admitted only a bare identifier, which contradicted that contract, and because `additionalProperties` was unset a dotted key was validated against nothing at all rather than refused. A `module`-typed entry carries its public members under `members`, so a name defined in many modules keeps one entry per module instead of one entry in total. This is a ROUTING map and not an inventory of every public definition: console-script entry points MUST be excluded (Agent Metadata \u00a75.4), and a producer MAY describe a narrower surface by declaring `surface_coverage`. Membership here never settles whether a symbol exists, which is what `resolve` is for (MIRI-CONSUMER-010)."
     },
     "surface_coverage": {
       "type": "string",
@@ -164,11 +164,10 @@
           "enum": [
             "class",
             "function",
-            "method",
             "module",
             "constant"
           ],
-          "description": "The kind of component. `method` was added at 0.8.0 to match api-graph-v1.json's node kinds, which have carried it since the same dotted key space was adopted there: a method is addressable as a dotted key (`Greeter.greet`) and could not be typed before. A method reached through its class appears under that class's `key_methods` instead."
+          "description": "The kind of component. A METHOD is not among them, deliberately: a method appears under its class's `key_methods`, which is where `MIRI-PY-031` already resolves one (\"a class, a method under `key_methods`, or a module-level function\"). A draft of 0.8.0 added `method` here so that a top-level `Greeter.greet` entry would validate, which an attack fixture happened to need; it was removed before release because a test needing a shape is a weaker reason to bless it than a producer needing it, and two conforming documents for one package is a cost every consumer pays forever. Raised by the miri-py team, whose generator has never emitted a top-level method key. `api-graph-v1.json` keeps `method` among its NODE kinds, which is a different vocabulary: a graph addresses what exists, while this index routes to where it is described."
         },
         "purpose": {
           "type": "string",

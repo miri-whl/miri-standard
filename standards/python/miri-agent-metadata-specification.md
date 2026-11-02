@@ -669,7 +669,9 @@ guarantees that make generated metadata trustworthy without re-reading the sourc
   absent symbol could not otherwise tell "not in this package" from "not in the declared scope", and a linter could
   not tell an empty delta from one it was unable to measure (`MIRI-PY-043`).
 - **Keys are dotted qualified names.** `api_index` keys share the key space the Discovery Contract's `resolve` (§3.6)
-  and `graph` (§3.5) operations use: `Greeter`, `Greeter.greet`, `api.tenants.list_tenants`. A `module`-typed entry
+  and `graph` (§3.5) operations address: `Greeter`, `api.tenants.list_tenants`. That space is what a consumer may
+  *ask* for, and `Greeter.greet` is a legitimate question; it is answered by walking into `key_methods` rather than
+  by a key of that spelling, because a method is not a top-level entry. A `module`-typed entry
   carries its public members under `members`, and a class entry carries its methods under `key_methods`, so a name
   defined in many modules keeps one entry per module rather than one entry in total.
 - **`api-graph.json` carries only source-evidenced structure.** Nodes carry their kind and edges carry a declared
