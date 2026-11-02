@@ -101,5 +101,27 @@ Decisions worked through so far, each as a proposal plus the response that settl
   prose and missing from that check's `references`, and gates the rule so it cannot reopen. Asks them to
   relabel their fix card from "Defined by" to "References", because four of the 21 are tooling
   instructions, cautionary examples, or cross-ecosystem prior art rather than the authority for the rule.
+- `miri-standard-response-api-index-keys.md` — miri-py reports that `api_index`, keyed by bare name, dropped about
+  1,760 definitions of a generated client, because 431 endpoint modules each define `sync` and the index holds one
+  entry per name. Accepted, with the lead finding reversed: the Discovery Contract §3.6 already defines the key space
+  as **dotted** and gives `Greeter.greet` as its example, so the schema, which admits only a bare identifier, never
+  implemented the standard's own position. Nobody noticed because the keys that escape the pattern escape validation
+  with it, which is their second ask and is seven `patternProperties` blocks rather than one. Resolved by nesting
+  module members instead of flattening them into the key, so no bare-name consumer breaks. Adds the finding the
+  report did not carry: `MIRI-PY-043` measures its delta *from* the index, so the dropped symbols fall outside the
+  population of the MUST that exists to catch silent removal.
+
+- `miri-standard-reply-conditional-exclusion.md` — miri-py accepts both corrections and reports that the vacuous
+  pass is worse than described: an empty delta is classified `condition_not_applicable`, which the vocabulary makes
+  an *exclusion*, so a release that silently deleted a module was "awarded six points". The finding holds and the
+  arithmetic does not. Awarding the weight is the PRE-0.5.0 rule, which `check-v1.json` carries along with its own
+  SUPERSEDED label; `check-v3.json` and `scoring-v2.json` both say an excluded check leaves the numerator and the
+  denominator. So nothing is credited, and the obligation vanishes from the ratio instead, which is the defect their
+  repair actually describes. Their distinction is adopted: an empty delta is an exclusion, a delta over a surface
+  known to be partial is a forfeit. Answers the declaration shape they are blocked on with `surface_coverage` and
+  `surface_scope`, modelled on `advisory_coverage` in `cli-describe-v1.json`. Sizes the open question beyond this
+  exchange: 15 of 43 active MIRI-PY checks are conditional and carry 39 of the 100 points, so the two scoring models
+  diverge on most artifacts, not on this pair.
+
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.
