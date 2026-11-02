@@ -142,4 +142,7 @@ writing or review (it encodes the house style and the exact markdownlint/cspell/
 `schema-governance` for JSON Schema changes, check-weight/checklist edits, example validation, and the site
 generator (the weights-sum-to-100 and schema-enforces-the-spec invariants live there); `glossary` before
 introducing a defined term, changing a closed vocabulary, or renaming anything, since `docs/glossary.md` is derived
-from the specs and `make consistency` gates the parts of that derivation a machine can see.
+from the specs and `make consistency` gates the parts of that derivation a machine can see. Three skills check the
+English with arghos: `prose-check` for any prose change (AI-voice tells, clarity, flow; free and offline, plus paid
+brief and panel reviews), `site-check` for auditing the generated site and fixing it in the sources, and
+`rewrite-to-brief` for writing or reworking a long piece such as a blog post against an approved brief.
