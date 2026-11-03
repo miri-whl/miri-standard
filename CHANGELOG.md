@@ -11,7 +11,14 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-## 0.8.0 — unreleased
+## 0.8.0 — 2026-11-03
+
+### Fixed (release hygiene)
+
+- **The 0.7.3 and 0.7.4 headings said "unreleased" while both tags existed.** Both were cut and neither heading was
+  filled in, so the changelog stated something false about two published releases for weeks. Dated from their tags,
+  2026-09-27 and 2026-10-17. The versioning policy calls this file a contract with implementers; a reader checking
+  whether a version shipped was being told no.
 
 **BREAKING.** Seven `patternProperties` blocks gain `additionalProperties: false`. A key that matches no pattern was
 previously validated against nothing at all, so a vendored mirror will start refusing documents it used to accept.
@@ -119,7 +126,7 @@ Regenerate against the 0.8.0 pin rather than letting it drift.
   is what `resolve` is for (`MIRI-CONSUMER-010`); keys are dotted qualified names. Three passages already implied the
   first. None stated it.
 
-## 0.7.4 — unreleased
+## 0.7.4 — 2026-10-17
 
 ### Fixed
 
@@ -188,7 +195,7 @@ Regenerate against the 0.8.0 pin rather than letting it drift.
 
 No check changed weight, level or intent.
 
-## 0.7.3 — unreleased
+## 0.7.3 — 2026-09-27
 
 `api-graph.json` is withdrawn, and `MIRI-PY-010` with it. A wheel need not ship the document and a consumer
 must not expect it; the schema stays published and frozen so anything already validating against it still can.
