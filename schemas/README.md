@@ -12,6 +12,13 @@ consistency and enable automated validation of agent metadata.
   - Required fields: `sdk_version`, `generated_at`, `miri_version`, `quick_reference`, `api_index`
   - Validates API components, methods, parameters, and error handling
 
+- **[agent-examples-v1.json](agent-examples-v1.json)** - Schema for `AGENT_EXAMPLES.json`, the index of runnable
+  examples, installed in the distribution's `.dist-info/` directory
+  - Required fields: `version`, `examples`; each entry carries `file` and `path`
+  - `dependencies` holds IMPORT names (`yaml`), never requirement strings (`PyYAML>=6`)
+  - Added at 0.8.0. Four active checks read this document and it had no schema, so the implementation guide and
+    the reference linter emitted incompatible shapes without anything catching it
+
 - **[usage-patterns-v1.json](usage-patterns-v1.json)** - Schema for `usage-patterns.json`
 - **[test-patterns-v1.json](test-patterns-v1.json)** - Schema for `test-patterns.json` - unit and integration test
   patterns extracted from the package's own suite, plus the test doubles it ships

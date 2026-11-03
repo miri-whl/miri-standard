@@ -20,7 +20,44 @@ long_description: 'Deprecation must be marked in code, inventoried in metadata, 
   same discipline applies to every measurable change. This check verifies: every public interface added to, removed from,
   or changed in `sdk-manifest.json` `api_index` since the previous release is named in a `releases[0]` entry''s `symbols`.
   MIRI-PY-030 covers removals against migration-guide.json; this check covers the whole delta against the changelog, so an
-  artifact that measurably changed cannot ship a changelog that says nothing.'
+  artifact that measurably changed cannot ship a changelog that says nothing.
+
+
+  The delta is measured over `api_index`, so the index decides the population, and an EMPTY delta settles the
+  condition only where the index is known to cover the package. A `surface_coverage` of `complete`, or its absence,
+  is a claim and not evidence. Three cases:
+
+
+  1. `surface_coverage` is `declared`. The index describes a producer-declared subset, so an empty delta cannot be
+  told apart from a change in the part never indexed. The condition is UNSETTLED.
+
+
+  2. The index is claimed complete, the collision test below read every source file in the package, and it found no
+  collision. An empty delta SETTLES the condition and the check is excluded, as before.
+
+
+  3. A collision was detected, or the collision test could not read every source file. Under bare-name keying a name
+  defined in several modules keeps one entry, so a removal inside the collided part produces an empty delta. The
+  condition is UNSETTLED.
+
+
+  The collision test is a pure function of the artifact and needs NO declared capability: a wheel carries its own
+  sources, so counting same-named public definitions and comparing that count against `api_index` requires no import
+  and no execution. It is deliberately not tied to `MIRI-PY-036`, which declares `execution` for the discovery
+  functions it also calls; a linter that declines to execute code can still settle this. The test DETECTS a
+  collision and never establishes the absence of one: a source file that will not parse is skipped rather than
+  guessed at, which is why an unreadable file lands in case 3 rather than case 2.
+
+
+  Under the `requirements` precedence rule an unsettled condition is ignorance rather than scope, so cases 1 and 3
+  FORFEIT rather than being excluded, reported as `comparison_not_possible`, and for a MUST a forfeit withdraws the
+  grade.
+
+
+  Raised by the miri-py team in two steps: first that a delta which cannot be measured is not the same as a delta
+  that is empty, and only the second is an exclusion; then that case 2 is the only safe one, so returning
+  `condition_not_applicable` on ANY empty delta is wrong today and not only under a declared surface. The first
+  draft of this clause fixed case 1 and left case 3 stating the opposite.'
 rationale: An API-diff tool detects that the surface changed; nothing cross-checks the change against what the producer declared.
   The delta is the same previous-release compare 0.5.0 already requires for MIRI-PY-030, and off-the-shelf tooling emits it
   as typed breakage objects (griffe), so the join costs a set difference. It is the check that turns a changelog from a courtesy
@@ -33,6 +70,8 @@ fires_when:
 remediation:
 - Derive the release's `added` / `removed` / `changed` entries from the api_index diff at build time rather than from memory
 - Gate the build on the delta being fully covered; an uncovered symbol is a missing fragment, not a linter false positive
+- Where the index is scoped, expect this check to forfeit rather than pass; narrowing the declared surface narrows what
+  the changelog can be held to, so scope it to what genuinely is not public rather than to what is inconvenient
 examples:
   violation: '1.1.0 api_index: Client, Client.fetch, Client.legacy_fetch
 

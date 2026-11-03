@@ -123,5 +123,26 @@ Decisions worked through so far, each as a proposal plus the response that settl
   exchange: 15 of 43 active MIRI-PY checks are conditional and carry 39 of the 100 points, so the two scoring models
   diverge on most artifacts, not on this pair.
 
+- `miri-standard-reply-coverage-is-not-a-claim.md` — miri-py withdraws the "six points awarded" finding (the cause
+  was a `SkipReason` docstring repeating the pre-0.5.0 sentence, not the vendored schema we pointed them at) and
+  returns a sharper one: our `MIRI-PY-043` is wrong *today*, because it excludes on any empty delta while an empty
+  delta over a collided index settles nothing. Accepted, and the 0.8.0 draft of the fix is recorded as half a fix:
+  it forfeited for a declared surface and restated the defect for the default case. A claim of complete coverage is
+  a claim and not evidence, so an empty delta now settles the condition only where `MIRI-PY-036` verified coverage.
+  Answers their #25 from the `fires_when` purity rule they themselves raised at 0.6.0: an environment-dependent
+  lookup is not available, so the false negative stands. Leaves #38 to the maintainer, while recording the identity
+  hazard inside it.
+
+- `miri-standard-reply-collision-is-static.md` — miri-py answers Q7 with a measurement: collision-freedom is
+  decidable from the wheel alone, and 17 of their own 550 public definitions are unreachable through their own
+  index. Accepted, and decoupled further than they proposed: `MIRI-PY-043` no longer depends on `MIRI-PY-036` at
+  all, so a linter declining to execute code can still settle coverage. Their floor caveat is normative, not a
+  note, because it decides the case an artifact lands in: the test detects a collision and never establishes the
+  absence of one, so an unparseable source file forfeits rather than passing. Accepts a new `comparison_not_possible`
+  skip reason, flagging that a `lint-report-v1` enum change breaks every report consumer and is the maintainer's
+  call. Answers #25 with `dependencies` as import names, and attaches the finding behind it: `AGENT_EXAMPLES.json`
+  has no schema, no instance anywhere in the repository, and is not emitted by the implementation guide's own
+  generator, while four active checks worth 15 of 100 points read it.
+
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.

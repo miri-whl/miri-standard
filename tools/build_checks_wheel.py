@@ -321,15 +321,15 @@ def write_agent_metadata(src: pathlib.Path, manifest: dict) -> None:
     # injected into the built wheel by `inject_dist_info()` below, because a dist-info file cannot be
     # carried as package data. Writing it to the package root - which is what this build did first -
     # produces a file no consumer looks for; the linter's layout section says so in as many words.
+    # Shape is schemas/agent-examples-v1.json. Before 0.8.0 this document had no schema and this
+    # build emitted a third shape: `examples` as an object, `categories` as arrays, and no `version`
+    # key at all. Our own published wheel carried it.
     (src / "_agent_examples.json.src").write_text(json.dumps({
-        "examples": {
-            "quickstart": {"file": "examples/quickstart.py", "complexity": "beginner",
-                           "description": "Read one check definition from the installed package"},
-            "error_handling": {"file": "examples/error_handling.py", "complexity": "beginner",
-                               "description": "What to catch when the install is incomplete or corrupt"},
-        },
-        "categories": {"getting_started": ["quickstart"], "reliability": ["error_handling"]},
-        "learning_paths": {"first_use": ["quickstart", "error_handling"]},
+        "version": "1.0",
+        "examples": [
+            {"file": "quickstart.py", "path": f"{PKG}/examples/quickstart.py"},
+            {"file": "error_handling.py", "path": f"{PKG}/examples/error_handling.py"},
+        ],
     }, indent=2) + "\n")
 
 

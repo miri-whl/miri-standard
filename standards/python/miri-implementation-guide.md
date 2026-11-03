@@ -237,17 +237,16 @@ def get_agent_metadata() -> Dict:
     # Fallback to scanning examples directory
     examples_dir = get_examples_dir()
     if not examples_dir.exists():
-        return {"version": "1.0", "examples": {}}
-    
-    examples = {}
-    for py_file in examples_dir.rglob("*.py"):
+        return {"version": "1.0", "examples": []}
+
+    examples = []
+    for py_file in sorted(examples_dir.rglob("*.py")):
         if py_file.name != "__init__.py":
             rel_path = py_file.relative_to(examples_dir)
-            name = str(rel_path.with_suffix(''))
-            examples[name] = {
-                "file": f"examples/{rel_path}",
-                "description": _extract_description(py_file)
-            }
+            examples.append({
+                "file": py_file.name,
+                "path": f"{__name__.split('.')[0]}/examples/{rel_path.as_posix()}"
+            })
     
     return {
         "version": "1.0",
@@ -570,80 +569,35 @@ def extract_example_metadata(file_path: Path) -> Dict[str, Any]:
     return metadata
 
 def generate_agent_examples_json(package_dir: Path) -> Dict[str, Any]:
-    """Generate AGENT_EXAMPLES.json content."""
+    """Generate AGENT_EXAMPLES.json content (schemas/agent-examples-v1.json)."""
+    package_name = package_dir.name
     examples_dir = package_dir / "examples"
-    
+
     if not examples_dir.exists():
-        return {"version": "1.0", "examples": {}}
-    
-    examples = {}
-    categories = {
-        "getting_started": {
-            "name": "Getting Started",
-            "description": "Essential examples for new users",
-            "examples": []
-        },
-        "authentication": {
-            "name": "Authentication",
-            "description": "Authentication and security patterns",
-            "examples": []
-        },
-        "advanced": {
-            "name": "Advanced Usage",
-            "description": "Complex workflows and patterns",
-            "examples": []
-        }
-    }
-    
-    learning_paths = {
-        "complete_guide": {
-            "name": "Complete Package Guide",
-            "description": "Full progression from basics to advanced usage",
-            "examples": [],
-            "estimated_total_time": "30 minutes"
-        }
-    }
-    
-    for py_file in examples_dir.rglob("*.py"):
+        return {"version": "1.0", "examples": []}
+
+    examples = []
+    for py_file in sorted(examples_dir.rglob("*.py")):
         if py_file.name == "__init__.py":
             continue
-        
+
         rel_path = py_file.relative_to(examples_dir)
-        example_id = str(rel_path.with_suffix(''))
-        
-        metadata = extract_example_metadata(py_file)
-        
-        examples[example_id] = {
-            "description": metadata.get("description", "No description"),
-            "file": f"examples/{rel_path}",
-            "complexity": metadata.get("complexity", "unknown"),
-            "tags": metadata.get("tags", []),
-            "dependencies": [],  # Could be extracted from imports
-            "estimated_time": metadata.get("estimated_time", "unknown"),
-            "prerequisites": metadata.get("prerequisites", []),
-            "related": [],  # Could be inferred from tags
-            "use_cases": []  # Could be extracted from content
+
+        entry = {
+            "file": py_file.name,
+            "path": f"{package_name}/examples/{rel_path.as_posix()}",
         }
-        
-        # Categorize examples
-        if "auth" in metadata.get("tags", []) or "authentication" in example_id:
-            categories["authentication"]["examples"].append(example_id)
-        elif metadata.get("complexity") == "advanced" or "advanced" in example_id:
-            categories["advanced"]["examples"].append(example_id)
-        else:
-            categories["getting_started"]["examples"].append(example_id)
-        
-        # Add to learning path based on complexity
-        if metadata.get("complexity") in ["beginner", "intermediate", "advanced"]:
-            learning_paths["complete_guide"]["examples"].append(example_id)
-    
-    return {
-        "version": "1.0",
-        "generated_at": "build-time",
-        "examples": examples,
-        "categories": categories,
-        "learning_paths": learning_paths
-    }
+
+        # Import names the example needs beyond the package itself and its
+        # Requires-Dist: ["yaml"], never ["PyYAML>=6"]. MIRI-PY-015 reads this.
+        # Omit the key entirely when there are none.
+        extra = sorted(third_party_imports(py_file) - requires_dist_import_names())
+        if extra:
+            entry["dependencies"] = extra
+
+        examples.append(entry)
+
+    return {"version": "1.0", "examples": examples}
 
 def main():
     """Generate all metadata files."""

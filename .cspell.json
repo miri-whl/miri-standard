@@ -146,7 +146,8 @@
     "vulndb",
     "weight\u1d62",
     "winget",
-    "writeups"
+    "writeups",
+    "fnmatch"
   ],
   "flagWords": [],
   "allowCompoundWords": true

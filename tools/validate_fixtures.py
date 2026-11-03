@@ -151,8 +151,8 @@ def main() -> int:
 
     # 4. The padding must still push a real symbol past the cap.
     keys = [k for k in index if not k.startswith("_")]
-    pos = keys.index("Greeter.greet") if "Greeter.greet" in keys else -1
-    check(f"A4 padding pushes Greeter.greet past cap={CAP}", pos >= CAP,
+    pos = keys.index("Greeter") if "Greeter" in keys else -1
+    check(f"A4 padding pushes Greeter past cap={CAP}", pos >= CAP,
           f"position {pos + 1} of {len(keys)}")
 
     # A5: the payload must be directive, inert, AND in a field the consumer actually reads.

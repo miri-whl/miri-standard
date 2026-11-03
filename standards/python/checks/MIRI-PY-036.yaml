@@ -14,10 +14,12 @@ requirements:
 severity:
   default: MEDIUM
   violation_unit: the discovery API surface
-short_description: Discovery functions work and `sdk-manifest.json` api_index resolves against the installed API surface
+short_description: Discovery functions work and `sdk-manifest.json` api_index agrees with the installed API surface in both directions
 long_description: 'Miri metadata must be discoverable at runtime and must never make the package worse for non-Miri consumers.
-  This check verifies: package-level discovery functions are importable and return coherent data, and every
-  `sdk-manifest.json` api_index entry resolves against the installed package.'
+  This check verifies: package-level discovery functions are importable and return coherent data, every
+  `sdk-manifest.json` api_index entry resolves against the installed package, and every public definition the
+  installed package exposes has an entry, unless a declared `surface_scope` excludes it. Both directions are
+  required: before 0.8.0 only the first was, so an index describing half its package passed cleanly.'
 rationale: 'The §6.1 functions (`get_examples_dir`, `get_agent_metadata`, `show_quickstart`, …) are the runtime entry point
   to everything else the standard ships — the wheel-side equivalent of a CLI''s `--describe`; when they raise or return
   paths that do not exist, agents fall back to guessing file locations by convention, the exact behavior the standard exists
@@ -37,6 +39,16 @@ fires_when:
 - An api_index entry names a console-script entry point declared in the wheel's `entry_points` (`console_scripts`) — the
   CLI surface belongs in the CLI standard's `--describe`, not api_index, and MUST be excluded from it (Generation
   Invariant §5.4)
+- A public definition importable from the installed package has no `api_index` entry reaching it, counting a module
+  entry's `members` and a class entry's `key_methods` as reaching one. PUBLIC is defined in Agent Metadata §5.4 rather than
+  left to the linter. It covers a name not beginning with `_` (except `__init__` and `__call__`), governed by
+  `__all__` where a module declares one, counted once at its definition rather than at each re-export, and
+  excluding inherited methods. Where `surface_coverage` is `declared`, a
+  definition matched by a `surface_scope.exclude` pattern is out of scope and does not fire; where `surface_coverage`
+  is absent or `complete`, every public definition is in scope. Console-script entry points are excluded by the clause
+  above and never fire this one. This clause needs no execution, because the wheel carries its own sources and the
+  comparison is a pure static one. It sits in this check for cohesion, and `MIRI-PY-043` deliberately does not
+  depend on it, so that a linter declining to execute code can still settle coverage for itself
 remediation:
 - Implement each function as a thin reader over the installed files via `importlib.resources.files(...)`, never over remembered
   build-tree paths
@@ -48,6 +60,8 @@ remediation:
   that every entry resolves after install — the manifest agents generate code from must not be able to lie
 - Exclude console-script entry points and the CLI command surface from api_index at generation time; the CLI is
   described by the CLI standard's `--describe`, not this file (Generation Invariant §5.4)
+- 'Where the index deliberately covers part of the package, declare it: set `surface_coverage` to `declared` and list
+  the excluded patterns in `surface_scope.exclude`, so an omission reads as a decision rather than as a defect'
 examples:
   violation: '$ pip install weather_sdk-1.2.0-py3-none-any.whl
 

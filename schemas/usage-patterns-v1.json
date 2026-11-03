@@ -35,6 +35,7 @@
           "$ref": "#/definitions/category"
         }
       },
+      "additionalProperties": false,
       "description": "Pattern categories"
     },
     "learning_paths": {
@@ -44,6 +45,7 @@
           "$ref": "#/definitions/learning_path"
         }
       },
+      "additionalProperties": false,
       "description": "Structured learning progressions"
     }
   },

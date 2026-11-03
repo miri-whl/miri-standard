@@ -29,7 +29,9 @@ validate-sample: ## Validate examples/sample-sdk agent-metadata against the JSON
 	base = pathlib.Path('examples/sample-sdk/src/weather_sdk/agent-metadata'); \
 	pairs = [('lifecycle.json','lifecycle-v1'), ('sdk-manifest.json','sdk-manifest-v1'), ('usage-patterns.json','usage-patterns-v1'), ('migration-guide.json','migration-guide-v1'), ('api-graph.json','api-graph-v1')]; \
 	[jsonschema.validate(json.load(open(base/f)), json.load(open('schemas/'+s+'.json'))) for f,s in pairs]; \
-	print(f'{len(pairs)} sample-sdk metadata files valid')"
+	ex = base.parent/'AGENT_EXAMPLES.json'; \
+	jsonschema.validate(json.load(open(ex)), json.load(open('schemas/agent-examples-v1.json'))); \
+	print(f'{len(pairs)+1} sample-sdk metadata files valid (incl. AGENT_EXAMPLES.json)')"
 
 score-sample: ## Build examples/sample-sdk and score it with miri (conformance gate; needs miri-py)
 	@python3 tools/score_sample.py

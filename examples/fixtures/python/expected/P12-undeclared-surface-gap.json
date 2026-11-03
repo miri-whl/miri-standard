@@ -1,0 +1,33 @@
+{
+  "case": "P12-undeclared-surface-gap",
+  "fixture": "surface-gap-1.1.0 (paired against scoped-1.1.0, which omits the same module and says so)",
+  "checks": [
+    "MIRI-PY-036"
+  ],
+  "clause": "",
+  "note": "Both arms ship greetlib/formatting.py, whose public render() has no api_index entry. The only difference between them is that scoped-1.1.0 declares surface_coverage: declared with formatting.py in surface_scope.exclude, and this arm declares nothing. An index silently narrower than its package claims coverage it does not have, and before 0.8.0 MIRI-PY-036 had no clause for that direction: it fired only when an entry failed to resolve, never when a definition had no entry. The first signal was a consumer failing to find a symbol that exists.",
+  "linter_assertion": {
+    "must_report_on": {
+      "arm": "surface-gap-1.1.0",
+      "checks": [
+        "MIRI-PY-036"
+      ],
+      "evidence": {
+        "MIRI-PY-036": [
+          "sdk-manifest.json:api_index"
+        ]
+      },
+      "evidence_note": "The finding must name api_index as the place the definition is missing from, not formatting.py as the place it exists. The module is not the defect; its absence from the index is."
+    },
+    "must_not_report_on": {
+      "arm": "scoped-1.1.0",
+      "checks": [
+        "MIRI-PY-036"
+      ],
+      "note": "Same source, same omission, declared. A linter reporting here is treating a declared scope as a defect, which would make surface_coverage unusable: the field exists so that a deliberate omission reads as a decision rather than as an incomplete index."
+    }
+  },
+  "paired_control": "scoped-1.1.0",
+  "previous_release": "conforming-1.0.0",
+  "why_this_case_was_missing": "The clause did not exist before 0.8.0, and neither did a fixture arm whose package spans more than one module. Every arm shared a single-module source, so no artifact in this repository could have exercised a rule about a surface the index fails to cover."
+}

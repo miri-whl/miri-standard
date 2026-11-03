@@ -657,6 +657,37 @@ guarantees that make generated metadata trustworthy without re-reading the sourc
   from `api_index`; the CLI surface is described by the CLI standard's `--describe`, not by this file. This keeps
   `api_index` a name→file→signature map that a consumer can resolve against the installed package by import
   (the MIRI-PY-036 discipline).
+- **`api_index` is a routing map, not an inventory.** Its purpose is to take a consumer from a name to a file and a
+  signature. It is not a census of every public definition, and membership in it never settles whether a symbol
+  exists: that is what the Discovery Contract's `resolve` operation is for, and `MIRI-CONSUMER-010` makes a consumer
+  treating index membership as proof non-conforming. The console-script exclusion above is one consequence; a
+  producer-declared scope is the other.
+- **A producer MAY declare a narrower surface, and MUST say so when it does.** Setting `surface_coverage` to
+  `declared` states that `api_index` describes a subset of the importable surface, and REQUIRES `surface_scope.exclude`
+  to carry the patterns that were left out. Omitting `surface_coverage` means `complete`, so every manifest written
+  before 0.8.0 keeps its meaning. A scoped index that does not declare itself is non-conforming. A consumer reading an
+  absent symbol could not otherwise tell "not in this package" from "not in the declared scope", and a linter could
+  not tell an empty delta from one it was unable to measure (`MIRI-PY-043`).
+- **What counts as a public definition.** `MIRI-PY-036` compares `api_index` against the package in both
+  directions, so the population has to be decidable the same way by every implementation. A definition is public
+  when it is defined in a module of the installed import package and its name does not begin with `_`, except
+  `__init__` and `__call__`, which are callable surface. **Where a module declares `__all__`, that declaration
+  governs**: it is the author stating the module's public surface in the language's own terms, and an index that
+  ignores it describes something the author did not claim. A re-export counts once, at its definition, never again
+  at each module that re-exports it. **Inherited methods are out of scope**: a class entry's `key_methods` holds
+  what that class itself defines. That is not a limit of static analysis but a consequence of what this document is.
+  The index routes a consumer to where a name is described, and `resolve` (Discovery Contract §3.6) settles whether
+  `client.close()` exists on the object, by reading the source rather than the index. Requiring every inherited
+  member here would duplicate a hierarchy the package already states, and `MIRI-CONSUMER-010` already forbids a
+  consumer treating index membership as proof of existence. The first and third rules were given by the miri-py
+  team as their implementation's behavior; the second and fourth are decided here, the second against their
+  implementation at their request.
+- **Keys are dotted qualified names.** `api_index` keys share the key space the Discovery Contract's `resolve` (§3.6)
+  and `graph` (§3.5) operations address: `Greeter`, `api.tenants.list_tenants`. That space is what a consumer may
+  *ask* for, and `Greeter.greet` is a legitimate question; it is answered by walking into `key_methods` rather than
+  by a key of that spelling, because a method is not a top-level entry. A `module`-typed entry
+  carries its public members under `members`, and a class entry carries its methods under `key_methods`, so a name
+  defined in many modules keeps one entry per module rather than one entry in total.
 - **`api-graph.json` carries only source-evidenced structure.** Nodes carry their kind and edges carry a declared
   relationship derived from the source (inheritance, return type, call site). Scored or inferred values (importance /
   centrality, usage frequency) and synthesized usage `workflows` MUST NOT be emitted — a generator cannot derive them
