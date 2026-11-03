@@ -110,7 +110,7 @@
           "type": "array",
           "minItems": 1,
           "items": { "type": "string" },
-          "description": "The patterns excluded from `api_index`, relative to the installed package directory."
+          "description": "The patterns excluded from `api_index`, relative to the installed package directory, POSIX-spelled. MATCHING IS fnmatch, not pathlib: a `*` CROSSES directory separators, so `api/*` and `api/**` both match `api/a/b.py`. The dialect is stated because two implementations diverge here silently otherwise, and because `PurePath.full_match`, the obvious alternative, arrived in Python 3.13 and is unavailable to a producer supporting 3.11. NEGATION IS NOT SUPPORTED, and neither is directory-only matching: a pattern never re-includes what an earlier one excluded, so the order of this array carries no meaning. Should negation be added, it will be specified as last-match-wins at the same time, since an unstated precedence is where implementations disagree without noticing."
         }
       },
       "additionalProperties": false,

@@ -105,6 +105,16 @@ Regenerate against the 0.8.0 pin rather than letting it drift.
   mapping between the two. Reported by the miri-py team, who found the field was not merely unpopulated but unread:
   no generator wrote it and no linter consumed it, so `MIRI-PY-015`'s second clause had prose, no data and no code.
 
+- **§5.4 defines what counts as a public definition, and `surface_scope` states its glob dialect.** Both were
+  answers miri-py asked for rather than inherited from them. `__all__` now governs where a module declares one,
+  which their walker parses and never consults; they called that an omission rather than a decision and asked to be
+  told to honour it. Inherited methods stay out of scope, but for a reason rather than an implementation limit: the
+  index routes to where a name is described, and `resolve` settles whether a member exists on an object. Matching in
+  `surface_scope.exclude` is `fnmatch`, so a `*` crosses directory separators, with no negation and no
+  directory-only form. The dialect is stated because the obvious alternative, `PurePath.full_match`, arrived in
+  Python 3.13 and is unavailable to a producer supporting 3.11, and because two implementations otherwise diverge
+  here without noticing.
+
 - **§5.4 states what `api_index` is.** A routing map and not an inventory; membership never settles existence, which
   is what `resolve` is for (`MIRI-CONSUMER-010`); keys are dotted qualified names. Three passages already implied the
   first. None stated it.
