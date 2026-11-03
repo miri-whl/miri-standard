@@ -20,7 +20,6 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
   2026-09-27 and 2026-10-17. The versioning policy calls this file a contract with implementers; a reader checking
   whether a version shipped was being told no.
 
-
 **BREAKING.** Seven `patternProperties` blocks gain `additionalProperties: false`. A key that matches no pattern was
 previously validated against nothing at all, so a vendored mirror will start refusing documents it used to accept.
 Regenerate against the 0.8.0 pin rather than letting it drift.
