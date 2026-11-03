@@ -523,6 +523,9 @@ def declared_version() -> str:
     raise SystemExit("website/site.yaml declares no version")
 
 
+RELEASE_TAG = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+
+
 def version() -> str:
     base = declared_version()
     sha = git("rev-parse", "HEAD")
@@ -530,6 +533,19 @@ def version() -> str:
                          capture_output=True, text=True).stdout.strip()
     if tag == base:
         return base
+    # A RELEASE tag that disagrees with the declared version is a mis-tagged release, not a dev
+    # build. This used to fall through to the `.dev0+g<sha>` branch below, which is how the 0.8.0
+    # release shipped `miri_standard_checks-0.7.4.dev0+g0588ec3`: the tag was cut on the commit
+    # BEFORE website/site.yaml was bumped, the builder noticed, and degraded quietly. The site
+    # computes its download URLs from site.yaml, so it advertised 0.8.0 filenames that 404ed, and a
+    # consumer pinning the wheel would have reported scoring against 0.7.4 while scoring against
+    # 0.8.0. Reported by the miri-py team. Refuse instead: the fix is to move the tag, and a release
+    # that cannot produce a release version must not publish one.
+    if RELEASE_TAG.match(tag):
+        raise SystemExit(
+            f"refusing to build: tag {tag} does not match website/site.yaml version {base}.\n"
+            f"  The tag is on {sha[:12]}, where the declared version is {base}.\n"
+            f"  Either bump site.yaml to {tag} and re-tag, or move the tag to a commit declaring {tag}.")
     return f"{base}.dev0+g{sha[:12]}"
 
 
