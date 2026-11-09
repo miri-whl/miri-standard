@@ -82,6 +82,11 @@ consistency and enable automated validation of agent metadata.
   - Publisher bytes nest under a payload key, so `ok` and `present` cannot be forged
   - The root is deliberately **open**, so a new operation or channel may add a payload key without a schema
     change forbidding it
+  - All six payload keys §4.1 names are defined: `packages`, `document`, `entries`, `resolution`, `patterns`,
+    `graph`. The last three were added at 0.9.0, having been specified in prose since 0.3 and in no schema
+  - An absent response is refused if it carries **any** of the six. Before 0.9.0 the rule covered three, so a
+    surface could return `present: false` with a fully-formed `resolution` and validate
+  - `matched` (0.9.0) is required on every capped operation, so a consumer can tell 25 of 26 from 25 of 1,300
   - Round-tripped in both directions by `tools/validate_envelope_schema.py` (`make envelope`)
 
 - **[agent-event-v1.json](agent-event-v1.json)** - The event a host sends a trigger
