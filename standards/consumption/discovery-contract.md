@@ -620,7 +620,7 @@ a consumer with a surface gains the thing `api_index` cannot give it, which is w
   "graph": {
     "nodes": { "RateLimitError": { "type": "class", "file": "exceptions.py" },
                "APIError": { "type": "class", "file": "exceptions.py" } },
-    "edges": [ { "from": "RateLimitError", "to": "APIError", "kind": "extends" } ]
+    "edges": [ { "from": "RateLimitError", "to": "APIError", "relationship": "extends" } ]
   }
 }
 ```

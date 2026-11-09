@@ -11,6 +11,42 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.8.1 — unreleased
+
+A patch: it defines payloads the contract has specified since 0.3 and closes a rule the schema was not enforcing.
+No new normative surface, so no addition. Ask 2 of the miri-py exchange is an addition and waits for 0.9.0.
+
+### Fixed
+
+- **Three of the six payload keys had no schema, and the gap hid a live defect.** `discovery-envelope-v1.json`
+  defined `packages`, `document` and `entries`; §4.1 names `resolution`, `patterns` and `graph` as well. §4.2 says
+  an absent response carries a reason and NO payload key, and the schema enforced that only for the three that had
+  been written down, so a surface could return `present: false` carrying a fully-formed `resolution` and validate.
+  That is the forgery the envelope exists to deny, in the section where its un-forgeability argument lives. All six
+  payloads are now defined and all six are refused on an absent response. Reported, in its narrower form, by the
+  miri-py team.
+
+- **§3.8's example spelled the graph edge key `kind`.** `api-graph-v1.json` has always spelled it `relationship`,
+  with a six-value vocabulary, and that schema governs. The reference implementation emitted `relationship`, so the
+  prose was the outlier rather than the surface. Corrected, and the envelope uses `relationship`.
+
+### Changed
+
+- **`resolution` gains `may_be_inherited` and `definitions`.** Both were shipped by the miri-py team ahead of the
+  committee, as fields rather than `evidence` values, on the reasoning that an unknown field is ignorable by
+  construction where an unknown value in a closed set makes the response unprocessable (§3.6.1). The reasoning
+  holds and both are standardized. `resolution` keeps `additionalProperties` open for the reason §4.1 gives for the
+  envelope root, so that line is now a property of the schema rather than an argument about one.
+
+  `definitions` is required when `found` is true including at 1, because an omitted count cannot be told apart from
+  a surface that does not count, and forbidden when `found` is false, because reporting 0 for a name that was not
+  found would be a claim about the package that this operation never makes.
+
+- **The `patterns` payload fixes its envelope keys and not its entries.** Entries remain owned by
+  `usage-patterns-v1.json`, because they are publisher bytes the surface relays rather than a shape it constructs,
+  and a second definition would specify one implementation's fixtures rather than what the producer schema permits.
+  Asked for by the miri-py team, who declined to have their own output codified.
+
 ## 0.8.0 — 2026-11-03
 
 ### Fixed (release hygiene)

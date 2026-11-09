@@ -137,6 +137,12 @@
     },
     "resolution": {
       "$ref": "#/definitions/resolution"
+    },
+    "graph": {
+      "$ref": "#/definitions/graph"
+    },
+    "patterns": {
+      "$ref": "#/definitions/patterns"
     }
   },
   "allOf": [
@@ -727,6 +733,111 @@
           }
         }
       ]
+    },
+    "graph": {
+      "type": "object",
+      "description": "Payload of `graph` (\u00a73.8): the neighbourhood of `symbol`, walked breadth-first and capped per \u00a73.5.1. Added at 0.8.1; the contract has described this payload since 0.3 and the schema never defined it. `nodes` and `edges` are NESTED here rather than sitting at the envelope root, because \u00a74.1's reserved key table is exhaustive and names neither: a surface emitting them at the top level puts unreserved keys in the surface-owned namespace, which MIRI-SURFACE-003 exists to catch.",
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "nodes": {
+          "type": "object",
+          "description": "Nodes keyed by dotted qualified name, the same key space `api_index` and `resolve` use. A symbol absent from the graph is not an error: `present: true` with empty `nodes`/`edges` means the graph exists and the symbol is simply not in it (\u00a73.8).",
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$": {
+              "$ref": "#/definitions/graph_node"
+            }
+          },
+          "additionalProperties": false
+        },
+        "edges": {
+          "type": "array",
+          "description": "Declared relationships between nodes, derived from source rather than inferred.",
+          "items": {
+            "$ref": "#/definitions/graph_edge"
+          }
+        }
+      }
+    },
+    "graph_node": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": true,
+      "description": "One graph node. Kinds match api-graph-v1.json's node vocabulary.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "class",
+            "function",
+            "method",
+            "module",
+            "constant"
+          ]
+        },
+        "file": {
+          "type": "string",
+          "description": "Defining module, relative to the installed package root."
+        }
+      }
+    },
+    "graph_edge": {
+      "type": "object",
+      "required": [
+        "from",
+        "to",
+        "relationship"
+      ],
+      "additionalProperties": true,
+      "description": "One declared relationship. The key is `relationship`, matching api-graph-v1.json's edge vocabulary, which governs. An example in Discovery Contract \u00a73.8 spelled it `kind` and is corrected at 0.8.1; the reference implementation already emitted `relationship`, so the prose was the outlier rather than the surface.",
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": [
+            "uses",
+            "returns",
+            "creates",
+            "extends",
+            "implements",
+            "calls"
+          ]
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Where the relationship is carried by named methods."
+        }
+      }
+    },
+    "patterns": {
+      "type": "array",
+      "description": "Payload of `patterns` (\u00a73.7): a filtered, capped view of `usage-patterns.json`'s `patterns` array, each entry carried WHOLE. The entry shape is owned by usage-patterns-v1.json `#/definitions/usage_pattern` and is deliberately NOT restated here. These are publisher bytes the surface relays rather than a shape it constructs, so a second definition would specify what one implementation's fixtures happen to declare rather than what the producer schema permits, and the two would drift. Only the required keys are mirrored, as a shape check; usage-patterns-v1.json governs the rest. Raised by the miri-py team, who asked that the envelope fix the keys around the payload and leave the entries alone.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "complexity",
+          "category",
+          "code"
+        ]
+      }
     }
   }
 }
