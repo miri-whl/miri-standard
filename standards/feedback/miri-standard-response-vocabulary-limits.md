@@ -15,8 +15,12 @@ reserved top level, and `additionalProperties` stays open on it for the reason �
 closing it would schedule the failure mode where a schema forbids a field a MUST requires. An unknown field
 validates. An invented `evidence` value does not. Declining to add one was correct.
 
-**Ask 2 is accepted and does not land here.** A new reserved envelope key is an addition, and this release is a
-patch. It ships in 0.9.0 with the `MIRI-SURFACE-003` change it needs.
+**Ask 2 is accepted and ships in the same release**, as `matched`. It was drafted for a later one, on the reasoning
+that a new reserved key is an addition and the payload work was a patch; folding both into 0.9.0 is simpler and the
+policy only forbids a patch carrying an addition, never a minor carrying fixes.
+
+`MIRI-SURFACE-003` needs no change, which we expected it would. It fires on a top-level key outside the reserved set
+in §4.1, written by reference rather than by enumeration, so adding the row updates what it enforces.
 
 ## `definitions` carries your corrected rule
 
@@ -104,6 +108,24 @@ That is the second time in this exchange that checking a sentence before sending
 earlier than review would have. The first was ours: `MIRI-PY-043`'s fix shipped stating the opposite for the common
 case, and you read it.
 
+## What we decided differently from your proposal
+
+Three, each said here rather than left for you to notice in the schema.
+
+**One count, not two.** You proposed `matched` and `indexed`. Both consequences your consumer reported are answered
+by the first: a view's completeness is `matched` against `cap`, and an empty filtered view is `matched: 0` beside
+`present: true`, which already says the document exists. `indexed` describes filter selectivity, and nothing across
+four rounds asked for it. We would rather decline an addition than ship one on a hypothesis.
+
+**At the top level, not inside the payload.** You wrote root-level fields and backed them out because §4.1 reserves
+that namespace. It reserves it against a *surface*, not against this document, so the row is ours to add. Nesting
+also has a flaw worth naming: `api-index`'s payload is keyed by symbol name, so a count inside it collides with a
+package that defines a symbol called `matched`.
+
+**The consistency rule is linter-enforced and says so.** `matched` exceeds `cap` exactly when `truncated` is true.
+Draft-07 cannot compare two properties of one object, so the schema cannot express it, and the field description
+states that rather than letting a consumer validating against the schema alone infer a guarantee it does not get.
+
 ## What ships
 
 | Change | Where | Version |
@@ -112,5 +134,6 @@ case, and you read it.
 | §4.2's no-payload rule extended to all six keys | `discovery-envelope-v1.json` | 0.9.0 |
 | `may_be_inherited` and `definitions` standardized | `discovery-envelope-v1.json` | 0.9.0 |
 | `kind` corrected to `relationship` in §3.8's example | `discovery-contract.md` | 0.9.0 |
-| `matched`, reserved once for every capped operation | `discovery-contract.md` §4.1, `MIRI-SURFACE-003` | 0.9.0 |
+| `matched`, reserved once for every capped operation | `discovery-contract.md` §4.1 and §3.5.1 | 0.9.0 |
+| `kind` corrected to `relationship` in §3.5.1's ordering table too | `discovery-contract.md` | 0.9.0 |
 | Graph payload nesting | your surface | yours |
