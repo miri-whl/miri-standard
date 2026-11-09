@@ -415,7 +415,7 @@ a conformance check written against one is vacuous on the other. The following a
   | `list` | the import `package` name |
   | `api-index` | the entry key |
   | `patterns` | the pattern `id` |
-  | `graph` † | breadth-first from `symbol`; nodes at equal depth by node key; `edges` by `(from, to, kind)` |
+  | `graph` † | breadth-first from `symbol`; nodes at equal depth by node key; `edges` by `(from, to, relationship)` |
 
   † `graph` appears here because its answer is *ordered*, not because it is continuable. Ordering and continuation
   are separate properties: `graph` has a defined order and **no cursor** (see Continuation below), so a reader must
