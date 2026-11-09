@@ -11,10 +11,31 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-## 0.8.1 — unreleased
+## 0.9.0 — unreleased
 
-A patch: it defines payloads the contract has specified since 0.3 and closes a rule the schema was not enforcing.
-No new normative surface, so no addition. Ask 2 of the miri-py exchange is an addition and waits for 0.9.0.
+### Added
+
+- **`matched`, a reserved envelope field saying how much a capped operation selected.** `truncated` says whether
+  anything was cut and `cap` says the bound; neither says how much was lost, so a query matching 26 entries and one
+  matching the whole index both return `truncated: true, cap: 25`. Required on every capped operation (`list`,
+  `api-index`, `patterns`, `graph`) and present even when nothing was cut, for the reason `truncated` is never
+  omitted as a shorthand for false: an omitted count cannot be told apart from a surface that does not count.
+  `matched: 0` beside `present: true` says the filter selected nothing from a document that exists, which an empty
+  capped view otherwise cannot distinguish from absence.
+
+  Requested by the miri-py team for a consumer that abandons the derived view and refetches the whole document
+  whenever `truncated` is true, because `MIRI-CONSUMER-040` admits no silent loss and the envelope gave it nothing
+  finer to act on. `patterns` is the sharpest case: antipatterns nest inside pattern entries, so a capped view drops
+  the author's misuse warnings for every entry past the cap without saying so.
+
+  Their proposal was two fields, `matched` and `indexed`. Only the first ships. Both consequences they reported are
+  answered by it, and `indexed` would describe filter selectivity, which nothing in four rounds of consumer reports
+  asked for. They also proposed putting the counts inside the payload rather than at the top level, because §4.1
+  reserves that namespace against a *surface*. It does not reserve it against this document: `api-index`'s payload
+  is keyed by symbol name, so a count inside it collides with a package defining a symbol called `matched`.
+
+  `MIRI-SURFACE-003` needs no change. It fires on a top-level key outside the reserved set in §4.1, written by
+  reference rather than by enumeration, so adding the row updates what it enforces.
 
 ### Fixed
 

@@ -7,7 +7,7 @@
 ## Disposition
 
 **Keep both fields.** `resolution.may_be_inherited` and `resolution.definitions` are in
-`discovery-envelope-v1.json` at 0.8.1, which is also the first time that payload has had a schema at all.
+`discovery-envelope-v1.json` at 0.9.0, which is also the first time that payload has had a schema at all.
 
 **The line you drew was right**, and it is now a property of the schema rather than an argument about one. §3.6
 shows `resolution` by example rather than as a closed list, `resolution` is a payload key so it sits below the
@@ -48,7 +48,7 @@ The consequence you did not follow it to:
 
 A surface could return `present: false` carrying a fully-formed `resolution` and the schema called it valid. §4.2 is
 where the envelope's un-forgeability argument lives, so the rule was unenforced in the half of the payload space
-nobody had written down. All six are covered at 0.8.1, and all six payloads are now defined.
+nobody had written down. All six are covered at 0.9.0, and all six payloads are now defined.
 
 ## On the payloads you sent, one correction each way
 
@@ -66,7 +66,7 @@ Yours is the nesting. You emit `nodes` and `edges` at the envelope's top level; 
 
 Ours is the edge key. §3.8's example spelled it `kind`. `api-graph-v1.json` has always spelled it `relationship`,
 with a six-value vocabulary, and that schema governs. You match the schema; our prose was the outlier. The example
-is corrected at 0.8.1, and the envelope uses `relationship`.
+is corrected at 0.9.0, and the envelope uses `relationship`.
 
 We note which way each one went because the first would have been easy to report as two of your defects.
 
@@ -108,9 +108,9 @@ case, and you read it.
 
 | Change | Where | Version |
 |---|---|---|
-| `resolution`, `graph` and `patterns` payloads defined | `discovery-envelope-v1.json` | 0.8.1 |
-| §4.2's no-payload rule extended to all six keys | `discovery-envelope-v1.json` | 0.8.1 |
-| `may_be_inherited` and `definitions` standardized | `discovery-envelope-v1.json` | 0.8.1 |
-| `kind` corrected to `relationship` in §3.8's example | `discovery-contract.md` | 0.8.1 |
+| `resolution`, `graph` and `patterns` payloads defined | `discovery-envelope-v1.json` | 0.9.0 |
+| §4.2's no-payload rule extended to all six keys | `discovery-envelope-v1.json` | 0.9.0 |
+| `may_be_inherited` and `definitions` standardized | `discovery-envelope-v1.json` | 0.9.0 |
+| `kind` corrected to `relationship` in §3.8's example | `discovery-contract.md` | 0.9.0 |
 | `matched`, reserved once for every capped operation | `discovery-contract.md` §4.1, `MIRI-SURFACE-003` | 0.9.0 |
 | Graph payload nesting | your surface | yours |

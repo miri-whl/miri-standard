@@ -60,6 +60,7 @@ LISTING: Final[dict[str, Any]] = {
     "ok": True,
     "truncated": False,
     "cap": 25,
+    "matched": 1,
     "packages": [
         {
             "package": "weather_sdk",
@@ -78,6 +79,7 @@ API_INDEX: Final[dict[str, Any]] = {
     "purl": "pkg:pypi/weather-sdk@1.2.0",
     "truncated": True,
     "cap": 25,
+    "matched": 73,
     "entries": {
         "WeatherClient": {
             "type": "class",
