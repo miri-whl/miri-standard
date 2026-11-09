@@ -134,6 +134,9 @@
           }
         }
       }
+    },
+    "resolution": {
+      "$ref": "#/definitions/resolution"
     }
   },
   "allOf": [
@@ -176,7 +179,7 @@
       }
     },
     {
-      "description": "\u00a74.2 \u2014 an absent response carries a human-readable reason and NO payload key.",
+      "description": "\u00a74.2 \u2014 an absent response carries a human-readable reason and NO payload key. Covers all six payload keys named in \u00a74.1; before 0.8.1 it covered document, entries and packages only, so an absent response carrying a resolution, patterns or graph payload validated \u2014 the exact confusion the envelope exists to prevent.",
       "if": {
         "properties": {
           "present": {
@@ -210,6 +213,27 @@
             "not": {
               "required": [
                 "packages"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "resolution"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "patterns"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "graph"
               ]
             }
           }
@@ -325,6 +349,47 @@
             "present"
           ]
         }
+      }
+    },
+    {
+      "description": "\u00a74.2 \u2014 an absent response carries a human-readable reason and NO payload key.",
+      "if": {
+        "properties": {
+          "present": {
+            "const": false
+          }
+        },
+        "required": [
+          "present"
+        ]
+      },
+      "then": {
+        "required": [
+          "reason"
+        ],
+        "allOf": [
+          {
+            "not": {
+              "required": [
+                "document"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "entries"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "packages"
+              ]
+            }
+          }
+        ]
       }
     },
     {
@@ -545,6 +610,123 @@
           "description": "OPTIONAL, on the same terms as `signature`. A pointer into the installed source, not a permission: it is publisher-authored and would be opened with the consumer's own privileges."
         }
       }
+    },
+    "resolution": {
+      "type": "object",
+      "description": "Payload of `resolve` (\u00a73.6): whether a symbol is defined in the installed package, determined by parsing its source. Added at 0.8.1. The contract has described this payload since 0.3 and the schema never defined it, so every field below validated against nothing, including the two the miri-py team shipped. `additionalProperties` stays OPEN for the reason \u00a74.1 gives for the envelope root: closing it would schedule the failure mode where a schema forbids a field a MUST requires, and an unknown field is ignorable by construction where an unknown `evidence` value is not (\u00a73.6.1).",
+      "required": [
+        "found",
+        "evidence"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "found": {
+          "type": "boolean",
+          "description": "Whether the symbol was found in the installed source. `true` is strong evidence; `false` is weak and means only 'not defined statically' (\u00a73.6.1)."
+        },
+        "evidence": {
+          "type": "string",
+          "enum": [
+            "static-source",
+            "not-in-source",
+            "module-unreadable"
+          ],
+          "description": "How the answer was reached. A CLOSED set (\u00a73.6.1): a consumer receiving a value outside it MUST treat the response as unprocessable. This is why a new distinction is carried by a new FIELD rather than a new value here."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "class",
+            "function",
+            "method",
+            "module",
+            "constant"
+          ],
+          "description": "What the symbol is, where it was found. Matches api-graph-v1.json's node kinds."
+        },
+        "file": {
+          "type": "string",
+          "description": "Path of the defining module, relative to the installed package root."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line of the definition."
+        },
+        "signature": {
+          "type": "string",
+          "description": "The definition's signature as parsed."
+        },
+        "may_be_inherited": {
+          "type": "boolean",
+          "description": "Set when the symbol was NOT found, its owner IS defined in the package, and the owner's ancestry reaches a base the surface never parsed. It separates 'inherited from a dependency' from 'nobody defined this anywhere', which `evidence` collapses into `not-in-source`. Contributed by the miri-py team from a consumer whose SDK inherits from pydantic."
+        },
+        "definitions": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many definitions of the name the scan found. MUST be present whenever `found` is true, including when it is 1: an omitted count cannot be told apart from a surface that does not count, and the two warrant different trust (the rule \u00a74.1 states for `truncated`). MUST be omitted when `found` is false, because reporting 0 for a name that was not found would be a claim about the package, and this operation never establishes absence."
+        }
+      },
+      "allOf": [
+        {
+          "description": "A found symbol was found statically, and carries its location and count.",
+          "if": {
+            "properties": {
+              "found": {
+                "const": true
+              }
+            },
+            "required": [
+              "found"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "const": "static-source"
+              }
+            },
+            "required": [
+              "evidence",
+              "file",
+              "line",
+              "definitions"
+            ]
+          }
+        },
+        {
+          "description": "A symbol not found cannot claim static evidence, and MUST NOT report a definition count.",
+          "if": {
+            "properties": {
+              "found": {
+                "const": false
+              }
+            },
+            "required": [
+              "found"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "enum": [
+                  "not-in-source",
+                  "module-unreadable"
+                ]
+              }
+            },
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "definitions"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
     }
   }
 }
