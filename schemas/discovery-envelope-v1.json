@@ -78,6 +78,20 @@
       "additionalProperties": {
         "$ref": "#/definitions/api_index_entry"
       }
+    },
+    "resolution": {
+      "$ref": "#/definitions/resolution"
+    },
+    "graph": {
+      "$ref": "#/definitions/graph"
+    },
+    "patterns": {
+      "$ref": "#/definitions/patterns"
+    },
+    "matched": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "How many items the operation selected BEFORE the cap applied (\u00a73.5.1). Added at 0.9.0. Required on every capped operation (`list`, `api-index`, `patterns`, `graph`) and MUST be present even when nothing was cut: an omitted count cannot be told apart from a surface that does not count, the same reason `truncated` is never omitted as a shorthand for false. `truncated` says whether anything was lost and `cap` says the bound; only this says how much, so without it a consumer holding 25 of 26 and 25 of 1,300 reads the same envelope. `matched: 0` with `present: true` says the filter selected nothing from a document that exists, which an empty capped view otherwise cannot distinguish from absence. Requested by the miri-py team on behalf of a consumer that refetches whole documents rather than risk the silent loss MIRI-CONSUMER-040 forbids. CONSISTENCY WITH `cap` AND `truncated` IS LINTER-ENFORCED, NOT SCHEMA-ENFORCED: `matched` exceeds `cap` exactly when `truncated` is true, and draft-07 cannot compare two properties of the same object, so this file cannot express it. Stated here rather than implied, because a consumer validating against this schema alone would otherwise read a guarantee it does not get."
     }
   },
   "allOf": [
@@ -120,7 +134,7 @@
       }
     },
     {
-      "description": "\u00a74.2 \u2014 an absent response carries a human-readable reason and NO payload key.",
+      "description": "\u00a74.2 \u2014 an absent response carries a human-readable reason and NO payload key. Covers all six payload keys named in \u00a74.1; before 0.9.0 it covered document, entries and packages only, so an absent response carrying a resolution, patterns or graph payload validated \u2014 the exact confusion the envelope exists to prevent.",
       "if": {
         "properties": {
           "present": {
@@ -154,6 +168,27 @@
             "not": {
               "required": [
                 "packages"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "resolution"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "patterns"
+              ]
+            }
+          },
+          {
+            "not": {
+              "required": [
+                "graph"
               ]
             }
           }
@@ -270,6 +305,27 @@
           ]
         }
       }
+    },
+    {
+      "description": "\u00a73.5.1 \u2014 a capped operation reports how many items it selected before the cap. `cap` is carried only by capped operations, so its presence on a served response is what makes `matched` required.",
+      "if": {
+        "required": [
+          "cap"
+        ],
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "present": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "matched"
+        ]
+      }
     }
   ],
   "definitions": {
@@ -364,6 +420,228 @@
           "type": "string",
           "description": "OPTIONAL, on the same terms as `signature`. A pointer into the installed source, not a permission: it is publisher-authored and would be opened with the consumer's own privileges."
         }
+      }
+    },
+    "resolution": {
+      "type": "object",
+      "description": "Payload of `resolve` (\u00a73.6): whether a symbol is defined in the installed package, determined by parsing its source. Added at 0.9.0. The contract has described this payload since 0.3 and the schema never defined it, so every field below validated against nothing, including the two the miri-py team shipped. `additionalProperties` stays OPEN for the reason \u00a74.1 gives for the envelope root: closing it would schedule the failure mode where a schema forbids a field a MUST requires, and an unknown field is ignorable by construction where an unknown `evidence` value is not (\u00a73.6.1).",
+      "required": [
+        "found",
+        "evidence"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "found": {
+          "type": "boolean",
+          "description": "Whether the symbol was found in the installed source. `true` is strong evidence; `false` is weak and means only 'not defined statically' (\u00a73.6.1)."
+        },
+        "evidence": {
+          "type": "string",
+          "enum": [
+            "static-source",
+            "not-in-source",
+            "module-unreadable"
+          ],
+          "description": "How the answer was reached. A CLOSED set (\u00a73.6.1): a consumer receiving a value outside it MUST treat the response as unprocessable. This is why a new distinction is carried by a new FIELD rather than a new value here."
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "class",
+            "function",
+            "method",
+            "module",
+            "constant"
+          ],
+          "description": "What the symbol is, where it was found. Matches api-graph-v1.json's node kinds."
+        },
+        "file": {
+          "type": "string",
+          "description": "Path of the defining module, relative to the installed package root."
+        },
+        "line": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Line of the definition."
+        },
+        "signature": {
+          "type": "string",
+          "description": "The definition's signature as parsed."
+        },
+        "may_be_inherited": {
+          "type": "boolean",
+          "description": "Set when the symbol was NOT found, its owner IS defined in the package, and the owner's ancestry reaches a base the surface never parsed. It separates 'inherited from a dependency' from 'nobody defined this anywhere', which `evidence` collapses into `not-in-source`. Contributed by the miri-py team from a consumer whose SDK inherits from pydantic."
+        },
+        "definitions": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "How many definitions of the name the scan found. MUST be present whenever `found` is true, including when it is 1: an omitted count cannot be told apart from a surface that does not count, and the two warrant different trust (the rule \u00a74.1 states for `truncated`). MUST be omitted when `found` is false, because reporting 0 for a name that was not found would be a claim about the package, and this operation never establishes absence."
+        }
+      },
+      "allOf": [
+        {
+          "description": "A found symbol was found statically, and carries its location and count.",
+          "if": {
+            "properties": {
+              "found": {
+                "const": true
+              }
+            },
+            "required": [
+              "found"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "const": "static-source"
+              }
+            },
+            "required": [
+              "evidence",
+              "file",
+              "line",
+              "definitions"
+            ]
+          }
+        },
+        {
+          "description": "A symbol not found cannot claim static evidence, and MUST NOT report a definition count.",
+          "if": {
+            "properties": {
+              "found": {
+                "const": false
+              }
+            },
+            "required": [
+              "found"
+            ]
+          },
+          "then": {
+            "properties": {
+              "evidence": {
+                "enum": [
+                  "not-in-source",
+                  "module-unreadable"
+                ]
+              }
+            },
+            "allOf": [
+              {
+                "not": {
+                  "required": [
+                    "definitions"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "graph": {
+      "type": "object",
+      "description": "Payload of `graph` (\u00a73.8): the neighbourhood of `symbol`, walked breadth-first and capped per \u00a73.5.1. Added at 0.9.0; the contract has described this payload since 0.3 and the schema never defined it. `nodes` and `edges` are NESTED here rather than sitting at the envelope root, because \u00a74.1's reserved key table is exhaustive and names neither: a surface emitting them at the top level puts unreserved keys in the surface-owned namespace, which MIRI-SURFACE-003 exists to catch.",
+      "required": [
+        "nodes",
+        "edges"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "nodes": {
+          "type": "object",
+          "description": "Nodes keyed by dotted qualified name, the same key space `api_index` and `resolve` use. A symbol absent from the graph is not an error: `present: true` with empty `nodes`/`edges` means the graph exists and the symbol is simply not in it (\u00a73.8).",
+          "patternProperties": {
+            "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$": {
+              "$ref": "#/definitions/graph_node"
+            }
+          },
+          "additionalProperties": false
+        },
+        "edges": {
+          "type": "array",
+          "description": "Declared relationships between nodes, derived from source rather than inferred.",
+          "items": {
+            "$ref": "#/definitions/graph_edge"
+          }
+        }
+      }
+    },
+    "graph_node": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "additionalProperties": true,
+      "description": "One graph node. Kinds match api-graph-v1.json's node vocabulary.",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "class",
+            "function",
+            "method",
+            "module",
+            "constant"
+          ]
+        },
+        "file": {
+          "type": "string",
+          "description": "Defining module, relative to the installed package root."
+        }
+      }
+    },
+    "graph_edge": {
+      "type": "object",
+      "required": [
+        "from",
+        "to",
+        "relationship"
+      ],
+      "additionalProperties": true,
+      "description": "One declared relationship. The key is `relationship`, matching api-graph-v1.json's edge vocabulary, which governs. An example in Discovery Contract \u00a73.8 spelled it `kind` and is corrected at 0.9.0; the reference implementation already emitted `relationship`, so the prose was the outlier rather than the surface.",
+      "properties": {
+        "from": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+        },
+        "to": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*$"
+        },
+        "relationship": {
+          "type": "string",
+          "enum": [
+            "uses",
+            "returns",
+            "creates",
+            "extends",
+            "implements",
+            "calls"
+          ]
+        },
+        "methods": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Where the relationship is carried by named methods."
+        }
+      }
+    },
+    "patterns": {
+      "type": "array",
+      "description": "Payload of `patterns` (\u00a73.7): a filtered, capped view of `usage-patterns.json`'s `patterns` array, each entry carried WHOLE. The entry shape is owned by usage-patterns-v1.json `#/definitions/usage_pattern` and is deliberately NOT restated here. These are publisher bytes the surface relays rather than a shape it constructs, so a second definition would specify what one implementation's fixtures happen to declare rather than what the producer schema permits, and the two would drift. Only the required keys are mirrored, as a shape check; usage-patterns-v1.json governs the rest. Raised by the miri-py team, who asked that the envelope fix the keys around the payload and leave the entries alone.",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "description",
+          "complexity",
+          "category",
+          "code"
+        ]
       }
     }
   }

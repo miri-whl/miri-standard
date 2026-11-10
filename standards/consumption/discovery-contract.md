@@ -1,6 +1,6 @@
 # Miri Standard: Discovery Contract (Consumption)
 
-*Specification Version: 0.3.1-draft*
+*Specification Version: 0.4.1-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -405,6 +405,13 @@ a conformance check written against one is vacuous on the other. The following a
 
 - **Value.** The default `cap` is **25**. A surface MAY accept a caller-supplied `limit` up to a declared maximum, and
   MUST NOT return more than the effective cap. The value in force MUST be reported as `cap` on every response.
+- **Selection size.** Every capped operation MUST report `matched`, the number of items selected **before** the cap
+  applied. `truncated` says whether anything was cut and `cap` says the bound; neither says how much was lost, so a
+  consumer holding 25 of 26 and 25 of 1,300 reads the same envelope. Reported by the miri-py team from a consumer
+  that abandons the derived view and refetches the whole document whenever `truncated` is true, because
+  `MIRI-CONSUMER-040` admits no silent loss and the envelope gave it nothing finer to act on. `patterns` is the
+  sharpest case: antipatterns nest inside pattern entries, so a capped view drops the author's misuse warnings for
+  every entry past the cap without saying so.
 - **Ordering.** Every capped operation has a declared ordering key, and the ordering MUST be stable across identical
   requests. Without this, "the first 25" is a different 25 per surface and per call, and truncation is
   unreproducible. Comparison is by Unicode code point — never locale-aware, which would make ordering depend on the
@@ -415,7 +422,7 @@ a conformance check written against one is vacuous on the other. The following a
   | `list` | the import `package` name |
   | `api-index` | the entry key |
   | `patterns` | the pattern `id` |
-  | `graph` † | breadth-first from `symbol`; nodes at equal depth by node key; `edges` by `(from, to, kind)` |
+  | `graph` † | breadth-first from `symbol`; nodes at equal depth by node key; `edges` by `(from, to, relationship)` |
 
   † `graph` appears here because its answer is *ordered*, not because it is continuable. Ordering and continuation
   are separate properties: `graph` has a defined order and **no cursor** (see Continuation below), so a reader must
@@ -429,10 +436,9 @@ a conformance check written against one is vacuous on the other. The following a
   (§3.1); `patterns` the `id`, `name` and `description`, but never `code` (§3.7) — and this bullet governs
   `api-index` alone. The scopes differ because the risk differs: matching `api-index` on `purpose` would let a
   consumer mistake a prose hit for a symbol, while matching `patterns` on `code` would turn the operation into a
-  source-grep by proxy. Neither is a widening of the other.
-  A
-  surface MUST NOT widen the match, because a consumer cannot distinguish "absent" from "matched on a field I did not
-  intend" (and §3.5's presence-only rule already forbids reading absence as non-existence).
+  source-grep by proxy. Neither is a widening of the other. A surface MUST NOT widen the match, because a consumer
+  cannot distinguish "absent" from "matched on a field I did not intend" (and §3.5's presence-only rule already
+  forbids reading absence as non-existence).
 - **Continuation.** Continuation is defined for the three **listing** operations — `list`, `api-index`, `patterns` —
   whose answers are flat sequences that a later page can extend. It is **not** defined for `graph`, whose answer is a
   walk whose shape depends on where the previous walk stopped; `graph` reports `truncated: true` and **MUST NOT** emit
@@ -588,6 +594,12 @@ A pattern entry is returned **whole**: the `explanation.key_points`, `security_n
 are the package's best-practice content ([Consumption Map §5](consumption-map.md)), and a surface MUST NOT strip them
 to save space. The filter selects *which* patterns, never *which parts of* a pattern.
 
+An entry may also carry `order` ([Agent Metadata §4.2.1](../python/miri-agent-metadata-specification.md)), which
+places it among patterns of equal `complexity` in the package's learning paths. It rides along with the entry and
+changes nothing above: this operation's ordering key stays the pattern `id` (§3.5.1). `order` is optional and
+admits ties, so it is not a total order over the array and cannot carry a cursor, where `id` is the document's
+unique pattern identifier and can.
+
 ### 3.8 `graph`
 
 **Input:** `{ "package": "<import-name>", "symbol": "<dotted-name>", "depth": <optional int>, "limit": <optional int>,
@@ -620,7 +632,7 @@ a consumer with a surface gains the thing `api_index` cannot give it, which is w
   "graph": {
     "nodes": { "RateLimitError": { "type": "class", "file": "exceptions.py" },
                "APIError": { "type": "class", "file": "exceptions.py" } },
-    "edges": [ { "from": "RateLimitError", "to": "APIError", "kind": "extends" } ]
+    "edges": [ { "from": "RateLimitError", "to": "APIError", "relationship": "extends" } ]
   }
 }
 ```
@@ -713,6 +725,7 @@ Without that order a consumer reading `present` first reports a parse failure as
 | `reason` | Absent responses (§4.2) only — **MUST be omitted whenever `ok` is `false`** | Free-text explanation for humans — **never a machine field**. A failure explains itself through `error.code`, whose set is closed; adding free text to the response a consumer is least likely to treat as hostile is the injection channel §4.2 closes for absent responses, reopened where it would be least noticed |
 | `truncated` | `list`, `api-index`, `patterns`, `graph`, `document` — **always present on these, `false` when nothing was cut** | Whether the payload was cut (§3.2.3, §3.5.1). Never omitted as a shorthand for `false`: a consumer cannot distinguish an omitted `truncated` from a surface that does not implement capping, and the two warrant different trust |
 | `cap` | `list`, `api-index`, `patterns`, `graph` | The entry bound in force (§3.5.1) |
+| `matched` | `list`, `api-index`, `patterns`, `graph` — **always present on these**, including when nothing was cut | How many items the operation selected **before** the cap applied: packages scanned, entries matching the filter, patterns matching it, nodes in the neighborhood. With `cap` it tells a consumer what proportion of the answer it is holding, which `truncated` alone cannot: a query matching 26 and a query matching the whole index both report `truncated: true, cap: 25`. Never omitted as a shorthand for "nothing was cut", for the reason stated for `truncated`: an omitted count cannot be told apart from a surface that does not count them, and the two warrant different trust. `matched: 0` with `present: true` says the filter selected nothing from a document that exists, which is the distinction an empty capped view otherwise loses |
 | `max_bytes` | `document` and its shorthands | The serialized-size bound in force (§3.2.3) |
 | `next_cursor` | `list`, `api-index`, `patterns`, when truncated | Continuation token for the same ordering (§3.5.1). `graph` has no cursor (§3.8). |
 | `error` | Failures only | The structured error object (§4.3) |

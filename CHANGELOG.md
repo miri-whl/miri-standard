@@ -11,6 +11,90 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
+## 0.9.0 — unreleased
+
+### Added
+
+- **`matched`, a reserved envelope field saying how much a capped operation selected.** `truncated` says whether
+  anything was cut and `cap` says the bound; neither says how much was lost, so a query matching 26 entries and one
+  matching the whole index both return `truncated: true, cap: 25`. Required on every capped operation (`list`,
+  `api-index`, `patterns`, `graph`) and present even when nothing was cut, for the reason `truncated` is never
+  omitted as a shorthand for false: an omitted count cannot be told apart from a surface that does not count.
+  `matched: 0` beside `present: true` says the filter selected nothing from a document that exists, which an empty
+  capped view otherwise cannot distinguish from absence.
+
+  Requested by the miri-py team for a consumer that abandons the derived view and refetches the whole document
+  whenever `truncated` is true, because `MIRI-CONSUMER-040` admits no silent loss and the envelope gave it nothing
+  finer to act on. `patterns` is the sharpest case: antipatterns nest inside pattern entries, so a capped view drops
+  the author's misuse warnings for every entry past the cap without saying so.
+
+  Their proposal was two fields, `matched` and `indexed`. Only the first ships. Both consequences they reported are
+  answered by it, and `indexed` would describe filter selectivity, which nothing in four rounds of consumer reports
+  asked for. They also proposed putting the counts inside the payload rather than at the top level, because §4.1
+  reserves that namespace against a *surface*. It does not reserve it against this document: `api-index`'s payload
+  is keyed by symbol name, so a count inside it collides with a package defining a symbol called `matched`.
+
+  `MIRI-SURFACE-003` needs no change. It fires on a top-level key outside the reserved set in §4.1, written by
+  reference rather than by enumeration, so adding the row updates what it enforces.
+
+- **`order`, so a learning path's sequence comes from the author rather than the build host.**
+  `learning_paths[*].patterns` has always been an ordered list, and the only orderable fact a pattern carried was
+  `complexity`, which has three values. Every pattern at one level was therefore tied, and the tie went to whatever
+  the generator read first. `order` is an optional integer on `usage_pattern`, lower first, comparable only within
+  one complexity level: `complexity` already answers the coarse question, and two fields deciding one order is how
+  they come to disagree.
+
+  Reported by the miri-py team from a consumer whose beginner path matched the build host's directory order
+  exactly, putting the pattern its author wrote to come first in fourth place. They fixed the half that was theirs
+  by sorting the walk, which makes the document reproducible from one tree but leaves the sequence following the
+  author's filenames, and asked for the field rather than inventing one under a vendor prefix that no consumer
+  reads.
+
+  Three things their proposal left open are settled in Agent Metadata §4.2.1. The published array MUST honor the
+  orders it names, including that a pattern declaring none MUST NOT precede one of equal complexity that does;
+  without that half a producer could declare `order` and publish any sequence it liked, and the field would be
+  decorative. The array as published stays what a consumer reads, so `order` constrains what a producer may
+  publish rather than handing a consumer a second ordering to apply, which matters because a path is not obliged
+  to run beginner-first. And one `order` serves every path the pattern appears in, because the field sits on the
+  pattern rather than on a path's entry.
+
+  Nothing scores it. `MIRI-PY-008` validates the document against its schema, which settles the field's type and
+  says nothing about its relation to the arrays, and draft-07 cannot compare one array's members against another
+  array's contents. The same section states that the order of `patterns` and of every learning path MUST be a
+  function of the package's content rather than of the build host, which is decidable only by building the same
+  tree twice and so sits outside the artifact-inspection model.
+
+### Fixed
+
+- **Three of the six payload keys had no schema, and the gap hid a live defect.** `discovery-envelope-v1.json`
+  defined `packages`, `document` and `entries`; §4.1 names `resolution`, `patterns` and `graph` as well. §4.2 says
+  an absent response carries a reason and NO payload key, and the schema enforced that only for the three that had
+  been written down, so a surface could return `present: false` carrying a fully-formed `resolution` and validate.
+  That is the forgery the envelope exists to deny, in the section where its un-forgeability argument lives. All six
+  payloads are now defined and all six are refused on an absent response. Reported, in its narrower form, by the
+  miri-py team.
+
+- **§3.8's example spelled the graph edge key `kind`.** `api-graph-v1.json` has always spelled it `relationship`,
+  with a six-value vocabulary, and that schema governs. The reference implementation emitted `relationship`, so the
+  prose was the outlier rather than the surface. Corrected, and the envelope uses `relationship`.
+
+### Changed
+
+- **`resolution` gains `may_be_inherited` and `definitions`.** Both were shipped by the miri-py team ahead of the
+  committee, as fields rather than `evidence` values, on the reasoning that an unknown field is ignorable by
+  construction where an unknown value in a closed set makes the response unprocessable (§3.6.1). The reasoning
+  holds and both are standardized. `resolution` keeps `additionalProperties` open for the reason §4.1 gives for the
+  envelope root, so that line is now a property of the schema rather than an argument about one.
+
+  `definitions` is required when `found` is true including at 1, because an omitted count cannot be told apart from
+  a surface that does not count, and forbidden when `found` is false, because reporting 0 for a name that was not
+  found would be a claim about the package that this operation never makes.
+
+- **The `patterns` payload fixes its envelope keys and not its entries.** Entries remain owned by
+  `usage-patterns-v1.json`, because they are publisher bytes the surface relays rather than a shape it constructs,
+  and a second definition would specify one implementation's fixtures rather than what the producer schema permits.
+  Asked for by the miri-py team, who declined to have their own output codified.
+
 ## 0.8.0 — 2026-11-03
 
 ### Fixed (release hygiene)

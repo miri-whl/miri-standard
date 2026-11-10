@@ -20,11 +20,16 @@ consistency and enable automated validation of agent metadata.
     the reference linter emitted incompatible shapes without anything catching it
 
 - **[usage-patterns-v1.json](usage-patterns-v1.json)** - Schema for `usage-patterns.json`
-- **[test-patterns-v1.json](test-patterns-v1.json)** - Schema for `test-patterns.json` - unit and integration test
-  patterns extracted from the package's own suite, plus the test doubles it ships
   - Pre-extracted, categorized code patterns
   - Required fields: `version`, `generated_at`, `patterns`
   - Validates pattern structure, categories, and learning paths
+  - `order`, added at 0.9.0, places a pattern among those of equal `complexity` in a learning path. The constraint
+    it puts on `learning_paths[*].patterns` is linter-decidable and not schema-expressible, and is stated in
+    [Agent Metadata §4.2.1](../standards/python/miri-agent-metadata-specification.md)
+
+- **[test-patterns-v1.json](test-patterns-v1.json)** - Schema for `test-patterns.json` - unit and integration test
+  patterns extracted from the package's own suite, plus the test doubles it ships
+  - Required fields: `version`, `generated_at`, `patterns`; `test_framework` and `supported_test_doubles` optional
 
 - **[migration-guide-v1.json](migration-guide-v1.json)** - Schema for `migration-guide.json`
   - Structured version change documentation
@@ -82,6 +87,11 @@ consistency and enable automated validation of agent metadata.
   - Publisher bytes nest under a payload key, so `ok` and `present` cannot be forged
   - The root is deliberately **open**, so a new operation or channel may add a payload key without a schema
     change forbidding it
+  - All six payload keys §4.1 names are defined: `packages`, `document`, `entries`, `resolution`, `patterns`,
+    `graph`. The last three were added at 0.9.0, having been specified in prose since 0.3 and in no schema
+  - An absent response is refused if it carries **any** of the six. Before 0.9.0 the rule covered three, so a
+    surface could return `present: false` with a fully-formed `resolution` and validate
+  - `matched` (0.9.0) is required on every capped operation, so a consumer can tell 25 of 26 from 25 of 1,300
   - Round-tripped in both directions by `tools/validate_envelope_schema.py` (`make envelope`)
 
 - **[agent-event-v1.json](agent-event-v1.json)** - The event a host sends a trigger

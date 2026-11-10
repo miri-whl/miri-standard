@@ -54,8 +54,8 @@ Decisions worked through so far, each as a proposal plus the response that settl
   executing them, and driver semantics whose core is forfeit-never-silence. The two schemas it delivers are
   recorded verbatim under `conformance-interop-schemas/`. The response accepts the driver semantics and adds the
   clause the proposal left out — a forfeited MUST withdraws the grade rather than discounting the score, which
-  makes all three of their behavioural families `undetermined` rather than "N pass / 0 fail". It declines to freeze
-  the operator vocabulary while a third of the behavioural checks need operator classes that do not exist, and
+  makes all three of their behavioral families `undetermined` rather than "N pass / 0 fail". It declines to freeze
+  the operator vocabulary while a third of the behavioral checks need operator classes that do not exist, and
   sets the promotion test. Fixture recipe blessed and checksummed; no binaries shipped. Nothing in `schemas/`
   derives from the delivered files.
 
@@ -143,6 +143,31 @@ Decisions worked through so far, each as a proposal plus the response that settl
   call. Answers #25 with `dependencies` as import names, and attaches the finding behind it: `AGENT_EXAMPLES.json`
   has no schema, no instance anywhere in the repository, and is not emitted by the implementation guide's own
   generator, while four active checks worth 15 of 100 points read it.
+
+- `miri-py-consumer-surface-vocabulary-limits.md` / `miri-standard-response-vocabulary-limits.md` — a consumer
+  team running miri-py against a production OpenAPI SDK hit three closed vocabularies that could not express a
+  distinction they needed. miri-py shipped two of them as FIELDS on `resolution` rather than as `evidence` values,
+  on the reasoning that an unknown field is ignorable where an unknown value in a closed set makes the response
+  unprocessable, and asked to be told if they drew that line wrong. They did not: the response standardizes both
+  and keeps `resolution` open for the reason §4.1 gives for the envelope root. Their schema finding turned out to
+  be one of three — `resolution`, `patterns` and `graph` all lacked payload schemas — and the gap hid a live
+  defect, since §4.2's no-payload-on-an-absent-response rule was enforced for only the three keys that had been
+  written down. On `graph`, one divergence was theirs (nesting `nodes`/`edges` at the reserved top level) and one
+  was ours (§3.8's example spelled the edge key `kind` where `api-graph-v1.json` has always said `relationship`).
+  Closes the blended-aggregate row with their measurement: two wheels from byte-identical Python, one raising
+  `FileNotFoundError` on first call, both scoring 28% of 48.
+
+- `miri-py-learning-path-order.md` / `miri-standard-response-learning-path-order.md` —
+  `learning_paths[*].patterns` is described as ordered, and the only orderable fact a pattern carried was
+  `complexity`, which has three values. Every pattern at one level was tied, and the tie went to whatever the
+  generator read first: on a consumer's SDK the beginner path matched the build host's directory order, and the
+  pattern its author wrote to come first landed fourth. `order` is accepted and ships, with the ask tightened. As
+  proposed the field advised a producer that still owned the sequence, so a declared value obliged nothing and the
+  author who wrote `order: 0` kept the guarantee they had before, which was none. Agent Metadata §4.2.1 makes it
+  bind the published array instead, which is decidable from the document alone. Adds the two properties the
+  proposal left out (the array as published is what a consumer reads, and one `order` serves every path the pattern
+  appears in), declines to standardize the docstring convention that produces it, and asks them not to sort the
+  `patterns` operation by a field that admits ties and so cannot carry a cursor.
 
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.

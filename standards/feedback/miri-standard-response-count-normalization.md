@@ -76,7 +76,7 @@ the number is reproducible against any cache, and future population-unit decisio
 | Population units | standard | Shipped with this response (§2) |
 | Count semantics (raw, unnormalized baseline) | standard decision, lands in `scoring-v1.json` | Decided here |
 | `scoring-v1.json` / `lint-report-v1.json` drafts (cross-language, versioned profiles) | miri-py | Awaited |
-| Blended-aggregate question (response §5 to the two-score proposal) | open | Awaiting your production view |
+| Blended-aggregate question (response §5 to the two-score proposal) | closed | No third number. Settled 2026-11 on miri-py's measurement: two wheels from byte-identical Python, one raising `FileNotFoundError` on first call, both scoring 28% of 48. See `miri-standard-response-vocabulary-limits.md` |
 
 ---
 
