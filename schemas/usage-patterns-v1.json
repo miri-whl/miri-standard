@@ -87,6 +87,11 @@
           "type": "string",
           "description": "Pattern category"
         },
+        "order": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Where this pattern sits among patterns of EQUAL `complexity` in a learning path. Lower comes first. Optional, and an absent value is NOT zero: a pattern declaring none sorts AFTER every pattern of equal complexity that declares one, so the majority who declare nothing cannot displace the few who do. Comparable only WITHIN one complexity level, so a `beginner` pattern declaring 9 still precedes an `advanced` one declaring 0: `complexity` already answers the coarse question, and two fields deciding one order is how they come to disagree. Equal values are a tie the producer breaks, and it MUST break that tie the same way on every build. The constraint this places on `learning_paths[*].patterns` is LINTER-DECIDABLE BUT NOT SCHEMA-EXPRESSIBLE, since draft-07 cannot compare one array's members against another array's contents; Agent Metadata \u00a74.2.1 states it. Requested by the miri-py team, whose generator had no orderable fact beyond `complexity` and was ordering learning paths by directory-walk order."
+        },
         "tags": {
           "type": "array",
           "items": {
@@ -121,7 +126,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Required knowledge or patterns"
+          "description": "Required knowledge or patterns. A set rendered as an array: position carries no meaning."
         },
         "estimated_time": {
           "type": "string",
@@ -245,7 +250,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Pattern IDs in this category"
+          "description": "Pattern IDs in this category. A set rendered as an array: position carries no meaning, unlike `learning_path.patterns`."
         }
       }
     },
@@ -270,7 +275,7 @@
           "items": {
             "type": "string"
           },
-          "description": "Ordered list of pattern IDs"
+          "description": "Ordered list of pattern IDs. The array AS PUBLISHED is the order a consumer reads, top to bottom, and a consumer MUST NOT re-sort it. Where the patterns it names declare `order`, the array MUST be consistent with them (Agent Metadata \u00a74.2.1)."
         },
         "estimated_total_time": {
           "type": "string",

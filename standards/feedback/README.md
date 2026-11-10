@@ -157,5 +157,17 @@ Decisions worked through so far, each as a proposal plus the response that settl
   Closes the blended-aggregate row with their measurement: two wheels from byte-identical Python, one raising
   `FileNotFoundError` on first call, both scoring 28% of 48.
 
+- `miri-py-learning-path-order.md` / `miri-standard-response-learning-path-order.md` —
+  `learning_paths[*].patterns` is described as ordered, and the only orderable fact a pattern carried was
+  `complexity`, which has three values. Every pattern at one level was tied, and the tie went to whatever the
+  generator read first: on a consumer's SDK the beginner path matched the build host's directory order, and the
+  pattern its author wrote to come first landed fourth. `order` is accepted and ships, with the ask tightened. As
+  proposed the field advised a producer that still owned the sequence, so a declared value obliged nothing and the
+  author who wrote `order: 0` kept the guarantee they had before, which was none. Agent Metadata §4.2.1 makes it
+  bind the published array instead, which is decidable from the document alone. Adds the two properties the
+  proposal left out (the array as published is what a consumer reads, and one `order` serves every path the pattern
+  appears in), declines to standardize the docstring convention that produces it, and asks them not to sort the
+  `patterns` operation by a field that admits ties and so cannot carry a cursor.
+
 Accepted outcomes are folded into the normative sources (`schemas/`, the check YAMLs, the linter checklists); these
 notes are the record of *why*, not a second source of truth.

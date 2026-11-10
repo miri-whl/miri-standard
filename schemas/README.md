@@ -20,11 +20,16 @@ consistency and enable automated validation of agent metadata.
     the reference linter emitted incompatible shapes without anything catching it
 
 - **[usage-patterns-v1.json](usage-patterns-v1.json)** - Schema for `usage-patterns.json`
-- **[test-patterns-v1.json](test-patterns-v1.json)** - Schema for `test-patterns.json` - unit and integration test
-  patterns extracted from the package's own suite, plus the test doubles it ships
   - Pre-extracted, categorized code patterns
   - Required fields: `version`, `generated_at`, `patterns`
   - Validates pattern structure, categories, and learning paths
+  - `order`, added at 0.9.0, places a pattern among those of equal `complexity` in a learning path. The constraint
+    it puts on `learning_paths[*].patterns` is linter-decidable and not schema-expressible, and is stated in
+    [Agent Metadata §4.2.1](../standards/python/miri-agent-metadata-specification.md)
+
+- **[test-patterns-v1.json](test-patterns-v1.json)** - Schema for `test-patterns.json` - unit and integration test
+  patterns extracted from the package's own suite, plus the test doubles it ships
+  - Required fields: `version`, `generated_at`, `patterns`; `test_framework` and `supported_test_doubles` optional
 
 - **[migration-guide-v1.json](migration-guide-v1.json)** - Schema for `migration-guide.json`
   - Structured version change documentation

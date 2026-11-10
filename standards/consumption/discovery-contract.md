@@ -1,6 +1,6 @@
 # Miri Standard: Discovery Contract (Consumption)
 
-*Specification Version: 0.4.0-draft*
+*Specification Version: 0.4.1-draft*
 *Status: Draft*
 *Created: 2026*
 
@@ -436,10 +436,9 @@ a conformance check written against one is vacuous on the other. The following a
   (§3.1); `patterns` the `id`, `name` and `description`, but never `code` (§3.7) — and this bullet governs
   `api-index` alone. The scopes differ because the risk differs: matching `api-index` on `purpose` would let a
   consumer mistake a prose hit for a symbol, while matching `patterns` on `code` would turn the operation into a
-  source-grep by proxy. Neither is a widening of the other.
-  A
-  surface MUST NOT widen the match, because a consumer cannot distinguish "absent" from "matched on a field I did not
-  intend" (and §3.5's presence-only rule already forbids reading absence as non-existence).
+  source-grep by proxy. Neither is a widening of the other. A surface MUST NOT widen the match, because a consumer
+  cannot distinguish "absent" from "matched on a field I did not intend" (and §3.5's presence-only rule already
+  forbids reading absence as non-existence).
 - **Continuation.** Continuation is defined for the three **listing** operations — `list`, `api-index`, `patterns` —
   whose answers are flat sequences that a later page can extend. It is **not** defined for `graph`, whose answer is a
   walk whose shape depends on where the previous walk stopped; `graph` reports `truncated: true` and **MUST NOT** emit
@@ -594,6 +593,12 @@ grep the package's source by proxy. Ordering, capping, truncation and continuati
 A pattern entry is returned **whole**: the `explanation.key_points`, `security_note` and `performance_note` fields
 are the package's best-practice content ([Consumption Map §5](consumption-map.md)), and a surface MUST NOT strip them
 to save space. The filter selects *which* patterns, never *which parts of* a pattern.
+
+An entry may also carry `order` ([Agent Metadata §4.2.1](../python/miri-agent-metadata-specification.md)), which
+places it among patterns of equal `complexity` in the package's learning paths. It rides along with the entry and
+changes nothing above: this operation's ordering key stays the pattern `id` (§3.5.1). `order` is optional and
+admits ties, so it is not a total order over the array and cannot carry a cursor, where `id` is the document's
+unique pattern identifier and can.
 
 ### 3.8 `graph`
 

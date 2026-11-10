@@ -37,6 +37,33 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
   `MIRI-SURFACE-003` needs no change. It fires on a top-level key outside the reserved set in §4.1, written by
   reference rather than by enumeration, so adding the row updates what it enforces.
 
+- **`order`, so a learning path's sequence comes from the author rather than the build host.**
+  `learning_paths[*].patterns` has always been an ordered list, and the only orderable fact a pattern carried was
+  `complexity`, which has three values. Every pattern at one level was therefore tied, and the tie went to whatever
+  the generator read first. `order` is an optional integer on `usage_pattern`, lower first, comparable only within
+  one complexity level: `complexity` already answers the coarse question, and two fields deciding one order is how
+  they come to disagree.
+
+  Reported by the miri-py team from a consumer whose beginner path matched the build host's directory order
+  exactly, putting the pattern its author wrote to come first in fourth place. They fixed the half that was theirs
+  by sorting the walk, which makes the document reproducible from one tree but leaves the sequence following the
+  author's filenames, and asked for the field rather than inventing one under a vendor prefix that no consumer
+  reads.
+
+  Three things their proposal left open are settled in Agent Metadata §4.2.1. The published array MUST honor the
+  orders it names, including that a pattern declaring none MUST NOT precede one of equal complexity that does;
+  without that half a producer could declare `order` and publish any sequence it liked, and the field would be
+  decorative. The array as published stays what a consumer reads, so `order` constrains what a producer may
+  publish rather than handing a consumer a second ordering to apply, which matters because a path is not obliged
+  to run beginner-first. And one `order` serves every path the pattern appears in, because the field sits on the
+  pattern rather than on a path's entry.
+
+  Nothing scores it. `MIRI-PY-008` validates the document against its schema, which settles the field's type and
+  says nothing about its relation to the arrays, and draft-07 cannot compare one array's members against another
+  array's contents. The same section states that the order of `patterns` and of every learning path MUST be a
+  function of the package's content rather than of the build host, which is decidable only by building the same
+  tree twice and so sits outside the artifact-inspection model.
+
 ### Fixed
 
 - **Three of the six payload keys had no schema, and the gap hid a live defect.** `discovery-envelope-v1.json`

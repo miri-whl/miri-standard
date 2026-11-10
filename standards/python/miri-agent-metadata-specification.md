@@ -1,6 +1,6 @@
 # Miri Standard: Pre-Parsed Agent Metadata Specification
 
-*Specification Version: 0.3-draft*  
+*Specification Version: 0.4-draft*  
 *Status: Draft*  
 *Created: 2025*
 
@@ -279,6 +279,66 @@ The `agent-metadata/` directory contains pre-processed data optimized for agent 
   }
 }
 ```
+
+#### 4.2.1 Pattern order within a learning path
+
+`learning_paths[*].patterns` is an **ordered** list, and the only orderable fact a pattern carried was
+`complexity`, which has three values. Every pattern at one level was therefore tied, and the
+tie went to whatever the generator read first. On one producer's output the beginner path matched the build host's
+directory order exactly: the pattern its author wrote to come first landed fourth, and a second machine could
+order it differently again. `order`, added at 0.9.0, is the author's input to that decision.
+
+```json
+{
+  "id": "first_typed_call",
+  "name": "First typed call",
+  "description": "Build a client and read one page of results",
+  "complexity": "beginner",
+  "order": 0,
+  "category": "basics",
+  "code": "client = Client(token=…)\nprint(client.devices.list(limit=1))"
+}
+```
+
+**It orders within a complexity level, never across one.** A `beginner` pattern declaring `order: 9` still precedes
+an `advanced` one declaring `order: 0`. `complexity` already answers the coarse question, and two fields deciding
+one order is how they come to disagree, so comparing `order` across levels is undefined rather than merely
+discouraged.
+
+**The published array MUST honor the orders it names.** Within one `learning_paths[*].patterns` array, for any two
+patterns of equal `complexity` that both declare `order`, the one with the lower value MUST appear earlier; and a
+pattern declaring no `order` MUST NOT appear before one of equal `complexity` that declares one. Without the second
+half the field is decorative: most authors declare nothing, and an undeclared pattern free to float to the front
+leaves the author who did declare one with no guarantee.
+
+**An absent `order` is not `0`.** It means the producer places the pattern, which is the behavior every existing
+document already has. A document that declares the field nowhere is unchanged by this section.
+
+**Equal values are a tie, not an error.** Two patterns of equal `complexity` declaring the same `order` are
+conforming, and the producer breaks the tie. It MUST break it the same way on every build of the same tree: the
+order of `patterns` and of every learning path MUST be a function of the package's content, never of the build
+host. A directory iteration order is not a property of the package.
+
+**The array as published is what a consumer reads.** A consumer reads `learning_paths[*].patterns` top to bottom
+and MUST NOT re-sort it, by `order` or by `complexity`. The producer has applied both already, and a path is not
+obliged to run beginner-first: the sample SDK's `production` path opens on an `intermediate` pattern because that
+is where production concerns start. `order` constrains what a producer may publish; it is not a second ordering for
+a consumer to apply.
+
+**One `order` serves every path the pattern appears in**, because the field sits on the pattern rather than on a
+path's entry. An author wanting a pattern early in one path and late in another has only the arrays themselves,
+which carry that difference without any new vocabulary. The rule above is stated pairwise for the same reason: it
+holds independently in every path the pattern appears in, and never requires two paths to agree.
+
+The `patterns` operation ([Discovery Contract §3.7](../consumption/discovery-contract.md)) carries `order` through,
+since it returns each entry whole. That operation's own output ordering is by pattern `id` and is unaffected.
+
+**What scores this.** Nothing, at 0.9.0. `MIRI-PY-008` validates `usage-patterns.json` against its schema, which
+settles the field's type and says nothing about its relation to the arrays, and JSON Schema draft-07 cannot
+compare one array's members against another array's contents. The array rule above is statically decidable from
+the document alone and a linter MAY report a violation; the reproducibility requirement is decidable only by
+building the same tree twice, which is outside the artifact-inspection model
+([Linter Checklist](linter-checklist.md)) and would be a build-system check rather than a wheel check.
 
 ### 4.3 migration-guide.json (Version-Dependent)
 

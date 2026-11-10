@@ -7,6 +7,7 @@
       "name": "Basic Weather Retrieval",
       "description": "Standard pattern for getting current weather conditions",
       "complexity": "beginner",
+      "order": 0,
       "category": "basic_usage",
       "tags": [
         "weather",
@@ -48,6 +49,7 @@
       "name": "Weather Forecast Retrieval",
       "description": "Get multi-day weather forecasts with customizable duration",
       "complexity": "beginner",
+      "order": 1,
       "category": "basic_usage",
       "tags": [
         "forecast",
@@ -89,6 +91,7 @@
       "name": "Comprehensive Error Handling",
       "description": "Robust error handling for all weather API operations",
       "complexity": "intermediate",
+      "order": 0,
       "category": "error_management",
       "tags": [
         "error",
@@ -128,6 +131,7 @@
       "name": "Location Search and Selection",
       "description": "Search for locations and handle ambiguous location names",
       "complexity": "intermediate",
+      "order": 1,
       "category": "location_handling",
       "tags": [
         "search",
