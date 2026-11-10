@@ -11,7 +11,7 @@ While the major version is 0 the standard is in initial development, so a **mino
 change ([Semantic Versioning §4](https://semver.org/#spec-item-4)). Where one does, the entry says **BREAKING** in
 its first line and names what breaks. From 1.0.0 onward a breaking change takes a major bump.
 
-## 0.9.0 — unreleased
+## 0.9.0 — 2026-11-10
 
 ### Added
 
@@ -74,9 +74,10 @@ its first line and names what breaks. From 1.0.0 onward a breaking change takes 
   payloads are now defined and all six are refused on an absent response. Reported, in its narrower form, by the
   miri-py team.
 
-- **§3.8's example spelled the graph edge key `kind`.** `api-graph-v1.json` has always spelled it `relationship`,
-  with a six-value vocabulary, and that schema governs. The reference implementation emitted `relationship`, so the
-  prose was the outlier rather than the surface. Corrected, and the envelope uses `relationship`.
+- **§3.8's example and §3.5.1's ordering table spelled the graph edge key `kind`.** `api-graph-v1.json` has always
+  spelled it `relationship`, with a six-value vocabulary, and that schema governs. The reference implementation
+  emitted `relationship`, so the prose was the outlier rather than the surface. Corrected, and the envelope uses
+  `relationship`.
 
 ### Changed
 
